@@ -2,13 +2,13 @@ import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import RootLayout from "./layout/RootLayout";
 import NotFoundPage from "./pages/NotFoundPage";
-import MainPage from "./pages/Mainpage";
+import MainPage from "./pages/MainPage";
 import SignInPage from "./pages/SignInPage";
 import ObjectPage from "./pages/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
 import AlarmPage from "./pages/AlarmPage";
-import MyPage from "./pages/Mypage";
+import MyPage from "./pages/MyPage";
 
 const router = createBrowserRouter([
   {
