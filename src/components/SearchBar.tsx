@@ -2,7 +2,7 @@ import { FiSearch } from "react-icons/fi";
 
 const SearchBar = () => {
   return (
-    <div className="px-4 py-3">
+    <div>
       <div className="flex items-center w-full p-3 rounded-[44px] bg-[#f2f2f2]">
         <input
           type="text"
