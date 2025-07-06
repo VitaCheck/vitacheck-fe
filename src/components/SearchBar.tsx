@@ -3,11 +3,11 @@ import { FiSearch } from "react-icons/fi";
 const SearchBar = () => {
   return (
     <div className="px-4 py-3">
-      <div className="flex items-center w-full p-3 rounded-lg bg-gray-100">
+      <div className="flex items-center w-full p-3 rounded-[44px] bg-[#f2f2f2]">
         <input
           type="text"
-          placeholder="제품 또는 성분을 입력해주세요."
-          className="w-full bg-transparent outline-none text-sm text-gray-800 placeholder-gray-300 font-pretendard"
+          placeholder="검색어를 입력해주세요."
+          className="w-full ml-2 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-300"
         />
         <FiSearch className="text-gray-300 mr-2" size={18} />
       </div>
