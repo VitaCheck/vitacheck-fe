@@ -1,7 +1,13 @@
+import MainTop from "../components/MainPage/MainTop";
+import ProductList from "../components/MainPage/ProductList";
+import SearchSection from "../components/MainPage/SearchSection";
+
 const MainPage = () => {
   return (
     <div>
-      <div>MainPage</div>
+      <MainTop />
+      <SearchSection />
+      <ProductList />
     </div>
   );
 };
