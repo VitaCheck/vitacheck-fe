@@ -7,7 +7,7 @@ import SignInPage from "./pages/SignInPage";
 import ObjectPage from "./pages/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
-import AlarmPage from "./pages/AlarmPage";
+import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 
 const router = createBrowserRouter([
@@ -40,6 +40,10 @@ const router = createBrowserRouter([
         path: "alarm", //알림 페이지
         element: <AlarmPage />,
       },
+      // {
+      //   path: "alarm/settings", // 알림 설정/관리 페이지
+      //   element: <AlarmSettingsPage />,
+      // },
       {
         path: "mypage", //마이 페이지
         element: <MyPage />,
