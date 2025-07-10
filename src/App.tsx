@@ -10,6 +10,7 @@ import CombinationPage from "./pages/CombinationPage";
 import AlarmPage from "./pages/AlarmPage";
 import MyPage from "./pages/MyPage";
 
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -32,6 +33,8 @@ const router = createBrowserRouter([
         path: "ingredient", //성분 페이지
         element: <IngredientPage />,
       },
+
+
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
