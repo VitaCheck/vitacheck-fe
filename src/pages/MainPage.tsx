@@ -1,12 +1,12 @@
 import MainTop from "../components/MainPage/MainTop";
 import ProductList from "../components/MainPage/ProductList";
-import SearchSection from "../components/MainPage/SearchSection";
+import NavSection from "../components/MainPage/NavSection";
 
 const MainPage = () => {
   return (
     <div>
       <MainTop />
-      <SearchSection />
+      <NavSection />
       <ProductList />
     </div>
   );
