@@ -7,18 +7,21 @@ const foods = [
   { name: "오이", emoji: "🥒" },
 ];
 
-
 const IngredientAlternatives = () => {
   return (
-    <div className="grid grid-cols-2 gap-x-20 gap-y-10 max-w-[900px] mx-auto">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 
+                    gap-x-5 sm:gap-x-8 md:gap-x-15 
+                    gap-y-4 sm:gap-y-8 md:gap-y-12 
+                    max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-5 pb-8">
       {foods.map((food, index) => (
         <div
           key={index}
-          className="w-full h-[80px] flex items-center justify-center bg-gray-100 rounded-4xl shadow-sm"
+          className="flex items-center justify-start px-5 py-5 
+                     bg-gray-100 rounded-[35px] shadow-sm 
+                     h-[64px] w-full"
         >
-          <span className="text-base font-medium">
-            {food.emoji} {food.name}
-          </span>
+          <span className="text-lg font-medium">{food.emoji}</span>
+          <span className="ml-3 text-base font-medium">{food.name}</span>
         </div>
       ))}
     </div>
