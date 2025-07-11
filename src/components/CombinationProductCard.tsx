@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 
 interface Props {
   item: {
@@ -6,14 +6,18 @@ interface Props {
     imageUrl: string;
   };
   isSelected: boolean;
-  onToggle: () => void; // ✅ 이름 변경
+  onToggle: () => void;
 }
 
-export default function CombinationProductCard({ item, isSelected, onToggle }: Props) {
+export default function CombinationProductCard({
+  item,
+  isSelected,
+  onToggle,
+}: Props) {
   return (
     <div
       className={`relative rounded-xl p-4 bg-white shadow-md transition hover:shadow-lg ${
-        isSelected ? 'bg-gray-100' : ''
+        isSelected ? "bg-gray-100" : ""
       }`}
     >
       <img
@@ -28,7 +32,7 @@ export default function CombinationProductCard({ item, isSelected, onToggle }: P
         onClick={onToggle}
         className="absolute top-2 right-2 w-6 h-6 rounded border border-gray-400 bg-white flex items-center justify-center text-sm"
       >
-        {isSelected ? '✓' : '+'}
+        {isSelected ? "✓" : "+"}
       </button>
     </div>
   );
