@@ -10,6 +10,8 @@ import CombinationPage from "./pages/CombinationPage";
 import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
+import NotificationCenterPage from "./pages/NotificationCenterPage";
+import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 
 const router = createBrowserRouter([
   {
@@ -33,6 +35,7 @@ const router = createBrowserRouter([
         path: "ingredient", //성분 페이지
         element: <IngredientPage />,
       },
+
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
@@ -48,6 +51,14 @@ const router = createBrowserRouter([
       {
         path: "mypage", //마이 페이지
         element: <MyPage />,
+      },
+      {
+        path: "NotificationCenter",
+        element: <NotificationCenterPage />,
+      },
+      {
+        path: "Setting",
+        element: <NotificationSettingsPage />,
       },
     ],
   },
