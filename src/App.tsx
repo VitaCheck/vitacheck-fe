@@ -9,7 +9,6 @@ import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
 import AlarmPage from "./pages/AlarmPage";
 import MyPage from "./pages/MyPage";
-import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 
 
 const router = createBrowserRouter([
@@ -30,20 +29,10 @@ const router = createBrowserRouter([
         path: "object", //목적 페이지
         element: <ObjectPage />,
       },
-  {
-  path: "ingredient",
-  children: [
-    {
-      index: true,
-      element: <IngredientPage />, // /ingredient
-    },
-    {
-      path: ":name", // /ingredient/유산균
-      element: <IngredientDetailPage />,
-    },
-  ],
-},
-
+      {
+        path: "ingredient", //성분 페이지
+        element: <IngredientPage />,
+      },
 
       {
         path: "combination", //조합 페이지
