@@ -12,7 +12,7 @@ function ProductCard({
   height = 150,
 }: ProductCardProps) {
   return (
-    <div className="inline-block">
+    <div className="inline-block mt-3 mb-3">
       <div
         className="bg-white rounded-xl flex justify-center items-center"
         style={{
@@ -21,11 +21,7 @@ function ProductCard({
           boxShadow: "2px 4px 12.2px rgba(0, 0, 0, 0.25)",
         }}
       >
-        <img
-          src={imageSrc}
-          alt={name}
-          className="w-24 h-24 object-contain" // 내부 이미지도 고정 크기로 제한
-        />
+        <img src={imageSrc} alt={name} className="w-24 h-24 object-contain" />
       </div>
 
       <p
