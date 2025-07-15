@@ -82,10 +82,28 @@ const ProductList = () => {
       {/* <div className="w-full border-t border-gray-200 mb-4" /> */}
 
       {/* 제품 카드 */}
-      <div className="flex overflow-x-auto space-x-4 justify-center m-5 h-max">
-        <ProductCard imageSrc={Logo} name="제품 1" width={110} height={100} />
-        <ProductCard imageSrc={Logo} name="제품 2" width={110} height={100} />
-        <ProductCard imageSrc={Logo} name="제품 3" width={110} height={100} />
+      <div className="flex overflow-x-auto mb-4">
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 1"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 2"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 3"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
       </div>
     </section>
   );
