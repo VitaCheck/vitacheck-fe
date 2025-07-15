@@ -1,8 +1,9 @@
 interface ProductCardProps {
   imageSrc: string;
   name: string;
-  width?: number; // 기본 166
-  height?: number; // 기본 150
+  width?: number;
+  height?: number;
+  fontSize?: number | string;
 }
 
 function ProductCard({
@@ -10,9 +11,10 @@ function ProductCard({
   name,
   width = 166,
   height = 150,
+  fontSize = 18,
 }: ProductCardProps) {
   return (
-    <div className="inline-block mt-3 mb-3">
+    <div className="inline-block pt-3 pb-3 px-2">
       <div
         className="bg-white rounded-xl flex justify-center items-center"
         style={{
@@ -25,8 +27,11 @@ function ProductCard({
       </div>
 
       <p
-        className="mt-3 text-center text-[18px] font-semibold text-black"
-        style={{ width: `${width}px` }}
+        className="mt-3 text-center font-semibold text-black"
+        style={{
+          width: `${width}px`,
+          fontSize: typeof fontSize === "number" ? `${fontSize}px` : fontSize,
+        }}
       >
         {name}
       </p>
