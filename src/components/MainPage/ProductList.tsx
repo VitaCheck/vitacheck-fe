@@ -79,10 +79,10 @@ const ProductList = () => {
           )}
         </div>
       </div>
-      <div className="w-full border-t border-gray-200 mb-4" />
+      {/* <div className="w-full border-t border-gray-200 mb-4" /> */}
 
       {/* 제품 카드 */}
-      <div className="flex overflow-x-auto space-x-4 justify-center mb-5">
+      <div className="flex overflow-x-auto space-x-4 justify-center m-5 h-max">
         <ProductCard imageSrc={Logo} name="제품 1" width={110} height={100} />
         <ProductCard imageSrc={Logo} name="제품 2" width={110} height={100} />
         <ProductCard imageSrc={Logo} name="제품 3" width={110} height={100} />
