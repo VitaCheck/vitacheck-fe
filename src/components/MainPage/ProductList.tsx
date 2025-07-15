@@ -34,7 +34,7 @@ const ProductList = () => {
 
         {/* 드롭다운 */}
         <div
-          className="relative w-[100px] cursor-pointer"
+          className="relative w-[85px] cursor-pointer"
           onClick={() => setOpen((prev) => !prev)}
           ref={dropdownRef}
         >
