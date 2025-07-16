@@ -65,8 +65,12 @@ const Navbar = () => {
         ) : (
           <>
             <div className="flex justify-between items-center mb-5 mt-5 px-4">
-              <img src={Bell} alt="알림" className="w-[24px] h-[27px]" />
-              <img src={User} alt="사용자" className="w-[36px] h-[36px]" />
+              <Link to="/NotificationCenter">
+                <img src={Bell} alt="알림" className="w-[24px] h-[27px]" />
+              </Link>
+              <Link to="/mypage">
+                <img src={User} alt="사용자" className="w-[36px] h-[36px]" />
+              </Link>
             </div>
 
             <div className="flex justify-center mb-6">
