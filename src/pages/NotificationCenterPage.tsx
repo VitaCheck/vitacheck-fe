@@ -27,15 +27,15 @@ function NotificationCenterPage() {
     },
   ];
 
-  const goToMain = () => {
-    navigate("/");
+  const goBack = () => {
+    navigate(-1); // 🔙 이전 페이지로 이동
   };
 
   return (
     <div className="min-h-screen bg-white px-6">
       <div className="w-full pt-4 pb-2 flex items-center justify-between">
         <div className="flex items-center">
-          <button onClick={goToMain} className="mr-2 text-2xl text-black">
+          <button onClick={goBack} className="mr-2 text-2xl text-black">
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
