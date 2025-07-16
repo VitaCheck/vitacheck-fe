@@ -34,7 +34,7 @@ const ProductList = () => {
 
         {/* 드롭다운 */}
         <div
-          className="relative w-[100px] cursor-pointer"
+          className="relative w-[85px] cursor-pointer"
           onClick={() => setOpen((prev) => !prev)}
           ref={dropdownRef}
         >
@@ -79,13 +79,31 @@ const ProductList = () => {
           )}
         </div>
       </div>
-      <div className="w-full border-t border-gray-200 mb-4" />
+      {/* <div className="w-full border-t border-gray-200 mb-4" /> */}
 
       {/* 제품 카드 */}
-      <div className="flex overflow-x-auto space-x-4 justify-center mb-5">
-        <ProductCard imageSrc={Logo} name="제품 1" width={110} height={100} />
-        <ProductCard imageSrc={Logo} name="제품 2" width={110} height={100} />
-        <ProductCard imageSrc={Logo} name="제품 3" width={110} height={100} />
+      <div className="flex overflow-x-auto mb-4">
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 1"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 2"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
+        <ProductCard
+          imageSrc={Logo}
+          name="제품 3"
+          width={110}
+          height={100}
+          fontSize={14}
+        />
       </div>
     </section>
   );
