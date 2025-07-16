@@ -4,16 +4,14 @@ interface MenuItemProps {
   onClick?: () => void;
 }
 
-function MenuItem(props: MenuItemProps) {
-  const { label, icon, onClick } = props;
-
+function MenuItem({ label, icon, onClick }: MenuItemProps) {
   return (
     <div
       className="bg-white w-full rounded-xl px-4 py-4 flex items-center justify-between shadow cursor-pointer"
       onClick={onClick}
     >
       <div className="flex items-center space-x-3">
-        <span className="text-xl">{icon}</span>
+        <img src={icon} alt="icon" className="w-5 h-5 object-contain" />
         <span className="text-base font-medium">{label}</span>
       </div>
       <svg
@@ -22,11 +20,12 @@ function MenuItem(props: MenuItemProps) {
         viewBox="0 0 24 24"
         strokeWidth={2}
         stroke="currentColor"
-        className="w-4 h-4 text-gray-400"
+        className="w-4 h-4 text-[#1C1B1F]"
       >
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
       </svg>
     </div>
   );
 }
+
 export default MenuItem;

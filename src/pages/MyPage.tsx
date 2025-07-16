@@ -1,13 +1,13 @@
 import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.svg";
 import { useNavigate } from "react-router-dom";
+import Service from "../assets/Service.svg";
+import Bell from "../assets/MyPageBell.svg";
+import Scrap from "../assets/MyPageScrap.svg";
+import Vita from "../assets/MyPageVita.svg";
 
 function MyPage() {
   const navigate = useNavigate();
-
-  const handleEditInfo = () => {
-    alert("내 정보 수정 페이지로 이동");
-  };
 
   const handleLogout = () => {
     alert("로그아웃 되었습니다.");
@@ -40,11 +40,11 @@ function MyPage() {
               />
             </svg>
           </button>
-          <h1 className="text-xl font-semibold py-2">마이페이지</h1>
+          <h1 className="text-[24px] font-semibold py-2">마이페이지</h1>
         </div>
 
         {/* 사용자 정보 카드 */}
-        <div className="w-[90%] mt-4 bg-white rounded-2xl p-10 flex items-center shadow py-11">
+        <div className="w-[90%] h-[25vh] bg-white rounded-2xl px-6 py-8 flex items-center shadow">
           <img
             src={ProfileCat}
             alt="profile"
@@ -58,7 +58,7 @@ function MyPage() {
 
             <button
               className="mt-2 bg-[#EBEBEB] rounded-full px-4 py-1 flex items-center justify-between cursor-pointer text-[13px]"
-              onClick={handleEditInfo}
+              onClick={() => navigate("/mypage/edit")}
             >
               <span className="mr-2">내 정보 수정</span>
               <svg
@@ -80,11 +80,11 @@ function MyPage() {
         </div>
 
         {/* 메뉴 리스트 */}
-        <div className="mt-6 w-full px-6 space-y-3">
+        <div className="mt-6 space-y-3 w-[90%]">
           <MenuItem
             label="찜한 제품"
-            icon="💛"
-            onClick={() => alert("찜한 제품")}
+            icon={Scrap}
+            onClick={() => navigate("/mypage/scrap")}
           />
 
           <div className="w-full mt-6 mb-6">
@@ -93,10 +93,12 @@ function MyPage() {
               {/* 나의 영양제 관리 (위쪽) */}
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => alert("영양제 관리")}
+                onClick={() => navigate("/alarm/settings")}
               >
                 <div className="flex items-center space-x-3">
-                  <span className="text-xl">💊</span>
+                  <span className="text-xl">
+                    <img src={Vita} alt="Vita" className="w-full h-auto" />
+                  </span>
                   <span className="text-base font-medium text-black">
                     나의 영양제 관리
                   </span>
@@ -107,7 +109,7 @@ function MyPage() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-4 h-4 text-gray-400"
+                  className="w-4 h-4 text-[#1C1B1F]"
                 >
                   <path
                     strokeLinecap="round"
@@ -119,10 +121,12 @@ function MyPage() {
 
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => alert("알림 설정")}
+                onClick={() => navigate("/notificationCenter")}
               >
                 <div className="flex items-center space-x-3">
-                  <span className="text-xl">🔔</span>
+                  <span className="text-xl">
+                    <img src={Bell} alt="Bell" className="w-full h-auto" />
+                  </span>
                   <span className="text-base font-medium text-black">
                     알림 설정
                   </span>
@@ -133,7 +137,7 @@ function MyPage() {
                   viewBox="0 0 24 24"
                   strokeWidth={2}
                   stroke="currentColor"
-                  className="w-4 h-4 text-gray-400"
+                  className="w-4 h-4 text-[#1C1B1F]"
                 >
                   <path
                     strokeLinecap="round"
@@ -147,8 +151,8 @@ function MyPage() {
 
           <MenuItem
             label="고객센터"
-            icon="🎧"
-            onClick={() => alert("고객센터")}
+            icon={Service}
+            onClick={() => navigate("/service")}
           />
         </div>
 
