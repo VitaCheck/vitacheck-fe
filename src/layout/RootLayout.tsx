@@ -5,12 +5,7 @@ const RootLayout = () => {
   const location = useLocation();
 
   // NavBar를 숨길 경로 목록
-  const hideNavbarRoutes = [
-    "/mypage",
-    "/NotificationCenter",
-    "/NotificationSettings",
-    "/Setting",
-  ];
+  const hideNavbarRoutes = ["/mypage", "/notificationCenter", "/setting"];
 
   const isMain = location.pathname === "/";
 
