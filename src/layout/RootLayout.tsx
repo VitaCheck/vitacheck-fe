@@ -27,7 +27,7 @@ const RootLayout = () => {
         </header>
       )}
 
-      <main className={`${hideNavbar ? "" : "pt-48 md:pt-25"} flex-1`}>
+      <main className={`${hideNavbar ? "" : "pt-15 md:pt-25"} flex-1`}>
         <Outlet />
       </main>
     </div>
