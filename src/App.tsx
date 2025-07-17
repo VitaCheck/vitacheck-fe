@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import NotFoundPage from "./pages/NotFoundPage";
 import MainPage from "./pages/MainPage";
 import SignInPage from "./pages/SignInPage";
-import ObjectPage from "./pages/ObjectPage";
+import ObjectPage from "./pages/purpose/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
 import AddCombinationPage from "./pages/AddCombinationPage";

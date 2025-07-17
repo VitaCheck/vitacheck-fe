@@ -1,5 +1,5 @@
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import MainDetailPageBrandSection from "../components/Purpose/MainDetailPageBrandSection";
 import IngredientTab from "../components/Purpose/IngredientTab";
 import TimingTab from "../components/Purpose/TimingTab";
@@ -7,10 +7,26 @@ import { GoShareAndroid } from "react-icons/go";
 import { GoHeart, GoHeartFill } from "react-icons/go";
 
 const ProductDetailPage = () => {
-  const { state } = useLocation();
+  const location = useLocation();
+  const { state } = location;
   const product = state;
   const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
   const [liked, setLiked] = useState(false);
+  const [showButton, setShowButton] = useState(true);
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentY = window.scrollY;
+      setShowButton(currentY < 150); // 200px 이상이면 버튼 숨김
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const toggleLike = () => {
     setLiked((prev) => !prev);
@@ -28,14 +44,36 @@ const ProductDetailPage = () => {
     <>
       {/* 모바일 전용 */}
       <div className="md:hidden">
-        <div className="w-[430px] mx-auto mt-[122px] mb-[150px]">
+        <div className="w-[430px] mx-auto mt-[70px] mb-[150px]">
           {/* 제품 이미지, 브랜드명, 제품명 */}
-          <div className="flex flex-col w-[338px] h-[427px] mx-[46px]">
-            <img
-              src={product.imageUrl}
-              alt={product.title}
-              className="w-[338px] h-[338px] rounded-[28px] shadow-lg object-cover"
-            />
+          <div className="flex flex-col w-[338px] mx-[46px]">
+            {/* 이미지 래퍼: relative */}
+            <div className="relative w-[338px] h-[338px]">
+              <img
+                src={product.imageUrl}
+                alt={product.title}
+                className="w-full h-full rounded-[28px] shadow-lg object-cover"
+              />
+
+              {/* 하트 + 공유 버튼: absolute로 겹치기 */}
+              <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
+                <button className="w-[33px] h-[33px] flex items-center justify-center">
+                  <GoShareAndroid className="w-[33px] h-[33px] text-black" />
+                </button>
+                <button
+                  onClick={toggleLike}
+                  className="w-[33px] h-[33px] flex items-center justify-center cursor-pointer"
+                >
+                  {liked ? (
+                    <GoHeartFill className="w-[33px] h-[33px] text-[#FD657E]" />
+                  ) : (
+                    <GoHeart className="w-[33px] h-[33px] text-[#FD657E]" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* 제품 정보 텍스트 */}
             <div className="mt-[21px] px-[5px] py-[10px]">
               <h2 className="text-[20px] tracking-[-0.4px] text-[#757575] font-medium">
                 {product.brand || "브랜드"}
@@ -45,6 +83,23 @@ const ProductDetailPage = () => {
               </h1>
             </div>
           </div>
+
+          <div
+            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-[430px] h-[103px] bg-white z-10
+              transition-all duration-300 ease-in-out
+              ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
+            `}
+          />
+          <button
+            className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-[366px] h-[58px] rounded-[71px] z-50
+              transition-all duration-300 ease-in-out flex justify-center items-center
+              bg-[#FFEB9D] text-black text-[20px] font-medium
+              ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
+            `}
+          >
+            섭취알림 등록하기
+          </button>
+
 
           {/* 상세정보 / 쿠팡 바로가기 */}
           <div className="flex justify-center mx-auto w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
@@ -99,7 +154,7 @@ const ProductDetailPage = () => {
 
       {/* PC 전용 */}
       <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-        <div className="max-w-[1280px] mx-auto pt-[168px]">
+        <div className="max-w-[1280px] mx-auto pt-[168px] scale-[0.66] origin-top">
           {/* 제품 이미지, 브랜드명, 제품명 */}
           <div className="flex justify-start gap-[100px] items-end">
             <img
@@ -132,7 +187,9 @@ const ProductDetailPage = () => {
                       <GoHeart className="w-[60px] h-[60px] text-[#FD657E]" />
                     )}
                 </button>
-                <button className="bg-[#FFEB9D] w-[440px] h-[94px] rounded-[22px] text-[30px]">쿠팡 바로가기</button>
+                <button className="bg-[#FFEB9D] w-[440px] h-[94px] rounded-[22px] text-[30px] font-medium">
+                  쿠팡 바로가기
+                </button>
               </div>
             </div>
           </div>

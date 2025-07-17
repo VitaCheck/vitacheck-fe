@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
+import { MdOutlineArrowBackIos } from "react-icons/md";
 
 interface RecommendedProductSectionProps {
   ingredientName?: string;
@@ -7,6 +9,9 @@ interface RecommendedProductSectionProps {
 
 const RecommendedProductSection = ({ ingredientName }: RecommendedProductSectionProps) => {
   const navigate = useNavigate();
+
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 4;
 
   // 실제 API 연결되면 이 데이터를 props나 context, fetch 등으로 받아오게 변경
   const ingredient = ingredientName || "오메가3"; // 임시 기본값
@@ -17,7 +22,19 @@ const RecommendedProductSection = ({ ingredientName }: RecommendedProductSection
     { id: 3, title: "제품3", imageUrl: "/images/product3.png" },
     { id: 4, title: "제품4", imageUrl: "/images/product4.png" },
     { id: 5, title: "제품5", imageUrl: "/images/product5.png" },
+    { id: 6, title: "제품6", imageUrl: "/images/product6.png" },
+    { id: 7, title: "제품7", imageUrl: "/images/product7.png" },
+    { id: 8, title: "제품8", imageUrl: "/images/product8.png" },
+    { id: 9, title: "제품9", imageUrl: "/images/product9.png" },
+    { id: 10, title: "제품10", imageUrl: "/images/product10.png" },
+    { id: 11, title: "제품11", imageUrl: "/images/product11.png" },
   ];
+
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = products.slice(
+    currentPage * itemsPerPage,
+    currentPage * itemsPerPage + itemsPerPage
+  );
 
   const goToIngredientPage = () => {
     navigate(`/ingredientproducts?ingredient=${encodeURIComponent(ingredient)}`);
@@ -101,9 +118,9 @@ const RecommendedProductSection = ({ ingredientName }: RecommendedProductSection
         </div>
 
         {/* 카드 리스트 */}
-        <div className="w-1280px h-[306px] hide-scrollbar relative">
-          <div className="flex gap-[40px] mt-[44px]">
-            {products.slice(0, 4).map((product) => (
+        <div className="w-[1280px] h-[306px] hide-scrollbar relative">
+          <div className="flex gap-[40px] mt-[44px] transition-all duration-300">
+            {paginatedProducts.map((product) => (
               <div
                 key={product.id}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
@@ -121,13 +138,24 @@ const RecommendedProductSection = ({ ingredientName }: RecommendedProductSection
                 </p>
               </div>
             ))}
-            {/* ➤ 오른쪽 화살표 버튼 (5개 이상일 때만 표시) */}
-            {products.length > 4 && (
+
+            {/* ➤ 오른쪽 화살표 버튼 */}
+            {currentPage < totalPages - 1 && (
               <button
-                onClick={goToIngredientPage}
+                onClick={() => setCurrentPage((prev) => prev + 1)}
                 className="absolute right-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
               >
                 <MdOutlineArrowForwardIos className="text-[34px]" />
+              </button>
+            )}
+
+            {/* ⬅ 왼쪽 화살표 버튼 */}
+            {currentPage > 0 && (
+              <button
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                className="absolute left-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
+              >
+                <MdOutlineArrowBackIos className="text-[34px]" />
               </button>
             )}
           </div>

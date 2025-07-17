@@ -1,5 +1,7 @@
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
+import { MdOutlineArrowBackIos } from "react-icons/md";
 
 interface MainDetailPageBrandSectionProps {
   ingredientName?: string;
@@ -8,17 +10,32 @@ interface MainDetailPageBrandSectionProps {
 const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSectionProps) => {
   const navigate = useNavigate();
 
+  const [currentPage, setCurrentPage] = useState(0);
+  const itemsPerPage = 4;
+
   const products = [
-    { id: 11, title: "아이클리어 루테인", imageUrl: "/images/product1.png" },
-    { id: 22, title: "여에스더 오메가3", imageUrl: "/images/product2.png" },
-    { id: 33, title: "제품3", imageUrl: "/images/product3.png" },
-    { id: 44, title: "제품4", imageUrl: "/images/product4.png" },
-    { id: 55, title: "제품5", imageUrl: "/images/product5.png" },
+    { id: 1, title: "아이클리어 루테인", imageUrl: "/images/product1.png" },
+    { id: 2, title: "여에스더 오메가3", imageUrl: "/images/product2.png" },
+    { id: 3, title: "제품3", imageUrl: "/images/product3.png" },
+    { id: 4, title: "제품4", imageUrl: "/images/product4.png" },
+    { id: 5, title: "제품5", imageUrl: "/images/product5.png" },
+    { id: 6, title: "제품6", imageUrl: "/images/product6.png" },
+    { id: 7, title: "제품7", imageUrl: "/images/product7.png" },
+    { id: 8, title: "제품8", imageUrl: "/images/product8.png" },
+    { id: 9, title: "제품9", imageUrl: "/images/product9.png" },
+    { id: 10, title: "제품10", imageUrl: "/images/product10.png" },
+    { id: 11, title: "제품11", imageUrl: "/images/product11.png" },
    ];
 
    const brands = [
     { id: 111, title: "정관장", imageUrl: "/images/product111.png" },
    ];
+
+    const totalPages = Math.ceil(products.length / itemsPerPage);
+    const paginatedProducts = products.slice(
+      currentPage * itemsPerPage,
+      currentPage * itemsPerPage + itemsPerPage
+    );
 
   return (
     <>
@@ -27,7 +44,10 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
         {/* 브랜드 이미지와 브랜드명 */}
         <div className="flex items-center justify-between w-[338px] gap-[18px]">
           {brands.map((brand) => (
-              <div className="flex items-center justify-center gap-[10px]">
+              <div
+                key={brand.id}
+                className="flex items-center justify-center gap-[10px]"
+              >
                 <img 
                 src={brand.imageUrl}
                 alt={brand.title}
@@ -37,8 +57,9 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
               </div>
           ))}
           <button
+            onClick={() => navigate(`/brandproducts?brand=${brands[0].title}`)}
             className="w-[80px] h-[30px] bg-[#EEEEEE] rounded-[20px]
-                      flex justify-center items-center"
+                      flex justify-center items-center cursor-pointer"
           >
             <span className="text-[12px] font-medium">더보기</span>
             <MdOutlineArrowForwardIos className="h-[12px] ml-[4px]"/>
@@ -75,18 +96,22 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
         {/* 브랜드 이미지와 브랜드명 */}
         <div className="flex items-center justify-between gap-[18px]">
           {brands.map((brand) => (
-              <div className="flex items-center justify-center gap-[20.5px]">
+              <div 
+                key={brand.id}
+                className="flex items-center justify-center gap-[20.5px]"
+              >
                 <img 
-                src={brand.imageUrl}
-                alt={brand.title}
-                className="w-[82px] h-[82px] mx-auto border-[1.025px] rounded-full object-cover"
+                  src={brand.imageUrl}
+                  alt={brand.title}
+                  className="w-[82px] h-[82px] mx-auto border-[1.025px] rounded-full object-cover"
                 />
                 <span className="text-[41px] tracking-[-0.82px] font-medium">{brand.title}</span>
               </div>
           ))}
           <button
+            onClick={() => navigate(`/brandproducts?brand=${brands[0].title}`)}
             className="w-[164px] py-[12.3px] bg-[#EEEEEE] rounded-[41px]
-                      flex justify-center items-center gap-[15px]"
+                      flex justify-center items-center gap-[15px] cursor-pointer"
           >
             <span className="text-[24.6px] font-medium">더보기</span>
             <MdOutlineArrowForwardIos className="text-[#757575] text-[24px]"/>
@@ -95,8 +120,8 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
 
         {/* 카드 리스트 */}
         <div className="w-1280px h-[306px] hide-scrollbar relative">
-          <div className="flex gap-[40px] mt-[44px]">
-            {products.slice(0, 4).map((product) => (
+          <div className="flex gap-[40px] mt-[44px] transition-all duration-300">
+            {paginatedProducts.map((product) => (
               <div
                 key={product.id}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
@@ -114,14 +139,27 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
                 </p>
               </div>
             ))}
-            {/* ➤ 오른쪽 화살표 버튼 (5개 이상일 때만 표시) */}
-            {products.length > 4 && (
+            
+            {/* ➤ 오른쪽 화살표 버튼 */}
+            {currentPage < totalPages - 1 && (
               <button
+                onClick={() => setCurrentPage((prev) => prev + 1)}
                 className="absolute right-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
               >
                 <MdOutlineArrowForwardIos className="text-[34px]" />
               </button>
             )}
+
+            {/* ⬅ 왼쪽 화살표 버튼 */}
+            {currentPage > 0 && (
+              <button
+                onClick={() => setCurrentPage((prev) => prev - 1)}
+                className="absolute left-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
+              >
+                <MdOutlineArrowBackIos className="text-[34px]" />
+              </button>
+            )}
+            
           </div>
         </div>
       </div>
