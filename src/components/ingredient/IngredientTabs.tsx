@@ -44,7 +44,7 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
     <button
       key={tab.key}
       onClick={() => setActiveTab(tab.key)}
-      className={`min-w-[96px] px-25 py-3 font-semibold text-sm rounded-t-xl border border-black border-b-0 ${
+      className={`min-w-[96px] px-25 py-3 font-semibold text-sm rounded-t-xl shadow-md boder-gray-200 ${
         activeTab === tab.key ? "bg-[#FFE17E] border-t-transparent border-l-transparent border-r-transparent" : "bg-white"
       }`}
     >
