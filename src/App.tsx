@@ -9,8 +9,8 @@ import ObjectPage from "./pages/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
 import AddCombinationPage from "./pages/AddCombinationPage";
-import CombinationResultPage from "./pages/CombinationResultPage"; // ✅ 추가
-import AlarmPage from "./pages/AlarmPage";
+import CombinationResultPage from "./pages/CombinationResultPage";
+import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
@@ -72,14 +72,14 @@ const router = createBrowserRouter([
         element: <EditProfilePage />,
       },
       {
-        path: "add-combination", 
-        element: <AddCombinationPage /> 
+        path: "add-combination",
+        element: <AddCombinationPage />,
+      },
+      {
+        path: "/combination-result", // 분석 결과 페이지
+        element: <CombinationResultPage />,
       },
     ],
-  },
-  {
-    path: "/combination-result", // ✅ 분석 결과 페이지 추가
-    element: <CombinationResultPage />,
   },
 ]);
 

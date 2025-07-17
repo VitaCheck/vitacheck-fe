@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import NavBar from "../components/NavBar";
 import { MdArrowForwardIos, MdArrowBackIos } from "react-icons/md";
 
 export default function CombinationResultPage() {
@@ -57,10 +56,9 @@ export default function CombinationResultPage() {
 
   return (
     <div className="min-h-screen bg-[#FAFAFA] font-pretendard">
-      <NavBar />
       <div className="w-full max-w-[1280px] mx-auto px-4 pb-40">
         {/* 모바일 제목 및 버튼 */}
-        <div className="md:hidden flex justify-between items-center mt-16 mb-10">
+        <div className="md:hidden flex justify-between items-center mb-10">
           <h1 className="block md:hidden font-pretendard font-bold text-[30px] leading-[120%] tracking-[-0.02em] px-[38px]">
             조합분석
           </h1>
@@ -166,8 +164,8 @@ export default function CombinationResultPage() {
               activeTab === "초과"
                 ? "text-red-500 border-b-4 border-red-500"
                 : !allOverUpper
-                ? "text-gray-300 cursor-not-allowed"
-                : "text-gray-400"
+                  ? "text-gray-300 cursor-not-allowed"
+                  : "text-gray-400"
             }`}
             onClick={() => allOverUpper && setActiveTab("초과")}
           >
