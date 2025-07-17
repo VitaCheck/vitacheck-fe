@@ -12,6 +12,7 @@ import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
+import EditProfilePage from "./pages/EditProfilePage";
 
 const router = createBrowserRouter([
   {
@@ -53,12 +54,16 @@ const router = createBrowserRouter([
         element: <MyPage />,
       },
       {
-        path: "NotificationCenter",
+        path: "notificationCenter",
         element: <NotificationCenterPage />,
       },
       {
-        path: "Setting",
+        path: "setting",
         element: <NotificationSettingsPage />,
+      },
+      {
+        path: "mypage/edit", // 마이페이지 수정
+        element: <EditProfilePage />,
       },
     ],
   },
