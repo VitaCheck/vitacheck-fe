@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import NavBar from "../components/NavBar";
 import CombinationProductCard from "../components/CombinationProductCard";
-import SelectedProductList from "../components/SelectedProductList";
+import ExpandableProductGroup from "../components/ExpandableProductGroup";
 import SadCat from "../assets/sad-cat.png";
+import { FiSearch, FiX } from "react-icons/fi";
 
 const mockProducts = [
   { name: "고려은단 비타민E 400IU", imageUrl: "/images/vita1.png" },
@@ -26,23 +26,28 @@ const mockProducts = [
   { name: "락토핏 플러스 프로바이오틱스", imageUrl: "/images/lacto8.png" },
 ];
 
-export default function AddCombinationPage() {
+const AddCombinationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const defaultQuery = searchParams.get("query") || "";
-  const [query, setQuery] = useState(defaultQuery);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [query, setQuery] = useState(searchParams.get("query") || "");
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const placeholder = "제품을 입력해주세요.";
 
   useEffect(() => {
-    const saved = localStorage.getItem("searchHistory");
-    if (saved) {
-      setSearchHistory(JSON.parse(saved));
+    const newQuery = searchParams.get("query") || "";
+    setQuery(newQuery);
+    setSearchTerm(newQuery);
+
+    const stored = localStorage.getItem("searchHistory");
+    if (stored) {
+      setSearchHistory(JSON.parse(stored));
     }
-  }, []);
+  }, [searchParams]);
 
   const handleSearch = () => {
-    const trimmed = query.trim();
+    const trimmed = searchTerm.trim();
     if (!trimmed) return;
 
     const updated = [
@@ -52,6 +57,7 @@ export default function AddCombinationPage() {
 
     localStorage.setItem("searchHistory", JSON.stringify(updated));
     setSearchHistory(updated);
+    setQuery(trimmed);
     navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
   };
 
@@ -72,7 +78,7 @@ export default function AddCombinationPage() {
     setSelectedItems(selectedItems.filter((i) => i.name !== name));
   };
 
-  const handleDeleteHistory = (itemToDelete: string) => {
+  const handleDelete = (itemToDelete: string) => {
     const updated = searchHistory.filter((item) => item !== itemToDelete);
     setSearchHistory(updated);
     localStorage.setItem("searchHistory", JSON.stringify(updated));
@@ -83,61 +89,181 @@ export default function AddCombinationPage() {
   );
 
   return (
-    <div className="w-full max-w-[1280px] mx-auto p-4 font-pretendard pb-40">
-      <NavBar />
+    <div className="w-full bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
+      {/* 조합추가 - 모바일 버전 */}
+      <h1 className="block md:hidden font-pretendard font-bold text-[30px] leading-[120%] tracking-[-0.02em] px-[38px] mb-10">
+        조합추가
+      </h1>
 
-      <h1 className="text-3xl font-extrabold mb-10">조합 추가</h1>
+      {/* 조합추가 - PC 버전 */}
 
-      {/* 검색창 */}
-      <div className="flex items-center w-full bg-[#f2f2f2] rounded-full px-4 py-3 mb-4 shadow-inner">
-        <input
-          type="text"
-          className="flex-1 bg-transparent outline-none text-base placeholder:text-gray-400"
-          placeholder="성분을 입력해주세요."
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") handleSearch();
-          }}
-        />
-        <button onClick={handleSearch} className="text-xl">
-          🔍
-        </button>
+      <h1 className="hidden md:block font-Pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
+        조합추가
+      </h1>
+
+      {/* 검색창 - 모바일 */}
+      <div className="flex justify-center mb-4 md:hidden">
+        <div className="w-[366px] h-[52px] bg-white border border-[#C7C7C7] rounded-[44px] flex items-center px-[18px] gap-[84px]">
+          <input
+            type="text"
+            className="flex-1 h-full bg-transparent outline-none
+        placeholder:font-Pretendard placeholder:text-[18px]
+        placeholder:text-black placeholder:opacity-40
+        placeholder:leading-[120%] placeholder:tracking-[-0.02em]
+        text-[18px]"
+            placeholder={placeholder}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearch();
+            }}
+          />
+          <button
+            onClick={handleSearch}
+            className="text-gray-400 text-xl ml-[-18px]"
+          >
+            <FiSearch />
+          </button>
+        </div>
       </div>
 
-      {/* 검색 기록 */}
-      <div className="flex flex-wrap gap-3 justify-center text-sm mb-10">
-        {searchHistory.map((item, idx) => (
-          <div
-            key={idx}
-            className="flex items-center gap-2 bg-gray-100 px-3 py-1 rounded-full"
-          >
-            <button
-              onClick={() => {
-                setQuery(item);
-                navigate(`/add-combination?query=${encodeURIComponent(item)}`);
-              }}
-              className="hover:underline"
-            >
-              {item}
-            </button>
-            <button
-              onClick={() => handleDeleteHistory(item)}
-              className="text-gray-400 hover:text-red-500"
-            >
-              ❌
-            </button>
-          </div>
-        ))}
+      {/* 검색창 - PC */}
+      <div className="hidden md:flex justify-center mb-8">
+        <div className="w-[1400px] h-[85px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
+          <input
+            type="text"
+            className="flex-1 h-full bg-transparent outline-none
+              placeholder:font-Pretendard placeholder:font-medium
+              placeholder:text-black placeholder:opacity-40
+              placeholder:leading-[30px] placeholder:tracking-[-0.02em]
+              placeholder:text-[30px] 
+              text-[30px] leading-[30px]"
+            placeholder={placeholder}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") handleSearch();
+            }}
+          />
+          <button onClick={handleSearch} className="text-gray-400 text-2xl">
+            <FiSearch />
+          </button>
+        </div>
+      </div>
+
+      {/* 검색 기록 - 모바일 */}
+      <div className="block md:hidden mb-12 flex justify-center">
+        <div
+          className="flex flex-wrap justify-center items-center gap-x-2 gap-y-2 text-[14px] "
+          style={{
+            width: "300px",
+            height: "auto",
+            opacity: 1,
+          }}
+        >
+          {searchHistory.length > 0
+            ? searchHistory.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-[4px]">
+                  <button
+                    onClick={() => {
+                      setSearchTerm(item);
+                      setQuery(item);
+                      navigate(
+                        `/add-combination?query=${encodeURIComponent(item)}`
+                      );
+                    }}
+                    className="text-[13px] font-medium text-gray-700"
+                  >
+                    {item}
+                  </button>
+                  <button
+                    onClick={() => handleDelete(item)}
+                    className="text-[16px] text-[#8A8A8A]"
+                    title="삭제"
+                  >
+                    <FiX />
+                  </button>
+                </div>
+              ))
+            : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
+                <span
+                  key={idx}
+                  className="text-gray-400 bg-white px-3 py-[2px] rounded-full shadow-sm"
+                >
+                  {item}
+                </span>
+              ))}
+        </div>
+      </div>
+
+      {/* 검색 기록 - PC */}
+      <div className="hidden md:flex justify-center gap-6 text-xl text-gray-700 mb-12 flex-wrap px-[35.64px]">
+        {searchHistory.length > 0
+          ? searchHistory.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-2 px-10 py-2">
+                <button
+                  onClick={() => {
+                    setSearchTerm(item);
+                    setQuery(item);
+                    navigate(
+                      `/add-combination?query=${encodeURIComponent(item)}`
+                    );
+                  }}
+                  className="hover:underline"
+                >
+                  {item}
+                </button>
+                <button
+                  onClick={() => handleDelete(item)}
+                  className="hover:text-[#555555] ml-2"
+                  title="삭제"
+                >
+                  <FiX className="text-[#8A8A8A] text-[18px]" />
+                </button>
+              </div>
+            ))
+          : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
+              <span
+                key={idx}
+                className="text-gray-300 bg-[#F5F5F5] px-6 py-2 rounded-full"
+              >
+                {item}
+              </span>
+            ))}
       </div>
 
       {/* 본문 */}
       <div className="flex flex-col lg:flex-row gap-8 relative">
         <div className="flex-1">
+          {query && (
+            <>
+              {/* 검색어 제목 - 모바일 */}
+              <h2 className="block md:hidden font-pretendard font-bold text-[22px] leading-[120%] tracking-[-0.02em] px-[38px] mb-6">
+                # {query}
+              </h2>
+
+              {/* 검색어 제목 - PC */}
+              <h2 className="hidden md:block font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
+                # {query}
+              </h2>
+            </>
+          )}
+
           {filteredProducts.length > 0 ? (
             <>
-              <h2 className="text-xl font-semibold mb-4">#{query}</h2>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+              {/* 모바일 카드: 펼쳐보기 적용 */}
+              <div className="block md:hidden px-4">
+                <ExpandableProductGroup
+                  title={query}
+                  products={filteredProducts}
+                  selectedItems={selectedItems}
+                  onToggle={handleToggle}
+                  hideTitle={true}
+                />
+              </div>
+
+              {/* PC 카드 */}
+              <div className="hidden md:grid w-[1000px] h-[1300px] mt-[50px] ml-[240px] gap-[40px] grid-cols-3">
                 {filteredProducts.map((item, idx) => (
                   <CombinationProductCard
                     key={idx}
@@ -164,53 +290,149 @@ export default function AddCombinationPage() {
           )}
         </div>
 
-        {/* 분석 목록 - 검색 결과 있을 때만 표시 */}
+        {/* 분석 목록 (검색 결과 있을 때만) */}
         {filteredProducts.length > 0 && (
           <>
-            {/* PC 사이드바 */}
-            <div className="hidden lg:block w-[280px] shrink-0 sticky top-[100px] bg-white shadow-md rounded-lg p-4 h-fit">
-              <div className="flex justify-between items-center mb-4">
-                <h3 className="font-semibold text-base">분석 목록</h3>
-                <button
-                  onClick={() =>
-                    navigate("/combination-result", { state: selectedItems })
-                  }
-                  className="text-sm bg-yellow-300 px-3 py-1 rounded-full"
-                >
-                  시작
-                </button>
-              </div>
-              <SelectedProductList
-                selectedItems={selectedItems}
-                onRemove={handleRemove}
-              />
-            </div>
+            {/* PC 분석 목록 */}
+            <div
+              className="hidden lg:block absolute"
+              style={{
+                width: "314px",
+                right: "250px",
+                gap: "22px",
+                opacity: 1,
+              }}
+            >
+              {/* 분석 시작 버튼 */}
+              <button
+                onClick={() =>
+                  navigate("/combination-result", {
+                    state: { selectedItems }, // 선택된 제품 배열
+                  })
+                }
+                className="w-[314px] h-[80px] bg-[#FFEB9D] rounded-[59px] text-[30px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center px-[90px] mt-[50px] mb-[30px]"
+              >
+                분석 시작
+              </button>
 
-            {/* 모바일 하단 */}
-            <div className="lg:hidden fixed bottom-0 left-0 w-full bg-white border-t rounded-t-xl shadow-2xl z-50">
-              <div className="flex justify-between items-center px-4 pt-4">
-                <h3 className="font-semibold text-sm">분석 목록</h3>
-                <button className="text-sm bg-yellow-300 px-3 py-1 rounded-full">
-                  시작
-                </button>
-              </div>
-              <p className="px-4 text-xs text-gray-500 mb-2">최대 10개 선택</p>
-              <div className="px-4 pb-4 overflow-x-auto">
-                <div className="flex gap-3 w-max">
+              <div
+                className="flex flex-col items-center"
+                style={{
+                  width: "314px",
+                  backgroundColor: "#F2F2F2",
+                  border: "0.8px solid #9C9A9A",
+                  borderRadius: "36px",
+                  paddingTop: "33px",
+                  paddingRight: "34px",
+                  paddingBottom: "33px",
+                  paddingLeft: "34px",
+                  boxSizing: "border-box",
+                  height: "fit-content",
+                }}
+              >
+                <div className="w-full flex justify-between items-center"></div>
+
+                {/* 선택된 제품 카드 리스트 */}
+                <div className="flex flex-col items-center gap-4 w-full">
                   {selectedItems.map((item, idx) => (
                     <div
                       key={idx}
-                      className="relative w-[140px] min-w-[140px] p-2 rounded-xl shadow flex-shrink-0"
+                      className="relative w-[230px] h-[250px] bg-white border border-gray-200 rounded-[30px] flex flex-col items-center justify-center px-4 py-6 shadow"
+                    >
+                      {/* X 버튼 */}
+                      <button
+                        onClick={() => handleRemove(item.name)}
+                        className="absolute top-3 right-4 text-gray-400 text-2xl"
+                      >
+                        ×
+                      </button>
+
+                      {/* 제품 이미지 */}
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-[120px] h-[120px] object-contain mb-4"
+                      />
+
+                      {/* 제품 이름 */}
+                      <p className="text-sm text-center font-medium leading-tight">
+                        {item.name}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* 모바일 분석 목록 */}
+            <div
+              className="lg:hidden fixed bottom-0 left-0 w-full h-[250px] bg-white z-50"
+              style={{
+                boxShadow: "0px -22px 40px 0px #C1C1C140",
+                paddingTop: "18px",
+                paddingRight: "10px",
+                paddingBottom: "10px",
+                paddingLeft: "10px",
+              }}
+            >
+              {/* 상단: 제목 & 시작 버튼 */}
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="font-pretendard font-bold text-[22px] leading-[120%] tracking-[-0.02em] px-3">
+                  분석 목록
+                </h3>
+                <button
+                  onClick={() => navigate("/combination-result")}
+                  className="bg-[#FFEB9D] rounded-[20px] flex items-center justify-center"
+                  style={{
+                    width: "67px",
+                    height: "32px",
+                    padding: "12px 18px",
+                  }}
+                >
+                  <span
+                    className="font-pretendard"
+                    style={{
+                      fontWeight: 500,
+                      fontSize: "15px",
+                      lineHeight: "120%",
+                      letterSpacing: "-0.02em",
+                      textAlign: "center",
+                    }}
+                  >
+                    시작
+                  </span>
+                </button>
+              </div>
+
+              {/* 설명 텍스트 */}
+              <p className="text-[14px] font-medium leading-[120%] tracking-[-0.02em] text-[#808080] mb-3 font-pretendard px-3">
+                최대 10개 선택
+              </p>
+
+              {/* 전체 감싸는 외곽 카드 */}
+              <div
+                className="w-full rounded-[22px] border border-[#B2B2B2] bg-white overflow-x-auto px-4 py-3"
+                style={{ height: "156px" }}
+              >
+                <div className="flex gap-[10px] w-max">
+                  {selectedItems.map((item, idx) => (
+                    <div
+                      key={idx}
+                      className="relative w-[130px] h-[130px] bg-white rounded-[10px] flex-shrink-0 flex flex-col items-center"
+                      style={{
+                        paddingTop: "26px",
+                        paddingBottom: "12px",
+                      }}
                     >
                       <img
                         src={item.imageUrl}
                         alt={item.name}
-                        className="w-full h-[100px] object-contain rounded"
+                        className="w-[70px] h-[50px] object-contain mb-2"
                       />
-                      <p className="text-xs mt-1 text-center">{item.name}</p>
+                      <p className="text-xs text-center px-1">{item.name}</p>
                       <button
                         onClick={() => handleRemove(item.name)}
-                        className="absolute top-1 right-2 text-lg text-gray-400"
+                        className="absolute top-1 right-1 text-lg text-gray-400"
                       >
                         ×
                       </button>
@@ -224,4 +446,5 @@ export default function AddCombinationPage() {
       </div>
     </div>
   );
-}
+};
+export default AddCombinationPage;
