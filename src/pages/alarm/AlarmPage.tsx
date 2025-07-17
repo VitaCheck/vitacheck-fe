@@ -1,0 +1,68 @@
+import { useState } from "react";
+import { useMediaQuery } from "react-responsive";
+import MobileAlarmPage from "./MobileAlarmPage";
+import DesktopAlarmPage from "./DesktopAlarmPage";
+
+const AlarmPage = () => {
+  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const today = new Date();
+
+  const [year, setYear] = useState(today.getFullYear());
+  const [month, setMonth] = useState(today.getMonth());
+  const [checkedIds, setCheckedIds] = useState<string[]>([]);
+
+  const supplements = [
+    {
+      id: "multi",
+      label: "멀티비타민",
+      time: ["09:30", "12:30", "18:30"],
+    },
+    {
+      id: "probiotics",
+      label: "유산균",
+      time: ["09:30"],
+    },
+    {
+      id: "omega3",
+      label: "오메가3",
+      time: ["09:30", "12:30"],
+    },
+  ];
+
+  const toggleChecked = (id: string) => {
+    setCheckedIds((prev) =>
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
+    );
+  };
+
+  const getDaysInMonth = (year: number, month: number) =>
+    new Date(year, month + 1, 0).getDate();
+
+  return isMobile ? (
+    <MobileAlarmPage
+      year={year}
+      month={month}
+      today={today}
+      setYear={setYear}
+      setMonth={setMonth}
+      supplements={supplements}
+      checkedIds={checkedIds}
+      toggleChecked={toggleChecked}
+      getDaysInMonth={getDaysInMonth}
+    />
+  ) : (
+    <DesktopAlarmPage
+      year={year}
+      month={month}
+      today={today}
+      setYear={setYear}
+      setMonth={setMonth}
+      supplements={supplements}
+      checkedIds={checkedIds}
+      toggleChecked={toggleChecked}
+      getDaysInMonth={getDaysInMonth}
+    />
+  );
+};
+
+export default AlarmPage;
