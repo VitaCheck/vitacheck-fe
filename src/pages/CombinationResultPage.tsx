@@ -10,11 +10,11 @@ export default function CombinationResultPage() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const ingredientData = [
-    { name: "비탄민 C", value: 70, recommended: 60, upper: 100 },
+    { name: "비타민 C", value: 70, recommended: 60, upper: 100 },
     { name: "유산광", value: 80, recommended: 70, upper: 120 },
     { name: "역산", value: 50, recommended: 60, upper: 100 },
     { name: "그루타치온", value: 90, recommended: 80, upper: 110 },
-    { name: "비탄민 A", value: 95, recommended: 90, upper: 100 },
+    { name: "비타민 A", value: 95, recommended: 90, upper: 100 },
   ];
 
   const [activeTab, setActiveTab] = useState<"전체" | "초과">("전체");
@@ -138,14 +138,51 @@ export default function CombinationResultPage() {
             </>
           )}
         </div>
+        {/* 모바일 슬라이더 */}
+        <div className="md:hidden w-[370px] h-[156px] bg-white border border-[#B2B2B2] rounded-[20px] mx-auto overflow-x-auto scrollbar-hide px-4 py-3">
+          <div className="flex gap-3 w-max">
+            {selectedItems.map((item: any, idx: number) => (
+              <div
+                key={idx}
+                className="relative w-[130px] h-[130px] bg-white rounded-[10px] flex-shrink-0 flex flex-col items-center"
+                style={{
+                  paddingTop: "26px",
+                  paddingBottom: "12px",
+                }}
+              >
+                {/* 체크박스 */}
+                <input
+                  type="checkbox"
+                  className="absolute top-[8px] left-[8px] w-[18px] h-[18px] border border-[#9C9A9A] rounded-[3.33px] accent-black"
+                  style={{
+                    paddingTop: "3.33px",
+                    paddingBottom: "3.33px",
+                    paddingLeft: "2.5px",
+                    paddingRight: "2.5px",
+                  }}
+                />
+                {/* 이미지 */}
+                <img
+                  src={item.imageUrl}
+                  alt={item.name}
+                  className="w-[70px] h-[50px] object-contain mb-2"
+                />
+                {/* 이름 */}
+                <p className="text-xs text-center px-1">{item.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        {/* 모바일 섭취알림 버튼 */}
-        <div className="w-full mb-6 flex justify-center md:hidden">
+        {/* 모바일 섭취알림 등록하기 버튼 (정중앙 정렬 완벽 반영) */}
+        <div className="md:hidden mt-4 flex justify-center">
           <button
             onClick={() => navigate("/알림-편집-1")}
-            className="w-[370px] h-[54px] px-[22px] py-[11px] bg-[#FFEB9D] rounded-[14px] text-sm font-semibold text-center"
+            className="w-[370px] h-[54px] rounded-[14px] bg-[#FFEB9D] px-[22px] py-[11px] flex items-center justify-center"
           >
-            섭취알림 등록하기 →
+            <span className="font-pretendard font-medium text-[20px] leading-[120%] tracking-[0.03em] text-center">
+              섭취알림 등록하기 →
+            </span>
           </button>
         </div>
 
@@ -183,41 +220,59 @@ export default function CombinationResultPage() {
           </div>
         )}
 
-        {/* 섭취량 그래프 */}
-        <div className="space-y-6">
+        {/* 모바일 섭취량 그래프 */}
+        <div className="md:hidden space-y-4 px-4">
           {filteredIngredients.map(({ name, value, upper }) => {
             const barWidth = `${(value / 120) * 100}%`;
             return (
-              <div key={name} className="flex items-center gap-4">
+              <div key={name} className="flex flex-col gap-2 items-center">
+                {/* 약품 이름 + 화살표 */}
                 <div
-                  className="cursor-pointer text-lg font-bold w-40 whitespace-nowrap"
+                  className="flex items-center"
                   onClick={() =>
                     navigate(`/ingredient?name=${encodeURIComponent(name)}`)
                   }
                 >
-                  {name} &gt;
+                  <span className="font-pretendard font-medium text-[20px] leading-[100%] tracking-[-0.02em] text-black w-[70px] h-[24px]">
+                    {name}
+                  </span>
+                  <MdArrowForwardIos
+                    size={12}
+                    className="ml-[14px] text-[#1C1B1F]"
+                    style={{ width: "6.87px", height: "11.67px" }}
+                  />
                 </div>
-                <div className="relative w-full h-4 bg-[#EFEFEF] rounded-full">
+
+                {/* 그래프 */}
+                <div
+                  className="relative"
+                  style={{
+                    width: "204px",
+                    height: "24px",
+                    backgroundColor: "#EFEFEF",
+                    borderRadius: "44px",
+                  }}
+                >
                   <div
-                    className="absolute h-4 bg-[#FFE17E] rounded-full"
-                    style={{ width: barWidth }}
+                    className="absolute bg-[#FFE17E]"
+                    style={{
+                      width: barWidth,
+                      height: "24px",
+                      borderRadius: "44px",
+                    }}
                   />
                   <div
-                    className="absolute top-0 h-4 border-l-2 border-dashed border-black"
+                    className="absolute top-0 h-[24px] border-l-2 border-dashed border-black"
                     style={{ left: "33.33%" }}
                   />
                   <div
-                    className="absolute top-0 h-4 border-l-2 border-dashed border-black"
+                    className="absolute top-0 h-[24px] border-l-2 border-dashed border-black"
                     style={{ left: "66.66%" }}
                   />
-                  <div className="absolute -top-6 left-[28%] text-xs font-semibold">
-                    권장
-                  </div>
-                  <div className="absolute -top-6 left-[61%] text-xs font-semibold">
-                    상한
-                  </div>
                 </div>
-                <div className="w-16 text-xs text-right">
+
+                {/* 수치 표시 */}
+                <div className="text-xs text-right text-gray-600 w-[204px]">
                   {value} / {upper}
                 </div>
               </div>
@@ -225,11 +280,58 @@ export default function CombinationResultPage() {
           })}
         </div>
 
-        {filteredIngredients.length > 5 && (
-          <div className="flex justify-center my-4">
-            <button className="text-sm text-gray-500">필터보기 ⌄</button>
-          </div>
-        )}
+        {/* PC 버전 섭취량 그래프 (약품 이름 + 아이콘 포함) */}
+        <div className="hidden md:flex flex-col items-center space-y-6 px-[60px]">
+          {filteredIngredients.map(({ name, value, upper }) => {
+            const barWidth = `${(value / 120) * 100}%`;
+            return (
+              <div key={name} className="flex items-center gap-6">
+                {/* 약품 이름 + 아이콘 */}
+                <div
+                  className="flex items-center w-[200px] h-[48px] cursor-pointer"
+                  onClick={() =>
+                    navigate(`/ingredient?name=${encodeURIComponent(name)}`)
+                  }
+                >
+                  <span className="font-pretendard font-medium text-[30px] leading-[100%] tracking-[-0.02em] text-black">
+                    {name}
+                  </span>
+                  <MdArrowForwardIos
+                    size={18}
+                    className="ml-[3px]"
+                    style={{
+                      width: "18px",
+                      height: "31px",
+                      color: "#1C1B1F",
+                      marginTop: "14px",
+                    }}
+                  />
+                </div>
+
+                {/* 그래프 */}
+                <div className="relative w-[518px] h-[56px] bg-[#E9E9E9] rounded-[113px]">
+                  <div
+                    className="absolute h-[56px] bg-[#FFE17E] rounded-[113px]"
+                    style={{ width: barWidth }}
+                  />
+                  <div
+                    className="absolute top-0 h-[56px] border-l-2 border-dashed border-black"
+                    style={{ left: "33.33%" }}
+                  />
+                  <div
+                    className="absolute top-0 h-[56px] border-l-2 border-dashed border-black"
+                    style={{ left: "66.66%" }}
+                  />
+                </div>
+
+                {/* 수치 */}
+                <div className="w-[80px] text-sm text-right">
+                  {value} / {upper}
+                </div>
+              </div>
+            );
+          })}
+        </div>
 
         {/* 조합 카드 */}
         <div className="mt-20 mb-10 max-w-[1248px] mx-auto">
