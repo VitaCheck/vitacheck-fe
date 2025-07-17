@@ -19,7 +19,6 @@ const RootLayout = () => {
     : isMain
       ? "pt-48 md:pt-25"
       : "pt-15 md:pt-25";
-
   return (
     <div className="font-[Pretendard] h-full flex flex-col">
       {!hideNavbar && (
@@ -29,7 +28,6 @@ const RootLayout = () => {
           </div>
         </header>
       )}
-
       <main className={`${paddingTopClass} flex-1`}>
         <Outlet />
       </main>

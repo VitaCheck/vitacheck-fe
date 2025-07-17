@@ -1,18 +1,24 @@
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import RootLayout from "./layout/RootLayout";
+
+// 페이지
 import NotFoundPage from "./pages/NotFoundPage";
 import MainPage from "./pages/MainPage";
 import SignInPage from "./pages/SignInPage";
 import ObjectPage from "./pages/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/CombinationPage";
-import AlarmPage from "./pages/alarm/AlarmPage";
+import AddCombinationPage from "./pages/AddCombinationPage";
+import CombinationResultPage from "./pages/CombinationResultPage"; // ✅ 추가
+import AlarmPage from "./pages/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
+
+// 레이아웃
+import RootLayout from "./layout/RootLayout";
 
 const router = createBrowserRouter([
   {
@@ -65,7 +71,15 @@ const router = createBrowserRouter([
         path: "mypage/edit", // 마이페이지 수정
         element: <EditProfilePage />,
       },
+      {
+        path: "add-combination", 
+        element: <AddCombinationPage /> 
+      },
     ],
+  },
+  {
+    path: "/combination-result", // ✅ 분석 결과 페이지 추가
+    element: <CombinationResultPage />,
   },
 ]);
 
