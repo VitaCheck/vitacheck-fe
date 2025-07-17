@@ -83,7 +83,7 @@ export default function CombinationResultPage() {
           <div className="flex gap-4">
             <button
               onClick={() => navigate("/조합-2-2")}
-              className="w-[150px] h-[70px] flex items-center justify-center bg-[#EEEEEE] rounded-full text-lg font-semibold"
+              className="w-[150px] h-[0px] flex items-center justify-center bg-[#EEEEEE] rounded-full text-lg font-semibold"
             >
               재조합
             </button>
