@@ -5,7 +5,7 @@ function EditProfileHeader() {
 
   return (
     <div className="flex items-center mb-6">
-      <button onClick={() => navigate(-1)}>
+      <button onClick={() => navigate(-1)} className="cursor-pointer">
         <svg
           className="w-6 h-6"
           fill="none"
