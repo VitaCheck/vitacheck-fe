@@ -381,7 +381,11 @@ const AddCombinationPage = () => {
                   분석 목록
                 </h3>
                 <button
-                  onClick={() => navigate("/combination-result")}
+                  onClick={() =>
+                    navigate("/combination-result", {
+                      state: { selectedItems },
+                    })
+                  }
                   className="bg-[#FFEB9D] rounded-[20px] flex items-center justify-center"
                   style={{
                     width: "67px",
