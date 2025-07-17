@@ -2,7 +2,7 @@ import { useLocation } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { MdOutlineArrowForwardIos } from "react-icons/md";
+import { useEffect } from "react";
 
 const PurposeIngredientProducts = () => {
   const location = useLocation();
@@ -20,11 +20,15 @@ const PurposeIngredientProducts = () => {
     { id: 5, title: "제품5", imageUrl: "/images/product5.png" },
   ];
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <>
       {/* 모바일 전용 */}
       <div className="md:hidden">
-        <div className="w-[430px] mx-auto mt-[124px]">
+        <div className="w-[430px] mx-auto mt-[70px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">{ingredient}</h1>
           </div>
@@ -67,7 +71,7 @@ const PurposeIngredientProducts = () => {
 
       {/* PC 전용 */}
       <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-        <div className="max-w-[1280px] mx-auto pt-[100px]">
+        <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.67] origin-top">
             {/* 상단 헤더 라인: 제목 */}
             <div className="flex justify-between items-center">
               <h1 className="text-[52px] tracking-[-1.04px] font-bold">{ingredient}</h1>
@@ -85,31 +89,8 @@ const PurposeIngredientProducts = () => {
             <AiOutlineSearch className="text-[#686666] text-[57px] ml-2" />
           </div>
 
-          {/* 성분/태그 */}
-          <div className="max-w-[1280px] mx-auto pt-[62px]">
-            <p className="text-[32px] font-semibold">연관 성분</p>
-            <div className="flex items-center mt-[27.89px] gap-[46px]">
-              <button
-                // onClick 추가
-                className="w-[617px] h-[105px] px-[38px] bg-white rounded-[20px] text-[33px] h-[70px]font-semibold
-                flex items-center justify-between cursor-pointer shadow-lg"
-              >
-                {ingredient}
-                <MdOutlineArrowForwardIos className="text-light h-[36px]"/>
-              </button>
-              <button
-                // onClick 추가
-                className="w-[617px] h-[105px] px-[38px] bg-white rounded-[20px] text-[33px] h-[70px]font-semibold
-                flex items-center justify-between cursor-pointer shadow-lg"
-              >
-                {ingredient}
-                <MdOutlineArrowForwardIos className="text-light h-[36px]"/>
-              </button>
-            </div>
-          </div>
-
           {/* 카드 리스트 */}
-          <div className="mt-[80px] grid grid-cols-4 gap-x-[40px] gap-y-[60px]">
+          <div className="mt-[84px] grid grid-cols-4 gap-x-[40px] gap-y-[60px]">
             {products.map((product) => (
             <div
                 key={product.id}

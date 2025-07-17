@@ -31,7 +31,7 @@ const PurposeProductList = () => {
       <> 
          {/* 모바일 전용 */}
          {/* 목적 제목 / 목적 드롭다운 */}
-         <div className="md:hidden flex items-center gap-[22px] w-[430px] mx-auto mt-[124px]">
+         <div className="md:hidden flex items-center gap-[22px] w-[430px] mx-auto mt-[70px]">
             {/* 제목 */}
             <div className="ml-[38px]">
                <h1 className="text-[30px] tracking-[-0.6px] font-semibold">{titleText}</h1>
@@ -63,30 +63,20 @@ const PurposeProductList = () => {
 
          {/* PC 전용 - 배경색 포함 */}
          <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-            <div className="max-w-[1280px] mx-auto pt-[100px]">
+            <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.66] origin-top">
                {/* 상단 헤더 라인: 제목 */}
                <div className="flex justify-between items-center">
                   <h1 className="text-[52px] tracking-[-1.04px] font-bold">{titleText}</h1>
-                  {/* 드롭다운 */}
-                  <div className="relative">
-                     <select
-                        className="w-[200px] h-[45px] pl-[5px] pr-[3px] text-[24px] font-medium bg-[#D9D9D9] focus:outline-none"
-                     >
-                        {selected.map((item: string, index: number) => (
-                        <option key={index} value={item}>{item}</option>
-                        ))}
-                     </select>
+               </div>
+               <div className="w-[1280px] mx-auto mt-[60px]">
+                  <div className="flex flex-col">
+                     <RecommendedProductSection />
                   </div>
                </div>
-            </div>
-            <div className="w-[1280px] mx-auto mt-[60px]">
-               <div className="flex flex-col">
-                  <RecommendedProductSection />
-               </div>
-            </div>
-            <div className="w-[1280px] mx-auto mt-[60px]">
-               <div className="flex flex-col">
-                  <RecommendedProductSection />
+               <div className="w-[1280px] mx-auto mt-[60px]">
+                  <div className="flex flex-col">
+                     <RecommendedProductSection />
+                  </div>
                </div>
             </div>
          </div>

@@ -104,7 +104,7 @@ const PurposeCardList = () => {
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden w-[430px] mx-auto mt-[124px] mb-[124px]">
+      <div className="md:hidden w-[430px] mx-auto mt-[70px] mb-[124px]">
         <div className="flex flex-col ml-[38px]">
           <h1 className="text-4xl tracking-[-0.72px] font-medium">목적별</h1>
           <h2 className="text-sm text-[#808080] mt-[1px] font-medium">최대 3개 선택</h2>
@@ -127,7 +127,7 @@ const PurposeCardList = () => {
 
       {/* PC 전용 - 배경색 포함 */}
       <div className="hidden md:block w-full bg-[#FAFAFA]">
-         <div className="max-w-[1280px] mx-auto pt-[100px] pb-[187px]">
+         <div className="max-w-[1280px] mx-auto pt-[100px] pb-[187px] scale-[0.67] origin-top">
             {/* 상단 헤더 라인: 제목 + 버튼 */}
             <div className="flex justify-between items-center mb-[6px]">
                <h1 className="text-[52px] font-bold">목적별</h1>
