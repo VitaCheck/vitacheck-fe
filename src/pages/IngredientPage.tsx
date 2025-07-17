@@ -1,10 +1,10 @@
-import { FiSearch } from "react-icons/fi";
+import { FiSearch, FiChevronRight } from "react-icons/fi";
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
-import catImage from "../assets/cat.png"; 
+import { Link, useNavigate } from "react-router-dom";
+import catImage from "../assets/cat.png";
 import IngredientDetailHeaderMobile from "../components/ingredient/IngredientDetailHeaderMobile";
 
-//모바일 여부 판단용 훅
+// 모바일 여부 판단용 훅
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
@@ -17,17 +17,29 @@ const useIsMobile = () => {
 
 const IngredientPage = () => {
   const [selected, setSelected] = useState("20대");
+  const [searchKeyword, setSearchKeyword] = useState("");
   const isMobile = useIsMobile();
+  const navigate = useNavigate();
 
-  // 모바일에서만 상단 nav, search바 숨기기
+  const ingredientList = ["유산균", "비타민 C", "글루타치온", "밀크씨슬", "오메가3"];
+
+  const filteredList = ingredientList.filter((item) =>
+    item.toLowerCase().includes(searchKeyword.toLowerCase())
+  );
+
+  // 검색어가 있고 결과가 없을 때 /no-result로 이동
+  useEffect(() => {
+    if (searchKeyword && filteredList.length === 0) {
+      navigate("/no-result");
+    }
+  }, [searchKeyword, filteredList, navigate]);
+
   useEffect(() => {
     if (!isMobile) return;
-
     const headerEl = document.querySelector("header");
     if (headerEl instanceof HTMLElement) {
       headerEl.style.display = "none";
     }
-
     return () => {
       if (headerEl instanceof HTMLElement) {
         headerEl.style.display = "";
@@ -39,24 +51,28 @@ const IngredientPage = () => {
     setSelected(e.target.value);
   };
 
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+  };
+
   return (
     <>
-      {/* 모바일 전용 상단 헤더 표시 */}
       {isMobile && <IngredientDetailHeaderMobile title="성분별" />}
 
-          <div className="px-4 md:px-36 pt-2 md:pt-10 max-w-screen-xl mx-auto">
-          <h1 className="text-2xl md:text-4xl font-semibold mb-6 md:mb-8 pl-2">성분별</h1>
-        
+      <div className="px-4 md:px-36 pt-2 md:pt-10 max-w-screen-xl mx-auto">
+        <h1 className="text-2xl md:text-4xl font-semibold mb-6 md:mb-8 pl-2">성분별</h1>
 
-        {/* 성분 검색 */}
-        <section className="flex items-center justify-center mb-4">
-          <div className="flex items-center w-full max-w-md px-4 py-3 rounded-[44px] bg-[#f2f2f2]">
+        {/* 검색창 */}
+        <section className="flex justify-center mb-6">
+          <div className={`flex items-center w-full ${isMobile ? "max-w-md px-4 py-3 rounded-[44px] bg-[#f2f2f2]" : "max-w-3xl rounded-full border border-gray-300 px-6 py-4 bg-white shadow-sm"}`}>
             <input
               type="text"
               placeholder="성분을 입력해주세요."
-              className="w-full text-lg bg-transparent outline-none text-gray-400 placeholder-gray-300"
+              value={searchKeyword}
+              onChange={handleSearch}
+              className={`w-full outline-none ${isMobile ? "text-lg bg-transparent text-gray-400 placeholder-gray-300" : "text-gray-800 placeholder-gray-400"}`}
             />
-            <FiSearch className="text-gray-600 ml-2" size={20} />
+            <FiSearch className="text-gray-600 ml-2" size={isMobile ? 20 : 22} />
           </div>
         </section>
 
@@ -68,45 +84,58 @@ const IngredientPage = () => {
         </section>
 
         {/* 캐릭터 & 설명 */}
-        <section className="flex items-center justify-center gap-4 mb-10">
-          <img src={catImage} alt="캐릭터" className="w-30 h-30 sm:w-30 sm:h-30" />
-          <p className="text-sm sm:text-base font-medium text-black leading-relaxed text-left">
+        <section className={`flex ${isMobile ? "justify-center gap-4" : "justify-center gap-6"} items-center mb-10`}>
+          <div className="h-[95px] overflow-hidden rounded-full mb-2">
+            <img src={catImage} alt="캐릭터" className={isMobile ? "w-30 h-30 object-cover object-top" : "w-28 h-28 object-contain"} />
+          </div>
+          <p className={`${isMobile ? "text-sm text-left" : "text-base"} font-medium text-black leading-relaxed`}>
             효능, 섭취 시기, 권장 섭취량 등<br />
             다양한 정보를 알 수 있어요!
           </p>
         </section>
 
-{/* TOP 5 성분 */}
-<section>
-  <div className="flex items-center gap-x-3 mb-4">
-    <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
-      연령대별 자주 찾는 성분 TOP 5
-    </h2>
-    <select
-      value={selected}
-      onChange={handleChange}
-      className="text-sm font-semibold px-3 py-1 bg-[#f2f2f2] rounded-md"
-    >
-      {["10대", "20대", "30대", "40대", "50대", "60대"].map((age) => (
-        <option key={age} value={age}>{age}</option>
-      ))}
-    </select>
-  </div>
+        {/* TOP 5 성분 */}
+        <section>
+          <div className="flex items-center gap-x-3 mb-4">
+            <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
+              연령대별 자주 찾는 성분 TOP 5
+            </h2>
+            <select
+              value={selected}
+              onChange={handleChange}
+              className="text-sm font-semibold px-2 py-1 bg-[#D9D9D9]"
+            >
+              {["10대", "20대", "30대", "40대", "50대", "60대 이상"].map((age) => (
+                <option key={age} value={age}>{age}</option>
+              ))}
+            </select>
+          </div>
 
-
-
-<div className="grid grid-cols-1 md:grid-cols-5 gap-3 pb-10">
-  {["유산균", "비타민 C", "글루타치온", "밀크씨슬", "오메가3"].map((item) => (
-    <Link
-      key={item}
-      to={`/ingredients/${encodeURIComponent(item)}`}
-      className="w-full flex justify-start items-center md:py-15 py-4 pl-5 rounded-4xl hover:bg-gray-300 transition bg-[#f2f2f2]"
-    >
-      <span className="font-semibold text-base md:text-lg">{item}</span>
-    </Link>
-  ))}
-</div>
-
+          {/* 성분 리스트 */}
+          {isMobile ? (
+            <div className="grid grid-cols-1 gap-3 pb-10">
+              {filteredList.map((item) => (
+                <Link
+                  key={item}
+                  to={`/ingredients/${encodeURIComponent(item)}`}
+                  className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
+                >
+                  <span className="font-semibold text-base">{item}</span>
+                  <FiChevronRight size={20} className="text-gray-500" />
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-5 gap-4 pb-10 pt-3">
+              {filteredList.map((item) => (
+                <Link key={item} to={`/ingredients/${encodeURIComponent(item)}`}>
+                  <div className="bg-white px-6 py-10 rounded-xl shadow text-center font-semibold text-lg shadow-md transition">
+                    {item}
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
       </div>
     </>

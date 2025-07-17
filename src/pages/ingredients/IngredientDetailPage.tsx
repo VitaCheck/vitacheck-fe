@@ -58,7 +58,14 @@ const IngredientDetailPage = () => {
         } max-w-screen-xl mx-auto`}
         style={isMobile ? { marginTop: 5, paddingTop: 5 } : {}}
       >
-        <h1 className="text-2xl md:text-4xl font-bold mb-10 pl-20">유산균 살펴보기</h1>
+<h1
+  className={`text-2xl md:text-4xl font-bold mb-10 ${
+    isMobile ? "pl-0 text-left" : "pl-20"
+  }`}
+>
+  <span className="underline">유산균</span> 살펴보기
+</h1>
+
 
         <div className="flex justify-center mb-6">
           <IngredientTabs activeTab={activeTab} setActiveTab={setActiveTab} />
