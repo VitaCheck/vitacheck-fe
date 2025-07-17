@@ -26,7 +26,7 @@ const ProductList = () => {
   }, []);
 
   return (
-    <section className="px-[9%] sm:px-[15%]">
+    <section className="px-[9%] sm:px-[9%]">
       <div className="flex items-center justify-start mb-4 relative">
         <h2 className="text-xl font-semibold flex items-center">
           <span className="text-2xl mr-8">🔥 인기 영양제</span>
@@ -82,27 +82,27 @@ const ProductList = () => {
       {/* <div className="w-full border-t border-gray-200 mb-4" /> */}
 
       {/* 제품 카드 */}
-      <div className="flex overflow-x-auto mb-4">
+      <div className="flex overflow-x-auto gap-3">
         <ProductCard
           imageSrc={Logo}
           name="제품 1"
-          width={110}
-          height={100}
-          fontSize={14}
+          widthClass="w-[110px] md:w-[150px]"
+          heightClass="h-[100px] md:h-[130px]"
+          fontSizeClass="text-[15px] md:text-[20px]"
         />
         <ProductCard
           imageSrc={Logo}
           name="제품 2"
-          width={110}
-          height={100}
-          fontSize={14}
+          widthClass="w-[110px] md:w-[150px]"
+          heightClass="h-[100px] md:h-[130px]"
+          fontSizeClass="text-[15px] md:text-[20px]"
         />
         <ProductCard
           imageSrc={Logo}
           name="제품 3"
-          width={110}
-          height={100}
-          fontSize={14}
+          widthClass="w-[110px] md:w-[150px]"
+          heightClass="h-[100px] md:h-[130px]"
+          fontSizeClass="text-[15px] md:text-[20px]"
         />
       </div>
     </section>

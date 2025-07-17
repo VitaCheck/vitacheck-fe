@@ -1,5 +1,4 @@
 import MainCard from "./MainCard";
-import Logo from "../../assets/logo.svg";
 import Combination from "../../assets/combination.svg";
 import Ingredient from "../../assets/ingredient.svg";
 import Object from "../../assets/object.svg";
@@ -14,23 +13,27 @@ const NavSection = () => {
       <div className="flex-row gap-4 w-full justify-around px-[9%] sm:px-[10%] py-13 hidden sm:flex">
         <MainCard
           title="목적별 검색"
-          subtitle="건강 고민에 맞는 영양제 체크"
-          icon={Logo}
+          subtitle={"건강 고민에 맞는 영양제<br/>체-크"}
+          icon={Object}
+          to="/object"
         />
         <MainCard
-          title="목적별 검색"
-          subtitle="건강 고민에 맞는 영양제 체크"
-          icon={Logo}
+          title="성분별 검색"
+          subtitle={"인기 있는 성분<br/>체-크"}
+          icon={Ingredient}
+          to="/ingredient"
         />
         <MainCard
-          title="목적별 검색"
-          subtitle="건강 고민에 맞는 영양제 체크"
-          icon={Logo}
+          title="조합 분석"
+          subtitle={"권장량 초과 여부<br/>체-크"}
+          icon={Combination}
+          to="/combination"
         />
         <MainCard
-          title="목적별 검색"
-          subtitle="건강 고민에 맞는 영양제 체크"
-          icon={Logo}
+          title="알림"
+          subtitle={"영양제 루틴<br/>체-크"}
+          icon={Alarm}
+          to="/alarm"
         />
       </div>
 
