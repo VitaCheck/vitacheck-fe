@@ -26,7 +26,7 @@ const IngredientDetailPage = () => {
     <div
       className={`px-5 md:px-10 ${isMobile ? "pt-3 pb-5" : "py-10"} max-w-screen-xl mx-auto`}
     >
-      <div className="flex justify-between items-center mb-6 ml-5 md:ml-30">
+      <div className="flex justify-between items-center mb-6 ml-5 md:ml-50">
         <h1 className="text-2xl font-bold">
           <span>유산균</span>
         </h1>

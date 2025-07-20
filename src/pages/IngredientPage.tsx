@@ -68,7 +68,7 @@ const IngredientPage = () => {
 
   return (
     <div className="px-4 md:px-36 pt-2 md:pt-10 max-w-screen-xl mx-auto">
-      <h1 className="text-2xl md:text-4xl font-semibold mb-6 md:mb-8 pl-2 md:ml-12">
+      <h1 className="text-2xl md:text-4xl font-semibold mb-6 md:mb-8 pl-2 md:ml-8">
         성분별
       </h1>
 
