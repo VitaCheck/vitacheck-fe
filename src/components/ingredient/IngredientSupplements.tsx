@@ -1,7 +1,7 @@
-import { FiSearch } from "react-icons/fi";
 import { useState, useEffect } from "react";
 import ProductCard from "../../components/ProductCard";
 import NoSearchResult from "./NoSearchResult"; // 검색결과 없을 때 표시용 컴포넌트
+import searchIcon from "../../assets/search.png";
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -39,25 +39,26 @@ const IngredientSupplements = () => {
         <div
           className={`flex items-center w-full ${
             isMobile
-              ? "max-w-md px-4 py-3 rounded-[44px] bg-[#f2f2f2]"
+              ? "max-w-md px-4 py-3 rounded-[44px] bg-white border border-gray-300"
               : "max-w-4xl rounded-full border border-gray-300 px-5 py-4 bg-white shadow-sm"
           }`}
         >
           <input
             type="text"
-            placeholder="제품을 입력해주세요."
+            placeholder="찾고 싶은 제품을 입력해주세요."
             value={searchKeyword}
             onChange={handleSearch}
             className={`w-full outline-none ${
               isMobile
-                ? "text-lg bg-transparent text-gray-400 placeholder-gray-300"
+                ? "text-sm bg-transparent text-gray-400 placeholder-gray-300"
                 : "text-gray-800 placeholder-gray-400"
             }`}
           />
-          <FiSearch
-            className="text-gray-600 ml-2"
-            size={isMobile ? 20 : 22}
-          />
+          <img
+            src={searchIcon}
+            alt="검색"
+            className={`ml-2 ${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
+          />{" "}
         </div>
       </section>
 
@@ -68,10 +69,7 @@ const IngredientSupplements = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-6 md:gap-x-2">
           {filteredProducts.map((product, i) => (
             <div key={i} className="flex justify-center">
-              <ProductCard
-                name={product.name}
-                imageSrc={product.imageSrc}
-              />
+              <ProductCard name={product.name} imageSrc={product.imageSrc} />
             </div>
           ))}
         </div>
