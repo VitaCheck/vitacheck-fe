@@ -39,6 +39,7 @@ const router = createBrowserRouter([
         path: "object", //목적 페이지
         element: <ObjectPage />,
       },
+
       {
         path: "ingredient", //성분 페이지
         element: <IngredientPage />,

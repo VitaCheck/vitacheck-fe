@@ -10,6 +10,7 @@ const RootLayout = () => {
     "/notificationCenter",
     "/setting",
     "/scrap",
+    "/ingredient",
   ];
 
   const isMain = location.pathname === "/";
