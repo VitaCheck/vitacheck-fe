@@ -16,9 +16,6 @@ import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
-import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
-import NoSearchResult from "./components/ingredient/NoSearchResult";
-import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
@@ -42,29 +39,10 @@ const router = createBrowserRouter([
         path: "object", //목적 페이지
         element: <ObjectPage />,
       },
-
       {
         path: "ingredient",
-        children: [
-          {
-            index: true,
-            element: <IngredientPage />,
-          },
-          {
-            path: ":name",
-            element: <IngredientDetailPage />,
-          },
-          {
-            path: "search",
-            element: <IngredientSearchSection />,
-          },
-          {
-            path: "no-result",
-            element: <NoSearchResult />,
-          },
-        ],
+        element: <IngredientPage />,
       },
-
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
