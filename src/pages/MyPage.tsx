@@ -24,7 +24,10 @@ function MyPage() {
 
       <div className="flex flex-col flex-1 items-center">
         <div className="w-full px-6 pt-4 pb-2 flex items-center">
-          <button onClick={goToMain} className="mr-2 text-2xl text-black">
+          <button
+            onClick={goToMain}
+            className="mr-2 text-2xl text-black cursor-pointer"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
@@ -84,7 +87,7 @@ function MyPage() {
           <MenuItem
             label="찜한 제품"
             icon={Scrap}
-            onClick={() => navigate("/mypage/scrap")}
+            onClick={() => navigate("/scrap")}
           />
 
           <div className="w-full mt-6 mb-6">
