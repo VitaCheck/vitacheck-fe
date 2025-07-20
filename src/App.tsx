@@ -19,6 +19,7 @@ import EditProfilePage from "./pages/EditProfilePage";
 
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
+import ScrapPage from "./pages/ScarpPage";
 
 const router = createBrowserRouter([
   {
@@ -78,6 +79,10 @@ const router = createBrowserRouter([
       {
         path: "/combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
+      },
+      {
+        path: "/scrap", // 마이페이지-스크랩
+        element: <ScrapPage />,
       },
     ],
   },
