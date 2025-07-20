@@ -40,10 +40,9 @@ const router = createBrowserRouter([
         element: <ObjectPage />,
       },
       {
-        path: "ingredient", //성분 페이지
+        path: "ingredient",
         element: <IngredientPage />,
       },
-
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
