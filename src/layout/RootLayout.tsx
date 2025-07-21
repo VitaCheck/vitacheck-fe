@@ -10,16 +10,13 @@ const RootLayout = () => {
     "/notificationCenter",
     "/setting",
     "/scrap",
-    "/ingredient",
     "/search",
   ];
 
   const isMain = location.pathname === "/";
 
   // 현재 경로가 해당 경로들 중 하나로 시작하면 숨김
-  const hideNavbar = hideNavbarRoutes.some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   const paddingTopClass = hideNavbar
     ? ""
