@@ -20,6 +20,7 @@ import EditProfilePage from "./pages/EditProfilePage";
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
 import ScrapPage from "./pages/ScarpPage";
+import SearchPage from "./pages/SearchPage";
 
 const router = createBrowserRouter([
   {
@@ -82,6 +83,10 @@ const router = createBrowserRouter([
       {
         path: "/scrap", // 마이페이지-스크랩
         element: <ScrapPage />,
+      },
+      {
+        path: "/search", // 검색창
+        element: <SearchPage />,
       },
     ],
   },
