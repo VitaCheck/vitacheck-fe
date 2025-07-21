@@ -11,6 +11,7 @@ const RootLayout = () => {
     "/setting",
     "/scrap",
     "/ingredient",
+    "/search",
   ];
 
   const isMain = location.pathname === "/";
@@ -23,8 +24,8 @@ const RootLayout = () => {
   const paddingTopClass = hideNavbar
     ? ""
     : isMain
-      ? "pt-48 md:pt-25"
-      : "pt-15 md:pt-25";
+      ? "pt-48 sm:pt-25"
+      : "pt-15 sm:pt-25";
   return (
     <div className="font-[Pretendard] h-full flex flex-col">
       {!hideNavbar && (
