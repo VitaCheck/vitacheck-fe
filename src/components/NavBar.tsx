@@ -1,5 +1,5 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
-import SearchBar from "./SearchBar";
+import SearchBar from "./MainSearchBar";
 import Logo from "../assets/logo.svg";
 import Bell from "../assets/Bell.svg";
 import User from "../assets/User.svg";
@@ -14,7 +14,7 @@ const Navbar = () => {
   return (
     <header className="bg-white w-full">
       {/* 데스크탑 레이아웃 */}
-      <div className="hidden md:flex justify-between items-center w-full h-[100px]">
+      <div className="hidden sm:flex justify-between items-center w-full h-[100px]">
         {/* 로고 */}
         <Link
           to="/"
@@ -38,7 +38,7 @@ const Navbar = () => {
       </div>
 
       {/* 모바일 레이아웃 */}
-      <div className="md:hidden">
+      <div className="sm:hidden">
         {!isMainPage ? (
           // / 경로가 아닌 경우
           <div className="flex justify-between items-center pt-5 pb-3">
