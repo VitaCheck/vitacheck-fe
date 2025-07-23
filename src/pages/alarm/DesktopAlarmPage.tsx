@@ -1,5 +1,6 @@
 // DesktopAlarmPage.tsx
 import type { Dispatch, SetStateAction } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 interface Supplement {
   id: string;
@@ -82,40 +83,40 @@ const DesktopAlarmPage = ({
     calendarCells.push(
       <div
         key={"day-" + i}
-        className={`flex items-center justify-center text-[25px] cursor-default select-none rounded-full transition-all duration-200 ${
-          isToday ? "bg-[#FFDB67] font-semibold text-black" : "text-black"
-        }`}
+        className={`w-[54px] h-[54px] flex items-center justify-center text-[25px] 
+              cursor-default select-none rounded-full transition-all duration-200
+              ${isToday ? "bg-[#FFDB67] font-semibold text-black" : "text-black"}`}
       >
         {i}
       </div>
     );
   }
-  while (calendarCells.length < 42) {
-    calendarCells.push(
-      <div
-        key={"next-" + calendarCells.length}
-        className="text-gray-300 text-center py-1 cursor-default select-none"
-      >
-        &nbsp;
-      </div>
-    );
-  }
+  // while (calendarCells.length < 42) {
+  //   calendarCells.push(
+  //     <div
+  //       key={"next-" + calendarCells.length}
+  //       className="text-gray-300 text-center py-1 cursor-default select-none"
+  //     >
+  //       &nbsp;
+  //     </div>
+  //   );
+  // }
 
   return (
     <div className="hidden md:flex justify-center items-start gap-[120px] bg-[#FAFAFA] px-[100px] py-[60px] min-h-screen">
       {/* 왼쪽: 달력 */}
       <div>
         <div className="text-[52px] font-extrabold mb-10">섭취알림</div>
-        <div className="bg-white rounded-[20px] p-6 w-[576.82px] h-[546.3px] border border-[#9C9A9A]">
+        <div className="bg-white rounded-[20px] p-6 w-[576.82px] border border-[#9C9A9A]">
           <div className="flex items-center justify-between mb-4">
             <button onClick={onPrevMonth} className="text-2xl font-bold px-2">
-              &lt;
+              <FiChevronLeft className="text-[35px]" />
             </button>
             <div className="text-[30px] font-semibold">
               {year}년 {month + 1}월
             </div>
             <button onClick={onNextMonth} className="text-2xl font-bold px-2">
-              &gt;
+              <FiChevronRight className="text-[35px]" />
             </button>
           </div>
           <div className="grid grid-cols-7 text-[25px] text-[#9E9E9E] mb-2">
@@ -130,6 +131,9 @@ const DesktopAlarmPage = ({
           </div>
         </div>
       </div>
+
+      {/* 수직 구분선 */}
+      <div className="w-[2px] h-[600px] bg-[#C8C8C8] mt-[70px]" />
 
       {/* 오른쪽: 체크리스트 */}
       <div className="flex-1 max-w-[500px]">
@@ -158,28 +162,32 @@ const DesktopAlarmPage = ({
         </div>
 
         <div className="space-y-4">
-          {supplements.map(({ id, label, time }) => (
-            <div
-              key={id}
-              className="w-[454px] h-[104px] flex items-center justify-between px-4 py-3 rounded-[12px] bg-white border border-[#9C9A9A]"
-            >
-              <div className="flex flex-col">
-                <label htmlFor={id} className="text-[26px] font-medium">
-                  {label}
-                </label>
-                <span className="text-[20px] font-medium text-gray-500">
-                  {time.join(" | ")}
-                </span>
+          {supplements.map(({ id, label, time }) => {
+            const isChecked = checkedIds.includes(id); // 체크 여부
+            return (
+              <div
+                key={id}
+                className={`w-[454px] h-[104px] flex items-center justify-between px-4 py-3 rounded-[12px] border transition-colors duration-200
+          ${isChecked ? "bg-[#F2F2F2] border-none" : "bg-white border-[#9C9A9A]"}`}
+              >
+                <div className="flex flex-col">
+                  <label htmlFor={id} className="text-[26px] font-medium">
+                    {label}
+                  </label>
+                  <span className="text-[20px] font-medium text-gray-500">
+                    {time.join(" | ")}
+                  </span>
+                </div>
+                <input
+                  id={id}
+                  type="checkbox"
+                  checked={isChecked}
+                  onChange={() => toggleChecked(id)}
+                  className="w-6 h-6 accent-[#8B8B8B]"
+                />
               </div>
-              <input
-                id={id}
-                type="checkbox"
-                checked={checkedIds.includes(id)}
-                onChange={() => toggleChecked(id)}
-                className="w-6 h-6 accent-[#8B8B8B]"
-              />
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

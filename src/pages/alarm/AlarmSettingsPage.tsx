@@ -7,6 +7,7 @@ export interface Alarm {
   id: number;
   name: string;
   times: string[];
+  days: string[]; // 추가
   enabled: boolean;
 }
 
@@ -19,18 +20,21 @@ const AlarmSettingsPage = () => {
       id: 1,
       name: "멀티비타민",
       times: ["09:30", "12:30", "18:30"],
+      days: ["월", "수", "금"], // 예시로 요일 추가
       enabled: true,
     },
     {
       id: 2,
       name: "유산균",
       times: ["09:30", "12:30", "18:30", "21:30"],
+      days: ["화", "목"], // 예시로 요일 추가
       enabled: true,
     },
     {
       id: 3,
       name: "오메가3",
       times: ["09:30", "12:30"],
+      days: ["월", "수", "금"], // 예시로 요일 추가
       enabled: true,
     },
   ]);
