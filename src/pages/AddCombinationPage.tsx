@@ -89,15 +89,14 @@ const AddCombinationPage = () => {
   );
 
   return (
-    <div className="w-full bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
+    <div className="w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
       {/* 조합추가 - 모바일 버전 */}
-      <h1 className="block md:hidden font-pretendard font-bold text-[30px] leading-[120%] tracking-[-0.02em] px-[38px] mb-10">
+      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
         조합추가
       </h1>
 
       {/* 조합추가 - PC 버전 */}
-
-      <h1 className="hidden md:block font-Pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
+      <h1 className="hidden md:block font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
         조합추가
       </h1>
 
@@ -107,13 +106,13 @@ const AddCombinationPage = () => {
           <input
             type="text"
             className="flex-1 h-full bg-transparent outline-none
-        placeholder:font-Pretendard placeholder:text-[18px]
-        placeholder:text-black placeholder:opacity-40
-        placeholder:leading-[120%] placeholder:tracking-[-0.02em]
-        text-[18px]"
+            placeholder:font-pretendard placeholder:text-[18px]
+            placeholder:text-black placeholder:opacity-40
+            placeholder:leading-[120%] placeholder:tracking-[-0.02em]
+            text-[18px]"
             placeholder={placeholder}
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSearch();
             }}
@@ -133,11 +132,11 @@ const AddCombinationPage = () => {
           <input
             type="text"
             className="flex-1 h-full bg-transparent outline-none
-              placeholder:font-Pretendard placeholder:font-medium
-              placeholder:text-black placeholder:opacity-40
-              placeholder:leading-[30px] placeholder:tracking-[-0.02em]
-              placeholder:text-[30px] 
-              text-[30px] leading-[30px]"
+            placeholder:font-pretendard placeholder:font-medium
+            placeholder:text-black placeholder:opacity-40
+            placeholder:leading-[30px] placeholder:tracking-[-0.02em]
+            placeholder:text-[30px] 
+            text-[30px] leading-[30px]"
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -152,55 +151,14 @@ const AddCombinationPage = () => {
       </div>
 
       {/* 검색 기록 - 모바일 */}
-      <div className="block md:hidden mb-12 flex justify-center">
-        <div
-          className="flex flex-wrap justify-center items-center gap-x-2 gap-y-2 text-[14px] "
-          style={{
-            width: "300px",
-            height: "auto",
-            opacity: 1,
-          }}
-        >
-          {searchHistory.length > 0
-            ? searchHistory.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-[4px]">
-                  <button
-                    onClick={() => {
-                      setSearchTerm(item);
-                      setQuery(item);
-                      navigate(
-                        `/add-combination?query=${encodeURIComponent(item)}`
-                      );
-                    }}
-                    className="text-[13px] font-medium text-gray-700"
-                  >
-                    {item}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="text-[16px] text-[#8A8A8A]"
-                    title="삭제"
-                  >
-                    <FiX />
-                  </button>
-                </div>
-              ))
-            : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
-                <span
-                  key={idx}
-                  className="text-gray-400 bg-white px-3 py-[2px] rounded-full shadow-sm"
-                >
-                  {item}
-                </span>
-              ))}
-        </div>
-      </div>
-
-      {/* 검색 기록 - PC */}
-      <div className="hidden md:flex justify-center gap-6 text-xl text-gray-700 mb-12 flex-wrap px-[35.64px]">
-        {searchHistory.length > 0
-          ? searchHistory.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2 px-10 py-2">
+      {searchHistory.length > 0 && (
+        <div className="block md:hidden mb-12 flex justify-center">
+          <div
+            className="flex flex-wrap justify-center items-center gap-x-2 gap-y-2 text-[14px]"
+            style={{ width: "300px", height: "auto", opacity: 1 }}
+          >
+            {searchHistory.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-[4px]">
                 <button
                   onClick={() => {
                     setSearchTerm(item);
@@ -209,28 +167,51 @@ const AddCombinationPage = () => {
                       `/add-combination?query=${encodeURIComponent(item)}`
                     );
                   }}
-                  className="hover:underline"
+                  className="text-[13px] font-medium text-gray-700"
                 >
                   {item}
                 </button>
                 <button
                   onClick={() => handleDelete(item)}
-                  className="hover:text-[#555555] ml-2"
+                  className="text-[16px] text-[#8A8A8A]"
                   title="삭제"
                 >
-                  <FiX className="text-[#8A8A8A] text-[18px]" />
+                  <FiX />
                 </button>
               </div>
-            ))
-          : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
-              <span
-                key={idx}
-                className="text-gray-300 bg-[#F5F5F5] px-6 py-2 rounded-full"
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 검색 기록 - PC */}
+      {searchHistory.length > 0 && (
+        <div className="hidden md:flex justify-center gap-6 text-xl text-gray-700 mb-12 flex-wrap px-[35.64px]">
+          {searchHistory.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2 px-10 py-2">
+              <button
+                onClick={() => {
+                  setSearchTerm(item);
+                  setQuery(item);
+                  navigate(
+                    `/add-combination?query=${encodeURIComponent(item)}`
+                  );
+                }}
+                className="hover:underline"
               >
                 {item}
-              </span>
-            ))}
-      </div>
+              </button>
+              <button
+                onClick={() => handleDelete(item)}
+                className="hover:text-[#555555] ml-2"
+                title="삭제"
+              >
+                <FiX className="text-[#8A8A8A] text-[18px]" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 본문 */}
       <div className="flex flex-col lg:flex-row gap-8 relative">
@@ -315,64 +296,69 @@ const AddCombinationPage = () => {
                 분석 시작
               </button>
 
-              <div
-                className="flex flex-col items-center"
-                style={{
-                  width: "314px",
-                  backgroundColor: "#F2F2F2",
-                  border: "0.8px solid #9C9A9A",
-                  borderRadius: "36px",
-                  paddingTop: "33px",
-                  paddingRight: "34px",
-                  paddingBottom: "33px",
-                  paddingLeft: "34px",
-                  boxSizing: "border-box",
-                  height: "fit-content",
-                }}
-              >
-                <div className="w-full flex justify-between items-center"></div>
+              {selectedItems.length > 0 && (
+                <div
+                  className="flex flex-col items-center"
+                  style={{
+                    width: "314px",
+                    backgroundColor: "#F2F2F2",
+                    border: "0.8px solid #9C9A9A",
+                    borderRadius: "36px",
+                    paddingTop: "33px",
+                    paddingRight: "34px",
+                    paddingBottom: "33px",
+                    paddingLeft: "34px",
+                    boxSizing: "border-box",
+                    height: "fit-content",
+                  }}
+                >
+                  <div className="w-full flex justify-between items-center"></div>
 
-                {/* 선택된 제품 카드 리스트 */}
-                <div className="flex flex-col items-center gap-4 w-full">
-                  {selectedItems.map((item, idx) => (
-                    <div
-                      key={idx}
-                      className="relative w-[230px] h-[250px] bg-white border border-gray-200 rounded-[30px] flex flex-col items-center justify-center px-4 py-6 shadow"
-                    >
-                      {/* X 버튼 */}
-                      <button
-                        onClick={() => handleRemove(item.name)}
-                        className="absolute top-3 right-4 text-gray-400 text-2xl"
+                  {/* 선택된 제품 카드 리스트 */}
+                  <div className="flex flex-col items-center gap-4 w-full">
+                    {selectedItems.map((item, idx) => (
+                      <div
+                        key={idx}
+                        className="relative w-[230px] h-[250px] bg-white border border-gray-200 rounded-[30px] flex flex-col items-center justify-center px-4 py-6 shadow"
                       >
-                        ×
-                      </button>
+                        {/* X 버튼 */}
+                        <button
+                          onClick={() => handleRemove(item.name)}
+                          className="absolute top-3 right-4 text-gray-400 text-2xl"
+                        >
+                          ×
+                        </button>
 
-                      {/* 제품 이미지 */}
-                      <img
-                        src={item.imageUrl}
-                        alt={item.name}
-                        className="w-[120px] h-[120px] object-contain mb-4"
-                      />
+                        {/* 제품 이미지 */}
+                        <img
+                          src={item.imageUrl}
+                          alt={item.name}
+                          className="w-[120px] h-[120px] object-contain mb-4"
+                        />
 
-                      {/* 제품 이름 */}
-                      <p className="text-sm text-center font-medium leading-tight">
-                        {item.name}
-                      </p>
-                    </div>
-                  ))}
+                        {/* 제품 이름 */}
+                        <p className="text-sm text-center font-medium leading-tight">
+                          {item.name}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
             </div>
 
             {/* 모바일 분석 목록 */}
             <div
-              className="lg:hidden fixed bottom-0 left-0 w-full h-[250px] bg-white z-50"
+              className="lg:hidden fixed bottom-0 left-0 w-full bg-white z-50"
               style={{
                 boxShadow: "0px -22px 40px 0px #C1C1C140",
                 paddingTop: "18px",
                 paddingRight: "10px",
-                paddingBottom: "10px",
+                paddingBottom: "max(30px, env(safe-area-inset-bottom))",
                 paddingLeft: "10px",
+                maxHeight: "280px",
+                overflowY: "auto",
+                boxSizing: "border-box",
               }}
             >
               {/* 상단: 제목 & 시작 버튼 */}
@@ -381,7 +367,11 @@ const AddCombinationPage = () => {
                   분석 목록
                 </h3>
                 <button
-                  onClick={() => navigate("/combination-result")}
+                  onClick={() =>
+                    navigate("/combination-result", {
+                      state: { selectedItems },
+                    })
+                  }
                   className="bg-[#FFEB9D] rounded-[20px] flex items-center justify-center"
                   style={{
                     width: "67px",
