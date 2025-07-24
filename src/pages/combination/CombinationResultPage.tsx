@@ -1,9 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdArrowForwardIos, MdArrowBackIos } from "react-icons/md";
-import backgroundLine from "../assets/background line.png";
-import vitaminArrow from "../assets/비타민 C_arrow.png";
-import selectionLine from "../assets/selection line 1.png";
+import backgroundLine from "../../assets/background line.png";
+import vitaminArrow from "../../assets/비타민 C_arrow.png";
+import selectionLine from "../../assets/selection line 1.png";
 
 type ProductItem = {
   name: string;
