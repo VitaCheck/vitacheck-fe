@@ -1,4 +1,14 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
+import axios from "@/lib/axios";
+
+type Supplement = {
+  notificationRoutineId: number;
+  supplementId: number;
+  supplementName: string;
+  supplementImageUrl: string;
+  daysOfWeek: string[];
+  times: string[];
+};
 
 type Props = {
   year: number;
@@ -6,7 +16,6 @@ type Props = {
   today: Date;
   setYear: React.Dispatch<React.SetStateAction<number>>;
   setMonth: React.Dispatch<React.SetStateAction<number>>;
-  supplements: { id: string; label: string; time: string[] }[];
   checkedIds: string[];
   toggleChecked: (id: string) => void;
   getDaysInMonth: (year: number, month: number) => number;
@@ -18,11 +27,13 @@ const MobileAlarmPage = ({
   today,
   setYear,
   setMonth,
-  supplements,
   checkedIds,
   toggleChecked,
   getDaysInMonth,
 }: Props) => {
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [supplements, setSupplements] = useState<Supplement[]>([]);
+
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = new Date(year, month, 1).getDay();
@@ -46,9 +57,30 @@ const MobileAlarmPage = ({
     }
   };
 
-  const percentComplete = Math.round(
-    (checkedIds.length / supplements.length) * 100
-  );
+  const onClickDate = (day: number) => {
+    setSelectedDate(new Date(year, month, day));
+  };
+
+  const fetchSupplementsByDate = async (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    const res = await axios.get("/api/v1/notifications/routines", {
+      params: { date: formattedDate },
+    });
+
+    setSupplements(res.data.result);
+  };
+
+  useEffect(() => {
+    fetchSupplementsByDate(selectedDate);
+  }, [selectedDate]);
+
+  const percentComplete = supplements.length
+    ? Math.round((checkedIds.length / supplements.length) * 100)
+    : 0;
 
   const getCatImage = () => {
     if (percentComplete === 100) return "/images/rate3.png";
@@ -57,6 +89,7 @@ const MobileAlarmPage = ({
   };
 
   const calendarCells = [];
+
   for (let i = firstDay - 1; i >= 0; i--) {
     calendarCells.push(
       <div
@@ -67,24 +100,41 @@ const MobileAlarmPage = ({
       </div>
     );
   }
+
   for (let i = 1; i <= daysInMonth; i++) {
+    const cellDate = new Date(year, month, i);
+
     const isToday =
-      year === today.getFullYear() &&
-      month === today.getMonth() &&
-      i === today.getDate();
+      today.getFullYear() === year &&
+      today.getMonth() === month &&
+      today.getDate() === i;
+    const isSelected =
+      selectedDate.getFullYear() === year &&
+      selectedDate.getMonth() === month &&
+      selectedDate.getDate() === i;
+
+    let className =
+      "w-8 h-8 flex items-center justify-center text-sm cursor-pointer select-none rounded-full transition-all ";
+
+    if (isSelected) {
+      className += "bg-[#FFDB67] text-black font-semibold";
+    } else if (isToday) {
+      className += "bg-[#E7E7E7] text-black font-semibold";
+    } else {
+      className += "text-gray-800";
+    }
+
     calendarCells.push(
       <div
         key={"day-" + i}
-        className={`w-8 h-8 flex items-center justify-center text-sm cursor-default select-none ${
-          isToday
-            ? "bg-[#FFDB67] rounded-full font-semibold text-black"
-            : "text-gray-800"
-        }`}
+        className={className}
+        onClick={() => onClickDate(i)}
       >
         {i}
       </div>
     );
   }
+
   while (calendarCells.length < 42) {
     calendarCells.push(
       <div
@@ -99,17 +149,25 @@ const MobileAlarmPage = ({
   return (
     <div className="md:hidden p-4 space-y-4">
       <h2 className="font-semibold text-[30px]">섭취 알림</h2>
-      <div className="flex items-center justify-center gap-3">
-        <img
-          src={getCatImage()}
-          alt="섭취율 고양이"
-          className="w-[122px] h-[122px] select-none"
-        />
-        <div className="flex items-baseline gap-1">
-          <span className="text-[35px] font-bold">{percentComplete}%</span>
+      {supplements.length === 0 ? (
+        <div className="flex flex-col items-center justify-center gap-2 py-4 rounded-lg bg-[#F4F4F4]">
+          <span className="text-[20px] font-medium text-black">
+            오늘은 섭취할 영양제가 없어요!
+          </span>
         </div>
-        <div className="text-[20px] font-bold text-black">섭취 완료</div>
-      </div>
+      ) : (
+        <div className="flex items-center justify-center gap-3">
+          <img
+            src={getCatImage()}
+            alt="섭취율 고양이"
+            className="w-[122px] h-[122px] select-none"
+          />
+          <div className="flex items-baseline gap-1">
+            <span className="text-[35px] font-bold">{percentComplete}%</span>
+          </div>
+          <div className="text-[20px] font-bold text-black">섭취 완료</div>
+        </div>
+      )}
 
       <div className="border border-gray-300/50 rounded-xl p-4 bg-white">
         <div className="flex items-center justify-between mb-4">
@@ -135,27 +193,76 @@ const MobileAlarmPage = ({
         </div>
       </div>
 
+      <button
+        className="w-full h-[64px] px-4 py-4 
+             flex items-center justify-center
+             gap-[10px] text-black text-[20px] font-medium 
+             border border-[#AAAAAA] rounded-[18px] transition"
+      >
+        <div className="flex items-center gap-[10px]">
+          <img
+            src="/images/medical_services.png"
+            alt="메디컬 아이콘"
+            className="w-[28px]"
+          />
+          <span>나의 영양제 관리</span>
+        </div>
+      </button>
+
       <div className="text-lg font-semibold">💊 나의 영양제</div>
 
       <div className="grid grid-cols-1 gap-4">
-        {supplements.map(({ id, label, time }) => (
-          <div
-            key={id}
-            className="flex items-center justify-between px-4 py-4 rounded-2xl bg-gray-100"
-          >
-            <div className="flex flex-col">
-              <span className="text-base font-semibold">{label}</span>
-              <span className="text-gray-500 text-sm">{time.join(" | ")}</span>
+        {supplements.map(({ notificationRoutineId, supplementName, times }) => {
+          const isChecked = checkedIds.includes(
+            notificationRoutineId.toString()
+          );
+          return (
+            <div
+              key={notificationRoutineId}
+              className={`flex items-center justify-between px-4 py-4 rounded-2xl transition-colors ${
+                isChecked ? "bg-gray-100" : "bg-white border border-gray-300"
+              }`}
+            >
+              <div className="flex flex-col">
+                <span className="text-base font-semibold">
+                  {supplementName}
+                </span>
+                <span className="text-gray-500 text-sm">
+                  {times.join(" | ")}
+                </span>
+              </div>
+
+              <label className="relative cursor-pointer w-5 h-5">
+                <input
+                  type="checkbox"
+                  id={notificationRoutineId.toString()}
+                  checked={isChecked}
+                  onChange={() =>
+                    toggleChecked(notificationRoutineId.toString())
+                  }
+                  className="sr-only peer"
+                />
+                <div
+                  className="w-5 h-5 rounded-sm border border-gray-400 
+             peer-checked:bg-[#FFC200] peer-checked:border-none 
+             flex items-center justify-center"
+                >
+                  <svg
+                    className="w-3 h-3 text-white hidden peer-checked:block"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </label>
             </div>
-            <input
-              id={id}
-              type="checkbox"
-              checked={checkedIds.includes(id)}
-              onChange={() => toggleChecked(id)}
-              className="w-5 h-5 accent-gray-500"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
