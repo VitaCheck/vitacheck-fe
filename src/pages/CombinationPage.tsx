@@ -17,13 +17,6 @@ const CombinationPage = () => {
     }
   }, []);
 
-  useEffect(() => {
-    const savedHistory = localStorage.getItem("searchHistory");
-    if (savedHistory) {
-      setSearchHistory(JSON.parse(savedHistory));
-    }
-  }, []);
-
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
@@ -45,14 +38,13 @@ const CombinationPage = () => {
   };
 
   return (
-    <div className="w-full bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
+    <div className="w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
       {/* 조합추가 - 모바일 버전 */}
-      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-10 px-4 pt-0">
+      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
         조합추가
       </h1>
 
       {/* 조합추가 - PC 버전 */}
-
       <h1 className="hidden md:block font-Pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
         조합추가
       </h1>
@@ -105,47 +97,14 @@ const CombinationPage = () => {
       </div>
 
       {/* 검색 기록 - 모바일 */}
-      <div className="block md:hidden mb-12 px-4">
-        <div className="flex flex-wrap justify-start gap-1 text-[16px] text-gray-700">
-          {searchHistory.length > 0
-            ? searchHistory.map((item, idx) => (
-                <div key={idx} className="flex items-center gap-1 px-5">
-                  <button
-                    onClick={() => {
-                      setSearchTerm(item);
-                      navigate(
-                        `/add-combination?query=${encodeURIComponent(item)}`
-                      );
-                    }}
-                    className="hover:underline"
-                  >
-                    {item}
-                  </button>
-                  <button
-                    onClick={() => handleDelete(item)}
-                    className="hover:text-[#555555] ml-2"
-                    title="삭제"
-                  >
-                    <FiX className="text-[#8A8A8A] text-[18px]" />
-                  </button>
-                </div>
-              ))
-            : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
-                <span
-                  key={idx}
-                  className="text-gray-300 bg-[#F5F5F5] px-4 py-1 rounded-full"
-                >
-                  {item}
-                </span>
-              ))}
-        </div>
-      </div>
-
-      {/* 검색 기록 - PC */}
-      <div className="hidden md:flex justify-center gap-6 text-xl text-gray-700 mb-12 flex-wrap px-[35.64px]">
-        {searchHistory.length > 0
-          ? searchHistory.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-2 px-10 py-2">
+      {searchHistory.length > 0 && (
+        <div className="block md:hidden mb-12 flex justify-center">
+          <div
+            className="flex flex-wrap justify-center items-center gap-x-2 gap-y-2 text-[14px]"
+            style={{ width: "300px", height: "auto", opacity: 1 }}
+          >
+            {searchHistory.map((item, idx) => (
+              <div key={idx} className="flex items-center gap-[4px]">
                 <button
                   onClick={() => {
                     setSearchTerm(item);
@@ -153,28 +112,50 @@ const CombinationPage = () => {
                       `/add-combination?query=${encodeURIComponent(item)}`
                     );
                   }}
-                  className="hover:underline"
+                  className="text-[13px] font-medium text-gray-700"
                 >
                   {item}
                 </button>
                 <button
                   onClick={() => handleDelete(item)}
-                  className="hover:text-[#555555] ml-2"
+                  className="text-[16px] text-[#8A8A8A]"
                   title="삭제"
                 >
-                  <FiX className="text-[#8A8A8A] text-[18px]" />
+                  <FiX />
                 </button>
               </div>
-            ))
-          : ["검색 기록 1", "검색 기록 2", "검색 기록 3"].map((item, idx) => (
-              <span
-                key={idx}
-                className="text-gray-300 bg-[#F5F5F5] px-6 py-2 rounded-full"
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 검색 기록 - PC */}
+      {searchHistory.length > 0 && (
+        <div className="hidden md:flex justify-center gap-6 text-xl text-gray-700 mb-12 flex-wrap px-[35.64px]">
+          {searchHistory.map((item, idx) => (
+            <div key={idx} className="flex items-center gap-2 px-10 py-2">
+              <button
+                onClick={() => {
+                  setSearchTerm(item);
+                  navigate(
+                    `/add-combination?query=${encodeURIComponent(item)}`
+                  );
+                }}
+                className="hover:underline"
               >
                 {item}
-              </span>
-            ))}
-      </div>
+              </button>
+              <button
+                onClick={() => handleDelete(item)}
+                className="hover:text-[#555555] ml-2"
+                title="삭제"
+              >
+                <FiX className="text-[#8A8A8A] text-[18px]" />
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* 고양이 일러스트 + 설명 - 모바일 */}
       <div className="relative flex justify-center my-20 md:hidden">
