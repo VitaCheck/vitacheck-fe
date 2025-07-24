@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import CombinationProductCard from "../components/CombinationProductCard";
-import ExpandableProductGroup from "../components/ExpandableProductGroup";
-import SadCat from "../assets/sad-cat.png";
+import CombinationProductCard from "../../components/combination/CombinationProductCard";
+import ExpandableProductGroup from "../../components/combination/ExpandableProductGroup";
+import SadCat from "../../assets/sad-cat.png";
 import { FiSearch, FiX } from "react-icons/fi";
 
 const mockProducts = [
