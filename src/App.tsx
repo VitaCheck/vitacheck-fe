@@ -5,7 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import NotFoundPage from "./pages/NotFoundPage";
 import MainPage from "./pages/MainPage";
 import SignInPage from "./pages/SignInPage";
-import ObjectPage from "./pages/ObjectPage";
+import ObjectPage from "./pages/purpose/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/combination/CombinationPage";
 import AddCombinationPage from "./pages/combination/AddCombinationPage";
@@ -20,6 +20,8 @@ import EditProfilePage from "./pages/EditProfilePage";
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
 import ScrapPage from "./pages/ScarpPage";
+import SearchPage from "./pages/SearchPage";
+import SearchResultPage from "./pages/SearchResultPage";
 
 const router = createBrowserRouter([
   {
@@ -40,10 +42,9 @@ const router = createBrowserRouter([
         element: <ObjectPage />,
       },
       {
-        path: "ingredient", //성분 페이지
+        path: "ingredient",
         element: <IngredientPage />,
       },
-
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
@@ -83,6 +84,14 @@ const router = createBrowserRouter([
       {
         path: "/scrap", // 마이페이지-스크랩
         element: <ScrapPage />,
+      },
+      {
+        path: "/search", // 검색창
+        element: <SearchPage />,
+      },
+      {
+        path: "/searchresult", // 검색 겨롸
+        element: <SearchResultPage />,
       },
     ],
   },
