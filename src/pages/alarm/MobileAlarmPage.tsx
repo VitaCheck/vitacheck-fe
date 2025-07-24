@@ -135,27 +135,72 @@ const MobileAlarmPage = ({
         </div>
       </div>
 
+      <button
+        className="w-full h-[64px] px-4 py-4 
+             flex items-center justify-center
+             gap-[10px] text-black text-[20px] font-medium 
+             border border-[#AAAAAA] rounded-[18px] transition"
+      >
+        <div className="flex items-center gap-[10px]">
+          <img
+            src="/images/medical_services.png"
+            alt="메디컬 아이콘"
+            className="w-[28px]"
+          />
+          <span>나의 영양제 관리</span>
+        </div>
+      </button>
+
       <div className="text-lg font-semibold">💊 나의 영양제</div>
 
       <div className="grid grid-cols-1 gap-4">
-        {supplements.map(({ id, label, time }) => (
-          <div
-            key={id}
-            className="flex items-center justify-between px-4 py-4 rounded-2xl bg-gray-100"
-          >
-            <div className="flex flex-col">
-              <span className="text-base font-semibold">{label}</span>
-              <span className="text-gray-500 text-sm">{time.join(" | ")}</span>
+        {supplements.map(({ id, label, time }) => {
+          const isChecked = checkedIds.includes(id);
+          return (
+            <div
+              key={id}
+              className={`flex items-center justify-between px-4 py-4 rounded-2xl transition-colors ${
+                isChecked ? "bg-gray-100" : "bg-white border border-gray-300"
+              }`}
+            >
+              <div className="flex flex-col">
+                <span className="text-base font-semibold">{label}</span>
+                <span className="text-gray-500 text-sm">
+                  {time.join(" | ")}
+                </span>
+              </div>
+
+              {/* 커스텀 체크박스 */}
+              <label className="relative cursor-pointer w-5 h-5">
+                <input
+                  type="checkbox"
+                  id={id}
+                  checked={isChecked}
+                  onChange={() => toggleChecked(id)}
+                  className="sr-only peer"
+                />
+                <div
+                  className="w-5 h-5 rounded-sm border border-gray-400 
+             peer-checked:bg-[#FFC200] peer-checked:border-none 
+             flex items-center justify-center"
+                >
+                  {/* ✔️ 체크 아이콘 */}
+                  <svg
+                    className="w-3 h-3 text-white hidden peer-checked:block"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </label>
             </div>
-            <input
-              id={id}
-              type="checkbox"
-              checked={checkedIds.includes(id)}
-              onChange={() => toggleChecked(id)}
-              className="w-5 h-5 accent-gray-500"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
