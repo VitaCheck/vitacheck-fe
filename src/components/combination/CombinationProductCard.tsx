@@ -1,3 +1,7 @@
+import { useState } from "react";
+import boxIcon from "../../assets/box.png";
+import checkboxIcon from "../../assets/check box.png";
+
 interface Props {
   item: {
     name: string;
@@ -12,26 +16,40 @@ export default function CombinationProductCard({
   isSelected,
   onToggle,
 }: Props) {
+  const [checkedMobile, setCheckedMobile] = useState(false);
+
+  const handleMobileToggle = (e: React.MouseEvent) => {
+    e.stopPropagation(); // 카드 클릭 막기
+    setCheckedMobile((prev) => !prev);
+    onToggle();
+  };
+
   return (
     <div
-      onClick={onToggle}
-      className={`relative cursor-pointer box-border
-        ${isSelected ? "bg-[#EEEEEE]" : "bg-white"}
+      className={`relative cursor-default box-border
+        ${checkedMobile ? "bg-[#EFEFEF]" : isSelected ? "bg-[#EEEEEE]" : "bg-white"}
 
         // 모바일
         w-[156px] h-[156px] pt-[34px] pr-[17px] pb-[14px] pl-[17px] rounded-[13px]
         shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]
 
         // PC
-        md:w-[299px] md:h-[246px] md:pt-[15px] md:pr-[24px] md:pb-[15px] md:pl-[24px] md:rounded-[25px]
-        md:shadow-md md:hover:shadow-lg
+        md:w-[299px] md:h-[246px] md:p-[24px] md:rounded-[25px]
+        md:shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] 
+        md:hover:shadow-lg
       `}
     >
       <img
+        src={checkedMobile ? checkboxIcon : boxIcon}
+        alt="check"
+        onClick={handleMobileToggle}
+        className="absolute top-[12px] left-[12px] w-[30px] h-[30px] md:hidden cursor-pointer"
+      />
+
+      <img
         src={item.imageUrl}
-        alt={item.name}
-        className="mx-auto mb-auto object-contain
-          w-[64px] h-[64px] md:w-[150px] md:h-[150px]"
+        className="mx-auto object-contain
+        w-[80px] h-[80px] md:w-[150px] md:h-[150px]"
       />
 
       <div
@@ -48,7 +66,7 @@ export default function CombinationProductCard({
           e.stopPropagation();
           onToggle();
         }}
-        className="hidden md:block absolute text-[22px] text-[#1C1B1F]"
+        className="hidden md:block absolute text-[40px] text-[#1C1B1F]"
         style={{
           top: "26.57px",
           left: "237.45px",

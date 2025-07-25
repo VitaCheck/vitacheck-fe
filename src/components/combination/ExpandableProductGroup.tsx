@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import CombinationProductCard from "./CombinationProductCard";
-import { FiChevronDown, FiChevronUp } from "react-icons/fi";
+import { FiChevronDown } from "react-icons/fi";
 
 interface Product {
   name: string;
@@ -43,24 +43,20 @@ const ExpandableProductGroup = ({
       </div>
 
       {/* 펼쳐보기 섹션 */}
-      {products.length > 2 && (
+      {!expanded && products.length > 2 && (
         <div className="mt-4 w-full">
           <div
             className="flex justify-center items-center cursor-pointer"
-            onClick={() => setExpanded((prev) => !prev)}
+            onClick={() => setExpanded(true)}
           >
             <span
               className="text-[12px] font-medium leading-[120%] tracking-[-0.02em] text-center font-pretendard text-black"
               style={{ width: "50px", height: "14px" }}
             >
-              {expanded ? "접기" : "펼쳐보기"}
+              펼쳐보기
             </span>
             <span className="ml-1" style={{ marginTop: "3px" }}>
-              {expanded ? (
-                <FiChevronUp size={16} color="#1C1B1F" />
-              ) : (
-                <FiChevronDown size={16} color="#1C1B1F" />
-              )}
+              <FiChevronDown size={16} color="#1C1B1F" />
             </span>
           </div>
 
