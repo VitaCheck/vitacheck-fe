@@ -17,6 +17,11 @@ import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
 
+import PurposeProductList from "./pages/purpose/PurposeProductListPage";
+import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
+import ProductDetailPage from "./pages/MainProductDetailPage";
+import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
+
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
 
@@ -79,6 +84,25 @@ const router = createBrowserRouter([
         path: "/combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
       },
+
+      {
+        path: "products",
+        element: <PurposeProductList />,
+      },
+      {
+        path: "ingredientproducts",
+        element: <PurposeIngredientProducts />,
+      },
+      {
+        path: "brandproducts",
+        element: <PurposeBrandProducts />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductDetailPage />,
+      },
+
+      
     ],
   },
 ]);

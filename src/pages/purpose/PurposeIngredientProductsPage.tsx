@@ -71,7 +71,7 @@ const PurposeIngredientProducts = () => {
 
       {/* PC 전용 */}
       <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-        <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.67] origin-top">
+        <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.66] origin-top">
             {/* 상단 헤더 라인: 제목 */}
             <div className="flex justify-between items-center">
               <h1 className="text-[52px] tracking-[-1.04px] font-bold">{ingredient}</h1>
