@@ -7,9 +7,9 @@ import MainPage from "./pages/MainPage";
 import SignInPage from "./pages/SignInPage";
 import ObjectPage from "./pages/purpose/ObjectPage";
 import IngredientPage from "./pages/IngredientPage";
-import CombinationPage from "./pages/CombinationPage";
-import AddCombinationPage from "./pages/AddCombinationPage";
-import CombinationResultPage from "./pages/CombinationResultPage";
+import CombinationPage from "./pages/combination/CombinationPage";
+import AddCombinationPage from "./pages/combination/AddCombinationPage";
+import CombinationResultPage from "./pages/combination/CombinationResultPage";
 import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
@@ -24,6 +24,9 @@ import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
+import ScrapPage from "./pages/ScarpPage";
+import SearchPage from "./pages/SearchPage";
+import SearchResultPage from "./pages/SearchResultPage";
 
 const router = createBrowserRouter([
   {
@@ -44,10 +47,9 @@ const router = createBrowserRouter([
         element: <ObjectPage />,
       },
       {
-        path: "ingredient", //성분 페이지
+        path: "ingredient",
         element: <IngredientPage />,
       },
-
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
@@ -84,25 +86,6 @@ const router = createBrowserRouter([
         path: "/combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
       },
-
-      {
-        path: "products",
-        element: <PurposeProductList />,
-      },
-      {
-        path: "ingredientproducts",
-        element: <PurposeIngredientProducts />,
-      },
-      {
-        path: "brandproducts",
-        element: <PurposeBrandProducts />,
-      },
-      {
-        path: "product/:id",
-        element: <ProductDetailPage />,
-      },
-
-      
     ],
   },
 ]);

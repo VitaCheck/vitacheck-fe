@@ -5,20 +5,24 @@ const RootLayout = () => {
   const location = useLocation();
 
   // NavBar를 숨길 경로 목록
-  const hideNavbarRoutes = ["/mypage", "/notificationCenter", "/setting"];
+  const hideNavbarRoutes = [
+    "/mypage",
+    "/notificationCenter",
+    "/setting",
+    "/scrap",
+    "/search",
+  ];
 
   const isMain = location.pathname === "/";
 
   // 현재 경로가 해당 경로들 중 하나로 시작하면 숨김
-  const hideNavbar = hideNavbarRoutes.some((path) =>
-    location.pathname.startsWith(path)
-  );
+  const hideNavbar = hideNavbarRoutes.includes(location.pathname);
 
   const paddingTopClass = hideNavbar
     ? ""
     : isMain
-      ? "pt-48 md:pt-25"
-      : "pt-15 md:pt-25";
+      ? "pt-48 sm:pt-25"
+      : "pt-15 sm:pt-25";
   return (
     <div className="font-[Pretendard] h-full flex flex-col">
       {!hideNavbar && (
