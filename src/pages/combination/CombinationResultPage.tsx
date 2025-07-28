@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { MdArrowForwardIos, MdArrowBackIos } from "react-icons/md";
 import backgroundLine from "../../assets/background line.png";
 import boxIcon from "../../assets/box.png";
+import checkedBoxIcon from "../../assets/check box.png";
 import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import selectionLine from "../../assets/selection line 1.png";
 
@@ -14,6 +15,8 @@ type ProductItem = {
 export default function CombinationResultPage() {
   const location = useLocation();
   const selectedItems = location.state?.selectedItems || [];
+
+  const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -64,6 +67,24 @@ export default function CombinationResultPage() {
     }
   };
 
+  const handleToggleCheckbox = (idx: number) => {
+    setCheckedIndices((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleRecombination = () => {
+    const selectedFiltered = selectedItems.filter((_: any, idx: number) =>
+      checkedIndices.includes(idx)
+    );
+
+    navigate("/add-combination", {
+      state: {
+        selectedItems,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
       {" "}
@@ -78,14 +99,16 @@ export default function CombinationResultPage() {
         </h1>
         <div className="flex gap-4">
           <button
-            onClick={() => navigate("/조합-2-2")}
+            onClick={handleRecombination}
             className="w-[150px] h-[70px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
           >
             재조합
           </button>
           <button
-            onClick={() => navigate("/알림-2")}
-            className="w-[280px] h-[70px] bg-[#FFEB9D] rounded-[62.5px] text-lg font-semibold text-center"
+            onClick={() => navigate("/alarm/settings")}
+            className={`w-[280px] h-[70px] ${
+              checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
+            } rounded-[62.5px] flex items-center justify-center`}
           >
             섭취알림 등록하기
           </button>
@@ -98,35 +121,35 @@ export default function CombinationResultPage() {
             ref={scrollRef}
             className="flex gap-[22.76px] overflow-x-auto scrollbar-hide scroll-smooth pr-[80px]"
           >
-            {selectedItems.map(
-              (item: { name: string; imageUrl: string }, idx: number) => (
-                <div
-                  key={idx}
-                  className="w-[270px] h-[250px] bg-white rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0"
+            {selectedItems.map((item: ProductItem, idx: number) => (
+              <div
+                key={idx}
+                className="w-[270px] h-[250px] bg-white rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0"
+              >
+                <img
+                  src={checkedIndices.includes(idx) ? checkedBoxIcon : boxIcon}
+                  alt="checkbox"
+                  onClick={() => handleToggleCheckbox(idx)}
+                  className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
+                />
+
+                <img
+                  src={item.imageUrl}
+                  className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
+                />
+                <p
+                  className="text-center font-pretendard font-medium mt-1"
+                  style={{
+                    fontSize: "23px",
+                    lineHeight: "100%",
+                    letterSpacing: "-0.02em",
+                    color: "#000000",
+                  }}
                 >
-                  <img
-                    src={boxIcon}
-                    alt="checkbox"
-                    className="absolute top-[10px] left-[18px] w-[50px] h-[50px]"
-                  />
-                  <img
-                    src={item.imageUrl}
-                    className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
-                  />
-                  <p
-                    className="text-center font-pretendard font-medium mt-1"
-                    style={{
-                      fontSize: "23px",
-                      lineHeight: "100%",
-                      letterSpacing: "-0.02em",
-                      color: "#000000",
-                    }}
-                  >
-                    {item.name}
-                  </p>
-                </div>
-              )
-            )}
+                  {item.name}
+                </p>
+              </div>
+            ))}
           </div>
 
           {selectedItems.length > 4 && (

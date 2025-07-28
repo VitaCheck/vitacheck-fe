@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import CombinationProductCard from "../../components/combination/CombinationProductCard";
 import ExpandableProductGroup from "../../components/combination/ExpandableProductGroup";
 import SadCat from "../../assets/sad-cat.png";
@@ -29,22 +29,38 @@ const mockProducts = [
 const AddCombinationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
+
+  const query = searchParams.get("query") || "";
+  const selectedProductNames = query ? query.split(",") : [];
+  const preSelectedItems = location.state?.selectedItems || [];
+
   const [searchTerm, setSearchTerm] = useState("");
-  const [query, setQuery] = useState(searchParams.get("query") || "");
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+
   const placeholder = "제품을 입력해주세요.";
 
+  // 첫 렌더링에만 실행되도록 useEffect 분리
   useEffect(() => {
-    const newQuery = searchParams.get("query") || "";
-    setQuery(newQuery);
-    setSearchTerm(newQuery);
-
     const stored = localStorage.getItem("searchHistory");
     if (stored) {
-      setSearchHistory(JSON.parse(stored));
+      const parsed = JSON.parse(stored);
+      setSearchHistory(parsed);
+
+      // 처음 마운트일 때만 설정
+      if (!searchTerm) {
+        setSearchTerm(parsed[0] || "");
+      }
     }
-  }, [searchParams]);
+  }, []); // 🔥 의존성 배열 비움
+
+  // selectedItems 업데이트는 location.state 있을 때만
+  useEffect(() => {
+    if (preSelectedItems.length > 0) {
+      setSelectedItems(preSelectedItems);
+    }
+  }, [preSelectedItems]);
 
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
@@ -57,8 +73,11 @@ const AddCombinationPage = () => {
 
     localStorage.setItem("searchHistory", JSON.stringify(updated));
     setSearchHistory(updated);
-    setQuery(trimmed);
-    navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
+
+    navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`, {
+      replace: false,
+      state: { selectedItems },
+    });
   };
 
   const handleToggle = (item: any) => {
@@ -162,7 +181,6 @@ const AddCombinationPage = () => {
                 <button
                   onClick={() => {
                     setSearchTerm(item);
-                    setQuery(item);
                     navigate(
                       `/add-combination?query=${encodeURIComponent(item)}`
                     );
@@ -193,7 +211,11 @@ const AddCombinationPage = () => {
                 onClick={() => {
                   setSearchTerm(item);
                   navigate(
-                    `/add-combination?query=${encodeURIComponent(item)}`
+                    `/add-combination?query=${encodeURIComponent(item)}`,
+                    {
+                      replace: false,
+                      state: { selectedItems },
+                    }
                   );
                 }}
                 className="text-[20px] font-medium leading-[120%] tracking-[-0.02em] text-[#000000] hover:underline"
@@ -392,14 +414,14 @@ const AddCombinationPage = () => {
                     >
                       <img
                         src={item.imageUrl}
-                        className="w-[80px] h-[85px] object-contain mb-3"
+                        className="w-[80px] h-[80px] mt-2 object-contain mb-3"
                       />
-                      <p className="text-[12px] font-medium leading-[100%] tracking-[-0.02em] text-center font-pretendard text-black px-1">
+                      <p className="text-[13px] -mt-1 font-medium leading-[100%] tracking-[-0.02em] text-center font-pretendard text-black px-3">
                         {item.name}
                       </p>
                       <button
                         onClick={() => handleRemove(item.name)}
-                        className="absolute bottom-25 right-1"
+                        className="absolute bottom-23 right-1"
                       >
                         <img
                           src="/src/assets/delete.png"
