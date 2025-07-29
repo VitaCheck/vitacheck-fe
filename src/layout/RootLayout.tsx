@@ -44,6 +44,7 @@
 import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
+import Footer from "@/components/Footer";
 
 const RootLayout = () => {
   const location = useLocation();
@@ -92,6 +93,7 @@ const RootLayout = () => {
       <main className={`${paddingTopClass} flex-1 sm:bg-[#F3F3F3]`}>
         <Outlet />
       </main>
+      <Footer />
     </div>
   );
 };
