@@ -68,6 +68,7 @@ const RootLayout = () => {
     "/setting",
     "/scrap",
     "/search",
+    "/mypage/edit",
   ];
 
   const isMain = location.pathname === "/";

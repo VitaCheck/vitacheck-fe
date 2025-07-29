@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IoMdClose } from "react-icons/io";
 import Search from "../assets/search.svg";
+import X from "../assets/X.svg";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
@@ -30,9 +30,10 @@ const SearchBar = () => {
         />
 
         {query && (
-          <IoMdClose
-            className="text-[#A0A0A0] mr-2 cursor-pointer"
-            size={18}
+          <img
+            src={X}
+            alt="Clear"
+            className="w-[16px] h-[16px] mr-2 cursor-pointer"
             onClick={handleClear}
           />
         )}
