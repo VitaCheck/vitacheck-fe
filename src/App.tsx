@@ -67,6 +67,18 @@ const router = createBrowserRouter([
         element: <MyPage />,
       },
       {
+        path: "/scrap", // 마이페이지-스크랩
+        element: <ScrapPage />,
+      },
+      {
+        path: "/search", // 검색창
+        element: <SearchPage />,
+      },
+      {
+        path: "/searchresult", // 검색 겨롸
+        element: <SearchResultPage />,
+      },
+      {
         path: "notificationCenter",
         element: <NotificationCenterPage />,
       },
