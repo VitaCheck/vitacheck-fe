@@ -19,7 +19,7 @@ export default function CombinationProductCard({
   const [checkedMobile, setCheckedMobile] = useState(false);
 
   const handleMobileToggle = (e: React.MouseEvent) => {
-    e.stopPropagation(); // 카드 클릭 막기
+    e.stopPropagation();
     setCheckedMobile((prev) => !prev);
     onToggle();
   };
@@ -49,13 +49,13 @@ export default function CombinationProductCard({
       <img
         src={item.imageUrl}
         className="mx-auto object-contain
-        w-[80px] h-[80px] md:w-[150px] md:h-[150px]"
+        w-[80px] h-[80px] mt-3 md:w-[150px] md:h-[150px]"
       />
 
       <div
         className="text-center font-pretendard font-medium
         text-[14px] leading-[120%] tracking-[-0.02em]
-        md:text-[22px] md:leading-[100%]"
+        mt-3 md:text-[20px] md:leading-[100%]"
       >
         {item.name}
       </div>
@@ -68,8 +68,8 @@ export default function CombinationProductCard({
         }}
         className="hidden md:block absolute text-[40px] text-[#1C1B1F]"
         style={{
-          top: "26.57px",
-          left: "237.45px",
+          top: "10px",
+          left: "245px",
           width: "27.2px",
           height: "27.19px",
         }}
