@@ -84,12 +84,18 @@ const PurposeCardList = () => {
                <div
                   className={`
                      absolute left-[6px] top-0 md:left-[-14px] md:top-[9px]
-                     w-[14px] h-[14px] md:w-[34px] md:h-[34px] md:border-[2.5px] md:rounded-[6px]
-                     rounded-xs flex items-center justify-center
-                     ${isSelected ? "bg-[#C7C7C7] border-none" : "bg-white border border-[#9C9A9A]"}
+                     w-[14px] h-[14px] md:w-[34px] md:h-[34px]
                   `}
                >
-                  {isSelected && <IoMdCheckmark className="text-white text-[10px] md:text-[24px]" />}
+                  <img
+                     src={
+                        isSelected
+                        ? "/images/PNG/PurposeObject/checkbox.png"   // 선택됨 이미지
+                        : "/images/PNG/PurposeObject/box.png" // 선택 전 이미지
+                     }
+                     alt={isSelected ? "선택됨" : "선택되지 않음"}
+                     className="w-full h-full object-contain"
+                  />
                </div>
             </div>
          </div>
@@ -117,17 +123,21 @@ const PurposeCardList = () => {
           onClick={goToProductList}
           disabled={selectedIds.length === 0}
           className={`fixed bottom-[42px] left-1/2 -translate-x-1/2 w-[389px] h-[68px] rounded-4xl z-50 transition-all duration-200 flex justify-center items-center ${
-            selectedIds.length === 0 ? "bg-gray-300 cursor-not-allowed" : "bg-[#FFEB9D]"
+            selectedIds.length === 0 ? "bg-[#EEEEEE] cursor-not-allowed" : "bg-[#FFEB9D]"
           }`}
         >
           <span className="text-black text-xl font-semibold ml-[109px] mr-[84px]">영양제 확인하기</span>
-          <MdArrowForwardIos className="w-[18px] h-[18px]" />
+          <img
+            src="/images/PNG/PurposeObject/arrowforward.png" // 실제 이미지 경로로 교체
+            alt="화살표"
+            className="h-[22px] object-contain"
+         />
         </button>
       </div>
 
       {/* PC 전용 - 배경색 포함 */}
       <div className="hidden md:block w-full bg-[#FAFAFA]">
-         <div className="max-w-[1280px] mx-auto pt-[100px] pb-[187px] scale-[0.67] origin-top">
+         <div className="max-w-[1280px] mx-auto pt-[100px] pb-[187px] scale-[0.66] origin-top">
             {/* 상단 헤더 라인: 제목 + 버튼 */}
             <div className="flex justify-between items-center mb-[6px]">
                <h1 className="text-[52px] font-bold">목적별</h1>
