@@ -48,14 +48,12 @@ const AddCombinationPage = () => {
       const parsed = JSON.parse(stored);
       setSearchHistory(parsed);
 
-      // 처음 마운트일 때만 설정
       if (!searchTerm) {
         setSearchTerm(parsed[0] || "");
       }
     }
-  }, []); // 🔥 의존성 배열 비움
+  }, []);
 
-  // selectedItems 업데이트는 location.state 있을 때만
   useEffect(() => {
     if (preSelectedItems.length > 0) {
       setSelectedItems(preSelectedItems);

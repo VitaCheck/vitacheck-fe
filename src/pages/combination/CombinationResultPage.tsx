@@ -2,10 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdArrowForwardIos, MdArrowBackIos } from "react-icons/md";
 import backgroundLine from "../../assets/background line.png";
-import boxIcon from "../../assets/box.png";
 import checkedBoxIcon from "../../assets/check box.png";
 import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import selectionLine from "../../assets/selection line 1.png";
+import checkboxIcon from "../../assets/check box.png";
+import boxIcon from "../../assets/box.png";
 
 type ProductItem = {
   name: string;
@@ -80,7 +81,7 @@ export default function CombinationResultPage() {
 
     navigate("/add-combination", {
       state: {
-        selectedItems,
+        selectedItems: selectedFiltered,
       },
     });
   };
@@ -124,7 +125,8 @@ export default function CombinationResultPage() {
             {selectedItems.map((item: ProductItem, idx: number) => (
               <div
                 key={idx}
-                className="w-[270px] h-[250px] bg-white rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0"
+                className={`w-[270px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0
+                ${checkedIndices.includes(idx) ? "bg-[#EEEEEE]" : "bg-white"}`}
               >
                 <img
                   src={checkedIndices.includes(idx) ? checkedBoxIcon : boxIcon}
@@ -176,18 +178,29 @@ export default function CombinationResultPage() {
           {selectedItems.map((item: ProductItem, idx: number) => (
             <div
               key={idx}
-              className="w-[130px] h-[130px] bg-white rounded-[10px] flex flex-col items-center relative flex-shrink-0 pt-[26px] pb-[12px]"
+              className={`w-[130px] h-[130px] rounded-[10px] flex flex-col items-center relative flex-shrink-0 pt-[26px] pb-[12px]
+        ${checkedIndices.includes(idx) ? "bg-[#EFEFEF]" : "bg-white"}
+        ${checkedIndices.includes(idx) ? "shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]" : ""}
+        `}
             >
-              <input
-                type="checkbox"
-                className="absolute top-[8px] left-[8px] w-[18px] h-[18px] border border-[#9C9A9A] rounded-[3.33px] accent-black"
+              {/* 이미지 체크박스 */}
+              <img
+                src={checkedIndices.includes(idx) ? checkboxIcon : boxIcon}
+                alt="checkbox"
+                onClick={() => handleToggleCheckbox(idx)}
+                className="absolute top-[2px] left-[2px] w-[30px] h-[30px] cursor-pointer"
               />
+
+              {/* 제품 이미지 */}
               <img
                 src={item.imageUrl}
-                alt={item.name}
-                className="w-[70px] h-[50px] object-contain mb-2"
+                className="w-[70px] h-[70px] object-contain -mt-2 mb-2"
               />
-              <p className="text-xs text-center px-1">{item.name}</p>
+
+              {/* 제품 이름 */}
+              <p className="font-pretendard font-medium text-[15px] leading-[100%] tracking-[-0.02em] text-center text-black">
+                {item.name}
+              </p>
             </div>
           ))}
         </div>
