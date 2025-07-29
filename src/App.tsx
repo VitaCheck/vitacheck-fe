@@ -75,7 +75,7 @@ const router = createBrowserRouter([
         element: <SearchPage />,
       },
       {
-        path: "/searchresult", // 검색 겨롸
+        path: "/searchresult", // 검색 결과
         element: <SearchResultPage />,
       },
       {
