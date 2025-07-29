@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
-import { IoMdClose } from "react-icons/io";
+import X from "../assets/X.svg";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
@@ -36,9 +36,10 @@ const SearchBar = () => {
         />
 
         {query && (
-          <IoMdClose
-            className="text-[#A0A0A0] mr-2 cursor-pointer"
-            size={18}
+          <img
+            src={X}
+            alt="Clear"
+            className="w-[16px] h-[16px] mr-2 cursor-pointer"
             onClick={handleClear}
           />
         )}
