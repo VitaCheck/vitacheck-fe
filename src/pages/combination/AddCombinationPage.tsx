@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import CombinationProductCard from "../../components/combination/CombinationProductCard";
 import ExpandableProductGroup from "../../components/combination/ExpandableProductGroup";
-import SadCat from "../../assets/sad-cat.png";
+import SadCat from "../../../public/images/rate1.png";
 import { FiSearch, FiX } from "react-icons/fi";
 
 const mockProducts = [
@@ -239,7 +239,7 @@ const AddCombinationPage = () => {
       {/* 본문 */}
       <div className="flex flex-col lg:flex-row gap-8 relative">
         <div className="flex-1">
-          {query && (
+          {query && filteredProducts.length > 0 && (
             <>
               {/* 검색어 제목 - 모바일 */}
               <h2 className="block md:hidden font-pretendard font-bold text-[22px] leading-[120%] tracking-[-0.02em] px-[38px] mb-6">
@@ -284,16 +284,30 @@ const AddCombinationPage = () => {
             </>
           ) : (
             query && (
-              <div className="flex flex-col items-center justify-center mt-20">
-                <img
-                  src={SadCat}
-                  alt="검색 결과 없음"
-                  className="w-[120px] mb-4"
-                />
-                <p className="text-gray-500 text-base">
-                  일치하는 검색 결과가 없습니다.
-                </p>
-              </div>
+              <>
+                <div className="block md:hidden flex flex-col items-center justify-center mt-20">
+                  <img
+                    src={SadCat}
+                    alt="검색 결과 없음"
+                    className="w-[160px] mt-5 mb-2"
+                  />
+                  <p className="font-pretendard font-medium text-[24px] leading-[120%] tracking-[-0.02em] text-[#808080] text-center">
+                    일치하는 검색 결과가 없습니다.
+                  </p>
+                </div>
+
+                {/* PC 전용: 검색 결과 없음 */}
+                <div className="hidden md:flex flex-col items-center justify-center mt-20">
+                  <img
+                    src={SadCat}
+                    alt="검색 결과 없음"
+                    className="w-[200px] mt-5 mb-2"
+                  />
+                  <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080]">
+                    일치하는 검색 결과가 없습니다.
+                  </p>
+                </div>
+              </>
             )
           )}
         </div>

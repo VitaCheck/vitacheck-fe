@@ -7,6 +7,7 @@ import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import selectionLine from "../../assets/selection line 1.png";
 import checkboxIcon from "../../assets/check box.png";
 import boxIcon from "../../assets/box.png";
+import flipIcon from "../../assets/flip.png";
 
 type ProductItem = {
   name: string;
@@ -44,19 +45,37 @@ export default function CombinationResultPage() {
       : ingredientData.filter((i) => i.value > i.upper);
 
   const riskyCombinations = [
-    "철분 + 칼슘",
-    "아연 + 철분",
-    "아연 + 구리",
-    "비타민C + 철분",
-    "칼슘 + 마그네슘",
+    { front: "철분 + 칼슘", back: "흡수를 방해할 수 있어요!" },
+    { front: "아연 + 철분", back: "같이 먹으면 경쟁 작용이 생겨요!" },
+    { front: "아연 + 구리", back: "상호 흡수 저해 우려가 있어요!" },
+    {
+      front: "비타민C + 철분",
+      back: "흡수는 증가하지만 속이 불편할 수 있어요.",
+    },
+    { front: "칼슘 + 마그네슘", back: "흡수율이 낮아질 수 있어요." },
   ];
 
   const goodCombinations = [
-    "비타민D + 칼슘",
-    "철분 + 비타민C",
-    "마그네슘 + 비타민B6",
-    "유산균 + 아연",
-    "오메가3 + 비타민E",
+    {
+      front: "비타민D + 칼슘",
+      back: "비타민D가 칼슘의 흡수를 도와줘요!",
+    },
+    {
+      front: "철분 + 비타민C",
+      back: "비타민C가 철분의 흡수를 촉진해요!",
+    },
+    {
+      front: "마그네슘 + 비타민B6",
+      back: "신경 안정과 에너지 생성에 시너지를 줘요!",
+    },
+    {
+      front: "유산균 + 아연",
+      back: "면역력 향상에 함께 작용해요!",
+    },
+    {
+      front: "오메가3 + 비타민E",
+      back: "세포 보호 효과가 상승해요!",
+    },
   ];
 
   const handleScroll = (direction: "left" | "right") => {
@@ -84,6 +103,43 @@ export default function CombinationResultPage() {
         selectedItems: selectedFiltered,
       },
     });
+  };
+
+  interface FlipCardProps {
+    frontText: string;
+    backText: string;
+  }
+
+  const FlipCard: React.FC<FlipCardProps> = ({ frontText, backText }) => {
+    const [flipped, setFlipped] = useState(false);
+
+    return (
+      <div
+        className="w-[130px] h-[114px] perspective cursor-pointer"
+        onClick={() => setFlipped(!flipped)}
+      >
+        <div
+          className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+            flipped ? "rotate-y-180" : ""
+          }`}
+        >
+          {/* 앞면 */}
+          <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            {frontText}
+            <img
+              src={flipIcon}
+              alt="회전 아이콘"
+              className="absolute top-[10px] right-[10px] w-[25px] h-[25px] opacity-100"
+            />
+          </div>
+
+          {/* 뒷면 */}
+          <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            {backText}
+          </div>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -453,76 +509,29 @@ export default function CombinationResultPage() {
         </p>
       </div>
       {/* 조합 카드들 - 모바일 */}
-      <div className="md:hidden px-4 hide-scrollbar overflow-x-auto">
-        <div className="w-max flex gap-[10px] ml-4 mr-4">
+      <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
           {riskyCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative mt-5 mb-5"
-            >
-              {combo}
-              <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
-                ⟳
-              </span>
-            </div>
+            <FlipCard key={i} frontText={combo.front} backText={combo.back} />
           ))}
         </div>
       </div>
-      {/* 주의가 필요한 조합 안내 - PC */}
-      <div className="hidden md:block px-[60px] mt-[80px]">
-        <h2
-          style={{
-            marginLeft: "200px",
-            width: "500px",
-            height: "48px",
-            fontFamily: "Pretendard",
-            fontWeight: 700,
-            fontStyle: "normal", // 명세에 Bold였지만 실제 CSS에서는 fontWeight로 표현
-            fontSize: "40px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#000000",
-            opacity: 1,
-          }}
-        >
+      {/* PC용 제목 및 카드 wrapper - 주의가 필요한 조합 */}
+      <div className="hidden md:block px-[230px]">
+        <h2 className="w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-25">
           주의가 필요한 조합 TOP 5
         </h2>
-        <p
-          style={{
-            marginLeft: "200px",
-            width: "500px",
-            height: "29px",
-            fontFamily: "Pretendard",
-            fontWeight: 600,
-            fontStyle: "normal", // SemiBold도 CSS에서는 fontWeight로 표현
-            fontSize: "24px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#6B6B6B",
-            opacity: 1,
-            marginTop: "8px",
-          }}
-        >
+        <span className="text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
           카드를 눌러서 확인해 보세요 !
-        </p>
-      </div>
-      {/* 조합 카드들 - PC */}
-      <div className="hidden md:flex overflow-x-auto px-[60px] justify-center">
-        <div className="flex gap-15 w-max mt-10 mb-5">
-          {riskyCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[222px] h-[150px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-start relative"
-            >
-              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center mx-auto">
-                {combo}
-              </span>
+        </span>
 
-              <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
-                ⟳
-              </span>
-            </div>
-          ))}
+        {/* 카드 목록 */}
+        <div className="flex justify-start mt-8">
+          <div className="flex gap-[50px]">
+            {riskyCombinations.map((combo, i) => (
+              <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+            ))}
+          </div>
         </div>
       </div>
       {/* ===== 모바일 - 궁합이 좋은 조합 안내 ===== */}
@@ -557,73 +566,30 @@ export default function CombinationResultPage() {
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-      {/* ===== 모바일 - 궁합 카드 ===== */}
-      <div className="md:hidden px-4 hide-scrollbar overflow-x-auto mb-10">
-        <div className="flex gap-3 w-max pl-4 pr-4">
+      {/* 조합 카드들 - 모바일 */}
+      <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
           {goodCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative mt-5 mb-10"
-            >
-              {combo}
-              <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
-                ⟳
-              </span>
-            </div>
+            <FlipCard key={i} frontText={combo.front} backText={combo.back} />
           ))}
         </div>
       </div>
-      {/* ===== PC - 궁합이 좋은 조합 안내 ===== */}
-      <div className="hidden md:block px-[60px] mt-[80px]">
-        <h2
-          style={{
-            marginLeft: "200px",
-            width: "407px",
-            height: "48px",
-            fontFamily: "Pretendard",
-            fontWeight: 700,
-            fontSize: "40px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#000000",
-          }}
-        >
+      {/* PC용 제목 및 카드 wrapper - 궁합이 좋은 조합 */}
+      <div className="hidden md:block px-[230px]">
+        <h2 className="w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-20">
           궁합이 좋은 조합 TOP 5
         </h2>
-        <p
-          style={{
-            marginLeft: "200px",
-            width: "500px",
-            height: "29px",
-            fontFamily: "Pretendard",
-            fontWeight: 600,
-            fontSize: "24px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#6B6B6B",
-            marginTop: "8px",
-          }}
-        >
+        <span className="text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
           카드를 눌러서 확인해 보세요 !
-        </p>
-      </div>
-      {/* ===== PC - 궁합 카드 ===== */}
-      <div className="hidden md:flex overflow-x-auto px-[60px] justify-center">
-        <div className="flex gap-15 w-max mt-10 mb-30">
-          {goodCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[222px] h-[150px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-start relative"
-            >
-              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center mx-auto">
-                {combo}
-              </span>
+        </span>
 
-              <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
-                ⟳
-              </span>
-            </div>
-          ))}
+        {/* 카드 목록 */}
+        <div className="flex justify-start">
+          <div className="flex gap-[50px] mt-8 mb-20">
+            {goodCombinations.map((combo, i) => (
+              <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+            ))}
+          </div>
         </div>
       </div>
     </div>
