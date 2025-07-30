@@ -1,15 +1,52 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import ProfileInput from "./ProfileInput";
+import { getUserInfo, updateUserInfo, type UserInfo } from "@/lib/user";
+import { useNavigate } from "react-router-dom";
 
 function ProfileForm() {
-  const [nickname, setNickname] = useState("유엠씨야채1580");
+  const [nickname, setNickname] = useState("");
+  const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("010-1234-5678");
-  const [email] = useState("si****@gmail.com");
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
-  const handleSave = () => {
-    // 저장 로직 처리
-    console.log("저장됨", { nickname, phone });
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        const user: UserInfo = await getUserInfo(token);
+        setNickname(user.nickname);
+        setEmail(user.email);
+        setLoading(false);
+      } catch (error) {
+        console.error("사용자 정보 불러오기 실패", error);
+        setLoading(false);
+      }
+    };
+
+    fetchUser();
+  }, []);
+
+  const handleSave = async () => {
+    const token = localStorage.getItem("accessToken");
+    if (!token) {
+      alert("로그인이 필요합니다.");
+      return;
+    }
+
+    try {
+      await updateUserInfo(token, nickname);
+      alert("변경되었습니다.");
+      navigate("/mypage");
+    } catch (error) {
+      console.error("닉네임 저장 실패:", error);
+      alert("저장에 실패했습니다.");
+    }
   };
+
+  if (loading) return <p>불러오는 중...</p>;
 
   return (
     <div className="space-y-4">
@@ -25,7 +62,7 @@ function ProfileForm() {
       />
       <ProfileInput label="이메일 주소" value={email} />
 
-      <div className="pt-6  mt-[22%] sm:mt-[5%]">
+      <div className="pt-6 mt-[22%] sm:mt-[5%]">
         <button
           onClick={handleSave}
           className="w-full bg-[#FFEB9D] hover:bg-[#FFDB67] text-black font-medium px-6 py-3 rounded-md transition-colors cursor-pointer"

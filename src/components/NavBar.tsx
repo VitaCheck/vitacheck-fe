@@ -4,6 +4,7 @@ import Logo from "../assets/logo.svg";
 import Bell from "../assets/Bell.svg";
 import Navfavorite from "../assets/navfavorite.svg";
 import User from "../assets/User.svg";
+import ProfileCat from "../assets/ProfileCat.svg";
 import BackIcon from "../assets/back.svg";
 import HomeIcon from "../assets/Vector.svg";
 
@@ -11,6 +12,9 @@ const Navbar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const isMainPage = location.pathname === "/";
+
+  const token = localStorage.getItem("accessToken");
+  const isLoggedIn = Boolean(token);
 
   return (
     <header className="bg-white w-full">
@@ -36,11 +40,11 @@ const Navbar = () => {
           <Link to="/scrap">
             <img src={Navfavorite} alt="알림" className="w-[24px] h-[24px]" />
           </Link>
-          <Link to="/mypage">
+          <Link to={isLoggedIn ? "/mypage" : "/login"}>
             <img
-              src={User}
+              src={isLoggedIn ? ProfileCat : User}
               alt="사용자"
-              className="w-[36px] h-[36px] rounded-full"
+              className="w-[36px] h-[36px] rounded-full object-cover"
             />
           </Link>
         </div>
@@ -62,11 +66,11 @@ const Navbar = () => {
               <Link to="/">
                 <img src={HomeIcon} alt="홈" className="w-[24px] h-[24px]" />
               </Link>
-              <Link to="/mypage">
+              <Link to={isLoggedIn ? "/mypage" : "/login"}>
                 <img
-                  src={User}
+                  src={isLoggedIn ? ProfileCat : User}
                   alt="사용자"
-                  className="w-[30px] h-[30px] rounded-full"
+                  className="w-[36px] h-[36px] rounded-full object-cover"
                 />
               </Link>
             </div>
@@ -77,8 +81,12 @@ const Navbar = () => {
               <Link to="/notificationCenter">
                 <img src={Bell} alt="알림" className="w-[24px] h-[27px]" />
               </Link>
-              <Link to="/mypage">
-                <img src={User} alt="사용자" className="w-[36px] h-[36px]" />
+              <Link to={isLoggedIn ? "/mypage" : "/login"}>
+                <img
+                  src={isLoggedIn ? ProfileCat : User}
+                  alt="사용자"
+                  className="w-[36px] h-[36px] rounded-full object-cover"
+                />
               </Link>
             </div>
 
