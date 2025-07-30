@@ -80,9 +80,10 @@ const ScrapPage = () => {
         {/* 상단 */}
         <div className="flex items-center justify-between mb-2">
           <div className="w-full px-6 pt-4 pb-2 flex items-center sm:px-0 sm:pt-0 sm:pb-4">
+            {/* 뒤로가기 버튼: sm 이상이면 숨김 */}
             <button
               onClick={goBack}
-              className="mr-2 text-2xl text-black cursor-pointer"
+              className="mr-2 text-2xl text-black cursor-pointer sm:hidden"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -99,7 +100,10 @@ const ScrapPage = () => {
                 />
               </svg>
             </button>
-            <h1 className="text-[24px] font-semibold py-2">찜한 제품/성분</h1>
+
+            <div className="flex-1">
+              <h1 className="text-[24px] font-semibold py-2">찜한 제품/성분</h1>
+            </div>
           </div>
         </div>
 

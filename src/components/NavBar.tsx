@@ -15,7 +15,7 @@ const Navbar = () => {
   return (
     <header className="bg-white w-full">
       {/* 데스크탑 레이아웃 */}
-      <div className="hidden sm:flex justify-between items-center w-full h-[100px]">
+      <div className="hidden sm:flex justify-between items-center w-full h-[80px]">
         {/* 왼쪽 로고 */}
         <Link
           to="/"
@@ -33,7 +33,7 @@ const Navbar = () => {
           <Link to="/notificationCenter">
             <img src={Bell} alt="알림" className="w-[24px] h-[24px]" />
           </Link>
-          <Link to="/wishlist">
+          <Link to="/scrap">
             <img src={Navfavorite} alt="알림" className="w-[24px] h-[24px]" />
           </Link>
           <Link to="/mypage">
