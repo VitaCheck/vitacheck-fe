@@ -1,3 +1,7 @@
+import { useState } from "react";
+import boxIcon from "../../assets/box.png";
+import checkboxIcon from "../../assets/check box.png";
+
 interface Props {
   item: {
     name: string;
@@ -12,52 +16,61 @@ export default function CombinationProductCard({
   isSelected,
   onToggle,
 }: Props) {
+  const [checkedMobile] = useState(false);
+
+  const handleMobileToggle = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggle();
+  };
+
   return (
-    <div
-      onClick={onToggle}
-      className={`relative cursor-pointer box-border
-        ${isSelected ? "bg-[#EEEEEE]" : "bg-white"}
-
-        // 모바일
-        w-[156px] h-[156px] pt-[34px] pr-[17px] pb-[14px] pl-[17px] rounded-[13px]
-        shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]
-
-        // PC
-        md:w-[299px] md:h-[246px] md:pt-[15px] md:pr-[24px] md:pb-[15px] md:pl-[24px] md:rounded-[25px]
-        md:shadow-md md:hover:shadow-lg
-      `}
-    >
-      <img
-        src={item.imageUrl}
-        alt={item.name}
-        className="mx-auto mb-auto object-contain
-          w-[64px] h-[64px] md:w-[150px] md:h-[150px]"
-      />
-
+    <>
+      {/* 모바일 카드 */}
       <div
-        className="text-center font-pretendard font-medium
-        text-[14px] leading-[120%] tracking-[-0.02em]
-        md:text-[22px] md:leading-[100%]"
+        className={`relative md:hidden box-border cursor-default
+        ${isSelected ? "bg-[#EFEFEF]" : "bg-white"}
+        w-[156px] h-[156px] p-[17px] pt-[34px] rounded-[13px]
+        shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]`}
       >
-        {item.name}
+        <img
+          src={isSelected ? checkboxIcon : boxIcon}
+          alt="check"
+          onClick={handleMobileToggle}
+          className="absolute top-[12px] left-[12px] w-[30px] h-[30px] cursor-pointer"
+        />
+        <img
+          src={item.imageUrl}
+          className="mx-auto w-[80px] h-[80px] object-contain -mt-2"
+        />
+        <p className="text-center font-pretendard font-medium text-[14px] mt-2 tracking-[-0.02em] leading-[120%]">
+          {item.name}
+        </p>
       </div>
 
-      {/* 선택/해제 버튼 */}
-      <button
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggle();
-        }}
-        className="hidden md:block absolute text-[22px] text-[#1C1B1F]"
-        style={{
-          top: "26.57px",
-          left: "237.45px",
-          width: "27.2px",
-          height: "27.19px",
-        }}
+      {/* PC 카드 */}
+      <div
+        className={`hidden md:block relative box-border cursor-default
+        ${isSelected ? "bg-[#EEEEEE]" : "bg-white"}
+        w-[299px] h-[246px] rounded-[25px] p-[30px]
+        shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg`}
       >
-        {isSelected ? "—" : "+"}
-      </button>
-    </div>
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggle();
+          }}
+          className="absolute top-[10px] left-[245px] text-[40px] text-[#1C1B1F]"
+        >
+          {isSelected ? "—" : "+"}
+        </button>
+        <img
+          src={item.imageUrl}
+          className="mx-auto w-[145px] h-[145px] object-contain mt-2"
+        />
+        <p className="text-center font-pretendard font-medium text-[20px] tracking-[-0.02em] leading-[100%] mt-4">
+          {item.name}
+        </p>
+      </div>
+    </>
   );
 }

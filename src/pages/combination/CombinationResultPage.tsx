@@ -2,8 +2,11 @@ import { useState, useEffect, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { MdArrowForwardIos, MdArrowBackIos } from "react-icons/md";
 import backgroundLine from "../../assets/background line.png";
+import checkedBoxIcon from "../../assets/check box.png";
 import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import selectionLine from "../../assets/selection line 1.png";
+import checkboxIcon from "../../assets/check box.png";
+import boxIcon from "../../assets/box.png";
 
 type ProductItem = {
   name: string;
@@ -13,6 +16,8 @@ type ProductItem = {
 export default function CombinationResultPage() {
   const location = useLocation();
   const selectedItems = location.state?.selectedItems || [];
+
+  const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -63,34 +68,53 @@ export default function CombinationResultPage() {
     }
   };
 
+  const handleToggleCheckbox = (idx: number) => {
+    setCheckedIndices((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const handleRecombination = () => {
+    const selectedFiltered = selectedItems.filter((_: any, idx: number) =>
+      checkedIndices.includes(idx)
+    );
+
+    navigate("/add-combination", {
+      state: {
+        selectedItems: selectedFiltered,
+      },
+    });
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
-      {/* 조합분석 - 모바일 버전 */}
-      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
-        조합분석
-      </h1>
 
+      {/* 조합분석 - 모바일 버전 */}
+      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-2 px-10 pt-10">
+        조합 분석
+      </h1>
       {/* 조합분석 - PC 버전 제목 + 버튼 수평 정렬 */}
       <div className="hidden md:flex justify-between items-start px-[230px] pt-[50px] mb-8">
         <h1 className="font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em]">
-          조합분석
+          조합 분석
         </h1>
         <div className="flex gap-4">
           <button
-            onClick={() => navigate("/조합-2-2")}
+            onClick={handleRecombination}
             className="w-[150px] h-[70px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
           >
             재조합
           </button>
           <button
-            onClick={() => navigate("/알림-2")}
-            className="w-[280px] h-[70px] bg-[#FFEB9D] rounded-[62.5px] text-lg font-semibold text-center"
+            onClick={() => navigate("/alarm/settings")}
+            className={`w-[280px] h-[70px] ${
+              checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
+            } rounded-[62.5px] flex items-center justify-center`}
           >
             섭취알림 등록하기
           </button>
         </div>
       </div>
-
       {/* PC 슬라이더 */}
       <div className="hidden md:block px-4">
         <div className="relative w-full max-w-[1430px] h-[300px] bg-white border border-[#B2B2B2] rounded-[45.51px] mx-auto px-[60px] py-[30px] overflow-hidden">
@@ -98,25 +122,36 @@ export default function CombinationResultPage() {
             ref={scrollRef}
             className="flex gap-[22.76px] overflow-x-auto scrollbar-hide scroll-smooth pr-[80px]"
           >
-            {selectedItems.map(
-              (item: { name: string; imageUrl: string }, idx: number) => (
-                <div
-                  key={idx}
-                  className="w-[270px] h-[250px] bg-white rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0"
+            {selectedItems.map((item: ProductItem, idx: number) => (
+              <div
+                key={idx}
+                className={`w-[270px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0
+                ${checkedIndices.includes(idx) ? "bg-[#EEEEEE]" : "bg-white"}`}
+              >
+                <img
+                  src={checkedIndices.includes(idx) ? checkedBoxIcon : boxIcon}
+                  alt="checkbox"
+                  onClick={() => handleToggleCheckbox(idx)}
+                  className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
+                />
+
+                <img
+                  src={item.imageUrl}
+                  className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
+                />
+                <p
+                  className="text-center font-pretendard font-medium mt-1"
+                  style={{
+                    fontSize: "23px",
+                    lineHeight: "100%",
+                    letterSpacing: "-0.02em",
+                    color: "#000000",
+                  }}
                 >
-                  <input
-                    type="checkbox"
-                    className="absolute top-[18px] left-[18px] w-[42px] h-[42px] border-2 border-[#9C9A9A] rounded-[7px] accent-black"
-                  />
-                  <img
-                    src={item.imageUrl}
-                    alt={item.name}
-                    className="w-[100px] h-[100px] object-contain mb-2"
-                  />
-                  <p className="text-sm font-medium text-center">{item.name}</p>
-                </div>
-              )
-            )}
+                  {item.name}
+                </p>
+              </div>
+            ))}
           </div>
 
           {selectedItems.length > 4 && (
@@ -137,40 +172,48 @@ export default function CombinationResultPage() {
           )}
         </div>
       </div>
-
       {/* 모바일 슬라이더 */}
-      <div className="md:hidden w-[390px] h-[156px] bg-white border border-[#B2B2B2] rounded-[20px] mx-auto overflow-x-auto scrollbar-hide px-4 py-3 mt-10">
+      <div className="md:hidden w-[370px] h-[156px] bg-white border border-[#B2B2B2] rounded-[20px] mx-auto overflow-x-auto scrollbar-hide px-4 py-3 mt-3">
         <div className="flex gap-3 w-max">
           {selectedItems.map((item: ProductItem, idx: number) => (
             <div
               key={idx}
-              className="w-[130px] h-[130px] bg-white rounded-[10px] flex flex-col items-center relative flex-shrink-0 pt-[26px] pb-[12px]"
+              className={`w-[130px] h-[130px] rounded-[10px] flex flex-col items-center relative flex-shrink-0 pt-[26px] pb-[12px]
+        ${checkedIndices.includes(idx) ? "bg-[#EFEFEF]" : "bg-white"}
+        ${checkedIndices.includes(idx) ? "shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]" : ""}
+        `}
             >
-              <input
-                type="checkbox"
-                className="absolute top-[8px] left-[8px] w-[18px] h-[18px] border border-[#9C9A9A] rounded-[3.33px] accent-black"
+              {/* 이미지 체크박스 */}
+              <img
+                src={checkedIndices.includes(idx) ? checkboxIcon : boxIcon}
+                alt="checkbox"
+                onClick={() => handleToggleCheckbox(idx)}
+                className="absolute top-[2px] left-[2px] w-[30px] h-[30px] cursor-pointer"
               />
+
+              {/* 제품 이미지 */}
               <img
                 src={item.imageUrl}
-                alt={item.name}
-                className="w-[70px] h-[50px] object-contain mb-2"
+                className="w-[70px] h-[70px] object-contain -mt-2 mb-2"
               />
-              <p className="text-xs text-center px-1">{item.name}</p>
+
+              {/* 제품 이름 */}
+              <p className="font-pretendard font-medium text-[15px] leading-[100%] tracking-[-0.02em] text-center text-black">
+                {item.name}
+              </p>
             </div>
           ))}
         </div>
       </div>
-
       {/* 모바일 섭취알림 버튼 */}
       <div className="md:hidden mt-4 flex justify-center">
         <button
           onClick={() => navigate("/알림-편집-1")}
-          className="w-[370px] h-[54px] bg-[#FFEB9D] rounded-[14px] flex justify-center items-center"
+          className="w-[370px] h-[54px] bg-[#FFEB9D] rounded-[14px] flex justify-center items-center mt-2"
         >
           <span className="text-[20px] font-medium">섭취알림 등록하기 →</span>
         </button>
       </div>
-
       {/* PC 섭취량 탭 - 전체 / 초과 */}
       <div className="hidden md:block relative mt-[50px] mb-[40px]">
         {/* 탭 버튼 영역 */}
@@ -195,12 +238,7 @@ export default function CombinationResultPage() {
                   lineHeight: "120%",
                   letterSpacing: "-0.02em",
                   textAlign: "center",
-                  color:
-                    activeTab === tab
-                      ? tab === "초과"
-                        ? "#E70000"
-                        : "#000000"
-                      : "#BDBDBD",
+                  color: tab === "초과" ? "#E70000" : "#000000",
                 }}
               >
                 {tab}
@@ -222,9 +260,8 @@ export default function CombinationResultPage() {
           }}
         />
       </div>
-
       {/* 모바일 버전 탭 */}
-      <div className="relative flex flex-col items-center md:hidden mt-6">
+      <div className="relative flex flex-col items-center md:hidden mt-10">
         {/* 탭 버튼 */}
         <div className="flex justify-center gap-25 w-full z-10">
           {["전체", "초과"].map((tab) => (
@@ -247,12 +284,7 @@ export default function CombinationResultPage() {
                   lineHeight: "100%",
                   letterSpacing: "-0.02em",
                   textAlign: "center",
-                  color:
-                    activeTab === tab
-                      ? tab === "초과"
-                        ? "#E70000"
-                        : "#000000"
-                      : "#BDBDBD",
+                  color: tab === "초과" ? "#E70000" : "#000000",
                 }}
               >
                 {tab}
@@ -274,7 +306,6 @@ export default function CombinationResultPage() {
           }}
         />
       </div>
-
       {activeTab === "초과" && (
         <div className="bg-gray-100 rounded-xl py-3 px-4 text-center mb-6">
           <p className="text-sm font-semibold text-gray-700">
@@ -282,7 +313,6 @@ export default function CombinationResultPage() {
           </p>
         </div>
       )}
-
       {/* 모바일 섭취량 그래프 */}
       <div className="md:hidden space-y-4 px-4">
         {filteredIngredients.map(({ name, value, upper }) => {
@@ -348,7 +378,6 @@ export default function CombinationResultPage() {
           );
         })}
       </div>
-
       {/* PC 섭취량 그래프 */}
       <div className="hidden md:flex flex-col items-center space-y-6 px-[60px] mt-20">
         {filteredIngredients.map(({ name, value, upper }) => {
@@ -391,9 +420,8 @@ export default function CombinationResultPage() {
           );
         })}
       </div>
-
       {/* 주의가 필요한 조합 안내 - 모바일 */}
-      <div className="md:hidden px-7 mt-10 mb-4">
+      <div className="md:hidden px-7 mt-10">
         <h2
           style={{
             width: "390px",
@@ -424,14 +452,13 @@ export default function CombinationResultPage() {
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-4 hide-scrollbar overflow-x-auto">
         <div className="w-max flex gap-[10px] ml-4 mr-4">
           {riskyCombinations.map((combo, i) => (
             <div
               key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative"
+              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative mt-5 mb-5"
             >
               {combo}
               <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
@@ -441,9 +468,8 @@ export default function CombinationResultPage() {
           ))}
         </div>
       </div>
-
       {/* 주의가 필요한 조합 안내 - PC */}
-      <div className="hidden md:block px-[60px] mt-[80px] mb-[40px]">
+      <div className="hidden md:block px-[60px] mt-[80px]">
         <h2
           style={{
             marginLeft: "200px",
@@ -480,16 +506,15 @@ export default function CombinationResultPage() {
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-
       {/* 조합 카드들 - PC */}
-      <div className="hidden md:flex overflow-x-auto px-[60px] mb-[60px] justify-center">
-        <div className="flex gap-15 w-max ">
+      <div className="hidden md:flex overflow-x-auto px-[60px] justify-center">
+        <div className="flex gap-15 w-max mt-10 mb-5">
           {riskyCombinations.map((combo, i) => (
             <div
               key={i}
-              className="w-[224px] h-[170px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-start relative"
+              className="w-[222px] h-[150px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-start relative"
             >
-              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] ml-[30px]">
+              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center mx-auto">
                 {combo}
               </span>
 
@@ -501,7 +526,7 @@ export default function CombinationResultPage() {
         </div>
       </div>
       {/* ===== 모바일 - 궁합이 좋은 조합 안내 ===== */}
-      <div className="md:hidden px-7 mt-10 mb-4">
+      <div className="md:hidden px-7 mt-10">
         <h2
           style={{
             width: "390px",
@@ -532,14 +557,13 @@ export default function CombinationResultPage() {
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-
       {/* ===== 모바일 - 궁합 카드 ===== */}
-      <div className="md:hidden px-4 hide-scrollbar overflow-x-auto">
+      <div className="md:hidden px-4 hide-scrollbar overflow-x-auto mb-10">
         <div className="flex gap-3 w-max pl-4 pr-4">
           {goodCombinations.map((combo, i) => (
             <div
               key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative"
+              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative mt-5 mb-10"
             >
               {combo}
               <span className="absolute top-[10px] right-[10px] text-xs text-gray-400">
@@ -549,9 +573,8 @@ export default function CombinationResultPage() {
           ))}
         </div>
       </div>
-
       {/* ===== PC - 궁합이 좋은 조합 안내 ===== */}
-      <div className="hidden md:block px-[60px] mt-[80px] mb-[40px]">
+      <div className="hidden md:block px-[60px] mt-[80px]">
         <h2
           style={{
             marginLeft: "200px",
@@ -584,16 +607,15 @@ export default function CombinationResultPage() {
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-
       {/* ===== PC - 궁합 카드 ===== */}
-      <div className="hidden md:block overflow-x-auto px-[60px] mb-[60px] ml-[200px]">
-        <div className="flex gap-15 w-max">
+      <div className="hidden md:flex overflow-x-auto px-[60px] justify-center">
+        <div className="flex gap-15 w-max mt-10 mb-30">
           {goodCombinations.map((combo, i) => (
             <div
               key={i}
-              className="w-[224px] h-[170px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-center relative"
+              className="w-[222px] h-[150px] bg-white rounded-[14px] px-[6px] py-[10px] shadow-[2px_2px_12.2px_0px_rgba(0,0,0,0.25)] flex items-center justify-start relative"
             >
-              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center">
+              <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center mx-auto">
                 {combo}
               </span>
 
@@ -602,7 +624,6 @@ export default function CombinationResultPage() {
               </span>
             </div>
           ))}
-          <div className="h-[120px] md:h-[140px]" />
         </div>
       </div>
     </div>
