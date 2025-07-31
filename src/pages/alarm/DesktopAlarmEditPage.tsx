@@ -149,7 +149,7 @@ const DesktopAlarmEditPage = () => {
             <img
               src="/images/camera.png"
               alt="camera icon"
-              className="w-[60px] h-[60px]"
+              className="w-[102.5px] h-[92.25px]"
             />
           </label>
         )}
