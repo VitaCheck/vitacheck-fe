@@ -36,8 +36,8 @@ const RootLayout = () => {
   const paddingTopClass = hideNavbar
     ? ""
     : isMain
-      ? "pt-48 sm:pt-25"
-      : "pt-15 sm:pt-25";
+      ? "pt-48 sm:pt-20"
+      : "pt-17 sm:pt-20";
 
   return (
     <div className="font-[Pretendard] h-full flex flex-col">

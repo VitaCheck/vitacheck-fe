@@ -1,5 +1,3 @@
-// src/apis/user.ts
-
 import axios from "axios";
 
 export interface UserInfo {
