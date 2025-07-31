@@ -8,6 +8,8 @@ import Vita from "../assets/MyPageVita.svg";
 import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
+import { useEffect, useState } from "react";
+import { getUserInfo, type UserInfo } from "@/lib/user";
 
 function MyPage() {
   const navigate = useNavigate();
@@ -19,6 +21,24 @@ function MyPage() {
   const goToMain = () => {
     navigate("/"); // 메인 페이지로 이동
   };
+
+  const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (!token) return;
+
+      try {
+        const user = await getUserInfo(token);
+        setUserInfo(user);
+      } catch (error) {
+        console.error("유저 정보 불러오기 실패", error);
+      }
+    };
+
+    fetchUser();
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -59,7 +79,8 @@ function MyPage() {
 
           <div className="flex-1">
             <p className="text-[20px] font-semibold text-[#E9B201]">
-              유엠씨야채<span className="text-black"> 님</span>
+              {userInfo?.nickname || "사용자"}
+              <span className="text-black"> 님</span>
             </p>
             <p className="text-sm">오늘도 비타체크 하세요!</p>
 
