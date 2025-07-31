@@ -38,7 +38,7 @@ function ProfileForm() {
 
     try {
       await updateUserInfo(token, nickname);
-      alert("변경되었습니다.");
+      alert("정보가 변경되었습니다.");
       navigate("/mypage");
     } catch (error) {
       console.error("닉네임 저장 실패:", error);
