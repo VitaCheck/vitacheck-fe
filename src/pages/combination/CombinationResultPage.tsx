@@ -8,15 +8,20 @@ import selectionLine from "../../assets/selection line 1.png";
 import checkboxIcon from "../../assets/check box.png";
 import boxIcon from "../../assets/box.png";
 import flipIcon from "../../assets/flip.png";
+import {
+  useCombinationAnalyze,
+  useCombinationRecommendations,
+} from "../../features/combination/hooks/useCombination";
 
 type ProductItem = {
+  id: number;
   name: string;
   imageUrl: string;
 };
 
 export default function CombinationResultPage() {
   const location = useLocation();
-  const selectedItems = location.state?.selectedItems || [];
+  const selectedItems: ProductItem[] = location.state?.selectedItems || [];
 
   const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
   const navigate = useNavigate();
@@ -103,6 +108,15 @@ export default function CombinationResultPage() {
         selectedItems: selectedFiltered,
       },
     });
+  };
+
+  const { mutate: analyzeCombination, data: analysisResult } =
+    useCombinationAnalyze();
+  const { data: recommendationResult } = useCombinationRecommendations();
+
+  const handleAnalyze = () => {
+    const supplementIds = selectedItems.map((item) => item.id);
+    analyzeCombination(supplementIds);
   };
 
   interface FlipCardProps {
