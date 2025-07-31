@@ -1,5 +1,7 @@
+// /alarm
 import React, { useEffect, useState } from "react";
 import axios from "@/lib/axios";
+import { useNavigate } from "react-router-dom";
 
 type Supplement = {
   notificationRoutineId: number;
@@ -33,6 +35,7 @@ const MobileAlarmPage = ({
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const navigate = useNavigate();
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const daysInMonth = getDaysInMonth(year, month);
@@ -102,7 +105,7 @@ const MobileAlarmPage = ({
   }
 
   for (let i = 1; i <= daysInMonth; i++) {
-    const cellDate = new Date(year, month, i);
+    // const cellDate = new Date(year, month, i);
 
     const isToday =
       today.getFullYear() === year &&
@@ -199,7 +202,10 @@ const MobileAlarmPage = ({
              gap-[10px] text-black text-[20px] font-medium 
              border border-[#AAAAAA] rounded-[18px] transition"
       >
-        <div className="flex items-center gap-[10px]">
+        <div
+          onClick={() => navigate("/alarm/settings")}
+          className="flex items-center gap-[10px]"
+        >
           <img
             src="/images/medical_services.png"
             alt="메디컬 아이콘"
