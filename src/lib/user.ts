@@ -6,6 +6,8 @@ export interface UserInfo {
   fullName: string;
   provider: string;
   age: number;
+  birthDate: string;
+  phoneNumber: string;
 }
 
 // 사용자 정보 조회
