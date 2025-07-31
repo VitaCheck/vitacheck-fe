@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/lib/axios";
 
 export interface SupplementsScrapList {
   supplementId: number;
@@ -8,21 +8,10 @@ export interface SupplementsScrapList {
   price: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_SERVER_API_URL;
-
 export const getLikedSupplements = async (): Promise<
   SupplementsScrapList[]
 > => {
-  const token = localStorage.getItem("accessToken");
-
-  const response = await axios.get(
-    `${API_BASE_URL}/api/v1/supplements/likes/me`,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await api.get("/api/v1/supplements/likes/me");
 
   if (response.data.isSuccess) {
     return response.data.result;

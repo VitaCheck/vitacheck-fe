@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/lib/axios";
 
 export interface Ingredient {
   ingredientId: number;
@@ -34,21 +34,16 @@ export interface SearchResultResponse {
   };
 }
 
-const API_BASE_URL = import.meta.env.VITE_SERVER_API_URL;
-
 export const searchSupplements = async (
   keyword: string
 ): Promise<SearchResultResponse> => {
-  const response = await axios.get(
-    `${API_BASE_URL}/api/v1/supplements/search`,
-    {
-      params: {
-        keyword,
-        page: 0,
-        size: 20,
-      },
-    }
-  );
+  const response = await api.get("/api/v1/supplements/search", {
+    params: {
+      keyword,
+      page: 0,
+      size: 20,
+    },
+  });
 
   if (response.data.isSuccess) {
     return response.data.result;

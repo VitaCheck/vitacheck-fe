@@ -12,11 +12,8 @@ function ProfileForm() {
 
   useEffect(() => {
     const fetchUser = async () => {
-      const token = localStorage.getItem("accessToken");
-      if (!token) return;
-
       try {
-        const user: UserInfo = await getUserInfo(token);
+        const user: UserInfo = await getUserInfo();
         setNickname(user.nickname);
         setEmail(user.email);
         setLoading(false);
@@ -30,14 +27,8 @@ function ProfileForm() {
   }, []);
 
   const handleSave = async () => {
-    const token = localStorage.getItem("accessToken");
-    if (!token) {
-      alert("로그인이 필요합니다.");
-      return;
-    }
-
     try {
-      await updateUserInfo(token, nickname);
+      await updateUserInfo(nickname);
       alert("정보가 변경되었습니다.");
       navigate("/mypage");
     } catch (error) {

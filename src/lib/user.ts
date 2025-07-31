@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "@/lib/axios";
 
 export interface UserInfo {
   email: string;
@@ -8,25 +8,19 @@ export interface UserInfo {
   age: number;
 }
 
-const API_BASE_URL = import.meta.env.VITE_SERVER_API_URL;
-
-export const getUserInfo = async (token: string): Promise<UserInfo> => {
-  const response = await axios.get(`${API_BASE_URL}/api/v1/users/me`, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-    },
-  });
-
+// 사용자 정보 조회
+export const getUserInfo = async (): Promise<UserInfo> => {
+  const response = await api.get("/api/v1/users/me");
   return response.data.result as UserInfo;
 };
 
-export const updateUserInfo = async (token: string, nickname: string) => {
-  const response = await axios.put(
-    `${API_BASE_URL}/api/v1/users/me`,
+// 사용자 닉네임 업데이트
+export const updateUserInfo = async (nickname: string) => {
+  const response = await api.put(
+    "/api/v1/users/me",
     { nickname },
     {
       headers: {
-        Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
       },
     }
