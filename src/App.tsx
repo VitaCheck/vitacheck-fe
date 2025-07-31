@@ -24,6 +24,7 @@ import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
+import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -100,6 +101,10 @@ const router = createBrowserRouter([
       {
         path: "product/:id",
         element: <ProductDetailPage />,
+      },
+      {
+        path: "/ingredients/:ingredientName",
+        element: <IngredientDetailPage />,
       },
 
       
