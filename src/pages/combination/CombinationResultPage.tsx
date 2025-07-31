@@ -64,7 +64,7 @@ export default function CombinationResultPage() {
   };
 
   return (
-    <div className="w-full min-h-screen bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard">
+    <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
       {/* 조합분석 - 모바일 버전 */}
       <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
         조합분석

@@ -13,6 +13,8 @@ import CombinationResultPage from "./pages/combination/CombinationResultPage";
 import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
+import DesktopAlarmAddPage from "./pages/alarm/DesktopAlarmAddPage";
+import DesktopAlarmEditPage from "./pages/alarm/DesktopAlarmEditPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
@@ -56,6 +58,14 @@ const router = createBrowserRouter([
       {
         path: "alarm/settings", // 알림 설정/관리 페이지
         element: <AlarmSettingsPage />,
+      },
+      {
+        path: "alarm/settings/add",
+        element: <DesktopAlarmAddPage />,
+      },
+      {
+        path: "alarm/settings/edit/:id",
+        element: <DesktopAlarmEditPage />,
       },
       {
         path: "mypage", //마이 페이지
