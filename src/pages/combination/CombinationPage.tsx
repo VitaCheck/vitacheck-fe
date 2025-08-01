@@ -4,11 +4,27 @@ import Cat from "../../assets/CatWithPointer.png";
 import Chick from "../../assets/chick.png";
 import flipIcon from "../../assets/flip.png";
 import { FiSearch, FiX } from "react-icons/fi";
+import axios from "@/lib/axios";
+
+interface Combination {
+  id: number;
+  type: "GOOD" | "CAUTION";
+  name: string;
+  description: string;
+  displayRank: number;
+}
+
+interface FlipCardProps {
+  name: string;
+  description: string;
+}
 
 const CombinationPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
+  const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const placeholder = "제품을 입력해주세요.";
 
   useEffect(() => {
@@ -18,39 +34,28 @@ const CombinationPage = () => {
     }
   }, []);
 
-  const riskyCombinations = [
-    { front: "철분 + 칼슘", back: "흡수를 방해할 수 있어요!" },
-    { front: "아연 + 철분", back: "같이 먹으면 경쟁 작용이 생겨요!" },
-    { front: "아연 + 구리", back: "상호 흡수 저해 우려가 있어요!" },
-    {
-      front: "비타민C + 철분",
-      back: "흡수는 증가하지만 속이 불편할 수 있어요.",
-    },
-    { front: "칼슘 + 마그네슘", back: "흡수율이 낮아질 수 있어요." },
-  ];
+  useEffect(() => {
+    const fetchCombinations = async () => {
+      try {
+        const response = await axios.get("/api/v1/combinations/recommend");
+        const result = response.data.result;
 
-  const goodCombinations = [
-    {
-      front: "비타민D + 칼슘",
-      back: "비타민D가 칼슘의 흡수를 도와줘요!",
-    },
-    {
-      front: "철분 + 비타민C",
-      back: "비타민C가 철분의 흡수를 촉진해요!",
-    },
-    {
-      front: "마그네슘 + 비타민B6",
-      back: "신경 안정과 에너지 생성에 시너지를 줘요!",
-    },
-    {
-      front: "유산균 + 아연",
-      back: "면역력 향상에 함께 작용해요!",
-    },
-    {
-      front: "오메가3 + 비타민E",
-      back: "세포 보호 효과가 상승해요!",
-    },
-  ];
+        if (result) {
+          setGoodCombinations(result.goodCombinations || []);
+          setRiskyCombinations(result.cautionCombinations || []);
+        } else {
+          setGoodCombinations([]);
+          setRiskyCombinations([]);
+        }
+      } catch (error) {
+        console.error("조합 추천 데이터를 불러오는 데 실패했습니다.", error);
+        setGoodCombinations([]);
+        setRiskyCombinations([]);
+      }
+    };
+
+    fetchCombinations();
+  }, []);
 
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
@@ -72,40 +77,63 @@ const CombinationPage = () => {
     localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
-  interface FlipCardProps {
-    frontText: string;
-    backText: string;
-  }
-
-  const FlipCard: React.FC<FlipCardProps> = ({ frontText, backText }) => {
+  const FlipCard: React.FC<FlipCardProps> = ({ name, description }) => {
     const [flipped, setFlipped] = useState(false);
 
     return (
-      <div
-        className="w-[130px] h-[114px] perspective cursor-pointer"
-        onClick={() => setFlipped(!flipped)}
-      >
+      <>
+        {/* 모바일용 카드 */}
         <div
-          className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
-            flipped ? "rotate-y-180" : ""
-          }`}
+          className="block md:hidden w-[130px] h-[114px] perspective cursor-pointer"
+          onClick={() => setFlipped(!flipped)}
         >
-          {/* 앞면 */}
-          <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
-            {frontText}
-            <img
-              src={flipIcon}
-              alt="회전 아이콘"
-              className="absolute top-[10px] right-[10px] w-[25px] h-[25px] opacity-100"
-            />
-          </div>
-
-          {/* 뒷면 */}
-          <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
-            {backText}
+          <div
+            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+              flipped ? "rotate-y-180" : ""
+            }`}
+          >
+            {/* 앞면 */}
+            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+              {name}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
+            </div>
+            {/* 뒷면 */}
+            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+              {description}
+            </div>
           </div>
         </div>
-      </div>
+
+        {/* PC용 카드 */}
+        <div
+          className="hidden md:block w-[222px] h-[150px] perspective cursor-pointer"
+          onClick={() => setFlipped(!flipped)}
+        >
+          <div
+            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+              flipped ? "rotate-y-180" : ""
+            }`}
+          >
+            {/* 앞면 */}
+            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+              {name}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[25px] h-[25px]"
+              />
+            </div>
+            {/* 뒷면 */}
+            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+              {description}
+            </div>
+          </div>
+        </div>
+      </>
     );
   };
 
@@ -351,8 +379,12 @@ const CombinationPage = () => {
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
         <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-          {riskyCombinations.map((combo, i) => (
-            <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+          {riskyCombinations.map((combo) => (
+            <FlipCard
+              key={combo.id}
+              name={combo.name}
+              description={combo.description}
+            />
           ))}
         </div>
       </div>
@@ -368,8 +400,12 @@ const CombinationPage = () => {
         {/* 카드 목록 */}
         <div className="flex justify-start mt-8">
           <div className="flex gap-[50px]">
-            {riskyCombinations.map((combo, i) => (
-              <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+            {riskyCombinations.map((combo) => (
+              <FlipCard
+                key={combo.id}
+                name={combo.name}
+                description={combo.description}
+              />
             ))}
           </div>
         </div>
@@ -408,9 +444,13 @@ const CombinationPage = () => {
       </div>
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-          {goodCombinations.map((combo, i) => (
-            <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
+          {goodCombinations.map((combo) => (
+            <FlipCard
+              key={combo.id}
+              name={combo.name}
+              description={combo.description}
+            />
           ))}
         </div>
       </div>
@@ -426,8 +466,12 @@ const CombinationPage = () => {
         {/* 카드 목록 */}
         <div className="flex justify-start">
           <div className="flex gap-[50px] mt-8 mb-20">
-            {goodCombinations.map((combo, i) => (
-              <FlipCard key={i} frontText={combo.front} backText={combo.back} />
+            {goodCombinations.map((combo) => (
+              <FlipCard
+                key={combo.id}
+                name={combo.name}
+                description={combo.description}
+              />
             ))}
           </div>
         </div>

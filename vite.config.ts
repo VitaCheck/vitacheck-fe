@@ -11,4 +11,13 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"), // @ -> src 경로로 매핑
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://43.203.119.146:8080",
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, "/api"),
+      },
+    },
+  },
 });
