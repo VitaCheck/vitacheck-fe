@@ -1,10 +1,18 @@
-// DesktopAlarmPage.tsx
-import type { Dispatch, SetStateAction } from "react";
+// alarm
+
+import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+import axios from "@/lib/axios";
+import { useNavigate } from "react-router-dom";
 
 interface Supplement {
-  id: string;
-  label: string;
-  time: string[];
+  notificationRoutineId: number;
+  supplementId: number;
+  supplementName: string;
+  supplementImageUrl: string;
+  daysOfWeek: string[];
+  times: string[];
+  isTaken: boolean; // ✅ 추가
 }
 
 interface Props {
@@ -14,7 +22,6 @@ interface Props {
   setMonth: Dispatch<SetStateAction<number>>;
   checkedIds: string[];
   toggleChecked: (id: string) => void;
-  supplements: Supplement[];
   today: Date;
   getDaysInMonth: (year: number, month: number) => number;
 }
@@ -25,11 +32,13 @@ const DesktopAlarmPage = ({
   setYear,
   setMonth,
   checkedIds,
-  toggleChecked,
-  supplements,
   today,
   getDaysInMonth,
 }: Props) => {
+  const [selectedDate, setSelectedDate] = useState(today);
+  const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const navigate = useNavigate();
+
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const daysInMonth = getDaysInMonth(year, month);
   const firstDay = new Date(year, month, 1).getDay();
@@ -53,15 +62,60 @@ const DesktopAlarmPage = ({
     }
   };
 
-  const percentComplete = Math.round(
-    (checkedIds.length / supplements.length) * 100
-  );
+  const percentComplete = supplements.length
+    ? Math.round((checkedIds.length / supplements.length) * 100)
+    : 0;
 
   const getCatImage = () => {
     if (percentComplete === 100) return "/images/rate3.png";
     if (percentComplete > 0) return "/images/rate2.png";
     return "/images/rate1.png";
   };
+
+  const onClickDate = (day: number) => {
+    setSelectedDate(new Date(year, month, day));
+  };
+
+  const fetchSupplementsByDate = async (date: Date) => {
+    const yyyy = date.getFullYear();
+    const mm = String(date.getMonth() + 1).padStart(2, "0");
+    const dd = String(date.getDate()).padStart(2, "0");
+    const formattedDate = `${yyyy}-${mm}-${dd}`;
+
+    const res = await axios.get("/api/v1/notifications/routines", {
+      params: { date: formattedDate },
+    });
+
+    setSupplements(res.data.result);
+  };
+
+  const toggleSupplementTaken = async (notificationRoutineId: number) => {
+    try {
+      const res = await axios.post(
+        `/api/v1/notifications/records/${notificationRoutineId}/toggle`,
+        {
+          date: selectedDate.toISOString().split("T")[0],
+        }
+      );
+
+      const { isTaken } = res.data.result;
+
+      // 현재 상태 업데이트 (옵셔널)
+      setSupplements((prev) =>
+        prev.map((s) =>
+          s.notificationRoutineId === notificationRoutineId
+            ? { ...s, isTaken }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error("섭취 토글 실패:", error);
+    }
+  };
+
+  useEffect(() => {
+    fetchSupplementsByDate(selectedDate);
+  }, [selectedDate]);
 
   const calendarCells = [];
   for (let i = firstDay - 1; i >= 0; i--) {
@@ -74,48 +128,54 @@ const DesktopAlarmPage = ({
       </div>
     );
   }
+
   for (let i = 1; i <= daysInMonth; i++) {
     const isToday =
-      year === today.getFullYear() &&
-      month === today.getMonth() &&
-      i === today.getDate();
+      today.getFullYear() === year &&
+      today.getMonth() === month &&
+      today.getDate() === i;
+
+    const isSelected =
+      selectedDate.getFullYear() === year &&
+      selectedDate.getMonth() === month &&
+      selectedDate.getDate() === i;
+
+    let cellClass =
+      "w-[54px] h-[54px] flex items-center justify-center text-[25px] cursor-pointer select-none rounded-full transition-all duration-200 ";
+
+    if (isSelected) {
+      cellClass += "bg-[#FFDB67] font-semibold text-black";
+    } else if (isToday) {
+      cellClass += "bg-[#E7E7E7] text-black font-semibold";
+    } else {
+      cellClass += "text-black";
+    }
+
     calendarCells.push(
       <div
         key={"day-" + i}
-        className={`flex items-center justify-center text-[25px] cursor-default select-none rounded-full transition-all duration-200 ${
-          isToday ? "bg-[#FFDB67] font-semibold text-black" : "text-black"
-        }`}
+        className={cellClass}
+        onClick={() => onClickDate(i)}
       >
         {i}
-      </div>
-    );
-  }
-  while (calendarCells.length < 42) {
-    calendarCells.push(
-      <div
-        key={"next-" + calendarCells.length}
-        className="text-gray-300 text-center py-1 cursor-default select-none"
-      >
-        &nbsp;
       </div>
     );
   }
 
   return (
     <div className="hidden md:flex justify-center items-start gap-[120px] bg-[#FAFAFA] px-[100px] py-[60px] min-h-screen">
-      {/* 왼쪽: 달력 */}
       <div>
         <div className="text-[52px] font-extrabold mb-10">섭취알림</div>
-        <div className="bg-white rounded-[20px] p-6 w-[576.82px] h-[546.3px] border border-[#9C9A9A]">
+        <div className="bg-white rounded-[20px] p-6 w-[576.82px] border border-[#9C9A9A]">
           <div className="flex items-center justify-between mb-4">
             <button onClick={onPrevMonth} className="text-2xl font-bold px-2">
-              &lt;
+              <FiChevronLeft className="text-[35px]" />
             </button>
             <div className="text-[30px] font-semibold">
               {year}년 {month + 1}월
             </div>
             <button onClick={onNextMonth} className="text-2xl font-bold px-2">
-              &gt;
+              <FiChevronRight className="text-[35px]" />
             </button>
           </div>
           <div className="grid grid-cols-7 text-[25px] text-[#9E9E9E] mb-2">
@@ -131,10 +191,14 @@ const DesktopAlarmPage = ({
         </div>
       </div>
 
-      {/* 오른쪽: 체크리스트 */}
+      <div className="w-[2px] h-[600px] bg-[#C8C8C8] mt-[70px]" />
+
       <div className="flex-1 max-w-[500px]">
         <div className="flex justify-end mb-6">
-          <button className="w-[287px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate("/alarm/settings")}
+            className="w-[287px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2"
+          >
             <img
               src="/images/medical_services.png"
               alt="메디컬 아이콘"
@@ -143,43 +207,67 @@ const DesktopAlarmPage = ({
             나의 영양제 관리
           </button>
         </div>
-        <div className="flex items-center justify-between mb-6">
-          <div className="flex items-center gap-4">
-            <img
-              src={getCatImage()}
-              alt="섭취율 고양이"
-              className="w-[153px] h-[153px] select-none"
-            />
-            <span className="text-[44px] font-bold text-black">
-              {percentComplete}%
-            </span>
-            <span className="text-[25px] font-bold text-black">섭취 완료</span>
-          </div>
+        <div className="flex items-center justify-center">
+          {supplements.length === 0 ? (
+            <div className="w-full max-w-md h-[104px] flex items-center justify-center rounded-xl bg-[#F4F4F4]">
+              <span className="text-[24px] font-medium">
+                오늘은 섭취할 영양제가 없어요!
+              </span>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-center gap-3">
+                <img
+                  src={getCatImage()}
+                  alt="섭취율 고양이"
+                  className="w-[153px] h-[153px] select-none"
+                />
+                <span className="text-[44px] font-bold text-black">
+                  {percentComplete}%
+                </span>
+              </div>
+              <div className="text-[20px] font-bold text-black">섭취 완료</div>
+            </>
+          )}
         </div>
 
         <div className="space-y-4">
-          {supplements.map(({ id, label, time }) => (
-            <div
-              key={id}
-              className="w-[454px] h-[104px] flex items-center justify-between px-4 py-3 rounded-[12px] bg-white border border-[#9C9A9A]"
-            >
-              <div className="flex flex-col">
-                <label htmlFor={id} className="text-[26px] font-medium">
-                  {label}
-                </label>
-                <span className="text-[20px] font-medium text-gray-500">
-                  {time.join(" | ")}
-                </span>
+          {supplements.map(
+            ({ notificationRoutineId, supplementName, times, isTaken }) => (
+              <div
+                key={notificationRoutineId}
+                onClick={() => toggleSupplementTaken(notificationRoutineId)}
+                className={`w-[454px] h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border border-[#9C9A9A] cursor-pointer transition ${
+                  isTaken ? "bg-[#FFF8DC] border-none" : "bg-white"
+                }`}
+              >
+                {/* 텍스트 영역 */}
+                <div className="flex flex-col">
+                  <span className="text-[20px] font-semibold text-black">
+                    {supplementName}
+                  </span>
+                  <span className="text-[16px] text-[#808080]">
+                    {times.join(" | ")}
+                  </span>
+                </div>
+
+                {/* 체크박스 */}
+                <div
+                  className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
+                    isTaken ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
+                  }`}
+                >
+                  {isTaken && (
+                    <img
+                      src="/images/check.svg"
+                      alt="체크됨"
+                      className="w-[24px] h-[18px]"
+                    />
+                  )}
+                </div>
               </div>
-              <input
-                id={id}
-                type="checkbox"
-                checked={checkedIds.includes(id)}
-                onChange={() => toggleChecked(id)}
-                className="w-6 h-6 accent-[#8B8B8B]"
-              />
-            </div>
-          ))}
+            )
+          )}
         </div>
       </div>
     </div>
