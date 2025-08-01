@@ -30,26 +30,61 @@ const DesktopAlarmEditPage = () => {
     if (isMobile) navigate("/alarm/settings");
   }, [isMobile, navigate]);
 
+  // useEffect(() => {
+  //   const fetchRoutine = async () => {
+  //     try {
+  //       const res = await axios.get(`/api/v1/notifications/routines/${id}`);
+  //       console.log("✔️ 루틴 응답:", res.data.result); // 콘솔 꼭 확인
+  //       console.log("✔️ 루틴 응답 구조:", res.data);
+  //       const routine = res.data.result; //첫 번째 요소 추출
+
+  //       const {
+  //         supplementId,
+  //         supplementName,
+  //         supplementImageUrl,
+  //         daysOfWeek,
+  //         times,
+  //       } = routine;
+  //       setSupplementId(supplementId);
+  //       setSupplementName(supplementName);
+  //       setSelectedDays(daysOfWeek);
+  //       setTimes(times); // 배열로 잘 세팅
+  //       setPreviewUrl(supplementImageUrl);
+  //     } catch (err) {
+  //       console.error("루틴 불러오기 실패", err);
+  //     }
+  //   };
+  //   if (id) fetchRoutine();
+  // }, [id]);
+
   useEffect(() => {
     const fetchRoutine = async () => {
       try {
-        const res = await axios.get(`/api/v1/notifications/routines/${id}`);
+        const res = await axios.get("/api/v1/notifications/routines");
+        const allRoutines = res.data.result;
+        const routine = allRoutines.find(
+          (r: any) => r.notificationRoutineId === Number(id)
+        );
+        if (!routine) throw new Error("해당 루틴이 없습니다.");
+
         const {
           supplementId,
           supplementName,
           supplementImageUrl,
           daysOfWeek,
           times,
-        } = res.data.result;
+        } = routine;
+
         setSupplementId(supplementId);
         setSupplementName(supplementName);
         setSelectedDays(daysOfWeek);
-        setTimes(times[0]);
+        setTimes(times);
         setPreviewUrl(supplementImageUrl);
       } catch (err) {
         console.error("루틴 불러오기 실패", err);
       }
     };
+
     if (id) fetchRoutine();
   }, [id]);
 

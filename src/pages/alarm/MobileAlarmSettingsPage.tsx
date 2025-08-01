@@ -1,6 +1,7 @@
 // /alarm /settings
 import { useEffect, useState } from "react";
 import AlarmAddModal from "./AlarmAddModal";
+import AlarmEditModal from "./AlarmEditModal";
 import axios from "@/lib/axios";
 
 interface Alarm {
@@ -19,6 +20,7 @@ interface Props {
 
 const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
   const [alarms, setAlarms] = useState<Alarm[]>([]);
+  const [editId, setEditId] = useState<number | null>(null);
 
   useEffect(() => {
     const fetchAlarms = async () => {
@@ -62,6 +64,7 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
             key={alarm.notificationRoutineId}
             className="flex justify-between items-center border-b border-gray-300 pb-4"
             style={{ height: "141px" }}
+            onClick={() => setEditId(alarm.notificationRoutineId)}
           >
             <div>
               <div className="text-[20px] font-semibold">
@@ -82,6 +85,9 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
       </div>
 
       {showModal && <AlarmAddModal onClose={() => setShowModal(false)} />}
+      {editId !== null && (
+        <AlarmEditModal id={editId} onClose={() => setEditId(null)} />
+      )}
     </div>
   );
 };
