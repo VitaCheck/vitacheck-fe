@@ -126,15 +126,20 @@ export default function CombinationResultPage() {
         {/* 모바일용 카드 */}
         <div
           className="block md:hidden w-[130px] h-[114px] perspective cursor-pointer"
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+            className={`relative w-full h-full transition-transform duration-500 ${
               flipped ? "rotate-y-180" : ""
             }`}
+            style={{ transformStyle: "preserve-3d" }}
           >
             {/* 앞면 */}
-            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
               {name}
               <img
                 src={flipIcon}
@@ -143,24 +148,39 @@ export default function CombinationResultPage() {
               />
             </div>
             {/* 뒷면 */}
-            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFEB9D] rounded-[14px] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-[#FFEB9D] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
               {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
             </div>
           </div>
         </div>
 
         {/* PC용 카드 */}
         <div
-          className="hidden md:block w-[245px] h-[170px] perspective cursor-pointer"
+          className="hidden md:block w-[245px] h-[170px] cursor-pointer"
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+            className={`relative w-full h-full transition-transform duration-500 ${
               flipped ? "rotate-y-180" : ""
             }`}
+            style={{ transformStyle: "preserve-3d" }}
           >
             {/* 앞면 */}
-            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
               {name}
               <img
                 src={flipIcon}
@@ -169,8 +189,19 @@ export default function CombinationResultPage() {
               />
             </div>
             {/* 뒷면 */}
-            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFEB9D] rounded-[14px] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-[#FFEB9D] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
               {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
             </div>
           </div>
         </div>
@@ -190,6 +221,7 @@ export default function CombinationResultPage() {
         <h1 className="font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em]">
           조합 분석
         </h1>
+
         <div className="flex gap-4">
           <button
             onClick={handleRecombination}
@@ -199,7 +231,7 @@ export default function CombinationResultPage() {
           </button>
           <button
             onClick={() => navigate("/alarm/settings")}
-            className={`w-[280px] h-[70px] ${
+            className={`w-[280px] h-[70px] font-bold ${
               checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
             } rounded-[62.5px] flex items-center justify-center`}
           >
@@ -214,44 +246,42 @@ export default function CombinationResultPage() {
             ref={scrollRef}
             className="flex gap-[22.76px] overflow-x-auto scrollbar-hide scroll-smooth pr-[80px]"
           >
-            {selectedItems
-              .filter((_: SupplementItem, idx: number) =>
-                checkedIndices.includes(idx)
-              )
-              .map((item: SupplementItem, idx: number) => (
-                <div
-                  key={idx}
-                  className={`w-[270px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0
-                ${checkedIndices.includes(idx) ? "bg-[#EEEEEE]" : "bg-white"}`}
+            {selectedItems.map((item: SupplementItem) => (
+              <div
+                key={item.supplementId}
+                className={`w-[270px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0
+          ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
+              >
+                <img
+                  src={
+                    checkedIndices.includes(item.supplementId)
+                      ? checkedBoxIcon
+                      : boxIcon
+                  }
+                  alt="checkbox"
+                  onClick={() => handleToggleCheckbox(item.supplementId)}
+                  className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
+                />
+                <img
+                  src={item.imageUrl}
+                  className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
+                />
+                <p
+                  className="text-center font-pretendard font-medium mt-1"
+                  style={{
+                    fontSize: "23px",
+                    lineHeight: "100%",
+                    letterSpacing: "-0.02em",
+                    color: "#000000",
+                  }}
                 >
-                  <img
-                    src={
-                      checkedIndices.includes(idx) ? checkedBoxIcon : boxIcon
-                    }
-                    alt="checkbox"
-                    onClick={() => handleToggleCheckbox(idx)}
-                    className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
-                  />
-
-                  <img
-                    src={item.imageUrl}
-                    className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
-                  />
-                  <p
-                    className="text-center font-pretendard font-medium mt-1"
-                    style={{
-                      fontSize: "23px",
-                      lineHeight: "100%",
-                      letterSpacing: "-0.02em",
-                      color: "#000000",
-                    }}
-                  >
-                    {item.supplementName}
-                  </p>
-                </div>
-              ))}
+                  {item.supplementName}
+                </p>
+              </div>
+            ))}
           </div>
 
+          {/* 좌우 스크롤 버튼 (4개 초과일 때만 표시) */}
           {selectedItems.length > 4 && (
             <>
               <button
@@ -262,7 +292,7 @@ export default function CombinationResultPage() {
                   src="/images/PNG/조합3-1/Frame667.png"
                   alt="왼쪽 스크롤"
                   className="w-[18px] h-[32px] object-contain"
-                />{" "}
+                />
               </button>
               <button
                 onClick={() => handleScroll("right")}
@@ -272,7 +302,7 @@ export default function CombinationResultPage() {
                   src="/images/PNG/조합3-1/Frame724.png"
                   alt="오른쪽 스크롤"
                   className="w-[18px] h-[32px] object-contain"
-                />{" "}
+                />
               </button>
             </>
           )}
@@ -281,38 +311,39 @@ export default function CombinationResultPage() {
       {/* 모바일 슬라이더 */}
       <div className="md:hidden w-[370px] h-[156px] bg-white border border-[#B2B2B2] rounded-[20px] mx-auto overflow-x-auto scrollbar-hide px-4 py-3 mt-3">
         <div className="flex gap-3 w-max">
-          {selectedItems
-            .filter((_: SupplementItem, idx: number) =>
-              checkedIndices.includes(idx)
-            )
-            .map((item: SupplementItem, idx: number) => (
-              <div
-                key={idx}
-                className={`w-[130px] h-[130px] rounded-[10px] flex flex-col items-center relative flex-shrink-0 pt-[26px] pb-[12px]
-        ${checkedIndices.includes(idx) ? "bg-[#EFEFEF]" : "bg-white"}
-        ${checkedIndices.includes(idx) ? "shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]" : ""}
-        `}
+          {selectedItems.map((item: SupplementItem) => (
+            <div
+              key={item.supplementId}
+              className={`w-[135px] h-[135px] rounded-[22.76px] flex flex-col items-center pt-[35px] relative flex-shrink-0
+              ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
+            >
+              <img
+                src={
+                  checkedIndices.includes(item.supplementId)
+                    ? checkedBoxIcon
+                    : boxIcon
+                }
+                alt="checkbox"
+                onClick={() => handleToggleCheckbox(item.supplementId)}
+                className="absolute top-[1px] left-[103px] w-[30px] h-[30px] cursor-pointer"
+              />
+              <img
+                src={item.imageUrl}
+                className="w-[80px] h-[80px] object-contain mb-3 mt-[-25px]"
+              />
+              <p
+                className="text-center font-pretendard font-medium"
+                style={{
+                  fontSize: "15px",
+                  lineHeight: "100%",
+                  letterSpacing: "-0.02em",
+                  color: "#000000",
+                }}
               >
-                {/* 이미지 체크박스 */}
-                <img
-                  src={checkedIndices.includes(idx) ? checkboxIcon : boxIcon}
-                  alt="checkbox"
-                  onClick={() => handleToggleCheckbox(idx)}
-                  className="absolute top-[2px] left-[2px] w-[30px] h-[30px] cursor-pointer"
-                />
-
-                {/* 제품 이미지 */}
-                <img
-                  src={item.imageUrl}
-                  className="w-[70px] h-[70px] object-contain -mt-2 mb-2"
-                />
-
-                {/* 제품 이름 */}
-                <p className="font-pretendard font-medium text-[15px] leading-[100%] tracking-[-0.02em] text-center text-black">
-                  {item.supplementName}
-                </p>
-              </div>
-            ))}
+                {item.supplementName}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
       {/* 모바일 섭취알림 버튼 */}
@@ -325,49 +356,46 @@ export default function CombinationResultPage() {
         </button>
       </div>
       {/* PC 섭취량 탭 - 전체 / 초과 */}
-      {filteredIngredients.length > 0 && (
-        <div className="hidden md:block relative mt-[50px] mb-[40px]">
-          {/* 탭 버튼 영역 */}
-          <div className="flex justify-center gap-[475px] z-10 relative">
-            {["전체", "초과"].map((tab) => (
-              <div
-                key={tab}
-                className="flex flex-col items-center"
-                onClick={() => setActiveTab(tab as "전체" | "초과")}
+      <div className="hidden md:flex flex-col items-center mt-[60px] relative">
+        {/* 탭 버튼 */}
+        <div className="flex justify-center gap-[200px] w-full z-10">
+          {["전체", "초과"].map((tab) => (
+            <div
+              key={tab}
+              className="flex flex-col items-center cursor-pointer"
+              onClick={() => setActiveTab(tab as "전체" | "초과")}
+            >
+              <span
+                style={{
+                  width: "100px",
+                  height: "58px",
+                  fontFamily: "Pretendard",
+                  fontWeight: 600,
+                  fontSize: "42px",
+                  lineHeight: "120%",
+                  letterSpacing: "-0.02em",
+                  textAlign: "center",
+                  color: tab === "초과" ? "#E70000" : "#000000",
+                }}
               >
-                <span
-                  style={{
-                    width: "100px",
-                    height: "58px",
-                    fontFamily: "Pretendard",
-                    fontWeight: 500,
-                    fontSize: "45px",
-                    lineHeight: "120%",
-                    letterSpacing: "-0.02em",
-                    textAlign: "center",
-                    color: tab === "초과" ? "#E70000" : "#000000",
-                  }}
-                >
-                  {tab}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* 탭 상태에 따라 selection line 이미지 변경 */}
-          <img
-            src={activeTab === "초과" ? selectionLine2 : selectionLine1}
-            alt="선택 라인"
-            className="absolute top-[72px] left-1/2 -translate-x-1/2"
-            style={{
-              width: "1350px",
-              height: "6px",
-              opacity: 1,
-              marginTop: "8px",
-            }}
-          />
+                {tab}
+              </span>
+            </div>
+          ))}
         </div>
-      )}
+
+        {/* 선택 라인 */}
+        <img
+          src={activeTab === "초과" ? selectionLine2 : selectionLine1}
+          alt="선택 라인"
+          className="mt-4"
+          style={{
+            width: "730px",
+            height: "6px",
+            opacity: 1,
+          }}
+        />
+      </div>
       {/* 모바일 버전 탭 */}
       <div className="relative flex flex-col items-center md:hidden mt-10">
         {/* 탭 버튼 */}

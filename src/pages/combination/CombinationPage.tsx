@@ -84,16 +84,21 @@ const CombinationPage = () => {
       <>
         {/* 모바일용 카드 */}
         <div
-          className="block md:hidden w-[130px] h-[114px] perspective cursor-pointer"
+          className="block md:hidden w-[130px] h-[114px] cursor-pointer"
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+            className={`relative w-full h-full transition-transform duration-500 ${
               flipped ? "rotate-y-180" : ""
             }`}
+            style={{ transformStyle: "preserve-3d" }}
           >
             {/* 앞면 */}
-            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
               {name}
               <img
                 src={flipIcon}
@@ -102,34 +107,61 @@ const CombinationPage = () => {
               />
             </div>
             {/* 뒷면 */}
-            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
               {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
             </div>
           </div>
         </div>
 
         {/* PC용 카드 */}
         <div
-          className="hidden md:block w-[222px] h-[150px] perspective cursor-pointer"
+          className="hidden md:block w-[222px] h-[150px] cursor-pointer"
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 transform-style-preserve-3d ${
+            className={`relative w-full h-full transition-transform duration-500 ${
               flipped ? "rotate-y-180" : ""
             }`}
+            style={{ transformStyle: "preserve-3d" }}
           >
             {/* 앞면 */}
-            <div className="absolute w-full h-full backface-hidden bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
               {name}
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[25px] h-[25px]"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
               />
             </div>
             {/* 뒷면 */}
-            <div className="absolute w-full h-full backface-hidden rotate-y-180 bg-[#FFFBCC] rounded-[14px] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]">
+            <div
+              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
               {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
             </div>
           </div>
         </div>

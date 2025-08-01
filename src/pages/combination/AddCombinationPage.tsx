@@ -5,6 +5,8 @@ import ExpandableProductGroup from "../../components/combination/ExpandableProdu
 import SadCat from "../../../public/images/rate1.png";
 import { FiSearch, FiX } from "react-icons/fi";
 import axios from "@/lib/axios";
+import { useInfiniteQuery } from "@tanstack/react-query";
+import { useInView } from "react-intersection-observer";
 
 interface Product {
   supplementId: number;
@@ -77,6 +79,12 @@ const AddCombinationPage = () => {
       setSelectedItems(preSelectedItems);
     }
   }, [preSelectedItems]);
+
+  const handleToggleCheckbox = (idx: number) => {
+    setCheckedIndices((prev) =>
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
+    );
+  };
 
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
@@ -293,12 +301,14 @@ const AddCombinationPage = () => {
               {/* PC 카드 */}
               <div className="hidden md:flex px-[230px] mt-[50px] mb-[60px] gap-[60px]">
                 <div className="grid grid-cols-3 gap-[40px] w-[980px]">
-                  {selectedItems.map((item: Product, idx: number) => (
+                  {results.map((item: Product) => (
                     <CombinationProductCard
                       key={item.supplementId}
                       item={item}
-                      isSelected={checkedIndices.includes(idx)}
-                      onToggle={() => handleToggleCheckbox(idx)}
+                      isSelected={selectedItems.some(
+                        (i) => i.supplementId === item.supplementId
+                      )}
+                      onToggle={() => handleToggle(item)}
                     />
                   ))}
                 </div>
