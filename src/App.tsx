@@ -26,6 +26,7 @@ import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
+import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import ScrapPage from "./pages/ScarpPage";
 import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
@@ -108,6 +109,29 @@ const router = createBrowserRouter([
         path: "/combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
       },
+
+      {
+        path: "products",
+        element: <PurposeProductList />,
+      },
+      {
+        path: "ingredientproducts",
+        element: <PurposeIngredientProducts />,
+      },
+      {
+        path: "brandproducts",
+        element: <PurposeBrandProducts />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductDetailPage />,
+      },
+      {
+        path: "/ingredients/:ingredientName",
+        element: <IngredientDetailPage />,
+      },
+
+      
     ],
   },
 ]);
