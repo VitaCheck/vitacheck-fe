@@ -1,5 +1,8 @@
+// /alarm
 import React, { useEffect, useState } from "react";
 import axios from "@/lib/axios";
+import { useNavigate } from "react-router-dom";
+import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 
 type Supplement = {
   notificationRoutineId: number;
@@ -33,6 +36,7 @@ const MobileAlarmPage = ({
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const navigate = useNavigate();
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const daysInMonth = getDaysInMonth(year, month);
@@ -102,7 +106,7 @@ const MobileAlarmPage = ({
   }
 
   for (let i = 1; i <= daysInMonth; i++) {
-    const cellDate = new Date(year, month, i);
+    // const cellDate = new Date(year, month, i);
 
     const isToday =
       today.getFullYear() === year &&
@@ -172,13 +176,13 @@ const MobileAlarmPage = ({
       <div className="border border-gray-300/50 rounded-xl p-4 bg-white">
         <div className="flex items-center justify-between mb-4">
           <button onClick={onPrevMonth} className="text-lg font-bold px-2">
-            &lt;
+            <FiChevronLeft className="text-[24px]" />
           </button>
           <div className="text-base font-semibold">
             {year}년 {month + 1}월
           </div>
           <button onClick={onNextMonth} className="text-lg font-bold px-2">
-            &gt;
+            <FiChevronRight className="text-[24px]" />
           </button>
         </div>
         <div className="grid grid-cols-7 text-xs text-gray-400 mb-2">
@@ -199,7 +203,10 @@ const MobileAlarmPage = ({
              gap-[10px] text-black text-[20px] font-medium 
              border border-[#AAAAAA] rounded-[18px] transition"
       >
-        <div className="flex items-center gap-[10px]">
+        <div
+          onClick={() => navigate("/alarm/settings")}
+          className="flex items-center gap-[10px]"
+        >
           <img
             src="/images/medical_services.png"
             alt="메디컬 아이콘"
@@ -212,7 +219,7 @@ const MobileAlarmPage = ({
       <div className="text-lg font-semibold">💊 나의 영양제</div>
 
       <div className="grid grid-cols-1 gap-4">
-        {supplements.map(({ notificationRoutineId, supplementName, times }) => {
+        {/* {supplements.map(({ notificationRoutineId, supplementName, times }) => {
           const isChecked = checkedIds.includes(
             notificationRoutineId.toString()
           );
@@ -260,6 +267,48 @@ const MobileAlarmPage = ({
                   </svg>
                 </div>
               </label>
+            </div>
+          );
+        })} */}
+        {supplements.map(({ notificationRoutineId, supplementName, times }) => {
+          const isChecked = checkedIds.includes(
+            notificationRoutineId.toString()
+          );
+
+          return (
+            <div
+              key={notificationRoutineId}
+              onClick={() => toggleChecked(notificationRoutineId.toString())}
+              className={`w-full h-[86px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
+                isChecked
+                  ? "bg-[#FFF8DC] border-none"
+                  : "bg-white border-[#9C9A9A]"
+              }`}
+            >
+              {/* 텍스트 영역 */}
+              <div className="flex flex-col">
+                <span className="text-[20px] font-semibold text-black">
+                  {supplementName}
+                </span>
+                <span className="text-[16px] text-[#808080]">
+                  {times.join(" | ")}
+                </span>
+              </div>
+
+              {/* 체크박스 */}
+              <div
+                className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
+                  isChecked ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
+                }`}
+              >
+                {isChecked && (
+                  <img
+                    src="/images/check.svg"
+                    alt="체크됨"
+                    className="w-[24px] h-[18px]"
+                  />
+                )}
+              </div>
             </div>
           );
         })}

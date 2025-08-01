@@ -7,7 +7,7 @@ interface SettingRowProps {
 function SettingRow({ label, checked, onToggle }: SettingRowProps) {
   return (
     <div className="flex justify-between items-center py-2">
-      <span className="text-sm text-[#6B6B6B]">{label}</span>
+      <span className="text-[18px] text-[#6B6B6B]">{label}</span>
       <div
         className={`w-10 h-6 flex items-center rounded-full p-1 cursor-pointer ${
           checked ? "bg-[#FCC000]" : "bg-[#AAA]"

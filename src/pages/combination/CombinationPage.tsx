@@ -4,11 +4,27 @@ import Cat from "../../assets/CatWithPointer.png";
 import Chick from "../../assets/chick.png";
 import flipIcon from "../../assets/flip.png";
 import { FiSearch, FiX } from "react-icons/fi";
+import axios from "@/lib/axios";
+
+interface Combination {
+  id: number;
+  type: "GOOD" | "CAUTION";
+  name: string;
+  description: string;
+  displayRank: number;
+}
+
+interface FlipCardProps {
+  name: string;
+  description: string;
+}
 
 const CombinationPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
+  const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
+  const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const placeholder = "제품을 입력해주세요.";
 
   useEffect(() => {
@@ -18,21 +34,28 @@ const CombinationPage = () => {
     }
   }, []);
 
-  const riskyCombinations = [
-    "철분 + 칼슘",
-    "아연 + 철분",
-    "아연 + 구리",
-    "비타민C + 철분",
-    "칼슘 + 마그네슘",
-  ];
+  useEffect(() => {
+    const fetchCombinations = async () => {
+      try {
+        const response = await axios.get("/api/v1/combinations/recommend");
+        const result = response.data.result;
 
-  const goodCombinations = [
-    "비타민D + 칼슘",
-    "철분 + 비타민C",
-    "마그네슘 + 비타민B6",
-    "유산균 + 아연",
-    "오메가3 + 비타민E",
-  ];
+        if (result) {
+          setGoodCombinations(result.goodCombinations || []);
+          setRiskyCombinations(result.cautionCombinations || []);
+        } else {
+          setGoodCombinations([]);
+          setRiskyCombinations([]);
+        }
+      } catch (error) {
+        console.error("조합 추천 데이터를 불러오는 데 실패했습니다.", error);
+        setGoodCombinations([]);
+        setRiskyCombinations([]);
+      }
+    };
+
+    fetchCombinations();
+  }, []);
 
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
@@ -54,9 +77,100 @@ const CombinationPage = () => {
     localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
+  const FlipCard: React.FC<FlipCardProps> = ({ name, description }) => {
+    const [flipped, setFlipped] = useState(false);
+
+    return (
+      <>
+        {/* 모바일용 카드 */}
+        <div
+          className="block md:hidden w-[130px] h-[114px] cursor-pointer"
+          style={{ perspective: "1000px" }}
+          onClick={() => setFlipped(!flipped)}
+        >
+          <div
+            className={`relative w-full h-full transition-transform duration-500 ${
+              flipped ? "rotate-y-180" : ""
+            }`}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            {/* 앞면 */}
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              {name}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
+            </div>
+            {/* 뒷면 */}
+            <div
+              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[16px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
+              {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* PC용 카드 */}
+        <div
+          className="hidden md:block w-[222px] h-[150px] cursor-pointer"
+          style={{ perspective: "1000px" }}
+          onClick={() => setFlipped(!flipped)}
+        >
+          <div
+            className={`relative w-full h-full transition-transform duration-500 ${
+              flipped ? "rotate-y-180" : ""
+            }`}
+            style={{ transformStyle: "preserve-3d" }}
+          >
+            {/* 앞면 */}
+            <div
+              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{ backfaceVisibility: "hidden" }}
+            >
+              {name}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
+            </div>
+            {/* 뒷면 */}
+            <div
+              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
+            >
+              {description}
+              <img
+                src={flipIcon}
+                alt="회전 아이콘"
+                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+              />
+            </div>
+          </div>
+        </div>
+      </>
+    );
+  };
+
   return (
     <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
-      {" "}
       {/* 조합추가 - 모바일 버전 */}
       <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
         조합 추가
@@ -296,49 +410,33 @@ const CombinationPage = () => {
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
         <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-          {riskyCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative"
-            >
-              {combo}
-              <img
-                src={flipIcon}
-                alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px] opacity-100"
-              />
-            </div>
+          {riskyCombinations.map((combo) => (
+            <FlipCard
+              key={combo.id}
+              name={combo.name}
+              description={combo.description}
+            />
           ))}
         </div>
       </div>
-      {/* PC용 제목 및 카드 wrapper */}
+      {/* PC용 제목 및 카드 wrapper - 주의가 필요한 조합 */}
       <div className="hidden md:block px-[230px]">
-        <h2 className="hidden md:block w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-10 mt-3">
+        <h2 className="w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3">
           주의가 필요한 조합 TOP 5
-          <span className="ml-8 text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
-            카드를 눌러서 확인해 보세요 !
-          </span>
         </h2>
+        <span className="text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
+          카드를 눌러서 확인해 보세요 !
+        </span>
 
-        {/* PC 카드 */}
-        <div className="flex justify-start">
+        {/* 카드 목록 */}
+        <div className="flex justify-start mt-8">
           <div className="flex gap-[50px]">
-            {riskyCombinations.map((combo, i) => (
-              <div
-                key={i}
-                className="w-[224px] h-[170px] rounded-[14px] px-[6px] py-[10px] 
-bg-white flex items-center justify-center 
-shadow-[2px_2px_12.2px_0px_#00000040] relative"
-              >
-                <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center">
-                  {combo}
-                  <img
-                    src={flipIcon}
-                    alt="회전 아이콘"
-                    className="absolute top-[10px] right-[10px] w-[25px] h-[25px] opacity-100"
-                  />
-                </span>
-              </div>
+            {riskyCombinations.map((combo) => (
+              <FlipCard
+                key={combo.id}
+                name={combo.name}
+                description={combo.description}
+              />
             ))}
           </div>
         </div>
@@ -375,52 +473,36 @@ shadow-[2px_2px_12.2px_0px_#00000040] relative"
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-      {/* ===== 모바일 - 궁합 카드 ===== */}
+      {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-13 mt-5">
-          {goodCombinations.map((combo, i) => (
-            <div
-              key={i}
-              className="w-[130px] h-[114px] bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-center text-[16px] font-medium flex items-center justify-center relative"
-            >
-              {combo}
-              <img
-                src={flipIcon}
-                alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px] opacity-100"
-              />
-            </div>
+        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
+          {goodCombinations.map((combo) => (
+            <FlipCard
+              key={combo.id}
+              name={combo.name}
+              description={combo.description}
+            />
           ))}
         </div>
       </div>
-      {/* PC용 제목 및 카드 wrapper */}
+      {/* PC용 제목 및 카드 wrapper - 궁합이 좋은 조합 */}
       <div className="hidden md:block px-[230px]">
-        <h2 className="hidden md:block w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-10 mt-20">
+        <h2 className="w-[1500px] h-[38px] text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-20">
           궁합이 좋은 조합 TOP 5
-          <span className="ml-8 text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
-            카드를 눌러서 확인해 보세요 !
-          </span>
         </h2>
+        <span className="text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
+          카드를 눌러서 확인해 보세요 !
+        </span>
 
-        {/* PC 카드 */}
+        {/* 카드 목록 */}
         <div className="flex justify-start">
-          <div className="flex gap-[50px] mb-20">
-            {riskyCombinations.map((combo, i) => (
-              <div
-                key={i}
-                className="w-[224px] h-[170px] rounded-[14px] px-[6px] py-[10px] 
-bg-white flex items-center justify-center 
-shadow-[2px_2px_12.2px_0px_#00000040] relative"
-              >
-                <span className="w-[200px] h-[36px] font-pretendard font-medium text-[25px] leading-[100%] tracking-[0] text-[#414141] text-center">
-                  {combo}
-                  <img
-                    src={flipIcon}
-                    alt="회전 아이콘"
-                    className="absolute top-[10px] right-[10px] w-[25px] h-[25px] opacity-100"
-                  />
-                </span>
-              </div>
+          <div className="flex gap-[50px] mt-8 mb-20">
+            {goodCombinations.map((combo) => (
+              <FlipCard
+                key={combo.id}
+                name={combo.name}
+                description={combo.description}
+              />
             ))}
           </div>
         </div>

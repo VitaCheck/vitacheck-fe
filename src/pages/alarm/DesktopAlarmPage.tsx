@@ -1,6 +1,10 @@
+// alarm
+
 import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import axios from "@/lib/axios";
+import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 
 interface Supplement {
   notificationRoutineId: number;
@@ -9,6 +13,7 @@ interface Supplement {
   supplementImageUrl: string;
   daysOfWeek: string[];
   times: string[];
+  isTaken: boolean; // ✅ 추가
 }
 
 interface Props {
@@ -16,7 +21,7 @@ interface Props {
   month: number;
   setYear: Dispatch<SetStateAction<number>>;
   setMonth: Dispatch<SetStateAction<number>>;
-  checkedIds: string[];
+  // checkedIds: string[];
   toggleChecked: (id: string) => void;
   today: Date;
   getDaysInMonth: (year: number, month: number) => number;
@@ -27,13 +32,12 @@ const DesktopAlarmPage = ({
   month,
   setYear,
   setMonth,
-  checkedIds,
-  toggleChecked,
   today,
   getDaysInMonth,
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const navigate = useNavigate();
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
   const daysInMonth = getDaysInMonth(year, month);
@@ -58,15 +62,29 @@ const DesktopAlarmPage = ({
     }
   };
 
-  const percentComplete = supplements.length
-    ? Math.round((checkedIds.length / supplements.length) * 100)
-    : 0;
+  // const percentComplete = (() => {
+  //   if (!Array.isArray(checkedIds) || !Array.isArray(supplements)) return 0;
+  //   if (supplements.length === 0) return 0;
+  //   return Math.round((checkedIds.length / supplements.length) * 100);
+  // })();
 
-  const getCatImage = () => {
+  const percentComplete = useMemo(() => {
+    if (!supplements || supplements.length === 0) return 0;
+    const takenCount = supplements.filter((s) => s.isTaken).length;
+    return Math.round((takenCount / supplements.length) * 100);
+  }, [supplements]);
+
+  // const getCatImage = () => {
+  //   if (percentComplete === 100) return "/images/rate3.png";
+  //   if (percentComplete > 0) return "/images/rate2.png";
+  //   return "/images/rate1.png";
+  // };
+
+  const catImage = useMemo(() => {
     if (percentComplete === 100) return "/images/rate3.png";
     if (percentComplete > 0) return "/images/rate2.png";
     return "/images/rate1.png";
-  };
+  }, [percentComplete]);
 
   const onClickDate = (day: number) => {
     setSelectedDate(new Date(year, month, day));
@@ -82,7 +100,36 @@ const DesktopAlarmPage = ({
       params: { date: formattedDate },
     });
 
+    console.log("📦 영양제 리스트 응답:", res.data);
+    console.log(
+      "🥤 isTaken 체크용:",
+      res.data.result.map((r: any) => ({
+        id: r.notificationRoutineId,
+        isTaken: r.isTaken,
+      }))
+    );
     setSupplements(res.data.result);
+  };
+
+  const toggleSupplementTaken = async (notificationRoutineId: number) => {
+    try {
+      const res = await axios.post(
+        `/api/v1/notifications/records/${notificationRoutineId}/toggle`
+      );
+
+      const { isTaken } = res.data.result;
+
+      // 현재 상태 업데이트 (옵셔널)
+      setSupplements((prev) =>
+        prev.map((s) =>
+          s.notificationRoutineId === notificationRoutineId
+            ? { ...s, isTaken }
+            : s
+        )
+      );
+    } catch (error) {
+      console.error("섭취 토글 실패:", error);
+    }
   };
 
   useEffect(() => {
@@ -102,8 +149,6 @@ const DesktopAlarmPage = ({
   }
 
   for (let i = 1; i <= daysInMonth; i++) {
-    const cellDate = new Date(year, month, i);
-
     const isToday =
       today.getFullYear() === year &&
       today.getMonth() === month &&
@@ -138,7 +183,6 @@ const DesktopAlarmPage = ({
 
   return (
     <div className="hidden md:flex justify-center items-start gap-[120px] bg-[#FAFAFA] px-[100px] py-[60px] min-h-screen">
-      {/* 왼쪽: 달력 */}
       <div>
         <div className="text-[52px] font-extrabold mb-10">섭취알림</div>
         <div className="bg-white rounded-[20px] p-6 w-[576.82px] border border-[#9C9A9A]">
@@ -166,13 +210,14 @@ const DesktopAlarmPage = ({
         </div>
       </div>
 
-      {/* 수직 구분선 */}
       <div className="w-[2px] h-[600px] bg-[#C8C8C8] mt-[70px]" />
 
-      {/* 오른쪽: 체크리스트 */}
       <div className="flex-1 max-w-[500px]">
         <div className="flex justify-end mb-6">
-          <button className="w-[287px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2">
+          <button
+            onClick={() => navigate("/alarm/settings")}
+            className="w-[287px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2"
+          >
             <img
               src="/images/medical_services.png"
               alt="메디컬 아이콘"
@@ -181,29 +226,18 @@ const DesktopAlarmPage = ({
             나의 영양제 관리
           </button>
         </div>
-        <div className="flex items-center justify-between mb-6">
-          {/* <div className="flex items-center gap-4">
-            <img
-              src={getCatImage()}
-              alt="섭취율 고양이"
-              className="w-[153px] h-[153px] select-none"
-            />
-            <span className="text-[44px] font-bold text-black">
-              {percentComplete}%
-            </span>
-            <span className="text-[25px] font-bold text-black">섭취 완료</span>
-          </div> */}
+        <div className="flex items-center justify-center">
           {supplements.length === 0 ? (
-            <div className="flex flex-col items-center justify-center gap-2 py-4">
-              <span className="text-[18px] font-medium text-gray-500">
-                섭취할 영양제가 없습니다
+            <div className="w-full max-w-md h-[104px] flex items-center justify-center rounded-xl bg-[#F4F4F4]">
+              <span className="text-[24px] font-medium">
+                오늘은 섭취할 영양제가 없어요!
               </span>
             </div>
           ) : (
             <>
               <div className="flex items-center justify-center gap-3">
                 <img
-                  src={getCatImage()}
+                  src={catImage}
                   alt="섭취율 고양이"
                   className="w-[153px] h-[153px] select-none"
                 />
@@ -218,20 +252,38 @@ const DesktopAlarmPage = ({
 
         <div className="space-y-4">
           {supplements.map(
-            ({ notificationRoutineId, supplementName, times }) => (
+            ({ notificationRoutineId, supplementName, times, isTaken }) => (
               <div
                 key={notificationRoutineId}
-                className="w-[454px] h-[104px] flex items-center justify-between px-4 py-3 rounded-[12px] border bg-white border-[#9C9A9A]"
+                onClick={() => toggleSupplementTaken(notificationRoutineId)}
+                className={`w-[454px] h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border border-[#9C9A9A] cursor-pointer transition ${
+                  isTaken ? "bg-[#FFF8DC] border-none" : "bg-white"
+                }`}
               >
+                {/* 텍스트 영역 */}
                 <div className="flex flex-col">
-                  <span className="text-[26px] font-medium">
+                  <span className="text-[20px] font-semibold text-black">
                     {supplementName}
                   </span>
-                  <span className="text-[20px] font-medium text-gray-500">
+                  <span className="text-[16px] text-[#808080]">
                     {times.join(" | ")}
                   </span>
                 </div>
-                {/* 체크박스나 toggle 버튼 등은 필요에 따라 여기에 추가 가능 */}
+
+                {/* 체크박스 */}
+                <div
+                  className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
+                    isTaken ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
+                  }`}
+                >
+                  {isTaken && (
+                    <img
+                      src="/images/check.svg"
+                      alt="체크됨"
+                      className="w-[24px] h-[18px]"
+                    />
+                  )}
+                </div>
               </div>
             )
           )}
