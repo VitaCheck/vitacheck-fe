@@ -18,6 +18,10 @@ import DesktopAlarmEditPage from "./pages/alarm/DesktopAlarmEditPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
+import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
+import NoSearchResult from "./components/ingredient/NoSearchResult";
+import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
+import SocialLogin from "./components/Auth/SocialLogin";
 
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
@@ -57,8 +61,26 @@ const router = createBrowserRouter([
       },
       {
         path: "ingredient",
-        element: <IngredientPage />,
+        children: [
+          {
+            index: true,
+            element: <IngredientPage />,
+          },
+          {
+            path: ":name",
+            element: <IngredientDetailPage />,
+          },
+          {
+            path: "search",
+            element: <IngredientSearchSection />,
+          },
+          {
+            path: "no-result",
+            element: <NoSearchResult />,
+          },
+        ],
       },
+
       {
         path: "combination", //조합 페이지
         element: <CombinationPage />,
@@ -133,11 +155,13 @@ const router = createBrowserRouter([
         element: <ProductDetailPage />,
       },
       {
+        path: "social-login",
+        element: <SocialLogin />,
+      },
+      {
         path: "/ingredients/:ingredientName",
         element: <IngredientDetailPage />,
       },
-
-      
     ],
   },
 ]);

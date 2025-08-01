@@ -1,7 +1,21 @@
 import { useState, useEffect } from "react";
 import ProductCard from "../../components/ProductCard";
-import NoSearchResult from "./NoSearchResult"; // 검색결과 없을 때 표시용 컴포넌트
 import searchIcon from "../../assets/search.png";
+import { fetchIngredientSearch } from "@/apis/ingredient";
+import { useNavigate } from "react-router-dom";
+import type { AxiosError } from "axios";
+
+interface Props {
+  data: {
+    name: string;
+  };
+}
+
+interface Supplement {
+  supplementId: number;
+  supplementName: string;
+  imageUrl: string;
+}
 
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -13,28 +27,58 @@ const useIsMobile = () => {
   return isMobile;
 };
 
-// 샘플 제품 목록
-const products = Array.from({ length: 8 }, (_, i) => ({
-  name: `제품 ${i + 1}`,
-  imageSrc: `/assets/sample${i + 1}.png`,
-}));
-
-const IngredientSupplements = () => {
+const IngredientSupplements = ({ data }: Props) => {
   const isMobile = useIsMobile();
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [products, setProducts] = useState<Supplement[]>([]);
+  const navigate = useNavigate();
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
 
-  // 검색 키워드 필터링
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const params: {
+          keyword?: string;
+          ingredientName?: string;
+          brand?: string;
+        } = {};
+
+        console.log(data.name);
+
+        if (data.name) params.ingredientName = data.name;
+        const res = await fetchIngredientSearch(params);
+
+        console.log(res);
+
+        const content = res.result.supplements.content;
+        if (!content || content.length === 0) {
+          navigate("/ingredient/NoSearchResult");
+          return;
+        }
+
+        setProducts(content);
+      } catch (err: unknown) {
+        const axiosErr = err as AxiosError;
+        console.error(
+          "검색 실패:",
+          axiosErr.response?.data || axiosErr.message
+        );
+        navigate("/ingredient/NoSearchResult");
+      }
+    };
+
+    fetchData();
+  }, [name, navigate]);
+
   const filteredProducts = products.filter((product) =>
-    product.name.includes(searchKeyword)
+    product.supplementName.includes(searchKeyword)
   );
 
   return (
     <div className="px-4 md:px-30 max-w-screen-xl mx-auto">
-      {/* 검색창 */}
       <section className="flex justify-center mb-6">
         <div
           className={`flex items-center w-full ${
@@ -58,22 +102,20 @@ const IngredientSupplements = () => {
             src={searchIcon}
             alt="검색"
             className={`ml-2 ${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
-          />{" "}
+          />
         </div>
       </section>
 
-      {/* 검색 결과 */}
-      {filteredProducts.length === 0 ? (
-        <NoSearchResult />
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-6 md:gap-x-2">
-          {filteredProducts.map((product, i) => (
-            <div key={i} className="flex justify-center">
-              <ProductCard name={product.name} imageSrc={product.imageSrc} />
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-6 md:gap-x-2">
+        {filteredProducts.map((product, i) => (
+          <div key={i} className="flex justify-center">
+            <ProductCard
+              name={product.supplementName}
+              imageSrc={product.imageUrl}
+            />
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
