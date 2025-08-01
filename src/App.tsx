@@ -22,20 +22,21 @@ import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/Auth/SocialLogin";
+import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
 
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
 import ProductDetailPage from "./pages/MainProductDetailPage";
 import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
-import LoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
-
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
-import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import ScrapPage from "./pages/ScarpPage";
 import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient(); // ✅ queryClient 생성
 
 const router = createBrowserRouter([
   {
@@ -53,7 +54,7 @@ const router = createBrowserRouter([
       },
       {
         path: "login/email", //로그인 페이지
-        element: <LoginPage />,
+        element: <EmailLoginPage />,
       },
       {
         path: "object", //목적 페이지
@@ -167,7 +168,11 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  return <RouterProvider router={router} />;
+  return (
+    <QueryClientProvider client={queryClient}>
+      <RouterProvider router={router} />
+    </QueryClientProvider>
+  );
 }
 
 export default App;

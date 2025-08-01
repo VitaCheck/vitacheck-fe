@@ -26,7 +26,6 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
     SAT: "토",
   };
 
-
   const selections = {
     hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
     minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
@@ -139,8 +138,8 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
             ) : (
               <img
                 src="/images/camera.png"
-                alt="camera icon"
-                className="w-[51.67px] h-[46.5px] object-cover rounded-[12px]"
+                alt="preview"
+                className="w-[51.67px] h-[46.5px] rounded-[12px]"
               />
             )}
           </button>
