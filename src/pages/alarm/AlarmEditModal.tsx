@@ -26,6 +26,7 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
     SAT: "토",
   };
 
+
   const selections = {
     hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
     minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
@@ -48,6 +49,7 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
         );
         setDays(convertedDays);
         // setDays(routine.daysOfWeek);
+
         setTimes(routine.times);
         setPreviewUrl(routine.supplementImageUrl);
       }

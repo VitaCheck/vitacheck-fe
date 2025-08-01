@@ -67,6 +67,7 @@ const DesktopAlarmEditPage = () => {
         );
         if (!routine) throw new Error("해당 루틴이 없습니다.");
 
+
         const {
           supplementId,
           supplementName,
@@ -74,11 +75,11 @@ const DesktopAlarmEditPage = () => {
           daysOfWeek,
           times,
         } = routine;
-
         setSupplementId(supplementId);
         setSupplementName(supplementName);
         setSelectedDays(daysOfWeek);
         setTimes(times);
+
         setPreviewUrl(supplementImageUrl);
       } catch (err) {
         console.error("루틴 불러오기 실패", err);
@@ -147,7 +148,7 @@ const DesktopAlarmEditPage = () => {
   if (isMobile) return null;
 
   return (
-    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8 bg-white">
+    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8">
       <div className="relative flex items-center justify-between w-full">
         <button
           onClick={() => navigate("/alarm/settings")}
@@ -166,7 +167,7 @@ const DesktopAlarmEditPage = () => {
         </button>
       </div>
 
-      <div className="w-[272px] h-[248px] bg-gray-100 mx-auto rounded-[20px] flex items-center justify-center overflow-hidden">
+      <div className="w-[272px] h-[248px] bg-white rounded-[20px] flex items-center justify-center overflow-hidden">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -196,7 +197,7 @@ const DesktopAlarmEditPage = () => {
         </label>
         <input
           type="text"
-          className="w-full h-[73px] border rounded-xl px-4 py-2 text-[22px] text-[#AAAAAA]"
+          className="w-full h-[73px] bg-white border border-[#AAAAAA] rounded-xl px-4 py-2 text-[22px]"
           placeholder="예: 멀티비타민"
           value={supplementName}
           onChange={(e) => setSupplementName(e.target.value)}
@@ -215,7 +216,7 @@ const DesktopAlarmEditPage = () => {
               className={`w-full aspect-square rounded-xl text-[22px] font-semibold border transition ${
                 selectedDays.includes(value)
                   ? "bg-[#AAAAAA] text-white border-transparent"
-                  : "bg-white text-[#AAAAAA] border border-gray-300"
+                  : "bg-white text-[#AAAAAA] border border-[#AAAAAA]"
               }`}
               onClick={() => toggleDay(value)}
             >
@@ -233,16 +234,22 @@ const DesktopAlarmEditPage = () => {
           <input
             key={index}
             type="time"
-            className="w-full h-[73px] border rounded-xl px-4 py-2 text-base mb-2"
+            className="w-full h-[73px] border border-[#AAAAAA] bg-white rounded-xl px-4 py-2 text-base mb-2"
             value={time}
             onChange={(e) => handleTimeChange(index, e.target.value)}
           />
         ))}
         <button
           onClick={addTime}
-          className="w-full h-[73px] border border-gray-400 text-[22px] py-2 rounded-xl text-gray-700"
+          className="w-full h-[73px] border border-[#AAAAAA] bg-white text-[22px] py-2 rounded-xl text-gray-700"
         >
           복용 시간 추가
+        </button>
+        <button
+          onClick={addTime}
+          className="w-full h-[73px] bg-[#EEEEEE] text-[22px] py-2 rounded-xl mt-[108px]"
+        >
+          알림 삭제
         </button>
       </div>
     </div>

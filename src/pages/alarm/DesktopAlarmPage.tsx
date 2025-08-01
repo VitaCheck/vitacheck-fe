@@ -4,6 +4,7 @@ import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
+import { useMemo } from "react";
 
 interface Supplement {
   notificationRoutineId: number;
@@ -20,7 +21,7 @@ interface Props {
   month: number;
   setYear: Dispatch<SetStateAction<number>>;
   setMonth: Dispatch<SetStateAction<number>>;
-  checkedIds: string[];
+  // checkedIds: string[];
   toggleChecked: (id: string) => void;
   today: Date;
   getDaysInMonth: (year: number, month: number) => number;
@@ -31,7 +32,6 @@ const DesktopAlarmPage = ({
   month,
   setYear,
   setMonth,
-  checkedIds,
   today,
   getDaysInMonth,
 }: Props) => {
@@ -62,15 +62,29 @@ const DesktopAlarmPage = ({
     }
   };
 
-  const percentComplete = supplements.length
-    ? Math.round((checkedIds.length / supplements.length) * 100)
-    : 0;
+  // const percentComplete = (() => {
+  //   if (!Array.isArray(checkedIds) || !Array.isArray(supplements)) return 0;
+  //   if (supplements.length === 0) return 0;
+  //   return Math.round((checkedIds.length / supplements.length) * 100);
+  // })();
 
-  const getCatImage = () => {
+  const percentComplete = useMemo(() => {
+    if (!supplements || supplements.length === 0) return 0;
+    const takenCount = supplements.filter((s) => s.isTaken).length;
+    return Math.round((takenCount / supplements.length) * 100);
+  }, [supplements]);
+
+  // const getCatImage = () => {
+  //   if (percentComplete === 100) return "/images/rate3.png";
+  //   if (percentComplete > 0) return "/images/rate2.png";
+  //   return "/images/rate1.png";
+  // };
+
+  const catImage = useMemo(() => {
     if (percentComplete === 100) return "/images/rate3.png";
     if (percentComplete > 0) return "/images/rate2.png";
     return "/images/rate1.png";
-  };
+  }, [percentComplete]);
 
   const onClickDate = (day: number) => {
     setSelectedDate(new Date(year, month, day));
@@ -223,7 +237,7 @@ const DesktopAlarmPage = ({
             <>
               <div className="flex items-center justify-center gap-3">
                 <img
-                  src={getCatImage()}
+                  src={catImage}
                   alt="섭취율 고양이"
                   className="w-[153px] h-[153px] select-none"
                 />

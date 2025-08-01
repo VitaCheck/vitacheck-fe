@@ -34,15 +34,15 @@ const PurposeIngredientProducts = () => {
           </div>
 
           {/* 검색창 */}
-          <div className="flex items-center w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full bg-[#F2F2F2]">
+          <div className="flex items-center w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="찾고 싶은 제품을 입력해주세요."
-              className="flex-grow font-light text-[18px] outline-none"
+              className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
             />
-            <AiOutlineSearch className="text-gray-500 text-[20px] ml-2" />
+            <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
           </div>
 
           {/* 카드 리스트 */}
@@ -74,7 +74,7 @@ const PurposeIngredientProducts = () => {
         <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.66] origin-top">
             {/* 상단 헤더 라인: 제목 */}
             <div className="flex justify-between items-center">
-              <h1 className="text-[52px] tracking-[-1.04px] font-bold">{ingredient}</h1>
+              <h1 className="text-[44px] tracking-[-1.04px] font-semibold">{ingredient}</h1>
             </div>
 
           {/* 검색창 */}

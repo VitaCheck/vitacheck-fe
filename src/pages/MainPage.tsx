@@ -4,7 +4,7 @@ import NavSection from "../components/MainPage/NavSection";
 
 const MainPage = () => {
   return (
-    <div>
+    <div className="bg-white">
       <MainTop />
       <NavSection />
       <ProductList />
