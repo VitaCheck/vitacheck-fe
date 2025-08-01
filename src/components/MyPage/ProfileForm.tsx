@@ -42,10 +42,10 @@ function ProfileForm() {
 
   if (loading) return <p>불러오는 중...</p>;
 
-  const handleSave = () => {
-    // 저장 로직 처리
-    console.log("저장됨", { nickname, phone });
-  };
+  // const handleSave = () => {
+  //   // 저장 로직 처리
+  //   console.log("저장됨", { nickname, phone });
+  // };
 
   return (
     <div className="space-y-4">
@@ -63,7 +63,6 @@ function ProfileForm() {
       <ProfileInput label="이메일 주소" value={email} />
 
       <div className="pt-6 mt-[22%] sm:mt-[5%]">
-
         <button
           onClick={handleSave}
           className="w-full bg-[#FFEB9D] hover:bg-[#FFDB67] text-black font-medium px-6 py-3 rounded-md transition-colors cursor-pointer"

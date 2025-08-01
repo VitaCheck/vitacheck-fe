@@ -54,7 +54,7 @@ const LoginPage = () => {
               placeholder="이메일 주소를 입력해주세요."
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className="w-full px-4 py-3 border-b border-gray-300 text-[18px] text-[#AAAAAA] focus:outline-none"
+              className="w-full px-4 py-3 border-b border-gray-300 text-[18px] text-[#6B6B6B] placeholder-[#AAAAAA] focus:outline-none"
               required
             />
           </div>
