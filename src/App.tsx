@@ -24,6 +24,8 @@ import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProducts
 import ProductDetailPage from "./pages/MainProductDetailPage";
 import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
+import LoginPage from "./pages/auth/LoginPage"; //자체 로그인 페이지
+
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
 import ScrapPage from "./pages/ScarpPage";
@@ -43,6 +45,10 @@ const router = createBrowserRouter([
       {
         path: "login", //로그인 페이지
         element: <SignInPage />,
+      },
+      {
+        path: "login2", //로그인 페이지
+        element: <LoginPage />,
       },
       {
         path: "object", //목적 페이지

@@ -40,7 +40,7 @@ const DesktopAlarmSettingsPage = () => {
   return (
     <div className="hidden md:flex flex-col min-h-screen px-[320px] py-[60px] bg-[#FAFAFA]">
       {/* 상단 고정 영역 */}
-      <div className="w-full flex justify-between items-center mb-10 max-w-[720px] mx-auto">
+      <div className="w-full flex justify-between items-center mb-10 mx-auto">
         <h1 className="text-[52px] font-bold">나의 영양제 관리</h1>
         <button
           onClick={() => navigate("/alarm/settings/add")}
@@ -54,7 +54,7 @@ const DesktopAlarmSettingsPage = () => {
       <div className="flex w-full justify-center">
         <div className="w-full max-w-[720px] mx-auto">
           <div className="space-y-6 w-full">
-            {alarms.map((alarm) => (
+            {/* {alarms.map((alarm) => (
               <div
                 key={alarm.notificationRoutineId}
                 className="flex justify-between items-center border-b border-gray-300 pb-6 cursor-pointer"
@@ -70,6 +70,36 @@ const DesktopAlarmSettingsPage = () => {
                 <div
                   onClick={(e) => {
                     e.stopPropagation();
+                    toggleAlarm(alarm.notificationRoutineId);
+                  }}
+                  className={`w-12 h-7 flex items-center px-1 rounded-full cursor-pointer transition-colors bg-[#FCC000]`}
+                >
+                  <div className="w-5 h-5 rounded-full bg-white shadow-md transform transition-transform translate-x-5" />
+                </div>
+              </div>
+            ))} */}
+            {alarms.map((alarm) => (
+              <div
+                key={alarm.notificationRoutineId}
+                onClick={() =>
+                  navigate(
+                    `/alarm/settings/edit/${alarm.notificationRoutineId}`
+                  )
+                }
+                className="flex justify-between items-center border-b border-gray-300 pb-6 cursor-pointer"
+              >
+                <div className="flex flex-col">
+                  <div className="text-[35.57px] font-semibold">
+                    {alarm.supplementName}
+                  </div>
+                  <div className="text-[35.57px] font-medium text-gray-500 mt-1">
+                    {formatTimes(alarm.times)}
+                  </div>
+                </div>
+
+                <div
+                  onClick={(e) => {
+                    e.stopPropagation(); // 토글 클릭 시 edit로 이동 막음
                     toggleAlarm(alarm.notificationRoutineId);
                   }}
                   className={`w-12 h-7 flex items-center px-1 rounded-full cursor-pointer transition-colors bg-[#FCC000]`}

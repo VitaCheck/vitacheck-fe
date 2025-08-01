@@ -11,4 +11,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"), // @ -> src 경로로 매핑
     },
   },
+  server: {
+    host: true,
+  },
 });

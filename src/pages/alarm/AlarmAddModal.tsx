@@ -43,6 +43,7 @@ const AlarmAddModal = ({ onClose }: Props) => {
   const [image, setImage] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
 
   // 파일 선택 핸들러
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,6 +51,7 @@ const AlarmAddModal = ({ onClose }: Props) => {
     if (file) {
       setImage(file);
       setPreviewUrl(URL.createObjectURL(file));
+      setShowImagePicker(false);
     }
   };
 
@@ -84,7 +86,11 @@ const AlarmAddModal = ({ onClose }: Props) => {
                 className="w-full h-full object-cover rounded-[12px]"
               />
             ) : (
-              <span className="text-[30px] text-[#CCCCCC]">📷</span>
+              <img
+                src="/images/camera.png"
+                alt="camera icon"
+                className="w-[51.67px] h-[46.5px] object-cover rounded-[12px]"
+              />
             )}
           </button>
         </div>
@@ -218,7 +224,12 @@ const AlarmAddModal = ({ onClose }: Props) => {
 
               <div className="flex flex-col">
                 <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 border-b border-[#D9D9D9] cursor-pointer flex items-center">
-                  📷 카메라로 촬영하기
+                  <img
+                    src="/images/cameraModal.png"
+                    alt="camera icon"
+                    className="w-[50px] h-[50px] object-cover mr-[22px]"
+                  />{" "}
+                  카메라로 촬영하기
                   <input
                     type="file"
                     accept="image/*"
@@ -228,7 +239,12 @@ const AlarmAddModal = ({ onClose }: Props) => {
                   />
                 </label>
                 <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 cursor-pointer flex items-center">
-                  🖼 사진 앨범에서 선택하기
+                  <img
+                    src="/images/galleryModal.png"
+                    alt="camera icon"
+                    className="w-[50px] h-[50px] object-cover mr-[22px]"
+                  />
+                  사진 앨범에서 선택하기
                   <input
                     type="file"
                     accept="image/*"
