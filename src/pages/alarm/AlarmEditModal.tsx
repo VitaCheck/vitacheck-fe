@@ -16,6 +16,17 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
 
+  const DAY_MAP: Record<string, string> = {
+    SUN: "일",
+    MON: "월",
+    TUE: "화",
+    WED: "수",
+    THU: "목",
+    FRI: "금",
+    SAT: "토",
+  };
+
+
   const selections = {
     hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
     minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
@@ -32,7 +43,13 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
       );
       if (routine) {
         setName(routine.supplementName);
-        setDays(routine.daysOfWeek);
+        // 영어 → 한글 요일 변환
+        const convertedDays = routine.daysOfWeek.map(
+          (day: string) => DAY_MAP[day]
+        );
+        setDays(convertedDays);
+        // setDays(routine.daysOfWeek);
+
         setTimes(routine.times);
         setPreviewUrl(routine.supplementImageUrl);
       }

@@ -100,16 +100,21 @@ const DesktopAlarmPage = ({
       params: { date: formattedDate },
     });
 
+    console.log("📦 영양제 리스트 응답:", res.data);
+    console.log(
+      "🥤 isTaken 체크용:",
+      res.data.result.map((r: any) => ({
+        id: r.notificationRoutineId,
+        isTaken: r.isTaken,
+      }))
+    );
     setSupplements(res.data.result);
   };
 
   const toggleSupplementTaken = async (notificationRoutineId: number) => {
     try {
       const res = await axios.post(
-        `/api/v1/notifications/records/${notificationRoutineId}/toggle`,
-        {
-          date: selectedDate.toISOString().split("T")[0],
-        }
+        `/api/v1/notifications/records/${notificationRoutineId}/toggle`
       );
 
       const { isTaken } = res.data.result;
