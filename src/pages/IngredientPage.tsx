@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import catImage from "../assets/cat.png";
 import searchIcon from "../assets/search.png";
+import downIcon from "../assets/arrow_drop_down.png";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -62,7 +63,8 @@ const IngredientPage = () => {
     if (e.key === "Enter") {
       const trimmed = searchKeyword.trim();
       if (trimmed.length === 0) return;
-      navigate(`/ingredient/search?query=${encodeURIComponent(trimmed)}`);
+
+      navigate(`/ingredient/search?keyword=${encodeURIComponent(trimmed)}`);
     }
   };
 
@@ -141,10 +143,17 @@ const IngredientPage = () => {
           <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
             연령대별 자주 찾는 성분 TOP 5
           </h2>
+
           <select
             value={selected}
             onChange={handleChange}
-            className="text-sm font-semibold px-2 py-1 bg-[#D9D9D9]"
+            className="text-sm font-semibold rounded-full pl-3 pr-6 py-1 bg-[#FFEB9D] appearance-none"
+            style={{
+              backgroundImage: `url(${downIcon})`,
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: "right 0.4rem center", // 화살표 왼쪽으로 붙이기
+              backgroundSize: "20px 20px", // 화살표 더 크게
+            }}
           >
             {["10대", "20대", "30대", "40대", "50대", "60대 이상"].map(
               (age) => (
