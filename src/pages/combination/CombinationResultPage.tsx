@@ -211,7 +211,7 @@ export default function CombinationResultPage() {
 
   return (
     <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
-      {" "}
+
       {/* 조합분석 - 모바일 버전 */}
       <h1 className="block md:hidden font-pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-2 px-10 pt-10">
         조합 분석

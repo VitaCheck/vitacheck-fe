@@ -3,7 +3,8 @@ import Logo from "../assets/logo.svg";
 
 const Footer = () => {
   return (
-    <footer className="w-full bg-white border-t border-gray-200 py-6 px-4 text-sm text-black hidden sm:block">
+
+    <footer className="w-full h-[100px] bg-white border-t border-gray-200 py-6 px-4 text-sm text-black hidden sm:block">
       <div className="flex flex-col items-center">
         {/* 로고 */}
         <Link to="/" className="mb-4">

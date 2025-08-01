@@ -13,6 +13,8 @@ import CombinationResultPage from "./pages/combination/CombinationResultPage";
 import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
+import DesktopAlarmAddPage from "./pages/alarm/DesktopAlarmAddPage";
+import DesktopAlarmEditPage from "./pages/alarm/DesktopAlarmEditPage";
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
@@ -22,8 +24,11 @@ import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProducts
 import ProductDetailPage from "./pages/MainProductDetailPage";
 import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
+import LoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
+
 // 레이아웃
 import RootLayout from "./layout/RootLayout";
+import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import ScrapPage from "./pages/ScarpPage";
 import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
@@ -41,6 +46,10 @@ const router = createBrowserRouter([
       {
         path: "login", //로그인 페이지
         element: <SignInPage />,
+      },
+      {
+        path: "login/email", //로그인 페이지
+        element: <LoginPage />,
       },
       {
         path: "object", //목적 페이지
@@ -61,6 +70,14 @@ const router = createBrowserRouter([
       {
         path: "alarm/settings", // 알림 설정/관리 페이지
         element: <AlarmSettingsPage />,
+      },
+      {
+        path: "alarm/settings/add",
+        element: <DesktopAlarmAddPage />,
+      },
+      {
+        path: "alarm/settings/edit/:id",
+        element: <DesktopAlarmEditPage />,
       },
       {
         path: "mypage", //마이 페이지
@@ -98,6 +115,29 @@ const router = createBrowserRouter([
         path: "combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
       },
+
+      {
+        path: "products",
+        element: <PurposeProductList />,
+      },
+      {
+        path: "ingredientproducts",
+        element: <PurposeIngredientProducts />,
+      },
+      {
+        path: "brandproducts",
+        element: <PurposeBrandProducts />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductDetailPage />,
+      },
+      {
+        path: "/ingredients/:ingredientName",
+        element: <IngredientDetailPage />,
+      },
+
+      
     ],
   },
 ]);
