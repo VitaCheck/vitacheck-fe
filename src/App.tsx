@@ -112,7 +112,7 @@ const router = createBrowserRouter([
         element: <AddCombinationPage />,
       },
       {
-        path: "/combination-result", // 분석 결과 페이지
+        path: "combination-result", // 분석 결과 페이지
         element: <CombinationResultPage />,
       },
 

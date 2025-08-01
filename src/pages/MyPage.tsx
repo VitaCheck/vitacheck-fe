@@ -11,6 +11,7 @@ import Logout from "../assets/logout.svg";
 import { useEffect, useState } from "react";
 import { getUserInfo, type UserInfo } from "@/lib/user";
 
+
 function MyPage() {
   const navigate = useNavigate();
 

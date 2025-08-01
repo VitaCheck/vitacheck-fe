@@ -20,6 +20,7 @@ const Navbar = () => {
     <header className="bg-white w-full">
       {/* 데스크탑 레이아웃 */}
       <div className="hidden sm:flex justify-between items-center w-full h-[80px]">
+
         {/* 왼쪽 로고 */}
         <Link
           to="/"

@@ -18,6 +18,7 @@ const SearchBar = () => {
   const handleClear = () => setQuery("");
   const toggleModal = () => setShowModal((prev) => !prev);
 
+
   return (
     <>
       <div className="flex items-center w-full p-2 rounded-[44px] bg-[#FFFFFF] border border-[#F8BD00]">
