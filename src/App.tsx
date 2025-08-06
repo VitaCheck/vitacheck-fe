@@ -23,6 +23,7 @@ import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/Auth/SocialLogin";
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
+import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
 
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
@@ -55,6 +56,10 @@ const router = createBrowserRouter([
       {
         path: "login/email", //로그인 페이지
         element: <EmailLoginPage />,
+      },
+      {
+        path: "signup/email", //로그인 페이지
+        element: <EmailSignupPage />,
       },
       {
         path: "object", //목적 페이지
