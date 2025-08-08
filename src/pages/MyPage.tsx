@@ -9,8 +9,7 @@ import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
 import { useEffect, useState } from "react";
-import { getUserInfo, type UserInfo } from "@/lib/user";
-
+import { getUserInfo, type UserInfo } from "@/apis/user";
 
 function MyPage() {
   const navigate = useNavigate();
@@ -120,7 +119,7 @@ function MyPage() {
               viewBox="0 0 25 25"
               strokeWidth={2}
               stroke="currentColor"
-              className="w-5 h-5 text-gray-400"
+              className="w-5 h-5 text-[#000000]"
             >
               <path
                 strokeLinecap="round"
