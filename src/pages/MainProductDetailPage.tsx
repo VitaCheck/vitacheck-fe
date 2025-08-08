@@ -58,7 +58,7 @@ const ProductDetailPage = () => {
               {/* 하트 + 공유 버튼: absolute로 겹치기 */}
               <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
                 <button className="w-[33px] h-[33px] flex items-center justify-center">
-                  <GoShareAndroid className="w-[33px] h-[33px] text-black" />
+                  <GoShareAndroid className="w-[33px] h-[33px] cursor-pointer text-black" />
                 </button>
                 <button
                   onClick={toggleLike}

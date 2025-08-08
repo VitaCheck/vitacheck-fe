@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Search from "../assets/search.svg";
 import X from "../assets/X.svg";
+import SearchOptionsModal from "./SearchOptionsModal";
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
 
   const handleFocus = () => {
@@ -13,12 +15,12 @@ const SearchBar = () => {
     }
   };
 
-  const handleClear = () => {
-    setQuery("");
-  };
+  const handleClear = () => setQuery("");
+  const toggleModal = () => setShowModal((prev) => !prev);
+
 
   return (
-    <div>
+    <>
       <div className="flex items-center w-full p-2 rounded-[44px] bg-[#FFFFFF] border border-[#F8BD00]">
         <input
           type="text"
@@ -38,9 +40,16 @@ const SearchBar = () => {
           />
         )}
 
-        <img src={Search} alt="검색" className="w-[24px] h-[27px] mr-2" />
+        <img
+          src={Search}
+          alt="검색"
+          className="w-[24px] h-[27px] mr-2 cursor-pointer"
+          onClick={toggleModal}
+        />
       </div>
-    </div>
+
+      {showModal && <SearchOptionsModal onClose={toggleModal} />}
+    </>
   );
 };
 

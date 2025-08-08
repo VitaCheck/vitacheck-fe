@@ -58,39 +58,57 @@ const DesktopAlarmAddPage = () => {
     }
   };
 
+  // 유틸: undefined/null 제거
+  const clean = (obj: Record<string, any>) =>
+    Object.fromEntries(
+      Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+    );
+
+  // 신규 등록용: supplementId / notificationRoutineId 일절 포함 X
   const handleSubmit = async () => {
-    if (!supplementId || selectedDays.length === 0 || times.some((t) => !t)) {
+    if (
+      !supplementName.trim() ||
+      selectedDays.length === 0 ||
+      times.some((t) => !t)
+    ) {
       alert("모든 정보를 입력해주세요.");
       return;
     }
 
     try {
       let imageUrl = "";
-
-      //  1. 이미지가 있다면 Cloudinary에 업로드 → URL 추출
       if (imageFile) {
         imageUrl = await uploadImageToCloudinary(imageFile);
       }
 
-      //  2. 추출한 URL 포함해서 백엔드에 요청 보내기
-      const payload = {
-        supplementName,
-        supplementImageUrl: imageUrl,
-        daysOfWeek: selectedDays,
-        times,
+      const rawPayload = {
+        supplementName: supplementName.trim(),
+        supplementImageUrl: imageUrl || undefined, // 없으면 빼기
+        daysOfWeek: selectedDays, // ["MON","TUE",...]
+        times: times.map((t) => (t.length === 5 ? t : t.slice(0, 5))), // "HH:mm" 보장
+        // ❌ notificationRoutineId: X
+        // ❌ supplementId: X
       };
 
-      await axios.post("/api/v1/notifications/routines", payload);
+      const payload = clean(rawPayload);
+      console.log("📦 payload(new):", payload);
+
+      await axios.post("/api/v1/notifications/routines", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`, // 인터셉터 쓰면 제거
+        },
+      });
+
       alert("알림이 추가되었습니다!");
       navigate("/alarm/settings");
-    } catch (err) {
-      console.error(err);
-      alert("알림 추가에 실패했습니다.");
+    } catch (err: any) {
+      console.error("create routine error:", err?.response ?? err);
+      alert(err?.response?.data?.message ?? "알림 추가에 실패했습니다.");
     }
   };
 
   return (
-    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8 bg-white">
+    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8 ">
       {/* 상단 헤더 */}
       <div className="relative flex items-center justify-between w-full">
         <button
@@ -111,7 +129,7 @@ const DesktopAlarmAddPage = () => {
       </div>
 
       {/* 이미지 업로드 */}
-      <div className="w-[272px] h-[248px] bg-gray-100 mx-auto rounded-[20px] flex items-center justify-center overflow-hidden">
+      <div className="w-[272px] h-[248px] bg-white rounded-[20px] flex items-center justify-center overflow-hidden">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -142,7 +160,7 @@ const DesktopAlarmAddPage = () => {
         </label>
         <input
           type="text"
-          className="w-full h-[73px] border rounded-xl px-4 py-2 text-[22px] text-[#AAAAAA]"
+          className="w-full h-[73px] border border-[#AAAAAA] rounded-xl px-4 py-2 text-[22px] text-[#202020] bg-white"
           placeholder="예: 멀티비타민"
           value={supplementName}
           onChange={(e) => setSupplementName(e.target.value)}
@@ -162,7 +180,7 @@ const DesktopAlarmAddPage = () => {
               className={`w-full aspect-square rounded-xl text-[22px] font-semibold border transition ${
                 selectedDays.includes(value)
                   ? "bg-[#AAAAAA] text-white border-transparent"
-                  : "bg-white text-[#AAAAAA] border border-gray-300"
+                  : "bg-white text-[#AAAAAA] border border-[#AAAAAA]"
               }`}
               onClick={() => toggleDay(value)}
             >
@@ -181,14 +199,14 @@ const DesktopAlarmAddPage = () => {
           <input
             key={index}
             type="time"
-            className="w-full h-[73px] border rounded-xl px-4 py-2 text-base mb-2"
+            className="bg-white w-full h-[73px] border border-[#AAAAAA] rounded-xl px-4 py-2 text-base mb-2"
             value={time}
             onChange={(e) => handleTimeChange(index, e.target.value)}
           />
         ))}
         <button
           onClick={addTime}
-          className="w-full h-[73px] border border-gray-400 text-[22px] py-2 rounded-xl text-gray-700"
+          className="bg-white w-full h-[73px] border border-[#AAAAAA] text-[22px] py-2 rounded-xl text-gray-700"
         >
           복용 시간 추가
         </button>

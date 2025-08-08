@@ -119,10 +119,10 @@ function NotificationSettingsPage() {
     <div className="min-h-screen bg-white px-4 py-6 flex justify-center items-start sm:bg-[#F3F3F3] sm:mt-15">
       <div className="w-full sm:max-w-[700px] sm:bg-white sm:rounded-2xl sm:p-10 sm:shadow-md">
         {/* 상단 헤더 */}
-        <div className="w-full pt-4 pb-2 flex items-center">
+        <div className="w-full pt-4 pb-2 flex items-center sm:border-b sm:border-[#D9D9D9] sm:pt-0">
           <button
             onClick={() => navigate("/NotificationCenter")}
-            className="mr-2 text-2xl text-black"
+            className="mr-2 text-2xl text-black sm:hidden"
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -139,7 +139,9 @@ function NotificationSettingsPage() {
               />
             </svg>
           </button>
-          <h1 className="text-xl font-semibold py-2">알림설정</h1>
+
+          <h1 className="text-xl font-semibold py-2 sm:ml-2">알림설정</h1>
+
         </div>
 
         {/* 이벤트 및 혜택 알림 */}

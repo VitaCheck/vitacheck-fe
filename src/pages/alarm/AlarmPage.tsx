@@ -1,5 +1,8 @@
 import { useState } from "react";
 import { useMediaQuery } from "react-responsive";
+import { useMutation } from "@tanstack/react-query";
+import axios from "@/lib/axios";
+
 import MobileAlarmPage from "./MobileAlarmPage";
 import DesktopAlarmPage from "./DesktopAlarmPage";
 
@@ -20,28 +23,55 @@ const AlarmPage = () => {
   const getDaysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
 
-  return isMobile ? (
-    <MobileAlarmPage
-      year={year}
-      month={month}
-      today={today}
-      setYear={setYear}
-      setMonth={setMonth}
-      checkedIds={checkedIds}
-      toggleChecked={toggleChecked}
-      getDaysInMonth={getDaysInMonth}
-    />
-  ) : (
-    <DesktopAlarmPage
-      year={year}
-      month={month}
-      today={today}
-      setYear={setYear}
-      setMonth={setMonth}
-      checkedIds={checkedIds}
-      toggleChecked={toggleChecked}
-      getDaysInMonth={getDaysInMonth}
-    />
+  // useMutation
+  const toggleRoutineMutation = useMutation({
+    mutationFn: (routineId: number) =>
+      axios.post(`/api/v1/notifications/records/${routineId}/toggle`),
+    onSuccess: () => {
+      console.log("토글 성공!");
+    },
+    onError: () => {
+      console.error("토글 실패!");
+    },
+  });
+
+  const handleToggle = () => {
+    toggleRoutineMutation.mutate(1); // 예시 ID
+  };
+
+  return (
+    <div>
+      {/* <button
+        onClick={handleToggle}
+        disabled={toggleRoutineMutation.isPending}
+        className="m-4 px-4 py-2 bg-yellow-400 text-white rounded"
+      >
+        {toggleRoutineMutation.isPending ? "요청 중..." : "루틴 토글 테스트"}
+      </button> */}
+
+      {isMobile ? (
+        <MobileAlarmPage
+          year={year}
+          month={month}
+          today={today}
+          setYear={setYear}
+          setMonth={setMonth}
+          checkedIds={checkedIds}
+          toggleChecked={toggleChecked}
+          getDaysInMonth={getDaysInMonth}
+        />
+      ) : (
+        <DesktopAlarmPage
+          year={year}
+          month={month}
+          today={today}
+          setYear={setYear}
+          setMonth={setMonth}
+          toggleChecked={toggleChecked}
+          getDaysInMonth={getDaysInMonth}
+        />
+      )}
+    </div>
   );
 };
 

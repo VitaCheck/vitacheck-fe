@@ -3,8 +3,12 @@ import { useNavigate } from "react-router-dom";
 import { FiSearch } from "react-icons/fi";
 import X from "../assets/X.svg";
 
-const SearchBar = () => {
-  const [query, setQuery] = useState("");
+interface SearchBarProps {
+  initialQuery?: string;
+}
+
+const SearchBar = ({ initialQuery = "" }: SearchBarProps) => {
+  const [query, setQuery] = useState(initialQuery);
   const navigate = useNavigate();
 
   const handleSearch = () => {

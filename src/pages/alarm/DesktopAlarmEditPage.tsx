@@ -1,3 +1,4 @@
+// DesktopAlarmEditPage.tsx
 import { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useMediaQuery } from "react-responsive";
@@ -15,7 +16,7 @@ const days = [
 ];
 
 const DesktopAlarmEditPage = () => {
-  const { id } = useParams();
+  const { id } = useParams(); // notificationRoutineId
   const navigate = useNavigate();
   const isMobile = useMediaQuery({ maxWidth: 768 });
 
@@ -26,36 +27,11 @@ const DesktopAlarmEditPage = () => {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
+  const [isDeleting, setIsDeleting] = useState(false); // ⬅️ 삭제 중 중복요청 방지
+
   useEffect(() => {
     if (isMobile) navigate("/alarm/settings");
   }, [isMobile, navigate]);
-
-  // useEffect(() => {
-  //   const fetchRoutine = async () => {
-  //     try {
-  //       const res = await axios.get(`/api/v1/notifications/routines/${id}`);
-  //       console.log("✔️ 루틴 응답:", res.data.result); // 콘솔 꼭 확인
-  //       console.log("✔️ 루틴 응답 구조:", res.data);
-  //       const routine = res.data.result; //첫 번째 요소 추출
-
-  //       const {
-  //         supplementId,
-  //         supplementName,
-  //         supplementImageUrl,
-  //         daysOfWeek,
-  //         times,
-  //       } = routine;
-  //       setSupplementId(supplementId);
-  //       setSupplementName(supplementName);
-  //       setSelectedDays(daysOfWeek);
-  //       setTimes(times); // 배열로 잘 세팅
-  //       setPreviewUrl(supplementImageUrl);
-  //     } catch (err) {
-  //       console.error("루틴 불러오기 실패", err);
-  //     }
-  //   };
-  //   if (id) fetchRoutine();
-  // }, [id]);
 
   useEffect(() => {
     const fetchRoutine = async () => {
@@ -144,10 +120,36 @@ const DesktopAlarmEditPage = () => {
     }
   };
 
+  // 🔥 삭제 핸들러
+  const handleDelete = async () => {
+    if (!id) return;
+    if (isDeleting) return;
+
+    const ok = window.confirm("정말 이 알림을 삭제할까요?");
+    if (!ok) return;
+
+    try {
+      setIsDeleting(true);
+      await axios.delete(`/api/v1/notifications/routines/${id}`);
+      alert("알림을 삭제했습니다.");
+      navigate("/alarm/settings");
+    } catch (err: any) {
+      console.error("삭제 실패:", err?.response ?? err);
+      const msg =
+        err?.response?.data?.message ||
+        (err?.response?.status === 404
+          ? "해당 루틴을 찾을 수 없습니다."
+          : "알림 삭제에 실패했습니다.");
+      alert(msg);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   if (isMobile) return null;
 
   return (
-    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8 bg-white">
+    <div className="max-w-[480px] mx-auto pt-12 pb-20 space-y-8">
       <div className="relative flex items-center justify-between w-full">
         <button
           onClick={() => navigate("/alarm/settings")}
@@ -166,7 +168,7 @@ const DesktopAlarmEditPage = () => {
         </button>
       </div>
 
-      <div className="w-[272px] h-[248px] bg-gray-100 mx-auto rounded-[20px] flex items-center justify-center overflow-hidden">
+      <div className="w-[272px] h-[248px] bg-white rounded-[20px] flex items-center justify-center overflow-hidden">
         {previewUrl ? (
           <img
             src={previewUrl}
@@ -196,7 +198,7 @@ const DesktopAlarmEditPage = () => {
         </label>
         <input
           type="text"
-          className="w-full h-[73px] border rounded-xl px-4 py-2 text-[22px] text-[#AAAAAA]"
+          className="w-full h-[73px] bg-white border border-[#AAAAAA] rounded-xl px-4 py-2 text-[22px]"
           placeholder="예: 멀티비타민"
           value={supplementName}
           onChange={(e) => setSupplementName(e.target.value)}
@@ -215,7 +217,7 @@ const DesktopAlarmEditPage = () => {
               className={`w-full aspect-square rounded-xl text-[22px] font-semibold border transition ${
                 selectedDays.includes(value)
                   ? "bg-[#AAAAAA] text-white border-transparent"
-                  : "bg-white text-[#AAAAAA] border border-gray-300"
+                  : "bg-white text-[#AAAAAA] border border-[#AAAAAA]"
               }`}
               onClick={() => toggleDay(value)}
             >
@@ -233,16 +235,26 @@ const DesktopAlarmEditPage = () => {
           <input
             key={index}
             type="time"
-            className="w-full h-[73px] border rounded-xl px-4 py-2 text-base mb-2"
+            className="w-full h-[73px] border border-[#AAAAAA] bg-white rounded-xl px-4 py-2 text-base mb-2"
             value={time}
             onChange={(e) => handleTimeChange(index, e.target.value)}
           />
         ))}
         <button
           onClick={addTime}
-          className="w-full h-[73px] border border-gray-400 text-[22px] py-2 rounded-xl text-gray-700"
+          className="w-full h-[73px] border border-[#AAAAAA] bg-white text-[22px] py-2 rounded-xl text-gray-700"
         >
           복용 시간 추가
+        </button>
+
+        {/* ⬇️ 삭제 버튼: DELETE /api/v1/notifications/routines/{notificationRoutineId} */}
+        <button
+          onClick={handleDelete}
+          disabled={!id || isDeleting}
+          className={`w-full h-[73px] text-[22px] py-2 rounded-xl mt-[108px]
+            ${isDeleting ? "bg-[#CCCCCC] cursor-not-allowed" : "bg-[#EEEEEE]"}`}
+        >
+          {isDeleting ? "삭제 중..." : "알림 삭제"}
         </button>
       </div>
     </div>

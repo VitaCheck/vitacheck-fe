@@ -48,6 +48,7 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
         );
         setDays(convertedDays);
         // setDays(routine.daysOfWeek);
+
         setTimes(routine.times);
         setPreviewUrl(routine.supplementImageUrl);
       }
@@ -137,8 +138,8 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
             ) : (
               <img
                 src="/images/camera.png"
-                alt="camera icon"
-                className="w-[51.67px] h-[46.5px] object-cover rounded-[12px]"
+                alt="preview"
+                className="w-[51.67px] h-[46.5px] rounded-[12px]"
               />
             )}
           </button>
