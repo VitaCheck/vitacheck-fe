@@ -3,8 +3,8 @@ import { useSearchParams } from "react-router-dom";
 import ProductCard from "@/components/ProductCard";
 import SearchBar from "@/components/SearchBar";
 
-import { searchSupplements } from "@/lib/search";
-import type { Supplement, Ingredient } from "@/lib/search";
+import { searchSupplements } from "@/apis/search";
+import type { Supplement, Ingredient } from "@/apis/search";
 import IngredientCard from "@/components/search/IngredientCard";
 
 export default function SearchResultPage() {

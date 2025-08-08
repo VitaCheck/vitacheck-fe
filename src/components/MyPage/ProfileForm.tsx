@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import ProfileInput from "./ProfileInput";
-import { getUserInfo, updateUserInfo, type UserInfo } from "@/lib/user";
+import { getUserInfo, updateUserInfo, type UserInfo } from "@/apis/user";
 import { useNavigate } from "react-router-dom";
 
 function ProfileForm() {
