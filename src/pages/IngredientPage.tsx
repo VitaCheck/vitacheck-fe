@@ -11,7 +11,9 @@ const useIsMobile = () => {
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, []);
   return isMobile;
 };
@@ -19,12 +21,67 @@ const useIsMobile = () => {
 const IngredientPage = () => {
   const [selected, setSelected] = useState("20대");
   const [searchKeyword, setSearchKeyword] = useState("");
+  const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
   useEffect(() => {
     document.title = "성분별";
+    const saved = localStorage.getItem("ingredient_search_history");
+    if (saved) {
+      setSearchHistory(JSON.parse(saved));
+    }
   }, []);
+
+  const saveSearchHistory = (keyword: string) => {
+    const trimmed = keyword.trim();
+    if (!trimmed) return;
+    const newHistory = [
+      trimmed,
+      ...searchHistory.filter((k) => k !== trimmed),
+    ].slice(0, 5);
+    setSearchHistory(newHistory);
+    localStorage.setItem(
+      "ingredient_search_history",
+      JSON.stringify(newHistory)
+    );
+  };
+
+  const deleteHistoryItem = (keyword: string) => {
+    const newHistory = searchHistory.filter((k) => k !== keyword);
+    setSearchHistory(newHistory);
+    localStorage.setItem(
+      "ingredient_search_history",
+      JSON.stringify(newHistory)
+    );
+  };
+
+  const handleHistoryClick = (keyword: string) => {
+    setSearchKeyword(keyword);
+    saveSearchHistory(keyword);
+    navigate(`/ingredient/search?keyword=${encodeURIComponent(keyword)}`);
+  };
+
+  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelected(e.target.value);
+  };
+
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchKeyword(e.target.value);
+  };
+
+  const submitSearch = () => {
+    const trimmed = searchKeyword.trim();
+    if (trimmed.length === 0) return;
+    saveSearchHistory(trimmed);
+    navigate(`/ingredient/search?keyword=${encodeURIComponent(trimmed)}`);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") {
+      submitSearch();
+    }
+  };
 
   const ingredientList = [
     "유산균",
@@ -33,7 +90,6 @@ const IngredientPage = () => {
     "밀크씨슬",
     "오메가3",
   ];
-
   const filteredList = ingredientList.filter((item) =>
     item.toLowerCase().includes(searchKeyword.toLowerCase())
   );
@@ -50,23 +106,6 @@ const IngredientPage = () => {
       }
     };
   }, [isMobile]);
-
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    setSelected(e.target.value);
-  };
-
-  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchKeyword(e.target.value);
-  };
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") {
-      const trimmed = searchKeyword.trim();
-      if (trimmed.length === 0) return;
-
-      navigate(`/ingredient/search?keyword=${encodeURIComponent(trimmed)}`);
-    }
-  };
 
   return (
     <div className="px-4 md:px-36 pt-2 md:pt-10 max-w-screen-xl mx-auto">
@@ -98,17 +137,36 @@ const IngredientPage = () => {
           <img
             src={searchIcon}
             alt="검색"
+            onClick={submitSearch}
             className={`ml-2 ${isMobile ? "w-5 h-5" : "w-6 h-6"}`}
-          />{" "}
+          />
         </div>
       </section>
 
       {/* 검색 기록 */}
-      <section className="flex justify-center items-center font-medium space-x-4 text-xs text-gray-700 mb-8">
-        <button className="hover:underline">검색 기록 1</button>
-        <button className="hover:underline">검색 기록 2</button>
-        <button className="hover:underline">검색 기록 3</button>
-      </section>
+      {searchHistory.length > 0 && (
+        <section className="flex flex-wrap justify-center items-center font-medium gap-3 text-xs text-gray-700 mb-8">
+          {searchHistory.map((item) => (
+            <div
+              key={item}
+              className="flex items-center px-3 py-1.5 bg-gray-100 rounded-full shadow-sm"
+            >
+              <button
+                onClick={() => handleHistoryClick(item)}
+                className="mr-2 hover:underline"
+              >
+                {item}
+              </button>
+              <button
+                onClick={() => deleteHistoryItem(item)}
+                className="text-gray-500 hover:text-gray-700 text-sm"
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </section>
+      )}
 
       {/* 캐릭터 & 설명 */}
       <section
@@ -143,7 +201,6 @@ const IngredientPage = () => {
           <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
             연령대별 자주 찾는 성분 TOP 5
           </h2>
-
           <select
             value={selected}
             onChange={handleChange}
@@ -151,8 +208,8 @@ const IngredientPage = () => {
             style={{
               backgroundImage: `url(${downIcon})`,
               backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 0.4rem center", // 화살표 왼쪽으로 붙이기
-              backgroundSize: "20px 20px", // 화살표 더 크게
+              backgroundPosition: "right 0.4rem center",
+              backgroundSize: "20px 20px",
             }}
           >
             {["10대", "20대", "30대", "40대", "50대", "60대 이상"].map(
