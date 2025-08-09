@@ -21,7 +21,7 @@ import EditProfilePage from "./pages/EditProfilePage";
 import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
-import SocialLogin from "./components/Auth/SocialLogin";
+import SocialLogin from "./components/auth/SocialLogin";
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
 import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPAge"; //자체 회원가입 상세 페이지
@@ -169,6 +169,23 @@ const router = createBrowserRouter([
         path: "social-login",
         element: <SocialLogin />,
       },
+      {
+        path: "v1/auth/google/callback",
+        element: <SocialCallback />,
+      },
+      {
+        path: "v1/auth/kakao/callback",
+        element: <SocialCallback />,
+      },
+      {
+        path: "v1/auth/naver/callback",
+        element: <SocialCallback />,
+      },
+      {
+        path: "social-signup",
+        element: <SocialSignupForm />,
+      },
+
       {
         path: "/ingredients/:ingredientName",
         element: <IngredientDetailPage />,
