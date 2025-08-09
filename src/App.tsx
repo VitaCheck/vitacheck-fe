@@ -23,8 +23,8 @@ import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/auth/SocialLogin";
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
-import SocialCallback from "./pages/auth/SocialCallback";
-import SocialSignupForm from "./pages/auth/SocialSignupForm";
+import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
+import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPAge"; //자체 회원가입 상세 페이지
 
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
@@ -57,6 +57,14 @@ const router = createBrowserRouter([
       {
         path: "login/email", //로그인 페이지
         element: <EmailLoginPage />,
+      },
+      {
+        path: "signup/email",
+        element: <EmailSignupPage />,
+      },
+      {
+        path: "signup/email/detail", // 회원가입 상세 정보 입력 페이지
+        element: <EmailSignupDetailPage />,
       },
       {
         path: "object", //목적 페이지
