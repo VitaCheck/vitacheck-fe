@@ -286,20 +286,26 @@ function MyPage() {
             </div>
           </div>
 
-          <MenuItem
-            label="로그아웃"
-            icon={Logout}
-            onClick={() => navigate("/logout")}
-          />
+          {!userLoadFailed && (
+            <div className="hidden sm:block">
+              <MenuItem
+                label="로그아웃"
+                icon={Logout}
+                onClick={() => navigate("/logout")}
+              />
+            </div>
+          )}
         </div>
 
         {/* 로그아웃 */}
-        <div
-          className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-          onClick={handleLogout}
-        >
-          로그아웃
-        </div>
+        {!userLoadFailed && (
+          <div
+            className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
+            onClick={handleLogout}
+          >
+            로그아웃
+          </div>
+        )}
       </div>
     </div>
   );
