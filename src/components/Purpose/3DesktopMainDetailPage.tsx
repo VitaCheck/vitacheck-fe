@@ -1,16 +1,20 @@
+// src/components/Purpose/3DesktopMainDetailPage.tsx
+
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
-import MainDetailPageBrandSection from "./MainDetailPageBrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import IngredientTab from "./IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import TimingTab from "./TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import MainDetailPageBrandSection from "./3MainDetailPageBrandSection";
+import IngredientTab from "./3IngredientTab";
+import TimingTab from "./3TimingTab";
 
 interface DesktopProps {
-  product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
+  product: any;
   liked: boolean;
   toggleLike: () => void;
   activeTab: "ingredient" | "timing";
   setActiveTab: (tab: "ingredient" | "timing") => void;
+  brandProducts: any[];
+  onCopyUrl: () => void; // ✨ 새로운 prop 추가
 }
 
 const MainDetailPageDesktop: React.FC<DesktopProps> = ({
@@ -19,6 +23,8 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   toggleLike,
   activeTab,
   setActiveTab,
+  brandProducts,
+  onCopyUrl, // ✨ prop으로 받아서 사용
 }) => {
   const navigate = useNavigate();
 
@@ -44,13 +50,14 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               </div>
               <div className="flex justify-between w-[108px]">
                 <button
-                  onClick={toggleLike}
+                  onClick={onCopyUrl} // ✨ prop으로 받은 함수를 onClick에 연결
                   className="rounded-full flex justify-center items-center w-[48px] h-[48px]
                                        bg-white border-[#AAA] border-[0.3px]"
                 >
                   <GoShareAndroid className="w-[28px] h-[28px]" />
                 </button>
                 <button
+                  onClick={toggleLike}
                   className="rounded-full flex justify-center items-center w-[48px] h-[48px]
                                        border-[#AAA] border-[0.3px]"
                 >
@@ -70,7 +77,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                 onClick={() => navigate("/alarm")}
                 className="bg-[#FFEB9D] w-[290px] h-[62px] rounded-[14px] text-[20px] font-medium"
               >
-                섭취알림등록
+                섭취알림 등록
               </button>
             </div>
           </div>
@@ -79,18 +86,19 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
         <div className="mt-[84px] bg-[#F3F3F3] w-[766px] h-[4px]" />
 
         {/* 브랜드 제품 리스트 */}
-        <div className="w-[766px] mx-auto mt-[27px]">
+        <div className="w-full mx-auto mt-[27px]">
           <div className="flex flex-col">
             <MainDetailPageBrandSection
               brandName={product.brandName}
               brandImageUrl={product.brandImageUrl}
+              brandProducts={brandProducts}
             />
           </div>
         </div>
 
         {/* 탭 UI */}
         <div className="flex flex-col justify-end items-center
-                               w-full h-[80px] border-b-[#F3F3F3] border-b-[5px] mt-[84px]">
+                                     w-full h-[80px] border-b-[#F3F3F3] border-b-[4px]">
           <div className="flex justify-between w-[502.7px] relative">
             {[
               { key: "ingredient", label: "성분 함량" },
@@ -105,7 +113,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               >
                 {tab.label}
                 {activeTab === tab.key && (
-                  <span className="absolute -bottom-[5px] left-[-13px] w-[105px] h-[5px] rounded-xl bg-black transition-all duration-300" />
+                  <span className="absolute -bottom-[5px] left-[-13px] w-[105px] h-[6.5px] rounded-xl bg-black transition-all duration-300" />
                 )}
               </button>
             ))}
@@ -113,7 +121,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
         </div>
 
         {/* 탭 내용 */}
-        <div className="mt-[16px] px-[16px] text-[10px] leading-relaxed">
+        <div className="flex flex-col items-center mx-auto mt-[16px] text-[10px] leading-relaxed">
           {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
         </div>
       </div>

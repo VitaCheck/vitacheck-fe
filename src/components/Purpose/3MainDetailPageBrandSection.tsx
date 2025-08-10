@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { MdOutlineArrowBackIos } from "react-icons/md";
 
@@ -7,36 +7,23 @@ import { MdOutlineArrowBackIos } from "react-icons/md";
 interface MainDetailPageBrandSectionProps {
   brandName: string;
   brandImageUrl: string | null;
+  brandProducts: {
+    id: number;
+    name: string;
+    imageUrl: string;
+  }[];
 }
 
-const MainDetailPageBrandSection = ({ brandName, brandImageUrl }: MainDetailPageBrandSectionProps) => {
+const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts }: MainDetailPageBrandSectionProps) => {
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
-  // isLoading 상태와 setIsLoading 함수는 더 이상 사용되지 않으므로 제거합니다.
 
-  useEffect(() => {
-      window.scrollTo(0, 0);
-    }, [location.pathname]);
-
-  // 이 부분은 임시 데이터입니다. 실제로는 이 브랜드의 다른 제품 목록을 API로 불러와야 합니다.
-  const products = [
-    { id: 1, title: "아이클리어 루테인", imageUrl: "/images/product1.png" },
-    { id: 2, title: "여에스더 오메가3", imageUrl: "/images/product2.png" },
-    { id: 3, title: "제품3", imageUrl: "/images/product3.png" },
-    { id: 4, title: "제품4", imageUrl: "/images/product4.png" },
-    { id: 5, title: "제품5", imageUrl: "/images/product5.png" },
-    { id: 6, title: "제품6", imageUrl: "/images/product6.png" },
-    { id: 7, title: "제품7", imageUrl: "/images/product7.png" },
-    { id: 8, title: "제품8", imageUrl: "/images/product8.png" },
-    { id: 9, title: "제품9", imageUrl: "/images/product9.png" },
-    { id: 10, title: "제품10", imageUrl: "/images/product10.png" },
-    { id: 11, title: "제품11", imageUrl: "/images/product11.png" },
-  ];
-
-  const totalPages = Math.ceil(products.length / itemsPerPage);
-  const paginatedProducts = products.slice(
+  const productsToDisplay = brandProducts || [];
+  
+  const totalPages = Math.ceil(productsToDisplay.length / itemsPerPage);
+  const paginatedProducts = productsToDisplay.slice(
     currentPage * itemsPerPage,
     currentPage * itemsPerPage + itemsPerPage
   );
@@ -79,26 +66,30 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl }: MainDetailPage
         </div>
 
         {/* 카드 리스트 */}
-        <div className="w-[388px] h-[224px] overflow-x-auto hide-scrollbar">
+        <div className="w-[388px] overflow-x-auto hide-scrollbar">
           <div className="flex gap-[24px] mt-[24px] mb-[22px]">
-            {products.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => navigate(`/product/${product.id}`, { state: product })}
-                className="w-[154px] h-[178px] flex-shrink-0 flex flex-col items-center cursor-pointer"
-              >
-                <div className="w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="w-[109px] h-[109px] mx-auto px-[22px] py-[15px] object-cover"
-                  />
+            {productsToDisplay.length === 0 ? (
+              <p className="text-center w-full">제품이 없습니다.</p>
+            ) : (
+              productsToDisplay.map((product) => (
+                <div
+                  key={product.id}
+                  onClick={() => navigate(`/product/${product.id}`, { state: product })}
+                  className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
+                >
+                  <div className="w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.name}
+                      className="w-[109px] h-[109px] mx-auto px-[22px] py-[15px] object-cover"
+                    />
+                  </div>
+                  <p className="mt-[17px] text-[17px] font-medium text-center">
+                    {product.name}
+                  </p>
                 </div>
-                <p className="mt-[17px] h-[20px] text-[17px] font-medium text-center">
-                  {product.title}
-                </p>
-              </div>
-            ))}
+              ))
+            )}
           </div>
         </div>
       </div>
@@ -136,7 +127,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl }: MainDetailPage
         {/* 카드 리스트 */}
         <div className="w-full h-[204px] mb-[70px] hide-scrollbar relative">
           <div className="grid grid-cols-4 gap-x-5 mt-[30px] transition-all duration-300">
-            {paginatedProducts.length === 0 ? (
+            {productsToDisplay.length === 0 ? (
               <p className="text-center w-full mt-[80px]">제품이 없습니다.</p>
             ) : (
               paginatedProducts.map((product) => (
@@ -148,12 +139,12 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl }: MainDetailPage
                   <div className="w-full h-[160px] min-w-[100px] bg-white rounded-[16px] shadow-xl overflow-hidden">
                     <img
                       src={product.imageUrl}
-                      alt={product.title}
+                      alt={product.name}
                       className="w-full h-full object-contain p-4"
                     />
                   </div>
                   <p className="mt-[16px] h-[28px] text-[22px] font-medium text-center">
-                    {product.title}
+                    {product.name}
                   </p>
                 </div>
               ))

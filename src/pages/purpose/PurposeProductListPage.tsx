@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom"; // useNavigate 추가
 import { useEffect, useState } from "react";
-import RecommendedProductSection from "@/components/Purpose/Purpose2Section";
+import RecommendedProductSection from "@/components/Purpose/2Purpose2Section";
 import useIsMobile from "@/hooks/useIsMobile";
 
 // API 응답 result 타입 정의
@@ -58,8 +58,8 @@ const PurposeProductList = () => {
               purposes: ["눈건강"],
               supplements: [
                 ["고려은단 비타민c 1000", "lutein.jpg"],
-                ["루테인2", "lutein.jpg"],
-                ["루테인3", "lutein.jpg"],
+                ["솔가 비타민D3 5000IU", "lutein.jpg"],
+                ["종근당건강 프로메가 오메가3", "lutein.jpg"],
                 ["루테인4", "lutein.jpg"],
                 ["루테인5", "lutein.jpg"],
                 ["루테인6", "lutein.jpg"],
