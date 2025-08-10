@@ -100,9 +100,16 @@ function MyPage() {
             {/* sm 미만: 아래에 버튼 표시 */}
             <button
               className="mt-2 bg-[#EBEBEB] rounded-full px-4 py-1 flex items-center justify-between cursor-pointer text-[13px] sm:hidden"
-              onClick={() => navigate("/mypage/edit")}
+              onClick={
+                () =>
+                  userLoadFailed
+                    ? navigate("/login") // 로그인 안되어있으면 로그인 페이지 이동
+                    : navigate("/mypage/edit") // 로그인 되어있으면 내 정보 수정 이동
+              }
             >
-              <span className="mr-2">내 정보 수정</span>
+              <span className="mr-2">
+                {userLoadFailed ? "로그인하기" : "내 정보 수정"}
+              </span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -122,10 +129,14 @@ function MyPage() {
 
           {/* sm 이상: 우측 중앙에 버튼 정렬 */}
           <button
-            className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-[#EBEBEB] rounded-full px-4 py-1 cursor-pointer text-[13px]"
-            onClick={() => navigate("/mypage/edit")}
+            className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-white border border-[#AAAAAA] rounded-[25px] px-4 py-1 cursor-pointer text-[13px]"
+            onClick={() =>
+              userLoadFailed ? navigate("/login") : navigate("/mypage/edit")
+            }
           >
-            <span className="mr-2">내 정보 수정</span>
+            <span className="mr-2">
+              {userLoadFailed ? "로그인하기" : "내 정보 수정"}
+            </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
