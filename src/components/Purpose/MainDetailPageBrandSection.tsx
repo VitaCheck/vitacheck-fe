@@ -1,18 +1,26 @@
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { MdOutlineArrowBackIos } from "react-icons/md";
 
+// 이 컴포넌트가 부모 컴포넌트로부터 받는 props의 타입을 정의합니다.
 interface MainDetailPageBrandSectionProps {
-  ingredientName?: string;
+  brandName: string;
+  brandImageUrl: string | null;
 }
 
-const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSectionProps) => {
+const MainDetailPageBrandSection = ({ brandName, brandImageUrl }: MainDetailPageBrandSectionProps) => {
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
+  // isLoading 상태와 setIsLoading 함수는 더 이상 사용되지 않으므로 제거합니다.
 
+  useEffect(() => {
+      window.scrollTo(0, 0);
+    }, [location.pathname]);
+
+  // 이 부분은 임시 데이터입니다. 실제로는 이 브랜드의 다른 제품 목록을 API로 불러와야 합니다.
   const products = [
     { id: 1, title: "아이클리어 루테인", imageUrl: "/images/product1.png" },
     { id: 2, title: "여에스더 오메가3", imageUrl: "/images/product2.png" },
@@ -25,41 +33,45 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
     { id: 9, title: "제품9", imageUrl: "/images/product9.png" },
     { id: 10, title: "제품10", imageUrl: "/images/product10.png" },
     { id: 11, title: "제품11", imageUrl: "/images/product11.png" },
-   ];
+  ];
 
-   const brands = [
-    { id: 111, title: "정관장", imageUrl: "/images/product111.png" },
-   ];
+  const totalPages = Math.ceil(products.length / itemsPerPage);
+  const paginatedProducts = products.slice(
+    currentPage * itemsPerPage,
+    currentPage * itemsPerPage + itemsPerPage
+  );
 
-    const totalPages = Math.ceil(products.length / itemsPerPage);
-    const paginatedProducts = products.slice(
-      currentPage * itemsPerPage,
-      currentPage * itemsPerPage + itemsPerPage
-    );
+  const handleNextPage = () => {
+    setCurrentPage((prev) => prev + 1);
+  };
 
+  const handlePrevPage = () => {
+    setCurrentPage((prev) => prev - 1);
+  };
+  
   return (
     <>
       {/* 모바일 전용 */}
       <div className="md:hidden">
         {/* 브랜드 이미지와 브랜드명 */}
         <div className="flex items-center justify-between w-[338px] gap-[18px]">
-          {brands.map((brand) => (
-              <div
-                key={brand.id}
-                className="flex items-center justify-center gap-[10px]"
-              >
+          <div className="flex items-center justify-center gap-[10px]">
+            {/* brandImageUrl이 null일 경우 <img>를 렌더링하지 않습니다. */}
+            <div className="w-[40px] h-[40px] rounded-[36px] border-[0.5px] border-gray-300 flex items-center justify-center overflow-hidden">
+              {brandImageUrl && (
                 <img 
-                src={brand.imageUrl}
-                alt={brand.title}
-                className="w-[40px] h-[40px] mx-auto border-[0.5px] rounded-[36px] object-cover"
+                  src={brandImageUrl}
+                  alt={brandName}
+                  className="w-full h-full object-cover"
                 />
-                <span className="text-[20px] tracking-[-0.4px] font-medium">{brand.title}</span>
-              </div>
-          ))}
+              )}
+            </div>
+            <span className="text-[20px] tracking-[-0.4px] font-medium">{brandName}</span>
+          </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brands[0].title}`)}
+            onClick={() => navigate(`/brandproducts?brand=${brandName}`)}
             className="w-[80px] h-[30px] bg-[#EEEEEE] rounded-[20px]
-                      flex justify-center items-center cursor-pointer"
+                       flex justify-center items-center cursor-pointer"
           >
             <span className="text-[12px] font-medium">더보기</span>
             <MdOutlineArrowForwardIos className="h-[12px] ml-[4px]"/>
@@ -72,7 +84,7 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
             {products.map((product) => (
               <div
                 key={product.id}
-                onClick={() => navigate(`/product/${product.id}`, { state: product })}  // 여기 추가
+                onClick={() => navigate(`/product/${product.id}`, { state: product })}
                 className="w-[154px] h-[178px] flex-shrink-0 flex flex-col items-center cursor-pointer"
               >
                 <div className="w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
@@ -94,73 +106,79 @@ const MainDetailPageBrandSection = ({ ingredientName }: MainDetailPageBrandSecti
       {/* PC 전용 */}
       <div className="hidden md:block">
         {/* 브랜드 이미지와 브랜드명 */}
-        <div className="flex items-center justify-between gap-[18px]">
-          {brands.map((brand) => (
-              <div 
-                key={brand.id}
-                className="flex items-center justify-center gap-[20.5px]"
-              >
+        <div className="flex items-center justify-between gap-[12px]">
+          <div className="flex items-center justify-center gap-[14px]">
+            {/* brandImageUrl이 null일 경우 <img>를 렌더링하지 않습니다. */}
+            <div className="w-[32px] h-[32px] rounded-full border-[0.7px] flex items-center justify-center overflow-hidden">
+              {brandImageUrl && (
                 <img 
-                  src={brand.imageUrl}
-                  alt={brand.title}
-                  className="w-[82px] h-[82px] mx-auto border-[1.025px] rounded-full object-cover"
+                  src={brandImageUrl}
+                  alt={brandName}
+                  className="w-full h-full object-cover"
                 />
-                <span className="text-[41px] tracking-[-0.82px] font-medium">{brand.title}</span>
-              </div>
-          ))}
+              )}
+            </div>
+            <span className="text-[22px] tracking-[-0.5px] font-medium">{brandName}</span>
+          </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brands[0].title}`)}
-            className="w-[164px] py-[12.3px] bg-[#EEEEEE] rounded-[41px]
-                      flex justify-center items-center gap-[15px] cursor-pointer"
-          >
-            <span className="text-[24.6px] font-medium">더보기</span>
-            <MdOutlineArrowForwardIos className="text-[#757575] text-[24px]"/>
-          </button>
+            onClick={() => navigate(`/brandproducts?brand=${brandName}`)}
+              className="w-[74px] h-[20px] flex items-center justify-between cursor-pointer"
+            >
+              <span className="text-[16px] text-[#6B6B6B] font-medium">전체보기</span>
+              <img
+                src="/images/PNG/Purpose2/allarrow.png"
+                alt="화살표"
+                className="w-[8px] text-[#6B6B6B] object-contain"
+              />
+            </button>
         </div>
 
         {/* 카드 리스트 */}
-        <div className="w-1280px h-[306px] hide-scrollbar relative">
-          <div className="flex gap-[40px] mt-[44px] transition-all duration-300">
-            {paginatedProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => navigate(`/product/${product.id}`, { state: product })}
-                className="w-[290px] h-[306px] flex-shrink-0 flex flex-col items-center cursor-pointer"
-              >
-                <div className="w-[290px] h-[240px] bg-white rounded-[24px] shadow-lg overflow-hidden">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="w-[204px] h-[204px] mx-auto mt-[22px] object-cover"
-                  />
+        <div className="w-full h-[204px] mb-[70px] hide-scrollbar relative">
+          <div className="grid grid-cols-4 gap-x-5 mt-[30px] transition-all duration-300">
+            {paginatedProducts.length === 0 ? (
+              <p className="text-center w-full mt-[80px]">제품이 없습니다.</p>
+            ) : (
+              paginatedProducts.map((product) => (
+                <div
+                  key={product.id}
+                  onClick={() => navigate(`/product/${product.id}`, { state: product })}
+                  className="flex-shrink-0 flex flex-col items-center cursor-pointer"
+                >
+                  <div className="w-full h-[160px] min-w-[100px] bg-white rounded-[16px] shadow-xl overflow-hidden">
+                    <img
+                      src={product.imageUrl}
+                      alt={product.title}
+                      className="w-full h-full object-contain p-4"
+                    />
+                  </div>
+                  <p className="mt-[16px] h-[28px] text-[22px] font-medium text-center">
+                    {product.title}
+                  </p>
                 </div>
-                <p className="mt-[24px] h-[42px] text-[34px] font-medium text-center">
-                  {product.title}
-                </p>
-              </div>
-            ))}
-            
-            {/* ➤ 오른쪽 화살표 버튼 */}
-            {currentPage < totalPages - 1 && (
-              <button
-                onClick={() => setCurrentPage((prev) => prev + 1)}
-                className="absolute right-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
-              >
-                <MdOutlineArrowForwardIos className="text-[34px]" />
-              </button>
+              ))
             )}
-
-            {/* ⬅ 왼쪽 화살표 버튼 */}
-            {currentPage > 0 && (
-              <button
-                onClick={() => setCurrentPage((prev) => prev - 1)}
-                className="absolute left-[-38px] top-[83px] z-10 w-[74px] h-[74px] bg-white rounded-full shadow-md flex items-center justify-center"
-              >
-                <MdOutlineArrowBackIos className="text-[34px]" />
-              </button>
-            )}
-            
           </div>
+          
+          {/* ➤ 오른쪽 화살표 버튼 */}
+          {currentPage < totalPages - 1 && (
+            <button
+              onClick={handleNextPage}
+              className="absolute right-[-25px] top-[55px] z-10 w-[49px] h-[49px] bg-white rounded-full shadow flex items-center justify-center"
+            >
+              <MdOutlineArrowForwardIos className="text-[22px]" />
+            </button>
+          )}
+
+          {/* ⬅ 왼쪽 화살표 버튼 */}
+          {currentPage > 0 && (
+            <button
+              onClick={handlePrevPage}
+              className="absolute left-[-25px] top-[55px] z-10 w-[49px] h-[49px] bg-white rounded-full shadow flex items-center justify-center"
+            >
+              <MdOutlineArrowBackIos className="text-[22px]" />
+            </button>
+          )}
         </div>
       </div>
     </>
