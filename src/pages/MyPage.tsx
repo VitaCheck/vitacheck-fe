@@ -1,5 +1,6 @@
 import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.svg";
+import Profile from "../assets/Profile2.svg";
 import { useNavigate } from "react-router-dom";
 // import Service from "../assets/Service.svg";
 import Bell from "../assets/MyPageBell.svg";
@@ -13,6 +14,7 @@ import { getUserInfo, type UserInfo } from "@/apis/user";
 
 function MyPage() {
   const navigate = useNavigate();
+  const [userLoadFailed, setUserLoadFailed] = useState(false);
 
   const handleLogout = () => {
     alert("로그아웃 되었습니다.");
@@ -27,13 +29,17 @@ function MyPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("accessToken");
-      if (!token) return;
+      if (!token) {
+        setUserLoadFailed(true); // 토큰 없으면 실패 처리
+        return;
+      }
 
       try {
         const user = await getUserInfo(token);
         setUserInfo(user);
       } catch (error) {
         console.error("유저 정보 불러오기 실패", error);
+        setUserLoadFailed(true); // 실패 시 true
       }
     };
 
@@ -41,7 +47,7 @@ function MyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col sm:mr-[18%] sm:ml-[18%]">
       <div className="absolute top-0 left-0 w-full h-[45vh] bg-[#FFDB67] -z-10 sm:hidden" />
       <div className="absolute top-[45vh] left-0 w-full h-[55vh] bg-[#F3F3F3] -z-10" />
 
@@ -72,17 +78,24 @@ function MyPage() {
         {/* 사용자 정보 카드 */}
         <div className="w-[90%] h-[25vh] sm:h-auto bg-white rounded-2xl px-6 py-8 sm:py-4 flex items-center relative shadow">
           <img
-            src={ProfileCat}
+            // src={ProfileCat}
+            src={userLoadFailed ? Profile : ProfileCat}
             alt="profile"
             className="w-[100px] h-[100px] rounded-[30px] mr-6 object-cover"
           />
 
           <div className="flex-1">
             <p className="text-[20px] font-semibold text-[#E9B201]">
-              {userInfo?.nickname || "사용자"}
-              <span className="text-black"> 님</span>
+              {userInfo?.nickname || ""}
+              <span className="text-black">
+                {userLoadFailed ? "로그인 후" : "님"}
+              </span>
             </p>
-            <p className="text-sm">오늘도 비타체크 하세요!</p>
+            <p className="text-sm">
+              {userLoadFailed
+                ? "이용가능한 기능입니다."
+                : "오늘도 비타체크 하세요!"}
+            </p>
 
             {/* sm 미만: 아래에 버튼 표시 */}
             <button
