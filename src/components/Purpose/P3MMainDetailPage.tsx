@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import ShareLinkPopup from './ShareLinkPopup';
+import ShareLinkPopup from './P3MShareLinkPopup';
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
-import MainDetailPageBrandSection from "./MainDetailPageBrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import IngredientTab from "./IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import TimingTab from "./TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import MainDetailPageBrandSection from "./P3BrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import IngredientTab from "./P3IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import TimingTab from "./P3TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
 interface MobileProps {
   product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
   liked: boolean;
@@ -12,6 +12,7 @@ interface MobileProps {
   activeTab: "ingredient" | "timing";
   setActiveTab: (tab: "ingredient" | "timing") => void;
   showButton: boolean;
+  brandProducts: any[];
 }
 
 const MainDetailPageMobile: React.FC<MobileProps> = ({
@@ -21,6 +22,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
   activeTab,
   setActiveTab,
   showButton,
+  brandProducts,
 }) => {
   const navigate = useNavigate();
 
@@ -117,6 +119,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
           <MainDetailPageBrandSection
             brandName={product.brandName}
             brandImageUrl={product.brandImageUrl}
+            brandProducts={brandProducts}
           />
         </div>
       </div>

@@ -95,7 +95,7 @@ const RecommendedProductSectionDesktop = ({
       </div>
 
       {/* 카드 리스트 */}
-      <div className="w-full h-[204px] mb-[70px] hide-scrollbar relative">
+      <div className="w-full mb-[70px] hide-scrollbar relative">
         <div className="grid grid-cols-4 gap-x-5 mt-[30px] transition-all duration-300">
           {isLoading ? (
             renderSkeletons(4)

@@ -68,7 +68,7 @@ const RecommendedProductSectionMobile = ({
       </div>
 
       {/* 카드 리스트 */}
-      <div className="w-full h-[224px] overflow-x-scroll hide-scrollbar mx-auto ml-[6px]">
+      <div className="w-full overflow-x-scroll hide-scrollbar mx-auto ml-[6px]">
         <div className="flex gap-[24px] px-[38px] mt-[24px] mb-[22px]">
           {isLoading ? (
             renderSkeletons(4)
@@ -79,7 +79,7 @@ const RecommendedProductSectionMobile = ({
               <div
                 key={product.id}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
-                className="w-[154px] h-[178px] flex-shrink-0 flex flex-col items-center cursor-pointer"
+                className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
               >
                 <div className="w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
                   <img
@@ -88,7 +88,7 @@ const RecommendedProductSectionMobile = ({
                     className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                   />
                 </div>
-                <p className="mt-[18px] h-[20px] text-[17px] font-medium text-center">
+                <p className="mt-[18px] text-[17px] font-medium text-center">
                   {product.title}
                 </p>
               </div>
