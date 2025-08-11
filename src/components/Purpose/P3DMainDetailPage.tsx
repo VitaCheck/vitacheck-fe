@@ -14,7 +14,8 @@ interface DesktopProps {
   activeTab: "ingredient" | "timing";
   setActiveTab: (tab: "ingredient" | "timing") => void;
   brandProducts: any[];
-  onCopyUrl: () => void; // ✨ 새로운 prop 추가
+  brandId: number;
+  onCopyUrl: () => void;
 }
 
 const MainDetailPageDesktop: React.FC<DesktopProps> = ({
@@ -92,6 +93,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               brandName={product.brandName}
               brandImageUrl={product.brandImageUrl}
               brandProducts={brandProducts}
+              brandId={product.brandId ?? product.supplementId}
             />
           </div>
         </div>

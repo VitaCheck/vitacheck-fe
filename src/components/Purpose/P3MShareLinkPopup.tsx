@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import ShareModal from './P3DShareModal';
 
 interface ShareLinkPopupProps {
   onClose: () => void;
@@ -6,16 +7,22 @@ interface ShareLinkPopupProps {
 }
 
 const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl }) => {
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+
   const handleCopyLink = () => {
     navigator.clipboard.writeText(supplementUrl)
       .then(() => {
-        alert('링크가 클립보드에 복사되었습니다.');
-        onClose();
+        setIsShareModalOpen(true);
       })
       .catch((err) => {
         console.error('링크 복사 실패:', err);
         alert('링크 복사에 실패했습니다.');
       });
+  };
+
+  const handleCloseShareModal = () => {
+    setIsShareModalOpen(false); // 모달을 닫고
+    onClose(); // ShareLinkPopup도 닫습니다.
   };
 
   // 배경 클릭 시 팝업 닫기
@@ -29,41 +36,51 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
   };
 
   return (
-    <div
-      className="fixed inset-0 flex items-end justify-center z-50 bg-gray-800/50"
-      onClick={handleBackgroundClick} // 배경 클릭 이벤트
-    >
+    <>
       <div
-        className="bg-white h-[250px] rounded-t-4xl shadow-lg relative w-full text-center"
-        onClick={handlePopupClick} // 팝업 내부 클릭 이벤트 버블링 방지
+        className="fixed inset-0 flex items-end justify-center z-50 bg-gray-800/50"
+        onClick={handleBackgroundClick} // 배경 클릭 이벤트
       >
-        <div className="px-[50px] flex flex-col items-start">
-          <h2 className="text-[22px] mt-[20px] ml-[32px] font-semibold mb-[4px]">공유하기</h2>
-          <button
-            onClick={handleCopyLink}
-            className="w-full py-2 flex justify-center  text-black cursor-pointer"
-          >
-            <img
-              src="/images/PNG/MainPurpose/kakaotalk.png"
-              alt="카카오톡이미지"
-              className="rounded-full w-[50px] h-[50px]"
-            />
-            <span className="text-[18px] font-medium">카카오톡으로 공유하기</span>
-          </button>
-          <button
-            onClick={handleCopyLink}
-            className="w-full py-2 flex justify-center text-black cursor-pointer"
-          >
-            <img
-              src="dd"
-              alt="링크"
-              className="rounded-full w-[50px] h-[50px]"
-            />
-            <span className="text-[18px] font-medium">링크 복사하기</span>
-          </button>
+        <div
+          className="bg-white rounded-t-4xl shadow-lg relative w-full text-center"
+          onClick={handlePopupClick} // 팝업 내부 클릭 이벤트 버블링 방지
+        >
+          <div className="flex flex-col items-start">
+            <div className='ml-[32px]'>
+              <h2 className="text-[22px] mt-[20px] font-semibold mb-[4px]">공유하기</h2>
+            </div>
+            <div className='ml-[32px]'>
+              <button
+              onClick={handleCopyLink}
+              className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
+            >
+              <img
+                src="/images/PNG/MainPurpose/kakaotalk.png"
+                alt="카카오톡이미지"
+                className="rounded-full w-[50px] h-[50px]"
+              />
+              <span className="text-[18px] font-medium">카카오톡으로 공유하기</span>
+            </button>
+            </div>
+
+            <div className='border-[#C7C7C7] w-full border-[0.3px]' />
+
+            <div className='ml-[32px]'>
+              <button
+                onClick={handleCopyLink}
+                className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
+              >
+                <div
+                  className="rounded-full bg-gray-100 w-[50px] h-[50px]"
+                />
+                <span className="text-[18px] font-medium">링크 복사하기</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
+      <ShareModal isOpen={isShareModalOpen} onClose={handleCloseShareModal} />
+    </>
   );
 };
 

@@ -1,6 +1,7 @@
-import { useLocation, useNavigate } from "react-router-dom"; // useNavigate 추가
+import { useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import RecommendedProductSection from "@/components/Purpose/P2Section";
+import P2MDropdownPopup from "@/components/Purpose/P2MDropdownPopup";
 import useIsMobile from "@/hooks/useIsMobile";
 
 // API 응답 result 타입 정의
@@ -13,27 +14,65 @@ type ResultData = Record<string, SupplementInfo>;
 
 const PurposeProductList = () => {
   const location = useLocation();
-  const navigate = useNavigate(); // navigate 변수 선언
+  const navigate = useNavigate();
   const selected = location.state?.selectedDescriptions || [];
   const selectedCodes = location.state?.selectedCodes || [];
   const isMobile = useIsMobile();
 
   const [data, setData] = useState<ResultData>({});
   const [isLoading, setIsLoading] = useState(true);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  // ✅ 1. 선택된 목적 이름을 관리하는 상태 추가 (초기값은 첫 번째 선택 항목)
+  const [activePurpose, setActivePurpose] = useState<string>(selected[0]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleOpenPopup = () => {
+    setIsPopupOpen(true);
+  };
+
+  const handleClosePopup = () => {
+    setIsPopupOpen(false);
+  };
+
+  // ✅ 팝업에서 항목 선택 시 호출될 함수
+  const handlePurposeSelect = (item: string) => {
+    setActivePurpose(item); // 선택된 목적을 상태에 저장
+    handleClosePopup(); // 팝업 닫기
+  };
 
   // 목적 코드와 한글 이름을 매핑하는 객체
   const purposeCodeMap: Record<string, string> = {
     'EYE': '눈건강',
     'BONE': '뼈건강',
     'SLEEP_STRESS': '수면/스트레스',
-    'CHOLESTEROL': '혈중콜레스테롤',
+    'CHOLESTEROL': '혈중 콜레스테롤',
     'FAT': '체지방',
-    // 다른 모든 목적에 대한 매핑 추가
+    'SKIN': '피부 건강',
+    'TIRED': '피로감',
+    'IMMUNE': '면역력',
+    'DIGEST': '소화/위 건강',
+    'ATHELETIC': '운동 능력',
+    'CLIMACTERIC': '여성 갱년기',
+    'TEETH': '치아/잇몸',
+    'HAIR_NAIL': '탈모/손톱 건강',
+    'BLOOD_PRESS': '혈압',
+    'NEUTRAL_FAT': '혈중 중성지방',
+    'ANEMIA': '빈혈',
+    'ANTIAGING': '노화/항산화',
+    'BRAIN': '두뇌활동',
+    'LIVER': '간 건강',
+    'BLOOD_CIRCULATION': '혈관/혈액순환',
+    'GUT_HEALTH': '장 건강',
+    'RESPIRATORY_HEALTH': '호흡기 건강',
+    'JOINT_HEALTH': '관절 건강',
+    'PREGNANT_HEALTH': '임산부/태아 건강',
+    'BLOOD_SUGAR': '혈당',
+    'THYROID_HEALTH': '갑상선 건강',
+    'WOMAN_HEALTH': '여성 건강',
+    'MAN_HEALTH': '남성 건강',
   };
 
   useEffect(() => {
@@ -50,105 +89,62 @@ const PurposeProductList = () => {
       };
 
       console.log("📤 보내는 데이터:", JSON.stringify(payload, null, 2));
-      
+
       // --- 👇 API 호출 대신 이 부분을 사용합니다. 👇 ---
-        try {
-          const mockData = {
-            '루테인': {
-              purposes: ["눈건강"],
-              supplements: [
-                ["고려은단 비타민c 1000", "lutein.jpg"],
-                ["솔가 비타민D3 5000IU", "lutein.jpg"],
-                ["종근당건강 프로메가 오메가3", "lutein.jpg"],
-                ["루테인4", "lutein.jpg"],
-                ["루테인5", "lutein.jpg"],
-                ["루테인6", "lutein.jpg"],
-                ["루테인7", "lutein.jpg"],
-                ["루테인8", "lutein.jpg"],
-                ["루테인9", "lutein.jpg"],
-                ["루테인10", "lutein.jpg"],
-                ["루테인11", "lutein.jpg"],
-                ["루테인12", "lutein.jpg"],
-                ["루테인13", "lutein.jpg"],
-                ["루테인14", "lutein.jpg"],
-                ["루테인15", "lutein.jpg"],
-                ["루테인16", "lutein.jpg"],
-                ["루테인17", "lutein.jpg"],
-              ],
-            },
-            '칼슘2': {
-              purposes: ["뼈건강"],
-              supplements: [["제품이름2", "omega3.jpg"]],
-            },
-            '성분3_수면': {
-              purposes: ["수면/스트레스"],
-              supplements: [["제품이름3", "omega3.jpg"]],
-            },
-            '성분4_혈중콜레스테롤': {
-              purposes: ["혈중콜레스테롤"],
-              supplements: [["제품이름4", "omega3.jpg"]],
-            },
-            '성분5_체지방': {
-              purposes: ["체지방"],
-              supplements: [["제품이름5", "omega3.jpg"]],
-            },
-          };
-          setData(mockData as unknown as ResultData);
-          console.log("✅ Mock 데이터 로드 완료:", mockData);
-        } catch (error) {
-          console.error("❌ 목업 데이터 로드 중 오류 발생:", error);
-          setData({});
-        } finally {
-          setIsLoading(false);
-        }
-
-        // --- 👆 API 호출 대신 이 부분을 사용합니다. 👆 ---
-
-  //     try {
-  //       const response = await axios.post("/api/v1/supplements/by-purposes", payload);
-  //       console.log("✅ API 응답:", response.data);
-
-  //       if (response.data?.isSuccess && response.data?.result) {
-  //         setData(response.data.result);
-  //       } else {
-  //         console.warn("⚠️ 응답 성공했지만 result가 비어있거나 형식이 다름:", response.data);
-  //         setData({});
-  //       }
-  //     } catch (error) {
-  //       console.error("❌ 추천 성분 불러오기 실패:", error);
-  //       setData({
-  //         '루테인': {
-  //           purposes: ["눈건강"],
-  //           supplements: [["루테인1", "lutein.jpg"], ["루테인2", "lutein.jpg"], ["루테인3", "lutein.jpg"], ["루테인4", "lutein.jpg"],
-  //           ["루테인5", "lutein.jpg"], ["루테인6", "lutein.jpg"], ["루테인7", "lutein.jpg"], ["루테인8", "lutein.jpg"],
-  //           ["루테인9", "lutein.jpg"], ["루테인10", "lutein.jpg"], ["루테인11", "lutein.jpg"], ["루테인12", "lutein.jpg"],
-  //           ["루테인13", "lutein.jpg"], ["루테인14", "lutein.jpg"], ["루테인15", "lutein.jpg"], ["루테인16", "lutein.jpg"],
-  //           ["루테인17", "lutein.jpg"],],
-  //         },
-  //         '칼슘2': {
-  //           purposes: ["뼈건강"],
-  //           supplements: [["제품이름2", "omega3.jpg"]],
-  //         },
-  //         '성분3_수면': {
-  //           purposes: ["수면/스트레스"],
-  //           supplements: [["제품이름3", "omega3.jpg"]],
-  //         },
-  //         '성분4_혈중콜레스테롤': {
-  //           purposes: ["혈중콜레스테롤"],
-  //           supplements: [["제품이름4", "omega3.jpg"]],
-  //         },
-  //         '성분5_체지방': {
-  //           purposes: ["체지방"],
-  //           supplements: [["제품이름5", "omega3.jpg"]],
-  //         },
-  //       });
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
+      try {
+        const mockData = {
+          '루테인': {
+            purposes: ["눈건강"],
+            supplements: [
+              ["고려은단 비타민c 1000", "lutein.jpg"],
+              ["솔가 비타민D3 5000IU", "lutein.jpg"],
+              ["종근당건강 프로메가 오메가3", "lutein.jpg"],
+              ["루테인4", "lutein.jpg"],
+              ["루테인5", "lutein.jpg"],
+              ["루테인6", "lutein.jpg"],
+              ["루테인7", "lutein.jpg"],
+              ["루테인8", "lutein.jpg"],
+              ["루테인9", "lutein.jpg"],
+              ["루테인10", "lutein.jpg"],
+              ["루테인11", "lutein.jpg"],
+              ["루테인12", "lutein.jpg"],
+              ["루테인13", "lutein.jpg"],
+              ["루테인14", "lutein.jpg"],
+              ["루테인15", "lutein.jpg"],
+              ["루테인16", "lutein.jpg"],
+              ["루테인17", "lutein.jpg"],
+            ],
+          },
+          '칼슘2': {
+            purposes: ["뼈건강"],
+            supplements: [["제품이름2", "omega3.jpg"]],
+          },
+          '성분3_수면': {
+            purposes: ["수면/스트레스"],
+            supplements: [["제품이름3", "omega3.jpg"]],
+          },
+          '성분4_혈중콜레스테롤': {
+            purposes: ["혈중콜레스테롤"],
+            supplements: [["제품이름4", "omega3.jpg"]],
+          },
+          '성분5_체지방': {
+            purposes: ["체지방"],
+            supplements: [["제품이름5", "omega3.jpg"]],
+          },
+        };
+        setData(mockData as unknown as ResultData);
+        console.log("✅ Mock 데이터 로드 완료:", mockData);
+      } catch (error) {
+        console.error("❌ 목업 데이터 로드 중 오류 발생:", error);
+        setData({});
+      } finally {
+        setIsLoading(false);
+      }
+      // --- 👆 API 호출 대신 이 부분을 사용합니다. 👆 ---
     };
 
     fetchData();
-  }, [selectedCodes]);
+  }, [selectedCodes, activePurpose]); // ✅ activePurpose를 의존성 배열에 추가
 
   // 제목 텍스트 처리
   let titleText: string | JSX.Element = "";
@@ -176,16 +172,23 @@ const PurposeProductList = () => {
     }
   }
 
-  // 수정된 renderSections 함수
+  // ✅ 3. renderSections 함수 수정: activePurpose에 따라 정렬
   const renderSections = () => {
-    // `data` 객체를 순회하면서 `selectedCodes`에 해당하는 항목만 필터링합니다.
     const translatedCodes = selectedCodes.map((code: string) => purposeCodeMap[code]).filter(Boolean);
     const filteredData = Object.entries(data).filter(([_ingredientName, info]) => {
       return info.purposes.some(purpose => translatedCodes.includes(purpose));
     });
 
-    // 필터링된 데이터만 렌더링
-    return filteredData.map(([ingredientName, info]) => (
+    // 선택된 목적에 해당하는 데이터를 최상단으로 옮기는 로직
+    const sortedData = [...filteredData].sort(([_, aInfo], [__, bInfo]) => {
+      const aHasActive = aInfo.purposes.includes(activePurpose);
+      const bHasActive = bInfo.purposes.includes(activePurpose);
+      if (aHasActive && !bHasActive) return -1;
+      if (!aHasActive && bHasActive) return 1;
+      return 0;
+    });
+
+    return sortedData.map(([ingredientName, info]) => (
       <div key={ingredientName} className="flex flex-col">
         <RecommendedProductSection
           ingredientName={ingredientName}
@@ -208,47 +211,41 @@ const PurposeProductList = () => {
       <div className="md:hidden w-full mx-auto pb-[50px]">
         <div className="md:hidden flex items-center gap-[22px] mt-[50px]">
           <div className="ml-[38px]">
-            <h1 className="text-[30px] tracking-[-0.6px] font-medium">
+            <h1 className="text-[30px] tracking-[-0.6px] font-semibold">
               {titleText}
             </h1>
           </div>
 
-          {/* 드롭다운 */}
-          <div className="relative w-[78px] h-[28px]">
-            <select
+          {/* 드롭다운 버튼. */}
+          <div
+            className="relative min-w-[78px] h-[28px] cursor-pointer"
+            onClick={handleOpenPopup}
+          >
+            <div
               className="w-full h-full pl-[15px] pr-[24px] text-[14px] font-medium
-              rounded-[26px] border-[0.8px] border-[#AAA]
-              text-black appearance-none focus:outline-none"
+              rounded-[26px] border-[0.8px] border-[#AAA] text-black
+              flex items-center justify-between"
             >
-              {selected.map((item: string, index: number) => (
-                <option key={index} value={item}>
-                  {item}
-                </option>
-              ))}
-            </select>
-            <div className="pointer-events-none absolute top-1/2 right-[8px] transform -translate-y-1/2">
-              <svg
-                className="w-[12px] h-[12px] text-black"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-              </svg>
+              <span>{activePurpose}</span>
+              <div className="pointer-events-none absolute top-1/2 right-[8px] transform -translate-y-1/2">
+                <svg
+                  className="w-[12px] h-[12px] text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                </svg>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* 로딩 상태일 때 */}
-        {/* {isLoading && <p>데이터를 불러오는 중입니다...</p>} */}
-        
-        {/* 데이터가 있을 때만 섹션 렌더링 */}
         {!isLoading && Object.keys(data).length > 0 && (
           <div className="mt-[20px]">{renderSections()}</div>
         )}
       </div>
-  
 
       {/* PC 전용 */}
       <div className="hidden md:block w-full bg-[#FAFAFA] px-[40px]">
@@ -263,6 +260,16 @@ const PurposeProductList = () => {
           )}
         </div>
       </div>
+      
+      {/* 팝업 렌더링. onSelect prop을 추가했습니다. */}
+      {isPopupOpen && (
+        <P2MDropdownPopup
+          onClose={handleClosePopup}
+          selectedItems={selected}
+          onSelect={handlePurposeSelect}
+          activeItem={activePurpose}
+        />
+      )}
     </>
   );
 };

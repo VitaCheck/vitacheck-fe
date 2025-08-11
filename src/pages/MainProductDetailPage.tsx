@@ -182,6 +182,7 @@ const ProductDetailPage = () => {
         setActiveTab={setActiveTab}
         showButton={showButton}
         brandProducts={brandProducts}
+        brandId={product.brandId ?? product.supplementId}
       />
       <MainDetailPageDesktop
         product={product}
@@ -190,7 +191,8 @@ const ProductDetailPage = () => {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         brandProducts={brandProducts}
-        onCopyUrl={handleCopyUrl} // 데스크탑 컴포넌트에 URL 복사 함수 전달
+        brandId={product.brandId ?? product.supplementId}
+        onCopyUrl={handleCopyUrl}
       />
       
       {/* 최상위 컴포넌트에서 모달을 렌더링 */}
