@@ -3,9 +3,9 @@
 import { useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
-import MainDetailPageMobile from "@/components/Purpose/3MobileMainDetailPage";
-import MainDetailPageDesktop from "@/components/Purpose/3DesktopMainDetailPage";
-import ShareModal from "@/components/Purpose/3DShareModal"; // ShareModal 컴포넌트 import
+import MainDetailPageMobile from "@/components/Purpose/P3MMainDetailPage";
+import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
+import ShareModal from "@/components/Purpose/P3DShareModal"; // ShareModal 컴포넌트 import
 
 interface Product {
   supplementId: number;

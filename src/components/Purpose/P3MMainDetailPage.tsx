@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import ShareLinkPopup from './3MShareLinkPopup';
+import ShareLinkPopup from './P3MShareLinkPopup';
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
-import MainDetailPageBrandSection from "./3MainDetailPageBrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import IngredientTab from "./3IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import TimingTab from "./3TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import MainDetailPageBrandSection from "./P3BrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import IngredientTab from "./P3IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import TimingTab from "./P3TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
 interface MobileProps {
   product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
   liked: boolean;

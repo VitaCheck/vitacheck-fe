@@ -3,9 +3,9 @@
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
-import MainDetailPageBrandSection from "./3MainDetailPageBrandSection";
-import IngredientTab from "./3IngredientTab";
-import TimingTab from "./3TimingTab";
+import MainDetailPageBrandSection from "./P3BrandSection";
+import IngredientTab from "./P3IngredientTab";
+import TimingTab from "./P3TimingTab";
 
 interface DesktopProps {
   product: any;

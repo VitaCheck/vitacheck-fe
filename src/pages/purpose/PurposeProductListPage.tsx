@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom"; // useNavigate 추가
 import { useEffect, useState } from "react";
-import RecommendedProductSection from "@/components/Purpose/2Purpose2Section";
+import RecommendedProductSection from "@/components/Purpose/P2Section";
 import useIsMobile from "@/hooks/useIsMobile";
 
 // API 응답 result 타입 정의

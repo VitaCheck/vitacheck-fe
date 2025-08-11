@@ -1,8 +1,8 @@
 // src/components/RecommendedProductSection.tsx
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
-import RecommendedProductSectionMobile from "./2MobilePurpose2Section";
-import RecommendedProductSectionDesktop from "./2DesktopPurposeSection";
+import RecommendedProductSectionMobile from "./P2MSection";
+import RecommendedProductSectionDesktop from "./P2DSection";
 import useMediaQuery from "@/hooks/useMediaQuery";
 
 interface RecommendedProductSectionProps {
