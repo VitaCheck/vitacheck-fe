@@ -21,7 +21,10 @@ import EditProfilePage from "./pages/EditProfilePage";
 import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
-import SocialLogin from "./components/auth/SocialLogin";
+import SocialLogin from "./components/Auth/SocialLogin";
+// import SocialCallback from "./pages/auth/SocialCallback";
+import SocialSignupForm from "./pages/auth/SocialSignupForm";
+
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
 import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPAge"; //자체 회원가입 상세 페이지
@@ -38,6 +41,7 @@ import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import OauthRedirect from "./pages/auth/OauthRedirect";
 const queryClient = new QueryClient(); // ✅ queryClient 생성
 
 const router = createBrowserRouter([
@@ -170,19 +174,15 @@ const router = createBrowserRouter([
         element: <SocialLogin />,
       },
       {
-        path: "v1/auth/google/callback",
-        element: <SocialCallback />,
+        path: "/oauth-redirect",
+        element: <OauthRedirect />,
       },
+      // {
+      //   path: "/auth/:provider/callback", // google|kakao|naver
+      //   element: <SocialCallback />,
+      // },
       {
-        path: "v1/auth/kakao/callback",
-        element: <SocialCallback />,
-      },
-      {
-        path: "v1/auth/naver/callback",
-        element: <SocialCallback />,
-      },
-      {
-        path: "social-signup",
+        path: "/social-signup",
         element: <SocialSignupForm />,
       },
 
