@@ -22,7 +22,7 @@ import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/Auth/SocialLogin";
-import SocialCallback from "./pages/auth/SocialCallback";
+// import SocialCallback from "./pages/auth/SocialCallback";
 import SocialSignupForm from "./pages/auth/SocialSignupForm";
 
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
@@ -41,6 +41,7 @@ import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import OauthRedirect from "./pages/auth/OauthRedirect";
 const queryClient = new QueryClient(); // ✅ queryClient 생성
 
 const router = createBrowserRouter([
@@ -173,11 +174,15 @@ const router = createBrowserRouter([
         element: <SocialLogin />,
       },
       {
-        path: "/auth/:provider/callback", // google|kakao|naver
-        element: <SocialCallback />,
+        path: "/oauth-redirect",
+        element: <OauthRedirect />,
       },
+      // {
+      //   path: "/auth/:provider/callback", // google|kakao|naver
+      //   element: <SocialCallback />,
+      // },
       {
-        path: "/auth/social-signup",
+        path: "/social-signup",
         element: <SocialSignupForm />,
       },
 
