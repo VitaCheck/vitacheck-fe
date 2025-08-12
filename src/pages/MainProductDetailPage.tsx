@@ -33,7 +33,9 @@ const ProductDetailPage = () => {
   const [product, setProduct] = useState<Product | null>(null);
   const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
+  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">(
+    "ingredient"
+  );
   const [liked, setLiked] = useState(false);
   const [showButton, setShowButton] = useState(true);
   const location = useLocation();
@@ -51,15 +53,21 @@ const ProductDetailPage = () => {
 
     const fetchBrandProducts = async (idToFetch: number) => {
       try {
-        const brandResponse = await axios.get(`http://3.35.50.61:8080/api/v1/supplements/brand`, {
-          params: { id: idToFetch },
-          headers: {
-            'accept': '*/*',
-          },
-        });
-        
+        const brandResponse = await axios.get(
+          `http://3.35.50.61:8080/api/v1/supplements/brand`,
+          {
+            params: { id: idToFetch },
+            headers: {
+              accept: "*/*",
+            },
+          }
+        );
+
         if (brandResponse.status === 200) {
-          console.log("브랜드 제품 목록 데이터:", brandResponse.data.supplements);
+          console.log(
+            "브랜드 제품 목록 데이터:",
+            brandResponse.data.supplements
+          );
           setBrandProducts(brandResponse.data.supplements);
         } else {
           setBrandProducts([]);
@@ -73,21 +81,25 @@ const ProductDetailPage = () => {
     const fetchProduct = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(`http://3.35.50.61:8080/api/v1/supplements`, {
-          params: { id },
-          headers: {
-            'X-User-Id': 987,
-            'Authorization': `Bearer ${AUTH_TOKEN}`,
-          },
-        });
-        
+        const response = await axios.get(
+          `http://3.35.50.61:8080/api/v1/supplements`,
+          {
+            params: { id },
+            headers: {
+              "X-User-Id": 987,
+              Authorization: `Bearer ${AUTH_TOKEN}`,
+            },
+          }
+        );
+
         if (response.status === 200) {
           console.log("제품 상세 페이지 데이터:", response.data);
           const productData = response.data;
           setProduct(productData);
           setLiked(productData.liked);
 
-          const brandIdOrSupplementId = productData.brandId || productData.supplementId;
+          const brandIdOrSupplementId =
+            productData.brandId || productData.supplementId;
           fetchBrandProducts(brandIdOrSupplementId);
         } else {
           setProduct(null);
@@ -126,11 +138,11 @@ const ProductDetailPage = () => {
     try {
       await axios.post(
         `http://3.35.50.61:8080/api/v1/supplements/${supplementId}/like`,
-        {}, 
+        {},
         {
           headers: {
-            'Authorization': `Bearer ${AUTH_TOKEN}`,
-            'Content-Type': 'application/json',
+            Authorization: `Bearer ${AUTH_TOKEN}`,
+            "Content-Type": "application/json",
           },
         }
       );
@@ -161,7 +173,9 @@ const ProductDetailPage = () => {
   };
 
   if (isLoading) {
-    return <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>;
+    return (
+      <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>
+    );
   }
 
   if (!product) {
@@ -192,7 +206,7 @@ const ProductDetailPage = () => {
         brandProducts={brandProducts}
         onCopyUrl={handleCopyUrl} // 데스크탑 컴포넌트에 URL 복사 함수 전달
       />
-      
+
       {/* 최상위 컴포넌트에서 모달을 렌더링 */}
       <ShareModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </>

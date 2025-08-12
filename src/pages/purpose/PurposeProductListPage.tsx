@@ -25,14 +25,13 @@ const PurposeProductList = () => {
     window.scrollTo(0, 0);
   }, []);
 
-
   // 목적 코드와 한글 이름을 매핑하는 객체
   const purposeCodeMap: Record<string, string> = {
-    'EYE': '눈건강',
-    'BONE': '뼈건강',
-    'SLEEP_STRESS': '수면/스트레스',
-    'CHOLESTEROL': '혈중콜레스테롤',
-    'FAT': '체지방',
+    EYE: "눈건강",
+    BONE: "뼈건강",
+    SLEEP_STRESS: "수면/스트레스",
+    CHOLESTEROL: "혈중콜레스테롤",
+    FAT: "체지방",
     // 다른 모든 목적에 대한 매핑 추가
   };
 
@@ -50,101 +49,100 @@ const PurposeProductList = () => {
       };
 
       console.log("📤 보내는 데이터:", JSON.stringify(payload, null, 2));
-      
-      // --- 👇 API 호출 대신 이 부분을 사용합니다. 👇 ---
-        try {
-          const mockData = {
-            '루테인': {
-              purposes: ["눈건강"],
-              supplements: [
-                ["고려은단 비타민c 1000", "lutein.jpg"],
-                ["솔가 비타민D3 5000IU", "lutein.jpg"],
-                ["종근당건강 프로메가 오메가3", "lutein.jpg"],
-                ["루테인4", "lutein.jpg"],
-                ["루테인5", "lutein.jpg"],
-                ["루테인6", "lutein.jpg"],
-                ["루테인7", "lutein.jpg"],
-                ["루테인8", "lutein.jpg"],
-                ["루테인9", "lutein.jpg"],
-                ["루테인10", "lutein.jpg"],
-                ["루테인11", "lutein.jpg"],
-                ["루테인12", "lutein.jpg"],
-                ["루테인13", "lutein.jpg"],
-                ["루테인14", "lutein.jpg"],
-                ["루테인15", "lutein.jpg"],
-                ["루테인16", "lutein.jpg"],
-                ["루테인17", "lutein.jpg"],
-              ],
-            },
-            '칼슘2': {
-              purposes: ["뼈건강"],
-              supplements: [["제품이름2", "omega3.jpg"]],
-            },
-            '성분3_수면': {
-              purposes: ["수면/스트레스"],
-              supplements: [["제품이름3", "omega3.jpg"]],
-            },
-            '성분4_혈중콜레스테롤': {
-              purposes: ["혈중콜레스테롤"],
-              supplements: [["제품이름4", "omega3.jpg"]],
-            },
-            '성분5_체지방': {
-              purposes: ["체지방"],
-              supplements: [["제품이름5", "omega3.jpg"]],
-            },
-          };
-          setData(mockData as unknown as ResultData);
-          console.log("✅ Mock 데이터 로드 완료:", mockData);
-        } catch (error) {
-          console.error("❌ 목업 데이터 로드 중 오류 발생:", error);
-          setData({});
-        } finally {
-          setIsLoading(false);
-        }
 
-        // --- 👆 API 호출 대신 이 부분을 사용합니다. 👆 ---
+      try {
+        const mockData = {
+          루테인: {
+            purposes: ["눈건강"],
+            supplements: [
+              ["고려은단 비타민c 1000", "lutein.jpg"],
+              ["솔가 비타민D3 5000IU", "lutein.jpg"],
+              ["종근당건강 프로메가 오메가3", "lutein.jpg"],
+              ["루테인4", "lutein.jpg"],
+              ["루테인5", "lutein.jpg"],
+              ["루테인6", "lutein.jpg"],
+              ["루테인7", "lutein.jpg"],
+              ["루테인8", "lutein.jpg"],
+              ["루테인9", "lutein.jpg"],
+              ["루테인10", "lutein.jpg"],
+              ["루테인11", "lutein.jpg"],
+              ["루테인12", "lutein.jpg"],
+              ["루테인13", "lutein.jpg"],
+              ["루테인14", "lutein.jpg"],
+              ["루테인15", "lutein.jpg"],
+              ["루테인16", "lutein.jpg"],
+              ["루테인17", "lutein.jpg"],
+            ],
+          },
+          칼슘2: {
+            purposes: ["뼈건강"],
+            supplements: [["제품이름2", "omega3.jpg"]],
+          },
+          성분3_수면: {
+            purposes: ["수면/스트레스"],
+            supplements: [["제품이름3", "omega3.jpg"]],
+          },
+          성분4_혈중콜레스테롤: {
+            purposes: ["혈중콜레스테롤"],
+            supplements: [["제품이름4", "omega3.jpg"]],
+          },
+          성분5_체지방: {
+            purposes: ["체지방"],
+            supplements: [["제품이름5", "omega3.jpg"]],
+          },
+        };
+        setData(mockData as unknown as ResultData);
+        console.log("✅ Mock 데이터 로드 완료:", mockData);
+      } catch (error) {
+        console.error("❌ 목업 데이터 로드 중 오류 발생:", error);
+        setData({});
+      } finally {
+        setIsLoading(false);
+      }
 
-  //     try {
-  //       const response = await axios.post("/api/v1/supplements/by-purposes", payload);
-  //       console.log("✅ API 응답:", response.data);
+      // --- 👆 API 호출 대신 이 부분을 사용합니다. 👆 ---
 
-  //       if (response.data?.isSuccess && response.data?.result) {
-  //         setData(response.data.result);
-  //       } else {
-  //         console.warn("⚠️ 응답 성공했지만 result가 비어있거나 형식이 다름:", response.data);
-  //         setData({});
-  //       }
-  //     } catch (error) {
-  //       console.error("❌ 추천 성분 불러오기 실패:", error);
-  //       setData({
-  //         '루테인': {
-  //           purposes: ["눈건강"],
-  //           supplements: [["루테인1", "lutein.jpg"], ["루테인2", "lutein.jpg"], ["루테인3", "lutein.jpg"], ["루테인4", "lutein.jpg"],
-  //           ["루테인5", "lutein.jpg"], ["루테인6", "lutein.jpg"], ["루테인7", "lutein.jpg"], ["루테인8", "lutein.jpg"],
-  //           ["루테인9", "lutein.jpg"], ["루테인10", "lutein.jpg"], ["루테인11", "lutein.jpg"], ["루테인12", "lutein.jpg"],
-  //           ["루테인13", "lutein.jpg"], ["루테인14", "lutein.jpg"], ["루테인15", "lutein.jpg"], ["루테인16", "lutein.jpg"],
-  //           ["루테인17", "lutein.jpg"],],
-  //         },
-  //         '칼슘2': {
-  //           purposes: ["뼈건강"],
-  //           supplements: [["제품이름2", "omega3.jpg"]],
-  //         },
-  //         '성분3_수면': {
-  //           purposes: ["수면/스트레스"],
-  //           supplements: [["제품이름3", "omega3.jpg"]],
-  //         },
-  //         '성분4_혈중콜레스테롤': {
-  //           purposes: ["혈중콜레스테롤"],
-  //           supplements: [["제품이름4", "omega3.jpg"]],
-  //         },
-  //         '성분5_체지방': {
-  //           purposes: ["체지방"],
-  //           supplements: [["제품이름5", "omega3.jpg"]],
-  //         },
-  //       });
-  //     } finally {
-  //       setIsLoading(false);
-  //     }
+      //     try {
+      //       const response = await axios.post("/api/v1/supplements/by-purposes", payload);
+      //       console.log("✅ API 응답:", response.data);
+
+      //       if (response.data?.isSuccess && response.data?.result) {
+      //         setData(response.data.result);
+      //       } else {
+      //         console.warn("⚠️ 응답 성공했지만 result가 비어있거나 형식이 다름:", response.data);
+      //         setData({});
+      //       }
+      //     } catch (error) {
+      //       console.error("❌ 추천 성분 불러오기 실패:", error);
+      //       setData({
+      //         '루테인': {
+      //           purposes: ["눈건강"],
+      //           supplements: [["루테인1", "lutein.jpg"], ["루테인2", "lutein.jpg"], ["루테인3", "lutein.jpg"], ["루테인4", "lutein.jpg"],
+      //           ["루테인5", "lutein.jpg"], ["루테인6", "lutein.jpg"], ["루테인7", "lutein.jpg"], ["루테인8", "lutein.jpg"],
+      //           ["루테인9", "lutein.jpg"], ["루테인10", "lutein.jpg"], ["루테인11", "lutein.jpg"], ["루테인12", "lutein.jpg"],
+      //           ["루테인13", "lutein.jpg"], ["루테인14", "lutein.jpg"], ["루테인15", "lutein.jpg"], ["루테인16", "lutein.jpg"],
+      //           ["루테인17", "lutein.jpg"],],
+      //         },
+      //         '칼슘2': {
+      //           purposes: ["뼈건강"],
+      //           supplements: [["제품이름2", "omega3.jpg"]],
+      //         },
+      //         '성분3_수면': {
+      //           purposes: ["수면/스트레스"],
+      //           supplements: [["제품이름3", "omega3.jpg"]],
+      //         },
+      //         '성분4_혈중콜레스테롤': {
+      //           purposes: ["혈중콜레스테롤"],
+      //           supplements: [["제품이름4", "omega3.jpg"]],
+      //         },
+      //         '성분5_체지방': {
+      //           purposes: ["체지방"],
+      //           supplements: [["제품이름5", "omega3.jpg"]],
+      //         },
+      //       });
+      //     } finally {
+      //       setIsLoading(false);
+      //     }
     };
 
     fetchData();
@@ -179,10 +177,16 @@ const PurposeProductList = () => {
   // 수정된 renderSections 함수
   const renderSections = () => {
     // `data` 객체를 순회하면서 `selectedCodes`에 해당하는 항목만 필터링합니다.
-    const translatedCodes = selectedCodes.map((code: string) => purposeCodeMap[code]).filter(Boolean);
-    const filteredData = Object.entries(data).filter(([_ingredientName, info]) => {
-      return info.purposes.some(purpose => translatedCodes.includes(purpose));
-    });
+    const translatedCodes = selectedCodes
+      .map((code: string) => purposeCodeMap[code])
+      .filter(Boolean);
+    const filteredData = Object.entries(data).filter(
+      ([_ingredientName, info]) => {
+        return info.purposes.some((purpose) =>
+          translatedCodes.includes(purpose)
+        );
+      }
+    );
 
     // 필터링된 데이터만 렌더링
     return filteredData.map(([ingredientName, info]) => (
@@ -193,9 +197,12 @@ const PurposeProductList = () => {
           supplements={info.supplements}
           isLoading={isLoading}
           goToAllIngredientPage={() => {
-            navigate(`/ingredientproducts?ingredient=${encodeURIComponent(ingredientName)}`, {
-              state: { supplements: info.supplements },
-            });
+            navigate(
+              `/ingredientproducts?ingredient=${encodeURIComponent(ingredientName)}`,
+              {
+                state: { supplements: info.supplements },
+              }
+            );
           }}
         />
       </div>
@@ -234,7 +241,11 @@ const PurposeProductList = () => {
                 strokeWidth="2"
                 viewBox="0 0 24 24"
               >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M19 9l-7 7-7-7"
+                />
               </svg>
             </div>
           </div>
@@ -242,19 +253,20 @@ const PurposeProductList = () => {
 
         {/* 로딩 상태일 때 */}
         {/* {isLoading && <p>데이터를 불러오는 중입니다...</p>} */}
-        
+
         {/* 데이터가 있을 때만 섹션 렌더링 */}
         {!isLoading && Object.keys(data).length > 0 && (
           <div className="mt-[20px]">{renderSections()}</div>
         )}
       </div>
-  
 
       {/* PC 전용 */}
       <div className="hidden md:block w-full bg-[#FAFAFA] px-[40px]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
-            <h1 className="text-[30px] tracking-[-1px] font-semibold">{titleText}</h1>
+            <h1 className="text-[30px] tracking-[-1px] font-semibold">
+              {titleText}
+            </h1>
           </div>
           {isLoading ? (
             <p className="mt-[40px]">데이터를 불러오는 중입니다...</p>
