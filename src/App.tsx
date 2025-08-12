@@ -10,11 +10,14 @@ import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/combination/CombinationPage";
 import AddCombinationPage from "./pages/combination/AddCombinationPage";
 import CombinationResultPage from "./pages/combination/CombinationResultPage";
-import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
+
+import AlarmPage from "./pages/alarm/AlarmPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import DesktopAlarmAddPage from "./pages/alarm/DesktopAlarmAddPage";
+import DesktopAlarmAddToSearchPage from "./pages/alarm/DesktopAlarmAddToSearchPage";
 import DesktopAlarmEditPage from "./pages/alarm/DesktopAlarmEditPage";
+
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
@@ -22,7 +25,7 @@ import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/Auth/SocialLogin";
-import SocialCallback from "./pages/auth/SocialCallback";
+// import SocialCallback from "./pages/auth/SocialCallback";
 import SocialSignupForm from "./pages/auth/SocialSignupForm";
 
 import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
@@ -42,7 +45,8 @@ import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const queryClient = new QueryClient(); // ✅ queryClient 생성
+import OauthRedirect from "./pages/auth/OauthRedirect";
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
@@ -54,10 +58,10 @@ const router = createBrowserRouter([
         index: true,
         element: <MainPage />,
       },
-      {
-        path: "login", //로그인 페이지
-        element: <SignInPage />,
-      },
+      // {
+      //   path: "login", //로그인 페이지
+      //   element: <SignInPage />,
+      // },
       {
         path: "login/email", //로그인 페이지
         element: <EmailLoginPage />,
@@ -111,6 +115,10 @@ const router = createBrowserRouter([
       {
         path: "alarm/settings/add",
         element: <DesktopAlarmAddPage />,
+      },
+      {
+        path: "alarm/settings/add/search",
+        element: <DesktopAlarmAddToSearchPage />,
       },
       {
         path: "alarm/settings/edit/:id",
@@ -174,15 +182,19 @@ const router = createBrowserRouter([
         element: <ProductDetailPage />,
       },
       {
-        path: "social-login",
+        path: "login",
         element: <SocialLogin />,
       },
       {
-        path: "/auth/:provider/callback", // google|kakao|naver
-        element: <SocialCallback />,
+        path: "/oauth-redirect",
+        element: <OauthRedirect />,
       },
+      // {
+      //   path: "/auth/:provider/callback", // google|kakao|naver
+      //   element: <SocialCallback />,
+      // },
       {
-        path: "/auth/social-signup",
+        path: "/social-signup",
         element: <SocialSignupForm />,
       },
 

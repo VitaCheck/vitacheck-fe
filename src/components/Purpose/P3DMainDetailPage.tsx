@@ -1,5 +1,4 @@
-// src/components/Purpose/3DesktopMainDetailPage.tsx
-
+// product/:id
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
@@ -28,6 +27,17 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   onCopyUrl, // ✨ prop으로 받아서 사용
 }) => {
   const navigate = useNavigate();
+
+  // 알람 등록 버튼 클릭 핸들러
+  const handleRegisterAlarm = () => {
+    const id = product?.supplementId ?? product?.id;
+    if (!id) {
+      console.error("supplementId 없음");
+      return;
+    }
+    const q = new URLSearchParams({ supplementId: String(id) });
+    navigate(`/alarm/settings/add/search?${q.toString()}`);
+  };
 
   return (
     <div className="hidden sm:block w-full bg-[#FAFAFA] px-[50px]">
@@ -75,7 +85,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                 쿠팡 바로가기
               </button>
               <button
-                onClick={() => navigate("/alarm")}
+                onClick={handleRegisterAlarm}
                 className="bg-[#FFEB9D] w-[290px] h-[62px] rounded-[14px] text-[20px] font-medium"
               >
                 섭취알림 등록
@@ -99,8 +109,10 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
         </div>
 
         {/* 탭 UI */}
-        <div className="flex flex-col justify-end items-center
-                                     w-full h-[80px] border-b-[#F3F3F3] border-b-[4px]">
+        <div
+          className="flex flex-col justify-end items-center
+                                     w-full h-[80px] border-b-[#F3F3F3] border-b-[4px]"
+        >
           <div className="flex justify-between w-[502.7px] relative">
             {[
               { key: "ingredient", label: "성분 함량" },

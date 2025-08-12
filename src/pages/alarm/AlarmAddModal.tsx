@@ -1,5 +1,6 @@
 import { useState } from "react";
-import Picker from "react-mobile-picker";
+import TimePickerModal from "./TimePickerModal"; // ⬅️ 추가
+// 나머지 import 동일 (Picker import는 삭제해도 됨)
 
 interface Props {
   onClose: () => void;
@@ -8,31 +9,12 @@ interface Props {
 const AlarmAddModal = ({ onClose }: Props) => {
   const [name, setName] = useState("");
   const [days, setDays] = useState<string[]>([]);
-  const selections = {
-    hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
-    minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
-  };
-  const [pickerValue, setPickerValue] = useState({
-    hour: "09",
-    minute: "00",
-  });
-
   const [times, setTimes] = useState<string[]>([]);
 
-  const handleAddTime = () => {
-    const newTime = `${pickerValue.hour}:${pickerValue.minute}`;
-    if (!times.includes(newTime)) {
-      setTimes([...times, newTime]);
-    }
-  };
-
-  const formatTime = (time: string) => {
-    const [hourStr, minute] = time.split(":");
-    const hour = parseInt(hourStr, 10);
-    const isPM = hour >= 12;
-    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
-    return `${isPM ? "오후" : "오전"} ${displayHour.toString().padStart(2, "0")}:${minute}`;
-  };
+  const [image, setImage] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false); // ⬅️ 시간 모달
 
   const toggleDay = (day: string) => {
     setDays((prev) =>
@@ -40,12 +22,6 @@ const AlarmAddModal = ({ onClose }: Props) => {
     );
   };
 
-  const [image, setImage] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [showImagePicker, setShowImagePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
-
-  // 파일 선택 핸들러
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
@@ -53,6 +29,27 @@ const AlarmAddModal = ({ onClose }: Props) => {
       setPreviewUrl(URL.createObjectURL(file));
       setShowImagePicker(false);
     }
+  };
+
+  // 시간 표시 (오전/오후)
+  const formatTime = (time: string) => {
+    const [hourStr, minute] = time.split(":");
+    const hour = parseInt(hourStr, 10);
+    const isPM = hour >= 12;
+    const displayHour = hour % 12 === 0 ? 12 : hour % 12;
+    return `${isPM ? "오후" : "오전"} ${displayHour
+      .toString()
+      .padStart(2, "0")}:${minute}`;
+  };
+
+  // 시간 추가 버튼 → 모달 열기
+  const openTimePicker = () => setShowTimePicker(true);
+
+  // 모달에서 완료 → times에 추가(중복 방지)
+  const handleConfirmTime = (v: { hour: string; minute: string }) => {
+    const newTime = `${v.hour}:${v.minute}`;
+    setTimes((prev) => (prev.includes(newTime) ? prev : [...prev, newTime]));
+    setShowTimePicker(false);
   };
 
   return (
@@ -126,66 +123,17 @@ const AlarmAddModal = ({ onClose }: Props) => {
           ))}
         </div>
 
-        {/* 휠형 시간 선택 */}
+        {/* 복용 시간 선택 (모달로 분리됨) */}
         <label className="block text-[#808080] font-semibold text-[20px] mb-1 mt-[38px]">
           복용 시간 선택
         </label>
-        <div className="relative flex justify-center items-center w-full mx-auto h-[180px]">
-          {/* 선택 영역 배경 */}
-          <div className="absolute top-1/2 -translate-y-1/2 w-full h-[36px] bg-[#F1F1F1] rounded-md z-0" />
-
-          {/* Picker */}
-          <div className="relative z-10 flex gap-3">
-            <Picker
-              value={pickerValue}
-              onChange={setPickerValue}
-              height={180}
-              itemHeight={36}
-              className="flex gap-3"
-            >
-              {/* Hour Column */}
-              <Picker.Column name="hour" className="flex flex-col items-center">
-                {selections.hour.map((h) => (
-                  <Picker.Item
-                    key={h}
-                    value={h}
-                    className="text-[24px] leading-[36px]"
-                  >
-                    {h}
-                  </Picker.Item>
-                ))}
-              </Picker.Column>
-
-              {/* 콜론 ":" */}
-              <div className="flex items-center justify-center text-[24px] font-regular w-[20px]">
-                :
-              </div>
-
-              {/* Minute Column */}
-              <Picker.Column
-                name="minute"
-                className="flex flex-col items-center"
-              >
-                {selections.minute.map((m) => (
-                  <Picker.Item
-                    key={m}
-                    value={m}
-                    className="text-[24px] leading-[36px]"
-                  >
-                    {m}
-                  </Picker.Item>
-                ))}
-              </Picker.Column>
-            </Picker>
-          </div>
-        </div>
 
         {/* 추가된 시간 리스트 */}
         {times.length > 0 && (
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="flex flex-col gap-2 mt-2">
             {times.map((t, idx) => (
               <div
-                key={t}
+                key={`${t}-${idx}`}
                 className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white"
               >
                 <span className="text-[16px] text-[#AAAAAA]">
@@ -202,13 +150,13 @@ const AlarmAddModal = ({ onClose }: Props) => {
         <div className="flex justify-center mt-4">
           <button
             className="w-full h-[60px] border border-[#AAAAAA] text-[#AAAAAA] rounded-[10px] px-3 py-2 bg-white mx-auto"
-            onClick={handleAddTime}
+            onClick={openTimePicker}
           >
             복용 시간 추가
           </button>
         </div>
 
-        {/* 이미지 선택 옵션 */}
+        {/* 이미지 선택 모달 */}
         {showImagePicker && (
           <div
             className="fixed inset-0 bg-black/40 flex items-end z-50"
@@ -218,17 +166,16 @@ const AlarmAddModal = ({ onClose }: Props) => {
               className="w-full bg-white rounded-t-2xl px-6 py-4"
               onClick={(e) => e.stopPropagation()}
             >
-              <p className="text-[18px] font-semibold mb-4 ">
+              <p className="text-[18px] font-semibold mb-4">
                 제품 사진 추가하기
               </p>
-
               <div className="flex flex-col">
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 border-b border-[#D9D9D9] cursor-pointer flex items-center">
+                <label className="w-full h-[90px] text-left text-[18px] py-3 px-4 border-b border-[#D9D9D9] cursor-pointer flex items-center">
                   <img
                     src="/images/cameraModal.png"
                     alt="camera icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
-                  />{" "}
+                    className="w-[50px] h-[50px] mr-[22px]"
+                  />
                   카메라로 촬영하기
                   <input
                     type="file"
@@ -238,11 +185,11 @@ const AlarmAddModal = ({ onClose }: Props) => {
                     onChange={handleImageChange}
                   />
                 </label>
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 cursor-pointer flex items-center">
+                <label className="w-full h-[90px] text-left text-[18px] py-3 px-4 cursor-pointer flex items-center">
                   <img
                     src="/images/galleryModal.png"
                     alt="camera icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
+                    className="w-[50px] h-[50px] mr-[22px]"
                   />
                   사진 앨범에서 선택하기
                   <input
@@ -255,6 +202,14 @@ const AlarmAddModal = ({ onClose }: Props) => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* 시간 선택 모달 */}
+        {showTimePicker && (
+          <TimePickerModal
+            onClose={() => setShowTimePicker(false)}
+            onConfirm={handleConfirmTime}
+          />
         )}
       </div>
     </div>
