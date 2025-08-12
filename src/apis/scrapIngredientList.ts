@@ -42,3 +42,8 @@ export const getLikedIngredients = async (): Promise<IngredientScrap[]> => {
     throw new Error("찜한 성분 조회 실패");
   }
 };
+
+// 찜한 성분 취소
+export const toggleLikeIngredient = async (ingredientId: number) => {
+  await api.post(`/api/v1/ingredients/${ingredientId}/like`);
+};
