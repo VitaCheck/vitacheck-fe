@@ -1,7 +1,8 @@
-// /alarm /settings
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import AlarmAddModal from "./AlarmAddModal";
 import AlarmEditModal from "./AlarmEditModal";
+import AddOptionsModal from "./AddOptionsModal";
 import axios from "@/lib/axios";
 
 interface Alarm {
@@ -14,13 +15,15 @@ interface Alarm {
 }
 
 interface Props {
-  showModal: boolean;
+  showModal: boolean; // 옵션 모달(추가하기) 표시 플래그
   setShowModal: (value: boolean) => void;
 }
 
 const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
+  const navigate = useNavigate();
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
+  const [showManualModal, setShowManualModal] = useState(false);
 
   useEffect(() => {
     const fetchAlarms = async () => {
@@ -35,7 +38,6 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
   }, []);
 
   const toggleAlarm = (id: number) => {
-    // TODO: 토글 API 연동
     console.log("토글할 알람 ID:", id);
   };
 
@@ -75,8 +77,11 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
               </div>
             </div>
             <div
-              onClick={() => toggleAlarm(alarm.notificationRoutineId)}
-              className={`w-12 h-7 flex items-center px-1 rounded-full cursor-pointer transition-colors bg-[#FFDB67]`}
+              onClick={(e) => {
+                e.stopPropagation();
+                toggleAlarm(alarm.notificationRoutineId);
+              }}
+              className="w-12 h-7 flex items-center px-1 rounded-full cursor-pointer transition-colors bg-[#FFDB67]"
             >
               <div className="w-5 h-5 rounded-full bg-white shadow-md transform transition-transform translate-x-5" />
             </div>
@@ -84,7 +89,28 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
         ))}
       </div>
 
-      {showModal && <AlarmAddModal onClose={() => setShowModal(false)} />}
+      {/* ➕ 옵션 모달 */}
+      {showModal && (
+        <AddOptionsModal
+          onClose={() => setShowModal(false)}
+          onSearch={() => {
+            setShowModal(false);
+            // 검색 플로우로 이동(원하는 경로로 변경 가능)
+            navigate("/search");
+          }}
+          onManual={() => {
+            setShowModal(false);
+            setShowManualModal(true); // 직접 입력 모달 열기
+          }}
+        />
+      )}
+
+      {/* 직접 입력 모달 */}
+      {showManualModal && (
+        <AlarmAddModal onClose={() => setShowManualModal(false)} />
+      )}
+
+      {/* 편집 모달 */}
       {editId !== null && (
         <AlarmEditModal id={editId} onClose={() => setEditId(null)} />
       )}

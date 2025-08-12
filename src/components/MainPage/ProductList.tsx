@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "../ProductCard";
 import Logo from "../../assets/logo.svg";
+import { getUserInfo } from "@/apis/user";
 
 const ageOptions = ["10대", "20대", "30대", "40대", "50대", "60대 이상"];
 
@@ -10,6 +11,15 @@ const ProductList = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
+
+  const mapAgeToGroup = (age: number): string => {
+    if (age < 20) return "10대";
+    if (age < 30) return "20대";
+    if (age < 40) return "30대";
+    if (age < 50) return "40대";
+    if (age < 60) return "50대";
+    return "60대 이상";
+  };
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {
@@ -25,6 +35,20 @@ const ProductList = () => {
     return () => window.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const fetchUserInfo = async () => {
+      try {
+        const user = await getUserInfo();
+        const group = mapAgeToGroup(user.age);
+        setSelectedAge(group);
+      } catch (error) {
+        console.error("사용자 정보 가져오기 실패:", error);
+      }
+    };
+
+    fetchUserInfo();
+  }, []);
+
   return (
     <section className="px-[9%] sm:px-[9%]">
       {/* 상단 영역 */}
@@ -37,7 +61,9 @@ const ProductList = () => {
 
           {/* 드롭다운 */}
           <div
-            className="relative w-[85px] cursor-pointer"
+            className={`relative cursor-pointer ${
+              selectedAge === "60대 이상" ? "w-[110px]" : "w-[85px]"
+            }`}
             onClick={() => setOpen((prev) => !prev)}
             ref={dropdownRef}
           >
@@ -84,7 +110,7 @@ const ProductList = () => {
         </div>
 
         <button
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/bestsupplement")}
           className="text-sm text-[#797979] hover:underline"
         >
           더보기 &gt;

@@ -10,22 +10,29 @@ import IngredientPage from "./pages/IngredientPage";
 import CombinationPage from "./pages/combination/CombinationPage";
 import AddCombinationPage from "./pages/combination/AddCombinationPage";
 import CombinationResultPage from "./pages/combination/CombinationResultPage";
-import AlarmPage from "./pages/alarm/AlarmPage";
 import MyPage from "./pages/MyPage";
+
+import AlarmPage from "./pages/alarm/AlarmPage";
 import AlarmSettingsPage from "./pages/alarm/AlarmSettingsPage";
 import DesktopAlarmAddPage from "./pages/alarm/DesktopAlarmAddPage";
+import DesktopAlarmAddToSearchPage from "./pages/alarm/DesktopAlarmAddToSearchPage";
 import DesktopAlarmEditPage from "./pages/alarm/DesktopAlarmEditPage";
+
 import NotificationCenterPage from "./pages/NotificationCenterPage";
 import NotificationSettingsPage from "./pages/NotificationSettingsPage";
 import EditProfilePage from "./pages/EditProfilePage";
 import IngredientDetailPage from "./pages/ingredients/IngredientDetailPage";
 import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
-import SocialLogin from "./components/auth/SocialLogin";
-import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
-import SocialCallback from "./pages/auth/SocialCallback";
+import SocialLogin from "./components/Auth/SocialLogin";
+// import SocialCallback from "./pages/auth/SocialCallback";
 import SocialSignupForm from "./pages/auth/SocialSignupForm";
 
+import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페이지
+import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
+import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPAge"; //자체 회원가입 상세 페이지
+
+import BestSupplement from "./pages/BestSupplement";
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
 import ProductDetailPage from "./pages/MainProductDetailPage";
@@ -38,7 +45,8 @@ import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-const queryClient = new QueryClient(); // ✅ queryClient 생성
+import OauthRedirect from "./pages/auth/OauthRedirect";
+const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
   {
@@ -50,13 +58,21 @@ const router = createBrowserRouter([
         index: true,
         element: <MainPage />,
       },
-      {
-        path: "login", //로그인 페이지
-        element: <SignInPage />,
-      },
+      // {
+      //   path: "login", //로그인 페이지
+      //   element: <SignInPage />,
+      // },
       {
         path: "login/email", //로그인 페이지
         element: <EmailLoginPage />,
+      },
+      {
+        path: "signup/email",
+        element: <EmailSignupPage />,
+      },
+      {
+        path: "signup/email/detail", // 회원가입 상세 정보 입력 페이지
+        element: <EmailSignupDetailPage />,
       },
       {
         path: "object", //목적 페이지
@@ -101,6 +117,10 @@ const router = createBrowserRouter([
         element: <DesktopAlarmAddPage />,
       },
       {
+        path: "alarm/settings/add/search",
+        element: <DesktopAlarmAddToSearchPage />,
+      },
+      {
         path: "alarm/settings/edit/:id",
         element: <DesktopAlarmEditPage />,
       },
@@ -142,6 +162,10 @@ const router = createBrowserRouter([
       },
 
       {
+        path: "bestsupplement",
+        element: <BestSupplement />,
+      },
+      {
         path: "products",
         element: <PurposeProductList />,
       },
@@ -158,23 +182,19 @@ const router = createBrowserRouter([
         element: <ProductDetailPage />,
       },
       {
-        path: "social-login",
+        path: "login",
         element: <SocialLogin />,
       },
       {
-        path: "v1/auth/google/callback",
-        element: <SocialCallback />,
+        path: "/oauth-redirect",
+        element: <OauthRedirect />,
       },
+      // {
+      //   path: "/auth/:provider/callback", // google|kakao|naver
+      //   element: <SocialCallback />,
+      // },
       {
-        path: "v1/auth/kakao/callback",
-        element: <SocialCallback />,
-      },
-      {
-        path: "v1/auth/naver/callback",
-        element: <SocialCallback />,
-      },
-      {
-        path: "social-signup",
+        path: "/social-signup",
         element: <SocialSignupForm />,
       },
     ],

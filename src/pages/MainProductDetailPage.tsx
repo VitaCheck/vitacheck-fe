@@ -1,36 +1,182 @@
-import { useLocation } from "react-router-dom";
+// src/pages/ProductDetailPage.tsx
+
+import { useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import MainDetailPageBrandSection from "../components/Purpose/MainDetailPageBrandSection";
-import IngredientTab from "../components/Purpose/IngredientTab";
-import TimingTab from "../components/Purpose/TimingTab";
-import { GoShareAndroid } from "react-icons/go";
-import { GoHeart, GoHeartFill } from "react-icons/go";
+import axios from "@/lib/axios";
+import MainDetailPageMobile from "@/components/Purpose/P3MMainDetailPage";
+import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
+import ShareModal from "@/components/Purpose/P3DShareModal"; // ShareModal 컴포넌트 import
+
+interface Product {
+  supplementId: number;
+  brandName: string;
+  brandImageUrl: string | null;
+  supplementName: string;
+  supplementImageUrl: string;
+  liked: boolean;
+  coupangLink: string | null;
+  intakeTime: string;
+  ingredients: string[];
+  brandId: number;
+}
+
+interface BrandProduct {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
+const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
 
 const ProductDetailPage = () => {
-  const location = useLocation();
-  const { state } = location;
-  const product = state;
-  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
+  const { id } = useParams<{ id: string }>();
+  const [product, setProduct] = useState<Product | null>(null);
+  const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">(
+    "ingredient"
+  );
   const [liked, setLiked] = useState(false);
   const [showButton, setShowButton] = useState(true);
+  const location = useLocation();
+  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 추가
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
   useEffect(() => {
+    if (!id) {
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchBrandProducts = async (idToFetch: number) => {
+      try {
+        const brandResponse = await axios.get(
+          `http://3.35.50.61:8080/api/v1/supplements/brand`,
+          {
+            params: { id: idToFetch },
+            headers: {
+              accept: "*/*",
+            },
+          }
+        );
+
+        if (brandResponse.status === 200) {
+          console.log(
+            "브랜드 제품 목록 데이터:",
+            brandResponse.data.supplements
+          );
+          setBrandProducts(brandResponse.data.supplements);
+        } else {
+          setBrandProducts([]);
+        }
+      } catch (error) {
+        console.error("브랜드 제품 목록을 불러오는데 실패했습니다:", error);
+        setBrandProducts([]);
+      }
+    };
+
+    const fetchProduct = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axios.get(
+          `http://3.35.50.61:8080/api/v1/supplements`,
+          {
+            params: { id },
+            headers: {
+              "X-User-Id": 987,
+              Authorization: `Bearer ${AUTH_TOKEN}`,
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("제품 상세 페이지 데이터:", response.data);
+          const productData = response.data;
+          setProduct(productData);
+          setLiked(productData.liked);
+
+          const brandIdOrSupplementId =
+            productData.brandId || productData.supplementId;
+          fetchBrandProducts(brandIdOrSupplementId);
+        } else {
+          setProduct(null);
+        }
+      } catch (error) {
+        console.error("제품 정보를 불러오는데 실패했습니다:", error);
+        setProduct(null);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchProduct();
+  }, [id]);
+
+  useEffect(() => {
     const handleScroll = () => {
       const currentY = window.scrollY;
-      setShowButton(currentY < 150); // 200px 이상이면 버튼 숨김
+      setShowButton(currentY < 150);
     };
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  const toggleLike = () => {
-    setLiked((prev) => !prev);
+  const toggleLike = async () => {
+    if (!product) {
+      console.error("제품 정보가 없어 좋아요를 누를 수 없습니다.");
+      return;
+    }
+    const supplementId = product.supplementId;
+    const newLikedState = !liked;
+
+    setLiked(newLikedState);
+
+    try {
+      await axios.post(
+        `http://3.35.50.61:8080/api/v1/supplements/${supplementId}/like`,
+        {},
+        {
+          headers: {
+            Authorization: `Bearer ${AUTH_TOKEN}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (newLikedState) {
+        console.log("찜한 상태로 요청되었습니다.");
+      } else {
+        console.log("찜을 취소했습니다.");
+      }
+    } catch (error) {
+      console.error("좋아요 상태 업데이트에 실패했습니다:", error);
+      setLiked(!newLikedState);
+    }
   };
+
+  // URL 복사 로직 추가
+  const handleCopyUrl = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setIsModalOpen(true);
+    } catch (err) {
+      console.error("URL 복사 실패:", err);
+    }
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  if (isLoading) {
+    return (
+      <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>
+    );
+  }
 
   if (!product) {
     return (
@@ -42,196 +188,29 @@ const ProductDetailPage = () => {
 
   return (
     <>
-      {/* 모바일 전용 */}
-      <div className="md:hidden">
-        <div className="w-[430px] mx-auto mt-[70px] mb-[150px]">
-          {/* 제품 이미지, 브랜드명, 제품명 */}
-          <div className="flex flex-col w-[338px] mx-[46px]">
-            {/* 이미지 래퍼: relative */}
-            <div className="relative w-[338px] h-[338px]">
-              <img
-                src={product.imageUrl}
-                alt={product.title}
-                className="w-full h-full rounded-[28px] shadow-lg object-cover"
-              />
+      <MainDetailPageMobile
+        product={product}
+        liked={liked}
+        toggleLike={toggleLike}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        showButton={showButton}
+        brandProducts={brandProducts}
+        brandId={product.brandId ?? product.supplementId}
+      />
+      <MainDetailPageDesktop
+        product={product}
+        liked={liked}
+        toggleLike={toggleLike}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        brandProducts={brandProducts}
+        brandId={product.brandId ?? product.supplementId}
+        onCopyUrl={handleCopyUrl}
+      />
 
-              {/* 하트 + 공유 버튼: absolute로 겹치기 */}
-              <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
-                <button className="w-[33px] h-[33px] flex items-center justify-center">
-                  <GoShareAndroid className="w-[33px] h-[33px] cursor-pointer text-black" />
-                </button>
-                <button
-                  onClick={toggleLike}
-                  className="w-[33px] h-[33px] flex items-center justify-center cursor-pointer"
-                >
-                  {liked ? (
-                    <GoHeartFill className="w-[33px] h-[33px] text-[#FD657E]" />
-                  ) : (
-                    <GoHeart className="w-[33px] h-[33px] text-[#FD657E]" />
-                  )}
-                </button>
-              </div>
-            </div>
-
-            {/* 제품 정보 텍스트 */}
-            <div className="mt-[21px] px-[5px] py-[10px]">
-              <h2 className="text-[20px] tracking-[-0.4px] text-[#757575] font-medium">
-                {product.brand || "브랜드"}
-              </h2>
-              <h1 className="text-[24px] tracking-[-0.48px] mt-[4px] font-bold">
-                {product.title}
-              </h1>
-            </div>
-          </div>
-
-          <div
-            className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-[430px] h-[103px] bg-white z-10
-              transition-all duration-300 ease-in-out
-              ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-            `}
-          />
-          <button
-            className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-[366px] h-[58px] rounded-[71px] z-50
-              transition-all duration-300 ease-in-out flex justify-center items-center
-              bg-[#FFEB9D] text-black text-[20px] font-medium
-              ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-            `}
-          >
-            섭취알림 등록하기
-          </button>
-
-
-          {/* 상세정보 / 쿠팡 바로가기 */}
-          <div className="flex justify-center mx-auto w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
-            <div className="w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
-              상세정보
-            </div>
-            <div className="w-[154px] h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
-              쿠팡 바로가기
-            </div>
-          </div>
-
-          <div className="mt-[24px] bg-[#F3F3F3] w-[430px] h-[4px]" />
-
-          {/* 브랜드 제품 리스트 */}
-          <div className="w-[430px] mx-auto mt-[28px]">
-            <div className="flex flex-col ml-[46px]">
-              <MainDetailPageBrandSection />
-            </div>
-          </div>
-
-          {/* 탭 UI */}
-          <div className="flex flex-col items-center w-full border-b-[#F3F3F3] border-b-[4px] mt-[47px] gap-[6px]">
-            <div className="flex justify-between w-[265px] relative">
-              {[
-                { key: "ingredient", label: "성분 함량" },
-                { key: "timing", label: "섭취 시기" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as "ingredient" | "timing")}
-                  className={`relative text-[19px] tracking-[-0.38px] font-medium transition-colors duration-300 ${
-                    activeTab === tab.key ? "text-black" : "text-[#9C9A9A]"
-                  }`}
-                >
-                  {tab.label}
-                  {activeTab === tab.key && (
-                    <span className="absolute -bottom-[6px] left-0 w-full mb-[2px] h-[4px] rounded-xl bg-black transition-all duration-300" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 탭 내용 */}
-          <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed">
-            {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
-          </div>
-        </div>
-      </div>
-
-
-
-      {/* PC 전용 */}
-      <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-        <div className="max-w-[1280px] mx-auto pt-[168px] scale-[0.66] origin-top">
-          {/* 제품 이미지, 브랜드명, 제품명 */}
-          <div className="flex justify-start gap-[100px] items-end">
-            <img
-              src={product.imageUrl}
-              alt={product.title}
-              className="w-[521px] h-[521px] rounded-[36.4px] shadow-lg object-cover"
-            />
-            <div className="flex flex-col gap-[216px]">
-              <div className="flex justify-between items-end w-[556px]">
-                <div className="flex flex-col gap-[6px]">
-                  <h2 className="text-[30.4px] tracking-[-0.608px] text-[#757575] font-medium">
-                    {product.brand || "브랜드"}
-                  </h2>
-                  <h1 className="text-[36.5px] tracking-[-0.73px] mt-[4px] font-bold">
-                    {product.title}
-                  </h1>
-                </div>
-                <button className="rounded-full flex justify-center items-center w-[72px] h-[72px]
-                                  bg-white border-[#AAA] border-[0.5px]">
-                  <GoShareAndroid className="w-[42px] h-[42px]" />
-                </button>
-              </div>
-              <div className="flex items-center w-[556px] gap-[22px] mb-[6px]">
-                <button
-                  onClick={toggleLike}
-                  className="w-[94px] h-[94px] bg-white flex justify-center items-center border-[#9C9A9A] border-[0.8px] rounded-[18px] cursor-pointer">
-                    {liked ? (
-                      <GoHeartFill className="w-[60px] h-[60px] text-[#FD657E]" />
-                    ) : (
-                      <GoHeart className="w-[60px] h-[60px] text-[#FD657E]" />
-                    )}
-                </button>
-                <button className="bg-[#FFEB9D] w-[440px] h-[94px] rounded-[22px] text-[30px] font-medium">
-                  쿠팡 바로가기
-                </button>
-              </div>
-            </div>
-          </div>
-
-          <div className="mt-[128px] bg-[#F3F3F3] w-[1280px] h-[6px]" />
-
-          {/* 브랜드 제품 리스트 */}
-          <div className="w-[1280px] mx-auto mt-[70px]">
-            <div className="flex flex-col">
-              <MainDetailPageBrandSection />
-            </div>
-          </div>
-
-          {/* 탭 UI */}
-          <div className="flex flex-col justify-end items-center w-full h-[120px] border-b-[#F3F3F3] border-b-[8px] mt-[160px]">
-            <div className="flex justify-between w-[789px] relative">
-              {[
-                { key: "ingredient", label: "성분 함량" },
-                { key: "timing", label: "섭취 시기" },
-              ].map((tab) => (
-                <button
-                  key={tab.key}
-                  onClick={() => setActiveTab(tab.key as "ingredient" | "timing")}
-                  className={`relative text-[48px] tracking-[-0.96px] font-medium transition-colors pb-[22px] duration-300 ${
-                    activeTab === tab.key ? "text-black" : "text-[#9C9A9A]"
-                  }`}
-                >
-                  {tab.label}
-                  {activeTab === tab.key && (
-                    <span className="absolute -bottom-[10px] left-[-20px] w-[214px] h-[10px] rounded-xl bg-black transition-all duration-300" />
-                  )}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* 탭 내용 */}
-          <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed">
-            {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
-          </div>
-        </div>
-      </div>
+      {/* 최상위 컴포넌트에서 모달을 렌더링 */}
+      <ShareModal isOpen={isModalOpen} onClose={handleCloseModal} />
     </>
   );
 };
