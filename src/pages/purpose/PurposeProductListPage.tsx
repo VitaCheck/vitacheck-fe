@@ -29,6 +29,7 @@ const PurposeProductList = () => {
     window.scrollTo(0, 0);
   }, []);
 
+
   const handleOpenPopup = () => {
     setIsPopupOpen(true);
   };
@@ -89,6 +90,7 @@ const PurposeProductList = () => {
       };
 
       console.log("📤 보내는 데이터:", JSON.stringify(payload, null, 2));
+
 
       // --- 👇 API 호출 대신 이 부분을 사용합니다. 👇 ---
       try {
@@ -196,9 +198,12 @@ const PurposeProductList = () => {
           supplements={info.supplements}
           isLoading={isLoading}
           goToAllIngredientPage={() => {
-            navigate(`/ingredientproducts?ingredient=${encodeURIComponent(ingredientName)}`, {
-              state: { supplements: info.supplements },
-            });
+            navigate(
+              `/ingredientproducts?ingredient=${encodeURIComponent(ingredientName)}`,
+              {
+                state: { supplements: info.supplements },
+              }
+            );
           }}
         />
       </div>
@@ -226,6 +231,7 @@ const PurposeProductList = () => {
               rounded-[26px] border-[0.8px] border-[#AAA] text-black
               flex items-center justify-between"
             >
+
               <span>{activePurpose}</span>
               <div className="pointer-events-none absolute top-1/2 right-[8px] transform -translate-y-1/2">
                 <svg
@@ -251,7 +257,9 @@ const PurposeProductList = () => {
       <div className="hidden md:block w-full bg-[#FAFAFA] px-[40px]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
-            <h1 className="text-[30px] tracking-[-1px] font-semibold">{titleText}</h1>
+            <h1 className="text-[30px] tracking-[-1px] font-semibold">
+              {titleText}
+            </h1>
           </div>
           {isLoading ? (
             <p className="mt-[40px]">데이터를 불러오는 중입니다...</p>

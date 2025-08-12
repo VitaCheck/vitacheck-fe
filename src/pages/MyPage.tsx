@@ -11,13 +11,16 @@ import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
 import { useEffect, useState } from "react";
 import { getUserInfo, type UserInfo } from "@/apis/user";
+import { useLogout } from "@/hooks/useLogout";
 
 function MyPage() {
   const navigate = useNavigate();
+  const logout = useLogout();
   const [userLoadFailed, setUserLoadFailed] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     alert("로그아웃 되었습니다.");
+    await logout("/social-login"); //토큰/캐시 삭제 후 /social-login으로 이동
   };
 
   const goToMain = () => {
@@ -35,7 +38,7 @@ function MyPage() {
       }
 
       try {
-        const user = await getUserInfo(token);
+        const user = await getUserInfo();
         setUserInfo(user);
       } catch (error) {
         console.error("유저 정보 불러오기 실패", error);
@@ -103,7 +106,7 @@ function MyPage() {
               onClick={
                 () =>
                   userLoadFailed
-                    ? navigate("/login") // 로그인 안되어있으면 로그인 페이지 이동
+                    ? navigate("/login/email") // 로그인 안되어있으면 로그인 페이지 이동
                     : navigate("/mypage/edit") // 로그인 되어있으면 내 정보 수정 이동
               }
             >
@@ -131,7 +134,9 @@ function MyPage() {
           <button
             className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-white border border-[#AAAAAA] rounded-[25px] px-4 py-1 cursor-pointer text-[13px]"
             onClick={() =>
-              userLoadFailed ? navigate("/login") : navigate("/mypage/edit")
+              userLoadFailed
+                ? navigate("/login/email")
+                : navigate("/mypage/edit")
             }
           >
             <span className="mr-2">
@@ -291,7 +296,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => navigate("/logout")}
+                onClick={() => logout("/social-login")}
               />
             </div>
           )}
