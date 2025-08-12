@@ -32,6 +32,7 @@ import EmailLoginPage from "./pages/auth/EmailLoginPage"; //자체 로그인 페
 import EmailSignupPage from "./pages/auth/EmailSignupPage"; //자체 회원가입 페이지
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPAge"; //자체 회원가입 상세 페이지
 
+import BestSupplement from "./pages/BestSupplement";
 import PurposeProductList from "./pages/purpose/PurposeProductListPage";
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
 import ProductDetailPage from "./pages/MainProductDetailPage";
@@ -160,6 +161,10 @@ const router = createBrowserRouter([
         element: <CombinationResultPage />,
       },
 
+      {
+        path: "bestsupplement",
+        element: <BestSupplement />,
+      },
       {
         path: "products",
         element: <PurposeProductList />,

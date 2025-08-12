@@ -40,7 +40,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden">
+      <div className="sm:hidden">
         {/* 브랜드 이미지와 브랜드명 */}
         <div className="flex items-center justify-between w-[338px] gap-[18px]">
           <div className="flex items-center justify-center gap-[10px]">
@@ -96,7 +96,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
       </div>
 
       {/* PC 전용 */}
-      <div className="hidden md:block">
+      <div className="hidden sm:block">
         {/* 브랜드 이미지와 브랜드명 */}
         <div className="flex items-center justify-between gap-[12px]">
           <div className="flex items-center justify-center gap-[14px]">

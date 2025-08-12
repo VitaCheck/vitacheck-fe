@@ -118,4 +118,3 @@ export default function SocialCallback() {
   }, [navigate, query]);
 
   return <div className="p-6 text-center text-gray-600">로그인 처리 중...</div>;
-}

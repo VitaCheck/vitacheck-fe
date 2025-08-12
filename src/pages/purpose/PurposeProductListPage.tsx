@@ -96,7 +96,7 @@ const PurposeProductList = () => {
       try {
         const mockData = {
           '루테인': {
-            purposes: ["눈건강"],
+            purposes: ["눈건강", "수면/스트레스", "피로감"],
             supplements: [
               ["고려은단 비타민c 1000", "lutein.jpg"],
               ["솔가 비타민D3 5000IU", "lutein.jpg"],
@@ -213,8 +213,8 @@ const PurposeProductList = () => {
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden w-full mx-auto pb-[50px]">
-        <div className="md:hidden flex items-center gap-[22px] mt-[50px]">
+      <div className="sm:hidden w-full mx-auto pb-[50px]">
+        <div className="sm:hidden flex items-center gap-[22px] mt-[50px]">
           <div className="ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-semibold">
               {titleText}
@@ -248,23 +248,29 @@ const PurposeProductList = () => {
           </div>
         </div>
 
-        {!isLoading && Object.keys(data).length > 0 && (
-          <div className="mt-[20px]">{renderSections()}</div>
+        {!isLoading && (
+          renderSections().length > 0 ? (
+            <div className="mt-[20px]">{renderSections()}</div>
+          ) : (
+            <p className="mt-[20px] text-center text-gray-500">연관 제품이 없습니다.</p>
+          )
         )}
       </div>
 
       {/* PC 전용 */}
-      <div className="hidden md:block w-full bg-[#FAFAFA] px-[40px]">
+      <div className="hidden sm:block w-full bg-[#FAFAFA] px-[40px]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
             <h1 className="text-[30px] tracking-[-1px] font-semibold">
               {titleText}
             </h1>
           </div>
-          {isLoading ? (
-            <p className="mt-[40px]">데이터를 불러오는 중입니다...</p>
-          ) : (
-            <div className="mt-[40px]">{renderSections()}</div>
+          {!isLoading && (
+            renderSections().length > 0 ? (
+              <div className="mt-[40px]">{renderSections()}</div>
+            ) : (
+              <p className="mt-[60px] text-center text-[20px] text-gray-500">연관 제품이 없습니다.</p>
+            )
           )}
         </div>
       </div>

@@ -10,7 +10,7 @@ const IngredientTab = () => {
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden">
+      <div className="sm:hidden">
         <div className="flex flex-col items-center w-full mt-[28px]">
           <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span className="font-Regular text-[14px] tracking-[-0.32px]">
@@ -59,7 +59,7 @@ const IngredientTab = () => {
 
 
       {/* PC 전용 */}
-      <div className="hidden md:block">
+      <div className="hidden sm:block">
         <div className="flex flex-col items-center w-[567px] mt-[36px]">
           <div className="flex items-center justify-between w-full h-[67px] bg-[#F2F2F2] rounded-[16px] px-[25px]">
             <div className="flex-1 text-center">

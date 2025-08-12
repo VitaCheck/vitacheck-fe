@@ -27,7 +27,7 @@ const RecommendedProductSection = ({
   goToAllIngredientPage,
 }: RecommendedProductSectionProps) => {
   const navigate = useNavigate();
-  const isMobile = useMediaQuery("(max-width: 767px)"); // MD breakpoint: 768px
+  const isMobile = useMediaQuery("(max-width: 639px)"); //  sm breakpoint: 640px
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
