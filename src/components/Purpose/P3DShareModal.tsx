@@ -12,9 +12,12 @@ const ShareModal: React.FC<ShareModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-gray-800/50">
-      <div className="bg-white rounded-2xl w-[324px] pt-10 pb-6 px-6 shadow-lg">
+      <div className="bg-white rounded-[20px] w-[324px] pt-10 pb-6 px-6 shadow-lg">
+        <div className="text-center text-[16px] font-medium">
+          링크가 복사되었습니다.
+        </div>
         <div className="text-center text-[16px] font-medium mb-6">
-          URL이 클립보드에 복사되었습니다.
+          원하는 곳에 붙여넣기 하세요.
         </div>
         <button
           onClick={onClose}
