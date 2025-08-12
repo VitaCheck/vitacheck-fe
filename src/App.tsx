@@ -63,14 +63,14 @@ const router = createBrowserRouter([
         element: <ObjectPage />,
       },
       {
-        path: "ingredient",
+        path: "ingredient", //성분 페이지
         children: [
           {
             index: true,
             element: <IngredientPage />,
           },
           {
-            path: ":name",
+            path: ":ingredientName",
             element: <IngredientDetailPage />,
           },
           {
@@ -176,11 +176,6 @@ const router = createBrowserRouter([
       {
         path: "social-signup",
         element: <SocialSignupForm />,
-      },
-
-      {
-        path: "/ingredients/:ingredientName",
-        element: <IngredientDetailPage />,
       },
     ],
   },

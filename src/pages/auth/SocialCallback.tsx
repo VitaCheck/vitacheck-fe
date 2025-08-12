@@ -11,7 +11,6 @@ export default function SocialCallback() {
     const providerId = params.get("providerId") || "";
     const email = params.get("email") || "";
 
-    // 서버가 쿼리로 토큰을 바로 주는 경우(기존 유저)
     const at = params.get("accessToken");
     const rt = params.get("refreshToken");
     if (at && rt && !isNew) {
@@ -21,7 +20,6 @@ export default function SocialCallback() {
       return;
     }
 
-    // 신규 유저면 소셜 회원가입 폼으로 이동
     navigate("/social-signup", {
       replace: true,
       state: { email, provider, providerId },

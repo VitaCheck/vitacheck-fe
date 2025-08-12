@@ -1,11 +1,12 @@
 import { useState, useEffect } from "react";
-import { useLocation, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import {
   useQuery,
   QueryClient,
   QueryClientProvider,
 } from "@tanstack/react-query";
 import { fetchIngredientDetail } from "@/apis/ingredient";
+import type { IngredientDetailResponse } from "@/types/ingredient";
 
 import IngredientTabs from "../../components/ingredient/IngredientTabs";
 import IngredientInfo from "../../components/ingredient/IngredientInfo";
@@ -13,63 +14,63 @@ import IngredientAlternatives from "../../components/ingredient/IngredientAltern
 import IngredientSupplements from "../../components/ingredient/IngredientSupplements";
 import { FiShare2, FiHeart } from "react-icons/fi";
 
-// ✅ 로컬에서만 사용하는 QueryClient 인스턴스
+// 로컬에서만 사용하는 QueryClient 인스턴스
 const queryClient = new QueryClient();
 
+// 640px 이하 = 모바일, 641px 이상 = PC
+const BREAKPOINT = 640;
+
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== "undefined" ? window.innerWidth <= BREAKPOINT : true
+  );
+
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    const onResize = () => setIsMobile(window.innerWidth <= BREAKPOINT);
+    window.addEventListener("resize", onResize);
+    // 초기 동기화
+    onResize();
+    return () => window.removeEventListener("resize", onResize);
   }, []);
+
   return isMobile;
 };
 
-// ✅ 실제 화면 로직은 내부 컴포넌트로 분리
+// 실제 화면 로직은 내부 컴포넌트로 분리
 const IngredientDetailInner = () => {
   const [activeTab, setActiveTab] = useState<
     "info" | "alternatives" | "supplements"
   >("info");
   const [liked, setLiked] = useState(false);
   const isMobile = useIsMobile();
-  const location = useLocation();
-  const id = location.state?.id; // 전달된 ID
+  const { ingredientName } = useParams<{ ingredientName: string }>();
 
-  // const { data, isLoading, isError } = useQuery({
-  //   queryKey: ["ingredientDetail", id],
-  //   queryFn: () => fetchIngredientDetail(id),
-  //   enabled: true,
-  // });
-
-  // if (isLoading) return <div className="px-5 py-10">불러오는 중...</div>;
-  // if (isError) return <div className="px-5 py-10">에러가 발생했습니다.</div>;
-  const data = {
-    isSuccess: true,
-    code: "string",
-    message: "string",
-    result: {
-      id: 0,
-      name: "string",
-      description: "string",
-      effect: "string",
-      caution: "string",
-      gender: "MALE",
-      age: 0,
-      upperLimit: 0,
-      recommendedDosage: 0,
-      unit: "string",
+  const { data, isLoading, isError } = useQuery<IngredientDetailResponse>({
+    queryKey: ["ingredientDetail", ingredientName],
+    queryFn: () => {
+      if (!ingredientName) throw new Error("Ingredient name is required");
+      return fetchIngredientDetail(ingredientName);
     },
-  };
-  const result = data.result;
+    enabled: !!ingredientName && typeof ingredientName !== "undefined",
+    staleTime: 60_000,
+  });
+
+  if (!ingredientName)
+    return (
+      <div className="px-5 py-10">잘못된 접근입니다. 성분명이 없습니다.</div>
+    );
+  if (isLoading) return <div className="px-5 py-10">불러오는 중...</div>;
+  if (isError) return <div className="px-5 py-10">에러가 발생했습니다.</div>;
+  if (!data)
+    return <div className="px-5 py-10">데이터를 찾을 수 없습니다.</div>;
+
+  const result = data;
 
   return (
     <div
-      className={`px-5 md:px-10 ${
-        isMobile ? "pt-3 pb-5" : "py-10"
-      } max-w-screen-xl mx-auto`}
+      className={`px-5 sm:px-10 ${isMobile ? "pt-3 pb-5" : "py-10"} max-w-screen-xl mx-auto`}
     >
-      <div className="flex justify-between items-center mb-6 ml-5 md:ml-50">
+      <div className="flex justify-between items-center mb-6 ml-5 sm:ml-50">
         <h1 className="text-2xl font-bold">
           <span>{result.name}</span>
         </h1>
@@ -97,8 +98,12 @@ const IngredientDetailInner = () => {
         <IngredientTabs activeTab={activeTab} setActiveTab={setActiveTab} />
       </div>
 
-      {activeTab === "info" && <IngredientInfo id={id} data={result} />}
-      {activeTab === "alternatives" && <IngredientAlternatives id={id} />}
+      {activeTab === "info" && (
+        <IngredientInfo id={ingredientName} data={result} />
+      )}
+      {activeTab === "alternatives" && (
+        <IngredientAlternatives name={result.name} />
+      )}
       {activeTab === "supplements" && <IngredientSupplements data={result} />}
     </div>
   );
