@@ -107,7 +107,7 @@ const PurposeBrandProducts = () => {
     // 검색 결과가 없을 때
     if (filteredProducts.length === 0 && searchQuery !== "") {
       return (
-        <p className="w-full text-center text-gray-500 mt-5 col-span-2 md:col-span-4">검색 결과가 없습니다.</p>
+        <p className="w-full text-center text-gray-500 mt-5 col-span-2 sm:col-span-4">검색 결과가 없습니다.</p>
       );
     }
 
@@ -145,7 +145,7 @@ const PurposeBrandProducts = () => {
   return (
     <>
       {/* 모바일 버전 */}
-      <div className="md:hidden">
+      <div className="sm:hidden">
         <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">{brand}</h1>
@@ -167,7 +167,7 @@ const PurposeBrandProducts = () => {
       </div>
 
       {/* PC 버전 */}
-      <div className="hidden md:block w-full px-[40px] bg-[#FAFAFA]">
+      <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
             <h1 className="text-[30px] font-semibold">{brand}</h1>
