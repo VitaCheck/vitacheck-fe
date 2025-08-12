@@ -118,7 +118,7 @@ const PurposeIngredientProducts = () => {
         </div>
         <p
           className={`${
-            isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] h-[16px] text-[22px]"
+            isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] text-[22px]"
           } font-medium text-center`}
         >
           {product.title}

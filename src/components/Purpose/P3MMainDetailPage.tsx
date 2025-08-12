@@ -13,6 +13,7 @@ interface MobileProps {
   setActiveTab: (tab: "ingredient" | "timing") => void;
   showButton: boolean;
   brandProducts: any[];
+  brandId: number;
 }
 
 const MainDetailPageMobile: React.FC<MobileProps> = ({
@@ -120,6 +121,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             brandName={product.brandName}
             brandImageUrl={product.brandImageUrl}
             brandProducts={brandProducts}
+            brandId={product.brandId ?? product.supplementId}
           />
         </div>
       </div>

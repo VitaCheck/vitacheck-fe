@@ -12,9 +12,10 @@ interface MainDetailPageBrandSectionProps {
     name: string;
     imageUrl: string;
   }[];
+  brandId: number;
 }
 
-const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts }: MainDetailPageBrandSectionProps) => {
+const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, brandId }: MainDetailPageBrandSectionProps) => {
   const navigate = useNavigate();
 
   const [currentPage, setCurrentPage] = useState(0);
@@ -56,7 +57,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts }:
             <span className="text-[20px] tracking-[-0.4px] font-medium">{brandName}</span>
           </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brandName}`)}
+            onClick={() => navigate(`/brandproducts?brand=${brandName}&id=${brandId}`)}
             className="w-[80px] h-[30px] bg-[#EEEEEE] rounded-[20px]
                        flex justify-center items-center cursor-pointer"
           >
@@ -112,7 +113,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts }:
             <span className="text-[22px] tracking-[-0.5px] font-medium">{brandName}</span>
           </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brandName}`)}
+            onClick={() => navigate(`/brandproducts?brand=${brandName}&id=${brandId}`)}
               className="w-[74px] h-[20px] flex items-center justify-between cursor-pointer"
             >
               <span className="text-[16px] text-[#6B6B6B] font-medium">전체보기</span>
