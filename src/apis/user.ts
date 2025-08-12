@@ -17,16 +17,15 @@ export const getUserInfo = async (): Promise<UserInfo> => {
 };
 
 // 사용자 닉네임 업데이트
-export const updateUserInfo = async (nickname: string) => {
-  const response = await api.put(
-    "/api/v1/users/me",
-    { nickname },
-    {
-      headers: {
-        "Content-Type": "application/json",
-      },
-    }
-  );
+export interface UpdateUserRequest {
+  nickname?: string;
+  birthDate?: string;
+  phoneNumber?: string;
+}
 
-  return response.data;
+export const updateUserInfo = async (payload: UpdateUserRequest) => {
+  const res = await api.put("/api/v1/users/me", payload, {
+    headers: { "Content-Type": "application/json" },
+  });
+  return res.data;
 };

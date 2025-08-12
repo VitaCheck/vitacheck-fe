@@ -8,14 +8,16 @@ import {
   type SupplementsScrapList,
   getLikedIngredients,
   type IngredientScrap,
+  toggleLikeSupplement,
 } from "@/apis/scrapIngredientList";
 
 const ScrapPage = () => {
   const [tab, setTab] = useState<"product" | "ingredient">("product");
   const [productItems, setProductItems] = useState<
-    { imageUrl: string; title: string }[]
+    { id: number; imageUrl: string; title: string }[]
   >([]);
-  const [ingredientItems, setIngredientItems] = useState<string[]>([]); // ✅ 추가
+  const [ingredientItems, setIngredientItems] = useState<string[]>([]);
+  const [processingIds, setProcessingIds] = useState<number[]>([]); // 추가
 
   const navigate = useNavigate();
 
@@ -28,6 +30,7 @@ const ScrapPage = () => {
       try {
         const supplements: SupplementsScrapList[] = await getLikedSupplements();
         const mapped = supplements.map((item) => ({
+          id: item.supplementId,
           imageUrl: item.imageUrl,
           title: item.name,
         }));
@@ -54,10 +57,33 @@ const ScrapPage = () => {
     }
   }, [tab]);
 
+  // 추가: 찜 토글(취소) 핸들러 - 옵티미스틱 업데이트
+  const handleToggleLike = async (id: number) => {
+    if (processingIds.includes(id)) return;
+
+    const removedItem = productItems.find((p) => p.id === id);
+    if (!removedItem) return;
+
+    // UI 즉시 반영
+    setProcessingIds((prev) => [...prev, id]);
+    setProductItems((prev) => prev.filter((p) => p.id !== id));
+
+    try {
+      await toggleLikeSupplement(id);
+      // 성공 시 그대로 유지
+    } catch (error) {
+      console.error("찜 취소 실패, 롤백합니다:", error);
+      // 실패 시 롤백
+      setProductItems((prev) => [removedItem, ...prev]);
+      alert("찜 취소에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    } finally {
+      setProcessingIds((prev) => prev.filter((x) => x !== id));
+    }
+  };
+
   return (
     <div className="bg-white sm:bg-[#F5F5F5] min-h-screen sm:pt-8 sm:px-4">
       <div className="sm:max-w-[850px] sm:mx-auto sm:bg-white sm:rounded-[20px] sm:shadow-sm sm:p-8">
-        {/* 상단 */}
         <div className="flex items-center justify-between mb-2">
           <div className="w-full px-6 pt-4 pb-2 flex items-center sm:px-0 sm:pt-0 sm:pb-4">
             <button
@@ -86,13 +112,14 @@ const ScrapPage = () => {
           </div>
         </div>
 
-        {/* 탭 */}
-
         <ScrapTabHeader activeTab={tab} onChange={setTab} />
 
-        {/* 리스트 */}
         {tab === "product" ? (
-          <ScrapList items={productItems} />
+          <ScrapList
+            items={productItems}
+            onToggleLike={handleToggleLike}
+            processingIds={processingIds}
+          />
         ) : (
           <ScrapIngredientList items={ingredientItems} />
         )}
