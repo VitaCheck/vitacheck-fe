@@ -64,7 +64,7 @@ const DesktopAlarmAddPage = () => {
       Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
     );
 
-  // 신규 등록용: supplementId / notificationRoutineId 일절 포함 X
+  // ✅ 교체: handleSubmit
   const handleSubmit = async () => {
     if (
       !supplementName.trim() ||
@@ -81,21 +81,27 @@ const DesktopAlarmAddPage = () => {
         imageUrl = await uploadImageToCloudinary(imageFile);
       }
 
-      const rawPayload = {
-        supplementName: supplementName.trim(),
-        supplementImageUrl: imageUrl || undefined, // 없으면 빼기
-        daysOfWeek: selectedDays, // ["MON","TUE",...]
-        times: times.map((t) => (t.length === 5 ? t : t.slice(0, 5))), // "HH:mm" 보장
-        // ❌ notificationRoutineId: X
-        // ❌ supplementId: X
+      // (요일 × 시간) -> schedules 배열로 변환
+      const schedules = selectedDays.flatMap(
+        (d) =>
+          times
+            .filter(Boolean)
+            .map((t) => ({ dayOfWeek: d, time: t.slice(0, 5) })) // HH:mm 보장
+      );
+
+      // Swagger 스펙에 맞춘 payload
+      const payload = {
+        name: supplementName.trim(),
+        imageUrl: imageUrl || undefined, // 없으면 필드 생략
+        schedules,
+        // notificationRoutineId: 생략 (신규)
       };
 
-      const payload = clean(rawPayload);
-      console.log("📦 payload(new):", payload);
+      console.log("📦 payload(custom):", payload);
 
-      await axios.post("/api/v1/notifications/routines", payload, {
+      await axios.post("/api/v1/notifications/routines/custom", payload, {
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`, // 인터셉터 쓰면 제거
+          Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`,
         },
       });
 
