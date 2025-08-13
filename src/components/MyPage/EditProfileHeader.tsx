@@ -4,8 +4,8 @@ function EditProfileHeader() {
   const navigate = useNavigate();
 
   return (
-    <div className="flex items-center mb-6">
-      <button onClick={() => navigate(-1)} className="cursor-pointer">
+    <div className="flex items-center mb-6 sm:flex-col sm:items-start sm:border-b sm:border-[#AAAAAA] sm:pb-2">
+      <button onClick={() => navigate(-1)} className="cursor-pointer sm:hidden">
         <svg
           className="w-6 h-6"
           fill="none"
@@ -20,7 +20,7 @@ function EditProfileHeader() {
           />
         </svg>
       </button>
-      <h1 className="text-[24px] font-semibold ml-3">내 정보 수정</h1>
+      <h1 className="text-[24px] font-semibold">내 정보 수정</h1>
     </div>
   );
 }

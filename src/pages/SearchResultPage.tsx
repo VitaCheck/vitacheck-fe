@@ -6,6 +6,7 @@ import SearchBar from "@/components/SearchBar";
 import { searchSupplements } from "@/apis/search";
 import type { Supplement, Ingredient } from "@/apis/search";
 import IngredientCard from "@/components/search/IngredientCard";
+import Notsearch from "../assets/notsearch.svg";
 
 export default function SearchResultPage() {
   const [searchParams] = useSearchParams();
@@ -14,15 +15,19 @@ export default function SearchResultPage() {
   const [matchedIngredients, setMatchedIngredients] = useState<Ingredient[]>(
     []
   );
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const fetchResults = async () => {
       try {
+        setLoading(true);
         const data = await searchSupplements(keyword);
         setResults(data.supplements.content);
         setMatchedIngredients(data.matchedIngredients);
       } catch (error) {
         console.error("검색 실패:", error);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -38,32 +43,59 @@ export default function SearchResultPage() {
           <SearchBar initialQuery={keyword} />
         </div>
 
-        {/* 성분 카드 */}
-        {matchedIngredients.length > 0 && (
-          <div className="mt-6">
-            <h3 className="text-[18px] font-semibold mb-3">성분</h3>
-            <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
-              {matchedIngredients.map((ingredient) => (
-                <IngredientCard
-                  key={ingredient.ingredientId}
-                  id={ingredient.ingredientId}
-                  name={ingredient.name}
-                />
-              ))}
-            </div>
+        {/* 로딩 스피너 */}
+        {loading && (
+          <div className="flex justify-center items-center mt-10">
+            <div className="w-10 h-10 border-4 border-gray-300 border-t-[#FFDB67] rounded-full animate-spin"></div>
           </div>
         )}
 
-        {/* 제품 카드 */}
-        <div className="grid grid-cols-2 gap-y-6 justify-between mt-5">
-          {results.map((product) => (
-            <ProductCard
-              key={product.supplementId}
-              imageSrc={product.imageUrl}
-              name={product.supplementName}
-            />
-          ))}
-        </div>
+        {/* 검색 결과 */}
+        {!loading && (
+          <>
+            {/* 성분 카드 */}
+            {matchedIngredients.length > 0 && (
+              <div className="mt-6">
+                <h3 className="text-[18px] font-semibold mb-3">성분</h3>
+                <div className="flex flex-col gap-2 sm:grid sm:grid-cols-2 sm:gap-3">
+                  {matchedIngredients.map((ingredient) => (
+                    <IngredientCard
+                      key={ingredient.ingredientId}
+                      id={ingredient.ingredientId}
+                      name={ingredient.name}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* 결과 없음 */}
+            {results.length === 0 ? (
+              <div className="flex flex-col items-center justify-center mt-16">
+                <img
+                  src={Notsearch}
+                  alt="검색 결과 없음"
+                  className="w-[144px] h-[144px] object-contain mb-4"
+                />
+                <p className="text-[#808080] text-lg">
+                  일치하는 검색 결과가 없습니다.
+                </p>
+              </div>
+            ) : (
+              /* 제품 카드 */
+              <div className="flex flex-wrap justify-start gap-x-2 sm:gap-x-4 gap-y-6 mt-5">
+                {results.map((product) => (
+                  <ProductCard
+                    key={product.supplementId}
+                    id={product.supplementId}
+                    imageSrc={product.imageUrl}
+                    name={product.supplementName}
+                  />
+                ))}
+              </div>
+            )}
+          </>
+        )}
       </div>
     </div>
   );

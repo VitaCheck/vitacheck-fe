@@ -73,49 +73,6 @@ export default function SocialCallback() {
   }, [params]);
 
   useEffect(() => {
-    const {
-      isNew,
-      provider,
-      providerId,
-      email,
-      fullName,
-      socialTempToken,
-      at,
-      rt,
-      next,
-    } = query;
 
-    // 1) 기존 유저: 토큰이 둘 다 있어야 바로 로그인
-    if (!isNew && at && rt) {
-      saveTokens(at, rt);
-      const safeNext = next?.startsWith("/") ? next : "/";
-      navigate(safeNext, { replace: true });
-      return;
-    }
-
-    // 2) 신규 유저: 추가 정보 입력으로 라우팅
-    // 2-1) 임시 토큰 방식
-    if (isNew && socialTempToken) {
-      navigate("/social-signup", {
-        replace: true,
-        state: { socialTempToken, next },
-      });
-      return;
-    }
-
-    // 2-2) 값 직접 전달 방식
-    if (isNew && provider && providerId && email) {
-      navigate("/social-signup", {
-        replace: true,
-        state: { provider, providerId, email, fullName, next },
-      });
-      return;
-    }
-
-    // 3) 매칭 실패 → 로그인 화면
-    clearTokens?.();
-    navigate("/login?error=callback_mismatch", { replace: true });
-  }, [navigate, query]);
 
   return <div className="p-6 text-center text-gray-600">로그인 처리 중...</div>;
-}

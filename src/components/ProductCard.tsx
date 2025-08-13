@@ -1,4 +1,7 @@
+import { useNavigate } from "react-router-dom";
+
 interface ProductCardProps {
+  id: number;
   imageSrc: string;
   name: string;
   widthClass?: string;
@@ -8,6 +11,7 @@ interface ProductCardProps {
 }
 
 function ProductCard({
+  id,
   imageSrc,
   name,
   widthClass = "w-[166px]",
@@ -15,11 +19,16 @@ function ProductCard({
   fontSize = 18,
   fontSizeClass = "",
 }: ProductCardProps) {
+  const navigate = useNavigate();
+
   return (
-    <div className="inline-block pt-3 pb-3 px-2">
+    <div
+      className="inline-block pt-3 pb-3 px-2 cursor-pointer"
+      onClick={() => navigate(`/product/${id}`)}
+    >
       <div
         className={`bg-white rounded-xl flex justify-center items-center 
-          transition-transform duration-200 ease-in-out transform hover:scale-[1.03] cursor-pointer
+          transition-transform duration-200 ease-in-out transform hover:scale-[1.03]
           hover:shadow-lg ${widthClass} ${heightClass}`}
         style={{
           boxShadow: "2px 4px 12.2px rgba(0, 0, 0, 0.25)",

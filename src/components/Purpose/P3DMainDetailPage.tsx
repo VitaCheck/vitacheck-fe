@@ -40,7 +40,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   };
 
   return (
-    <div className="hidden md:block w-full bg-[#FAFAFA] px-[50px]">
+    <div className="hidden sm:block w-full bg-[#FAFAFA] px-[50px]">
       <div className="max-w-[766px] mx-auto mb-[3px] pt-[70px] pb-[100px]">
         {/* 제품 이미지, 브랜드명, 제품명 */}
         <div className="flex justify-start gap-[54px] items-end">

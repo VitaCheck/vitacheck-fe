@@ -72,7 +72,16 @@ const RecommendedProductSectionDesktop = ({
           {isLoading ? (
             <div className="w-[250px] h-[42px] bg-gray-200 rounded-full animate-pulse"></div>
           ) : (
-            <span className="text-[20px] flex items-center font-medium h-[42px]">#{purposes.join(", #")}</span>
+            <div className="flex flex-wrap gap-3 h-[42px] items-center">
+               {purposes.map((purpose, idx) => (
+                  <span
+                     key={idx}
+                     className="text-[20px] flex items-center font-medium h-[42px]"
+                  >
+                     #{purpose}
+                  </span>
+               ))}
+            </div>
           )}
         </div>
 

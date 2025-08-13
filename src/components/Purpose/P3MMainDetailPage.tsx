@@ -45,7 +45,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
 
   return (
-    <div className="md:hidden flex flex-col">
+    <div className="sm:hidden flex flex-col">
       <div className="mx-auto mt-[70px] mb-[24px] flex flex-col items-center">
         {/* 제품 이미지, 브랜드명, 제품명 */}
         <div className="flex flex-col w-[338px] mx-[46px]">

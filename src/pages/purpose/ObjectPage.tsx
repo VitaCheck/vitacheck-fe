@@ -159,8 +159,8 @@ const PurposeCardList = () => {
       className="w-full flex flex-col items-center cursor-pointer"
     >
       <div
-        className={`w-full aspect-[110/118] md:w-full md:aspect-[172/160] flex justify-center items-center
-          rounded-xl shadow-md relative md:rounded-[14px] md:shadow-[1px_2px_8.2px_0px_rgba(0,0,0,0.16)]
+        className={`w-full aspect-[110/118] sm:w-full sm:aspect-[172/160] flex justify-center items-center
+          rounded-xl shadow-sm relative sm:rounded-[14px] sm:shadow-[1px_2px_8.2px_0px_rgba(0,0,0,0.16)]
           ${isSelected ? "bg-[#FFF8DC] border-1 border-[#FFEB9D]" : "bg-white border-1 border-transparent"}`}
       >
         <div
@@ -173,17 +173,17 @@ const PurposeCardList = () => {
           />
         </div>
       </div>
-      <p className="mt-[18px] h-[22px] text-sm md:text-[20px] text-center font-semibold">
+      <p className="mt-[18px] text-[clamp(12px,5vw,20px)] sm:text-[20px] text-center font-semibold">
         {card.description}
       </p>
-    </div>
+    </div>  
   );
 
   // 스켈레톤 UI 렌더링 함수 (깜빡이는 효과 포함)
   const renderSkeletonCard = () => (
-    <div className="w-full md:w-full flex flex-col items-center animate-pulse">
-      <div className="w-full aspect-[110/118] md:aspect-[172/160] rounded-xl shadow-md relative md:rounded-[14px] bg-gray-200"></div>
-      <div className="mt-[18px] h-[22px] w-2/3 bg-gray-200 rounded-full md:mt-[22px] md:h-[28px]"></div>
+    <div className="w-full sm:w-full flex flex-col items-center animate-pulse">
+      <div className="w-full aspect-[110/118] sm:aspect-[172/160] rounded-xl shadow-md relative sm:rounded-[14px] bg-gray-200"></div>
+      <div className="mt-[18px] h-[22px] w-2/3 bg-gray-200 rounded-full sm:mt-[22px] sm:h-[28px]"></div>
     </div>
   );
 
@@ -210,7 +210,7 @@ const PurposeCardList = () => {
   return (
     <>
       {/* 모바일 */}
-      <div className="md:hidden w-full px-[20px] mx-auto mt-[50px] mb-[124px]">
+      <div className="sm:hidden w-full px-[20px] mx-auto mt-[50px] mb-[124px]">
         <div className="flex flex-col ml-[20px]">
           <h1 className="text-[35px] tracking-[-0.72px] font-medium">목적별</h1>
           <h2 className="text-sm text-[#808080] mt-[1px] font-medium">최대 3개 선택</h2>
@@ -239,7 +239,7 @@ const PurposeCardList = () => {
       </div>
 
       {/* 데스크탑 */}
-      <div className="hidden md:block w-full bg-[#FAFAFA] px-[20px]">
+      <div className="hidden sm:block w-full bg-[#FAFAFA] px-[20px]">
         <div className="w-full pt-[70px] pb-[100px]">
           <div className="max-w-[766px] mx-auto mb-[3px]">
             <div className="flex justify-between items-center">

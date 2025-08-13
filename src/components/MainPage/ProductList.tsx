@@ -110,7 +110,7 @@ const ProductList = () => {
         </div>
 
         <button
-          onClick={() => navigate("/products")}
+          onClick={() => navigate("/bestsupplement")}
           className="text-sm text-[#797979] hover:underline"
         >
           더보기 &gt;

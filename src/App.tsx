@@ -6,6 +6,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // 페이지 컴포넌트
 import NotFoundPage from "./pages/NotFoundPage"; // 404 페이지
 import MainPage from "./pages/MainPage"; // 메인 페이지
+import SignInPage from "./pages/SignInPage"; // (예비) 기존 로그인 페이지
 import ObjectPage from "./pages/purpose/ObjectPage"; // 목적별 페이지
 import IngredientPage from "./pages/IngredientPage"; // 원료 목록 페이지
 import CombinationPage from "./pages/combination/CombinationPage"; // 조합 페이지
@@ -40,6 +41,7 @@ import EmailSignupPage from "./pages/auth/EmailSignupPage"; // 자체 회원가�
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPage"; // 자체 회원가입 상세 페이지
 
 // 목적별 상품 관련
+import BestSupplement from "./pages/BestSupplement"; // 베스트 영양제 페이지
 import PurposeProductList from "./pages/purpose/PurposeProductListPage"; // 목적별 상품 목록
 import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage"; // 원료별 상품 목록
 import ProductDetailPage from "./pages/MainProductDetailPage"; // 상품 상세 페이지
@@ -67,28 +69,40 @@ const router = createBrowserRouter([
     errorElement: <NotFoundPage />,
     children: [
       { index: true, element: <MainPage /> },
+
+      // (필요 시 교체) 기존 로그인 페이지
+      // { path: "login", element: <SignInPage /> },
+
+      // 자체 로그인/회원가입
       { path: "login/email", element: <EmailLoginPage /> },
       { path: "signup/email", element: <EmailSignupPage /> },
       { path: "signup/email/detail", element: <EmailSignupDetailPage /> },
+
+      // 목적/원료
       { path: "object", element: <ObjectPage /> },
       {
         path: "ingredient",
         children: [
           { index: true, element: <IngredientPage /> },
-          { path: ":name", element: <IngredientDetailPage /> },
+          { path: ":ingredientName", element: <IngredientDetailPage /> }, // 최신 기준(:ingredientName)
           { path: "search", element: <IngredientSearchSection /> },
           { path: "no-result", element: <NoSearchResult /> },
         ],
       },
+
+      // 조합
       { path: "combination", element: <CombinationPage /> },
+      { path: "add-combination", element: <AddCombinationPage /> },
+      { path: "combination-result", element: <CombinationResultPage /> },
+
+      // 알람
       { path: "alarm", element: <AlarmPage /> },
       { path: "alarm/settings", element: <AlarmSettingsPage /> },
       { path: "alarm/settings/add", element: <DesktopAlarmAddPage /> },
-      {
-        path: "alarm/settings/add/search",
-        element: <DesktopAlarmAddToSearchPage />,
-      },
+      { path: "alarm/settings/add/search", element: <DesktopAlarmAddToSearchPage /> },
       { path: "alarm/settings/edit/:id", element: <DesktopAlarmEditPage /> },
+
+      // 마이/스크랩/검색/설정
       { path: "mypage", element: <MyPage /> },
       { path: "/scrap", element: <ScrapPage /> },
       { path: "/search", element: <SearchPage /> },
@@ -96,19 +110,22 @@ const router = createBrowserRouter([
       { path: "notificationCenter", element: <NotificationCenterPage /> },
       { path: "setting", element: <NotificationSettingsPage /> },
       { path: "mypage/edit", element: <EditProfilePage /> },
-      { path: "add-combination", element: <AddCombinationPage /> },
-      { path: "combination-result", element: <CombinationResultPage /> },
+
+      // 상품/리스트
+      { path: "bestsupplement", element: <BestSupplement /> },
       { path: "products", element: <PurposeProductList /> },
       { path: "ingredientproducts", element: <PurposeIngredientProducts /> },
       { path: "brandproducts", element: <PurposeBrandProducts /> },
       { path: "product/:id", element: <ProductDetailPage /> },
+
+      // 소셜 로그인
       { path: "login", element: <SocialLogin /> },
       { path: "/oauth-redirect", element: <OauthRedirect /> },
+      // { path: "/auth/:provider/callback", element: <SocialCallback /> },
       { path: "/social-signup", element: <SocialSignupForm /> },
-      {
-        path: "/ingredients/:ingredientName",
-        element: <IngredientDetailPage />,
-      },
+
+      // (옵션) 별도 상세 경로 - 필요 시 유지
+      { path: "/ingredients/:ingredientName", element: <IngredientDetailPage /> },
     ],
   },
 ]);
