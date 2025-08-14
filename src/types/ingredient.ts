@@ -55,6 +55,7 @@ export type Supplement = Required<
 
 // 기존 타입들 (하위 호환성을 위해 유지)
 export interface IngredientData {
+
   name: string;
   description: string;
   effect: string;
@@ -66,3 +67,4 @@ export interface IngredientData {
   alternatives: IngredientAlternative[];
   supplements: IngredientSupplement[];
 }
+

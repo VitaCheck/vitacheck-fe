@@ -18,7 +18,6 @@ const days = [
 ];
 
 const DesktopAlarmAddPage = () => {
-  const [supplementId, setSupplementId] = useState<number>(1);
   const [supplementName, setSupplementName] = useState("");
   const [selectedDays, setSelectedDays] = useState<string[]>([]);
   const [times, setTimes] = useState<string[]>([""]);
@@ -64,7 +63,7 @@ const DesktopAlarmAddPage = () => {
       Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
     );
 
-  // ✅ 교체: handleSubmit
+  // handleSubmit
   const handleSubmit = async () => {
     if (
       !supplementName.trim() ||
@@ -89,12 +88,10 @@ const DesktopAlarmAddPage = () => {
             .map((t) => ({ dayOfWeek: d, time: t.slice(0, 5) })) // HH:mm 보장
       );
 
-      // Swagger 스펙에 맞춘 payload
       const payload = {
         name: supplementName.trim(),
         imageUrl: imageUrl || undefined, // 없으면 필드 생략
         schedules,
-        // notificationRoutineId: 생략 (신규)
       };
 
       console.log("📦 payload(custom):", payload);
