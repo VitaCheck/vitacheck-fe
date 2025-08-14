@@ -1,8 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
 
 interface Product {
   id: number;
@@ -18,9 +17,13 @@ const PurposeIngredientProducts = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingCount, setLoadingCount] = useState(0); 
 
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const batchSize = window.innerWidth >= 768 ? 4 : 2; // PC:4개, 모바일:2개
+
+  // 1️⃣ 초기 데이터 로드
   useEffect(() => {
     setIsLoading(true);
     const supplementsFromState = location.state?.supplements || [];
@@ -31,10 +34,11 @@ const PurposeIngredientProducts = () => {
           (item: [string, string], index: number) => ({
             id: index + 1,
             title: item[0],
-            imageUrl: `/images/${item[1]}`,
+            imageUrl: item[1].startsWith("http") ? item[1] : `/images/${item[1]}`,
           })
         );
         setProducts(mappedProducts);
+        setDisplayProducts(mappedProducts.slice(0, batchSize));
       } else {
         setProducts([]);
       }
@@ -42,43 +46,40 @@ const PurposeIngredientProducts = () => {
     }, 1000);
 
     window.scrollTo(0, 0);
-
     return () => clearTimeout(initialLoadTimer);
   }, [location.state?.supplements]);
 
-    useEffect(() => {
-    // 로딩이 완료되었거나 제품이 없으면 실행하지 않음
-    if (isLoading || products.length === 0) return;
+  // 2️⃣ 무한 스크롤
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !isLoading && displayProducts.length < products.length) {
+          const nextBatch = products.slice(displayProducts.length, displayProducts.length + batchSize);
+          setDisplayProducts((prev) => [...prev, ...nextBatch]);
+        }
+      },
+      { threshold: 1 }
+    );
 
-    // 현재 로딩된 카드 개수가 전체 제품 개수보다 적을 때만 실행
-    if (loadingCount < products.length) {
-      const sequentialLoadTimer = setTimeout(() => {
-        // 모바일(2개씩)과 데스크톱(4개씩)의 로딩 단위를 설정
-        const columnCount = window.innerWidth >= 768 ? 4 : 2; 
-        setLoadingCount(prev => prev + columnCount);
-      }, 100); // ✨ 100ms 지연 후 다음 스켈레톤 표시
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [isLoading, displayProducts, products]);
 
-      return () => clearTimeout(sequentialLoadTimer);
-    }
-  }, [isLoading, products, loadingCount]);
-
-  const filteredProducts = products.filter((product) =>
+  const filteredProducts = displayProducts.filter((product) =>
     product.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 스켈레톤 카드 렌더링 함수
+  // 3️⃣ 스켈레톤 카드
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
-      {/* 모바일 스켈레톤 */}
       <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
       <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
-      {/* PC 스켈레톤 */}
       <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
       <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
     </div>
   );
 
-  // 로딩 상태에 따라 스켈레톤을 렌더링하는 함수
   const renderCards = (isMobile: boolean) => {
     if (isLoading) {
       const count = isMobile ? 2 : 4;
@@ -89,14 +90,10 @@ const PurposeIngredientProducts = () => {
       ));
     }
 
-    // 로딩이 끝났고 검색 결과가 없을 때
     if (filteredProducts.length === 0 && searchQuery !== "") {
-      return (
-        <p className="w-full text-center text-gray-500 mt-5">검색 결과가 없습니다.</p>
-      );
+      return <p className="w-full text-center text-gray-500 mt-5">검색 결과가 없습니다.</p>;
     }
 
-    // 로딩이 끝났고 검색 결과가 있을 때
     return filteredProducts.map((product) => (
       <div
         key={product.id}
@@ -111,6 +108,7 @@ const PurposeIngredientProducts = () => {
           <img
             src={product.imageUrl}
             alt={product.title}
+            loading="lazy"
             className={`${
               isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
             } mx-auto object-cover`}
@@ -129,7 +127,7 @@ const PurposeIngredientProducts = () => {
 
   return (
     <>
-      {/* 모바일 전용 */}
+      {/* 모바일 */}
       <div className="sm:hidden">
         <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
@@ -148,10 +146,11 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[33px] grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
+          <div ref={loadMoreRef}></div>
         </div>
       </div>
 
-      {/* PC 전용 */}
+      {/* PC */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
@@ -170,6 +169,7 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
+          <div ref={loadMoreRef}></div>
         </div>
       </div>
     </>
