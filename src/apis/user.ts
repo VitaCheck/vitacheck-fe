@@ -49,3 +49,21 @@ export const getMyProfileImageUrl = async (): Promise<string | null> => {
   });
   return res.data.result ?? null;
 };
+
+export async function updateFcmTokenWithLocalStorageFetch() {
+  const fcmToken = localStorage.getItem("fcmToken");
+  const accessToken = localStorage.getItem("accessToken");
+  if (!fcmToken || !accessToken) return;
+
+  await fetch(
+    `${import.meta.env.VITE_SERVER_API_URL}/api/v1/users/me/fcm-token`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ fcmToken }),
+    }
+  );
+}
