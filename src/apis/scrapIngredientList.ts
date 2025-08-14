@@ -18,13 +18,18 @@ export interface IngredientScrap {
 export const getLikedSupplements = async (): Promise<
   SupplementsScrapList[]
 > => {
-  const response = await api.get("/api/v1/supplements/likes/me");
+  const response = await api.get("/api/v1/likes/me");
 
   if (response.data.isSuccess) {
     return response.data.result;
   } else {
     throw new Error("찜한 제품 조회 실패");
   }
+};
+
+//찜한 제품 취소
+export const toggleLikeSupplement = async (supplementId: number) => {
+  await api.post(`/api/v1/supplements/${supplementId}/like`);
 };
 
 // 찜한 성분 조회
@@ -36,4 +41,9 @@ export const getLikedIngredients = async (): Promise<IngredientScrap[]> => {
   } else {
     throw new Error("찜한 성분 조회 실패");
   }
+};
+
+// 찜한 성분 취소
+export const toggleLikeIngredient = async (ingredientId: number) => {
+  await api.post(`/api/v1/ingredients/${ingredientId}/like`);
 };
