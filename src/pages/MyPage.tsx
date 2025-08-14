@@ -1,5 +1,6 @@
 import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.svg";
+import Profile from "../assets/Profile2.svg";
 import { useNavigate } from "react-router-dom";
 // import Service from "../assets/Service.svg";
 import Bell from "../assets/MyPageBell.svg";
@@ -9,14 +10,17 @@ import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
 import { useEffect, useState } from "react";
-import { getUserInfo, type UserInfo } from "@/lib/user";
-
+import { getUserInfo, type UserInfo } from "@/apis/user";
+import { useLogout } from "@/hooks/useLogout";
 
 function MyPage() {
   const navigate = useNavigate();
+  const logout = useLogout();
+  const [userLoadFailed, setUserLoadFailed] = useState(false);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
     alert("로그아웃 되었습니다.");
+    await logout("/social-login"); //토큰/캐시 삭제 후 /social-login으로 이동
   };
 
   const goToMain = () => {
@@ -28,13 +32,17 @@ function MyPage() {
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("accessToken");
-      if (!token) return;
+      if (!token) {
+        setUserLoadFailed(true); // 토큰 없으면 실패 처리
+        return;
+      }
 
       try {
-        const user = await getUserInfo(token);
+        const user = await getUserInfo();
         setUserInfo(user);
       } catch (error) {
         console.error("유저 정보 불러오기 실패", error);
+        setUserLoadFailed(true); // 실패 시 true
       }
     };
 
@@ -42,7 +50,7 @@ function MyPage() {
   }, []);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col sm:mr-[18%] sm:ml-[18%]">
       <div className="absolute top-0 left-0 w-full h-[45vh] bg-[#FFDB67] -z-10 sm:hidden" />
       <div className="absolute top-[45vh] left-0 w-full h-[55vh] bg-[#F3F3F3] -z-10" />
 
@@ -73,24 +81,38 @@ function MyPage() {
         {/* 사용자 정보 카드 */}
         <div className="w-[90%] h-[25vh] sm:h-auto bg-white rounded-2xl px-6 py-8 sm:py-4 flex items-center relative shadow">
           <img
-            src={ProfileCat}
+            // src={ProfileCat}
+            src={userLoadFailed ? Profile : ProfileCat}
             alt="profile"
             className="w-[100px] h-[100px] rounded-[30px] mr-6 object-cover"
           />
 
           <div className="flex-1">
             <p className="text-[20px] font-semibold text-[#E9B201]">
-              {userInfo?.nickname || "사용자"}
-              <span className="text-black"> 님</span>
+              {userInfo?.nickname || ""}
+              <span className="text-black">
+                {userLoadFailed ? "로그인 후" : "님"}
+              </span>
             </p>
-            <p className="text-sm">오늘도 비타체크 하세요!</p>
+            <p className="text-sm">
+              {userLoadFailed
+                ? "이용가능한 기능입니다."
+                : "오늘도 비타체크 하세요!"}
+            </p>
 
             {/* sm 미만: 아래에 버튼 표시 */}
             <button
               className="mt-2 bg-[#EBEBEB] rounded-full px-4 py-1 flex items-center justify-between cursor-pointer text-[13px] sm:hidden"
-              onClick={() => navigate("/mypage/edit")}
+              onClick={
+                () =>
+                  userLoadFailed
+                    ? navigate("/login/email") // 로그인 안되어있으면 로그인 페이지 이동
+                    : navigate("/mypage/edit") // 로그인 되어있으면 내 정보 수정 이동
+              }
             >
-              <span className="mr-2">내 정보 수정</span>
+              <span className="mr-2">
+                {userLoadFailed ? "로그인하기" : "내 정보 수정"}
+              </span>
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 fill="none"
@@ -110,17 +132,23 @@ function MyPage() {
 
           {/* sm 이상: 우측 중앙에 버튼 정렬 */}
           <button
-            className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-[#EBEBEB] rounded-full px-4 py-1 cursor-pointer text-[13px]"
-            onClick={() => navigate("/mypage/edit")}
+            className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-white border border-[#AAAAAA] rounded-[25px] px-4 py-1 cursor-pointer text-[13px]"
+            onClick={() =>
+              userLoadFailed
+                ? navigate("/login/email")
+                : navigate("/mypage/edit")
+            }
           >
-            <span className="mr-2">내 정보 수정</span>
+            <span className="mr-2">
+              {userLoadFailed ? "로그인하기" : "내 정보 수정"}
+            </span>
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 25 25"
               strokeWidth={2}
               stroke="currentColor"
-              className="w-5 h-5 text-gray-400"
+              className="w-5 h-5 text-[#000000]"
             >
               <path
                 strokeLinecap="round"
@@ -263,20 +291,26 @@ function MyPage() {
             </div>
           </div>
 
-          <MenuItem
-            label="로그아웃"
-            icon={Logout}
-            onClick={() => navigate("/logout")}
-          />
+          {!userLoadFailed && (
+            <div className="hidden sm:block">
+              <MenuItem
+                label="로그아웃"
+                icon={Logout}
+                onClick={() => logout("/social-login")}
+              />
+            </div>
+          )}
         </div>
 
         {/* 로그아웃 */}
-        <div
-          className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-          onClick={handleLogout}
-        >
-          로그아웃
-        </div>
+        {!userLoadFailed && (
+          <div
+            className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
+            onClick={handleLogout}
+          >
+            로그아웃
+          </div>
+        )}
       </div>
     </div>
   );

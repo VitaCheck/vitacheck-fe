@@ -10,7 +10,7 @@ const IngredientTab = () => {
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden">
+      <div className="sm:hidden">
         <div className="flex flex-col items-center w-full mt-[28px]">
           <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span className="font-Regular text-[14px] tracking-[-0.32px]">
@@ -59,29 +59,34 @@ const IngredientTab = () => {
 
 
       {/* PC 전용 */}
-      <div className="hidden md:block">
-        <div className="flex flex-col items-center w-full mt-[84px]">
-          <div className="flex items-center justify-center w-[1046px] h-[155px] bg-[#F2F2F2] rounded-[36px]">
-            <span className="font-Regular text-[48px] tracking-[-1px]">
-              오메가 3에 대해 더 자세히 알고 싶다면 ?
-            </span>
-            <MdOutlineArrowForwardIos className="text-[50px] ml-[75px]" />
+      <div className="hidden sm:block">
+        <div className="flex flex-col items-center w-[567px] mt-[36px]">
+          <div className="flex items-center justify-between w-full h-[67px] bg-[#F2F2F2] rounded-[16px] px-[25px]">
+            <div className="flex-1 text-center">
+              <span className="font-Regular text-[22px] tracking-[-1px]">
+                오메가 3에 대해 더 자세히 알고 싶다면 ?
+              </span>
+            </div>  
+            <MdOutlineArrowForwardIos className="text-[22px]" />
           </div>
 
-          <div className="mt-[90px] ml-[370px] w-[225px] flex justify-between">
-            <span className="text-[32px] font-medium">권장</span>
-            <span className="text-[32px] font-medium">상한</span>
+          <div className="mt-[40px] ml-[227px] w-[133px] flex justify-between">
+            <span className="text-[14px] font-medium">권장</span>
+            <span className="text-[14px] font-medium">상한</span>
           </div>
 
           {/* 성분 함량 그래프 */}
-          <div className="flex flex-col gap-[72px] mt-[37.36px] w-[896px]">
+          <div className="flex flex-col gap-[32px] mt-[16px] w-full">
             {nutrientData.map((nutrient) => (
               <div key={nutrient.name} className="flex items-center justify-between">
                 {/* 성분 이름 */}
-                <span className="text-[52px] tracking-[-0.432px] font-medium">{nutrient.name}</span>
+                <div className="flex justify-center items-center gap-[15px]">
+                  <span className="text-[22px] tracking-[-0.4px] font-medium">{nutrient.name}</span>
+                  <MdOutlineArrowForwardIos className="text-[16px]" />
+                </div>
 
                 {/* 막대 그래프 */}
-                <div className="relative w-[518px] h-[62px] rounded-full bg-[#E9E9E9] overflow-hidden">
+                <div className="relative w-[338px] h-[33px] rounded-full bg-[#E9E9E9] overflow-hidden">
                   {/* 실제 섭취량 */}
                   <div
                     className="h-full bg-[#FFE178] rounded-full"
@@ -90,13 +95,13 @@ const IngredientTab = () => {
 
                   {/* 권장 기준선 */}
                   <div
-                    className="absolute top-0 bottom-0 w-[2.3px] border-l border-black border-dotted"
+                    className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
                     style={{ left: `${nutrient.recommended}%` }}
                   />
 
                   {/* 상한 기준선 */}
                   <div
-                    className="absolute top-0 bottom-0 w-[2.3px] border-l border-black border-dotted"
+                    className="absolute top-0 bottom-0 w-[1,5px] border-l border-black border-dotted"
                     style={{ left: `${nutrient.upperLimit}%` }}
                   />
                 </div>
@@ -104,7 +109,6 @@ const IngredientTab = () => {
             ))}
           </div>
         </div>
-
       </div>
     </>
   );

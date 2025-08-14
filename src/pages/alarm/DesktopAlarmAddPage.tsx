@@ -58,34 +58,52 @@ const DesktopAlarmAddPage = () => {
     }
   };
 
+  // 유틸: undefined/null 제거
+  const clean = (obj: Record<string, any>) =>
+    Object.fromEntries(
+      Object.entries(obj).filter(([, v]) => v !== undefined && v !== null)
+    );
+
+  // 신규 등록용: supplementId / notificationRoutineId 일절 포함 X
   const handleSubmit = async () => {
-    if (!supplementId || selectedDays.length === 0 || times.some((t) => !t)) {
+    if (
+      !supplementName.trim() ||
+      selectedDays.length === 0 ||
+      times.some((t) => !t)
+    ) {
       alert("모든 정보를 입력해주세요.");
       return;
     }
 
     try {
       let imageUrl = "";
-
-      //  1. 이미지가 있다면 Cloudinary에 업로드 → URL 추출
       if (imageFile) {
         imageUrl = await uploadImageToCloudinary(imageFile);
       }
 
-      //  2. 추출한 URL 포함해서 백엔드에 요청 보내기
-      const payload = {
-        supplementName,
-        supplementImageUrl: imageUrl,
-        daysOfWeek: selectedDays,
-        times,
+      const rawPayload = {
+        supplementName: supplementName.trim(),
+        supplementImageUrl: imageUrl || undefined, // 없으면 빼기
+        daysOfWeek: selectedDays, // ["MON","TUE",...]
+        times: times.map((t) => (t.length === 5 ? t : t.slice(0, 5))), // "HH:mm" 보장
+        // ❌ notificationRoutineId: X
+        // ❌ supplementId: X
       };
 
-      await axios.post("/api/v1/notifications/routines", payload);
+      const payload = clean(rawPayload);
+      console.log("📦 payload(new):", payload);
+
+      await axios.post("/api/v1/notifications/routines", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("accessToken") ?? ""}`, // 인터셉터 쓰면 제거
+        },
+      });
+
       alert("알림이 추가되었습니다!");
       navigate("/alarm/settings");
-    } catch (err) {
-      console.error(err);
-      alert("알림 추가에 실패했습니다.");
+    } catch (err: any) {
+      console.error("create routine error:", err?.response ?? err);
+      alert(err?.response?.data?.message ?? "알림 추가에 실패했습니다.");
     }
   };
 

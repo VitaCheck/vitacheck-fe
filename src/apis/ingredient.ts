@@ -1,293 +1,10 @@
 import axios from "@/lib/axios";
+import type {
+  IngredientSearchResponse,
+  IngredientDetailResponse,
+} from "@/types/ingredient";
 
-interface IngredientAlternative {
-  name: string;
-  imageOrEmoji: string;
-}
-
-interface IngredientSupplement {
-  id: number;
-  name: string;
-  brand: string;
-  price: number;
-  rating: number;
-}
-
-interface IngredientData {
-  name: string;
-  description: string;
-  effect: string;
-  caution: string;
-  upperLimit: number;
-  recommendedDosage: number;
-  unit: string;
-  subIngredients: string[];
-  alternatives: IngredientAlternative[];
-  supplements: IngredientSupplement[];
-}
-
-// 더미 데이터 추가
-const DUMMY_INGREDIENT_DATA: Record<string, IngredientData> = {
-  비타민A: {
-    name: "비타민A",
-    description:
-      "비타민A는 시각 기능, 면역 체계, 세포 성장에 중요한 역할을 하는 지용성 비타민입니다.",
-    effect: "야맹증 예방, 시각 기능 향상, 면역력 증진, 피부 건강 유지",
-    caution:
-      "과다 섭취 시 두통, 메스꺼움, 간 손상 등의 부작용이 있을 수 있습니다. 임산부는 특히 주의해야 합니다.",
-    upperLimit: 3000,
-    recommendedDosage: 900,
-    unit: "μg",
-    subIngredients: ["베타카로틴", "레티놀"],
-    alternatives: [
-      { name: "요거트", imageOrEmoji: "🥛" },
-      { name: "발효 식초", imageOrEmoji: "🍎" },
-      { name: "김치", imageOrEmoji: "🥬" },
-      { name: "된장", imageOrEmoji: "🫘" },
-      { name: "장아찌", imageOrEmoji: "🥒" },
-      { name: "오이", imageOrEmoji: "🥒" },
-    ],
-    supplements: [
-      {
-        id: 1,
-        name: "비타민A 1000IU",
-        brand: "네추럴라이프",
-        price: 15000,
-        rating: 4.5,
-      },
-      {
-        id: 2,
-        name: "비타민A 플러스",
-        brand: "헬스원",
-        price: 22000,
-        rating: 4.2,
-      },
-    ],
-  },
-  비타민C: {
-    name: "비타민C",
-    description:
-      "비타민C는 항산화 작용을 하는 수용성 비타민으로, 콜라겐 합성과 면역 체계 강화에 중요합니다.",
-    effect: "항산화 작용, 콜라겐 합성, 면역력 증진, 철분 흡수 촉진",
-    caution: "과다 섭취 시 설사, 복통 등의 위장 장애가 발생할 수 있습니다.",
-    upperLimit: 2000,
-    recommendedDosage: 100,
-    unit: "mg",
-    subIngredients: ["아스코르브산", "칼슘아스코르베이트"],
-    alternatives: [
-      { name: "레몬", imageOrEmoji: "🍋" },
-      { name: "오렌지", imageOrEmoji: "🍊" },
-      { name: "브로콜리", imageOrEmoji: "🥦" },
-      { name: "피망", imageOrEmoji: "🫑" },
-      { name: "키위", imageOrEmoji: "🥝" },
-      { name: "딸기", imageOrEmoji: "🍓" },
-    ],
-    supplements: [
-      {
-        id: 3,
-        name: "비타민C 1000mg",
-        brand: "네추럴라이프",
-        price: 12000,
-        rating: 4.7,
-      },
-    ],
-  },
-  // 소문자 버전
-  비타민a: {
-    name: "비타민A",
-    description:
-      "비타민A는 시각 기능, 면역 체계, 세포 성장에 중요한 역할을 하는 지용성 비타민입니다.",
-    effect: "야맹증 예방, 시각 기능 향상, 면역력 증진, 피부 건강 유지",
-    caution:
-      "과다 섭취 시 두통, 메스꺼움, 간 손상 등의 부작용이 발생할 수 있습니다. 임산부는 특히 주의해야 합니다.",
-    upperLimit: 3000,
-    recommendedDosage: 900,
-    unit: "μg",
-    subIngredients: ["베타카로틴", "레티놀"],
-    alternatives: [
-      { name: "요거트", imageOrEmoji: "🥛" },
-      { name: "발효 식초", imageOrEmoji: "🍎" },
-      { name: "김치", imageOrEmoji: "🥬" },
-      { name: "된장", imageOrEmoji: "🫘" },
-      { name: "장아찌", imageOrEmoji: "🥒" },
-      { name: "오이", imageOrEmoji: "🥒" },
-    ],
-    supplements: [
-      {
-        id: 1,
-        name: "비타민A 1000IU",
-        brand: "네추럴라이프",
-        price: 15000,
-        rating: 4.5,
-      },
-      {
-        id: 2,
-        name: "비타민A 플러스",
-        brand: "헬스원",
-        price: 22000,
-        rating: 4.2,
-      },
-    ],
-  },
-  비타민c: {
-    name: "비타민C",
-    description:
-      "비타민C는 항산화 작용을 하는 수용성 비타민으로, 콜라겐 합성과 면역 체계 강화에 중요합니다.",
-    effect: "항산화 작용, 콜라겐 합성, 면역력 증진, 철분 흡수 촉진",
-    caution: "과다 섭취 시 설사, 복통 등의 위장 장애가 발생할 수 있습니다.",
-    upperLimit: 2000,
-    recommendedDosage: 100,
-    unit: "mg",
-    subIngredients: ["아스코르브산", "칼슘아스코르베이트"],
-    alternatives: [
-      { name: "레몬", imageOrEmoji: "🍋" },
-      { name: "오렌지", imageOrEmoji: "🍊" },
-      { name: "브로콜리", imageOrEmoji: "🥦" },
-      { name: "피망", imageOrEmoji: "🫑" },
-      { name: "키위", imageOrEmoji: "🥝" },
-      { name: "딸기", imageOrEmoji: "🍓" },
-    ],
-    supplements: [
-      {
-        id: 3,
-        name: "비타민C 1000mg",
-        brand: "네추럴라이프",
-        price: 12000,
-        rating: 4.7,
-      },
-    ],
-  },
-  유산균: {
-    name: "유산균",
-    description:
-      "우리 몸에 살고 있는 100개가 넘는 균주 중에서 몸에 좋은 균을 유익균(유산균) 또는 프로바이오틱스라고 해요. 반대로 나쁜 영향을 주는 균을 '유해균'이라고 해요.건강한 장 환경과 원활한 배변활동을 위해서는 여러 종류의 균들이 균형을 이뤄야해요.",
-    effect: "장 건강 개선, 면역력 강화, 피부 건강 개선, 대사 조절",
-    caution: "프로바이오틱스(유산균) 알러지 주의",
-    upperLimit: 50,
-    recommendedDosage: 0.6,
-    unit: "mg",
-    subIngredients: ["락토바실러스", "비피도박테리움"],
-    alternatives: [
-      { name: "요거트", imageOrEmoji: "🥛" },
-      { name: "발효 식초", imageOrEmoji: "🍎" },
-      { name: "김치", imageOrEmoji: "🥬" },
-      { name: "된장", imageOrEmoji: "🫘" },
-      { name: "장아찌", imageOrEmoji: "🥒" },
-      { name: "오이", imageOrEmoji: "🥒" },
-    ],
-    supplements: [
-      {
-        id: 4,
-        name: "유산균 100억",
-        brand: "네추럴라이프",
-        price: 25000,
-        rating: 4.6,
-      },
-      {
-        id: 5,
-        name: "프로바이오틱스 플러스",
-        brand: "헬스원",
-        price: 30000,
-        rating: 4.4,
-      },
-    ],
-  },
-  글루타치온: {
-    name: "글루타치온",
-    description:
-      "글루타치온은 항산화 작용을 하는 아미노산으로, 세포 보호와 해독 작용에 중요한 역할을 합니다.",
-    effect: "항산화 작용, 해독 작용, 면역력 증진, 피부 건강 개선",
-    caution:
-      "과다 섭취 시 두통이나 현기증이 발생할 수 있습니다. 임산부나 수유부는 의사와 상담 후 섭취해야 합니다.",
-    upperLimit: 500,
-    recommendedDosage: 100,
-    unit: "mg",
-    subIngredients: ["글루타민", "시스테인"],
-    alternatives: [
-      { name: "브로콜리", imageOrEmoji: "🥦" },
-      { name: "마늘", imageOrEmoji: "🧄" },
-      { name: "양파", imageOrEmoji: "🧅" },
-      { name: "아스파라거스", imageOrEmoji: "🫛" },
-      { name: "시금치", imageOrEmoji: "🥬" },
-      { name: "아보카도", imageOrEmoji: "🥑" },
-    ],
-    supplements: [
-      {
-        id: 6,
-        name: "글루타치온 500mg",
-        brand: "네추럴라이프",
-        price: 45000,
-        rating: 4.8,
-      },
-    ],
-  },
-  밀크씨슬: {
-    name: "밀크씨슬",
-    description:
-      "밀크씨슬은 간 건강에 도움을 주는 허브 성분으로, 실리마린이라는 활성 성분을 함유하고 있습니다.",
-    effect: "간 기능 개선, 해독 작용, 항산화 작용, 지방 대사 촉진",
-    caution:
-      "과다 섭취 시 복통이나 설사가 발생할 수 있습니다. 간 질환이 있는 경우 의사와 상담 후 섭취해야 합니다.",
-    upperLimit: 420,
-    recommendedDosage: 140,
-    unit: "mg",
-    subIngredients: ["실리마린", "실리빈"],
-    alternatives: [
-      { name: "아티초크", imageOrEmoji: "🥬" },
-      { name: "우엉", imageOrEmoji: "🥬" },
-      { name: "민들레", imageOrEmoji: "🌼" },
-      { name: "감초", imageOrEmoji: "🌿" },
-      { name: "강황", imageOrEmoji: "🟡" },
-      { name: "생강", imageOrEmoji: "🫘" },
-    ],
-    supplements: [
-      {
-        id: 7,
-        name: "밀크씨슬 500mg",
-        brand: "네추럴라이프",
-        price: 28000,
-        rating: 4.5,
-      },
-    ],
-  },
-  오메가3: {
-    name: "오메가3",
-    description:
-      "오메가3는 필수 지방산으로, 심혈관 건강과 뇌 기능 향상에 중요한 역할을 하는 영양소입니다.",
-    effect: "심혈관 건강 개선, 뇌 기능 향상, 염증 감소, 시력 보호",
-    caution:
-      "과다 섭취 시 출혈 위험이 증가할 수 있습니다. 혈액 응고제를 복용 중인 경우 의사와 상담해야 합니다.",
-    upperLimit: 3000,
-    recommendedDosage: 1000,
-    unit: "mg",
-    subIngredients: ["EPA", "DHA", "ALA"],
-    alternatives: [
-      { name: "고등어", imageOrEmoji: "🐟" },
-      { name: "연어", imageOrEmoji: "🐟" },
-      { name: "견과류", imageOrEmoji: "🥜" },
-      { name: "아마씨", imageOrEmoji: "🌱" },
-      { name: "치아씨드", imageOrEmoji: "🌱" },
-      { name: "월넛", imageOrEmoji: "🌰" },
-    ],
-    supplements: [
-      {
-        id: 8,
-        name: "오메가3 1000mg",
-        brand: "네추럴라이프",
-        price: 35000,
-        rating: 4.7,
-      },
-      {
-        id: 9,
-        name: "피쉬오일 플러스",
-        brand: "헬스원",
-        price: 42000,
-        rating: 4.6,
-      },
-    ],
-  },
-};
-
+// 성분 검색 API
 export const fetchIngredientSearch = async ({
   ingredientName,
   keyword,
@@ -300,73 +17,139 @@ export const fetchIngredientSearch = async ({
   console.log("🔍 [API] fetchIngredientSearch 호출됨");
   console.log("🔍 [API] 파라미터:", { ingredientName, keyword, brand });
 
-  // 더미 데이터로 테스트
-  if (process.env.NODE_ENV === "development") {
-    console.log("🔍 [API] 개발 환경 - 더미 데이터 사용");
-    const results = Object.entries(DUMMY_INGREDIENT_DATA)
-      .filter(([key, data]) => {
-        if (
-          ingredientName &&
-          !key.toLowerCase().includes(ingredientName.toLowerCase())
-        )
-          return false;
-        if (keyword && !data.name.toLowerCase().includes(keyword.toLowerCase()))
-          return false;
-        return true;
-      })
-      .map(([key, data]) => ({
-        ingredientId: key,
-        ingredientName: data.name,
-        amount: 0,
-        unit: "string",
-      }));
+  try {
+    // 실제 API 엔드포인트 사용
+    const url = "/api/v1/ingredients/search";
 
-    console.log("🔍 [API] 더미 데이터 결과:", results);
-    return { results };
+    // keyword 파라미터가 우선순위를 가짐
+    const searchKeyword = keyword || ingredientName || "";
+    const params: any = { keyword: searchKeyword };
+
+    // 브랜드 필터가 있으면 추가
+    if (brand) {
+      params.brand = brand;
+    }
+
+    console.log("🔍 [API] 요청 URL:", url);
+    console.log("🔍 [API] 요청 파라미터:", params);
+
+    const { data } = await axios.get<IngredientSearchResponse>(url, { params });
+    console.log("🔍 [API] 실제 API 응답:", data);
+
+    if (!data.isSuccess) {
+      throw new Error(data.message || "검색에 실패했습니다.");
+    }
+
+    return data;
+  } catch (error: any) {
+    console.error("🔍 [API] 검색 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("🔍 [API] 에러 응답 상태:", error.response.status);
+      console.error("🔍 [API] 에러 응답 데이터:", error.response.data);
+    } else if (error.request) {
+      console.error(
+        "🔍 [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("🔍 [API] 요청 설정 중 에러:", error.message);
+    }
+
+    throw error;
   }
-
-  const { data } = await axios.get("/api/v1/supplements/search", {
-    params: {
-      ingredientName,
-      keyword,
-      brand,
-    },
-  });
-  return data;
 };
 
-// 스웨거 문서에 따른 성분 상세 정보 API
+// 성분 상세 정보 API
 export const fetchIngredientDetail = async (name: string | number) => {
   const ingredientName = String(name);
   console.log("🏠 [API] fetchIngredientDetail 호출됨");
   console.log("🏠 [API] 요청 성분명:", ingredientName);
 
-  // 더미 데이터로 테스트
-  if (process.env.NODE_ENV === "development") {
-    console.log("🏠 [API] 개발 환경 - 더미 데이터 사용");
-    const dummyData = DUMMY_INGREDIENT_DATA[ingredientName];
-    console.log("🏠 [API] 더미 데이터 검색 결과:", dummyData);
+  try {
+    // 1단계: 성분명으로 검색하여 id 얻기
+    console.log("🏠 [API] 1단계: 성분 검색 시작");
+    const searchResponse = await axios.get<IngredientSearchResponse>(
+      "/api/v1/ingredients/search",
+      {
+        params: { keyword: ingredientName },
+      }
+    );
 
-    if (!dummyData) {
-      console.error(
-        "🏠 [API] 더미 데이터에서 성분을 찾을 수 없음:",
-        ingredientName
+    console.log("🏠 [API] 검색 응답:", searchResponse.data);
+
+    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+      throw new Error(`검색 결과가 없습니다: ${ingredientName}`);
+    }
+
+    // 검색 결과에서 첫 번째 성분의 id 사용
+    const searchResults = searchResponse.data.result;
+    if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      throw new Error(`검색 결과가 없습니다: ${ingredientName}`);
+    }
+
+    const firstResult = searchResults[0];
+    const ingredientId = firstResult.id; // "id" 필드 사용
+
+    if (!ingredientId) {
+      throw new Error(`검색 결과에서 id를 찾을 수 없습니다: ${ingredientName}`);
+    }
+
+    console.log("🏠 [API] 찾은 성분 ID:", ingredientId);
+
+    // 2단계: id로 상세 정보 조회
+    console.log("🏠 [API] 2단계: 상세 정보 조회 시작");
+    const detailResponse = await axios.get<IngredientDetailResponse>(
+      `/api/v1/ingredients/${ingredientId}`
+    );
+
+    console.log("🏠 [API] 상세 정보 응답:", detailResponse.data);
+    console.log(
+      "🏠 [API] 상세 정보 응답 구조:",
+      JSON.stringify(detailResponse.data, null, 2)
+    );
+
+    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
+      console.warn(
+        "🏠 [API] 응답 데이터 구조가 예상과 다름:",
+        detailResponse.data
       );
       throw new Error(`Ingredient detail not found for: ${ingredientName}`);
     }
 
-    console.log("🏠 [API] 더미 데이터 반환:", dummyData);
-    return dummyData;
+    const result = detailResponse.data.result;
+    console.log("🏠 [API] 파싱된 결과:", {
+      name: result.name,
+      description: result.description,
+      effect: result.effect,
+      caution: result.caution,
+      upperLimit: result.upperLimit,
+      recommendedDosage: result.recommendedDosage,
+      unit: result.unit,
+      subIngredients: result.subIngredients,
+      alternatives: result.alternatives,
+      supplements: result.supplements,
+    });
+
+    return result;
+  } catch (error: any) {
+    console.error("🏠 [API] 성분 상세 정보 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("🏠 [API] 에러 응답 상태:", error.response.status);
+      console.error("🏠 [API] 에러 응답 데이터:", error.response.data);
+      console.error("🏠 [API] 에러 응답 헤더:", error.response.headers);
+    } else if (error.request) {
+      console.error(
+        "🏠 [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("🏠 [API] 요청 설정 중 에러:", error.message);
+    }
+
+    throw error;
   }
-
-  const encoded = encodeURIComponent(ingredientName);
-  const res = await axios.get(`/api/v1/ingredients/${encoded}`);
-
-  if (!res.data || !res.data.result) {
-    throw new Error(`Ingredient detail not found for: ${ingredientName}`);
-  }
-
-  return res.data.result;
 };
 
 // 대체 식품 API
@@ -375,28 +158,80 @@ export const fetchIngredientAlternatives = async (name: string | number) => {
   console.log("🥗 [API] fetchIngredientAlternatives 호출됨");
   console.log("🥗 [API] 요청 성분명:", ingredientName);
 
-  // 더미 데이터로 테스트
-  if (process.env.NODE_ENV === "development") {
-    console.log("🥗 [API] 개발 환경 - 더미 데이터 사용");
-    const dummyData = DUMMY_INGREDIENT_DATA[ingredientName];
-    console.log("🥗 [API] 더미 데이터 검색 결과:", dummyData);
+  try {
+    // 1단계: 성분명으로 검색하여 id 얻기
+    console.log("🥗 [API] 1단계: 성분 검색 시작");
+    const searchResponse = await axios.get<IngredientSearchResponse>(
+      "/api/v1/ingredients/search",
+      {
+        params: { keyword: ingredientName },
+      }
+    );
 
-    if (!dummyData) {
+    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+      return [];
+    }
+
+    const searchResults = searchResponse.data.result;
+    if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      return [];
+    }
+
+    const firstResult = searchResults[0];
+    const ingredientId = firstResult.id; // "id" 필드 사용
+
+    if (!ingredientId) {
+      return [];
+    }
+
+    console.log("🥗 [API] 찾은 성분 ID:", ingredientId);
+
+    // 2단계: id로 상세 정보 조회
+    const detailResponse = await axios.get<IngredientDetailResponse>(
+      `/api/v1/ingredients/${ingredientId}`
+    );
+    console.log("🥗 [API] 상세 정보 응답:", detailResponse.data);
+    console.log(
+      "🥗 [API] 상세 정보 응답 구조:",
+      JSON.stringify(detailResponse.data, null, 2)
+    );
+
+    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
       console.warn(
-        "🥗 [API] 더미 데이터에서 성분을 찾을 수 없음:",
-        ingredientName
+        "🥗 [API] 응답 데이터 구조가 예상과 다름:",
+        detailResponse.data
       );
       return [];
     }
 
-    const alternatives = dummyData.alternatives || [];
-    console.log("🥗 [API] 대체식품 데이터:", alternatives);
-    return alternatives;
-  }
+    const result = detailResponse.data.result;
+    console.log("🥗 [API] 파싱된 결과:", {
+      name: result.name,
+      alternatives: result.alternatives,
+      alternativesType: typeof result.alternatives,
+      alternativesLength: Array.isArray(result.alternatives)
+        ? result.alternatives.length
+        : "not array",
+    });
 
-  const encoded = encodeURIComponent(ingredientName);
-  const res = await axios.get(`/api/v1/ingredients/${encoded}`);
-  return res.data.result.alternatives || [];
+    return result.alternatives || [];
+  } catch (error: any) {
+    console.error("🥗 [API] 대체 식품 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("🥗 [API] 에러 응답 상태:", error.response.status);
+      console.error("🥗 [API] 에러 응답 데이터:", error.response.data);
+    } else if (error.request) {
+      console.error(
+        "🥗 [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("🥗 [API] 요청 설정 중 에러:", error.message);
+    }
+
+    return [];
+  }
 };
 
 // 관련 영양제 API
@@ -405,26 +240,110 @@ export const fetchIngredientSupplements = async (name: string | number) => {
   console.log("💊 [API] fetchIngredientSupplements 호출됨");
   console.log("💊 [API] 요청 성분명:", ingredientName);
 
-  // 더미 데이터로 테스트
-  if (process.env.NODE_ENV === "development") {
-    console.log("💊 [API] 개발 환경 - 더미 데이터 사용");
-    const dummyData = DUMMY_INGREDIENT_DATA[ingredientName];
-    console.log("💊 [API] 더미 데이터 검색 결과:", dummyData);
+  try {
+    // 1단계: 성분명으로 검색하여 id 얻기
+    console.log("💊 [API] 1단계: 성분 검색 시작");
+    const searchResponse = await axios.get<IngredientSearchResponse>(
+      "/api/v1/ingredients/search",
+      {
+        params: { keyword: ingredientName },
+      }
+    );
 
-    if (!dummyData) {
+    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+      return [];
+    }
+
+    const searchResults = searchResponse.data.result;
+    if (!Array.isArray(searchResults) || searchResults.length === 0) {
+      return [];
+    }
+
+    const firstResult = searchResults[0];
+    const ingredientId = firstResult.id; // "id" 필드 사용
+
+    if (!ingredientId) {
+      return [];
+    }
+
+    console.log("💊 [API] 찾은 성분 ID:", ingredientId);
+
+    // 2단계: id로 상세 정보 조회
+    const detailResponse = await axios.get<IngredientDetailResponse>(
+      `/api/v1/ingredients/${ingredientId}`
+    );
+    console.log("💊 [API] 상세 정보 응답:", detailResponse.data);
+    console.log(
+      "💊 [API] 상세 정보 응답 구조:",
+      JSON.stringify(detailResponse.data, null, 2)
+    );
+
+    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
       console.warn(
-        "💊 [API] 더미 데이터에서 성분을 찾을 수 없음:",
-        ingredientName
+        "💊 [API] 응답 데이터 구조가 예상과 다름:",
+        detailResponse.data
       );
       return [];
     }
 
-    const supplements = dummyData.supplements || [];
-    console.log("💊 [API] 영양제 데이터:", supplements);
-    return supplements;
-  }
+    const result = detailResponse.data.result;
+    console.log("💊 [API] 파싱된 결과:", {
+      name: result.name,
+      supplements: result.supplements,
+      supplementsType: typeof result.supplements,
+      supplementsLength: Array.isArray(result.supplements)
+        ? result.supplements.length
+        : "not array",
+    });
 
-  const encoded = encodeURIComponent(ingredientName);
-  const res = await axios.get(`/api/v1/ingredients/${encoded}`);
-  return res.data.result.supplements || [];
+    return result.supplements || [];
+  } catch (error: any) {
+    console.error("💊 [API] 영양제 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("💊 [API] 에러 응답 상태:", error.response.status);
+      console.error("💊 [API] 에러 응답 데이터:", error.response.data);
+    } else if (error.request) {
+      console.error(
+        "💊 [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("💊 [API] 요청 설정 중 에러:", error.message);
+    }
+
+    return [];
+  }
+};
+
+// 비타민 계열인지 확인하는 함수
+export const isVitaminSeries = (name: string): boolean => {
+  return /^비타민[A-Z]?$/.test(name);
+};
+
+// 성분 검색 결과를 비타민 계열과 단독 성분으로 분류하는 함수
+export const classifyIngredientSearch = async (keyword: string) => {
+  try {
+    const searchResponse = await fetchIngredientSearch({ keyword });
+
+    if (!searchResponse.isSuccess || !searchResponse.result) {
+      return { isVitamin: false, results: [], shouldShowList: false };
+    }
+
+    const results = searchResponse.result;
+    const isVitamin = isVitaminSeries(keyword);
+
+    // 비타민 계열이면 리스트 표시, 단독 성분이면 바로 상세 페이지로
+    const shouldShowList = isVitamin && results.length > 1;
+
+    return {
+      isVitamin,
+      results,
+      shouldShowList,
+      firstResult: results[0],
+    };
+  } catch (error) {
+    console.error("🔍 [API] 성분 분류 실패:", error);
+    return { isVitamin: false, results: [], shouldShowList: false };
+  }
 };

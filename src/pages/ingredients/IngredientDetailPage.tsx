@@ -7,6 +7,7 @@ import {
 } from "@tanstack/react-query";
 import { fetchIngredientDetail } from "@/apis/ingredient";
 import type { IngredientDetailResponse } from "@/types/ingredient";
+import type { IngredientDetail } from "@/types/ingredient";
 
 import IngredientTabs from "../../components/ingredient/IngredientTabs";
 import IngredientInfo from "../../components/ingredient/IngredientInfo";
@@ -45,11 +46,12 @@ const IngredientDetailInner = () => {
   const isMobile = useIsMobile();
   const { ingredientName } = useParams<{ ingredientName: string }>();
 
-  const { data, isLoading, isError } = useQuery<IngredientDetailResponse>({
+  const { data, isLoading, isError } = useQuery<IngredientDetail>({
     queryKey: ["ingredientDetail", ingredientName],
-    queryFn: () => {
+    queryFn: async () => {
       if (!ingredientName) throw new Error("Ingredient name is required");
-      return fetchIngredientDetail(ingredientName);
+      const response = await fetchIngredientDetail(ingredientName);
+      return response;
     },
     enabled: !!ingredientName && typeof ingredientName !== "undefined",
     staleTime: 60_000,
@@ -64,7 +66,7 @@ const IngredientDetailInner = () => {
   if (!data)
     return <div className="px-5 py-10">데이터를 찾을 수 없습니다.</div>;
 
-  const result = data;
+  const result = data; // 직접 사용
 
   return (
     <div

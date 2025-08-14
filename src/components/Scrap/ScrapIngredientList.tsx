@@ -5,6 +5,14 @@ interface ScrapIngredientListProps {
 }
 
 const ScrapIngredientList = ({ items }: ScrapIngredientListProps) => {
+  if (items.length === 0) {
+    return (
+      <div className="text-center text-gray-400 text-sm py-10">
+        찜한 성분이 없습니다.
+      </div>
+    );
+  }
+
   return (
     <div
       className="

@@ -4,6 +4,12 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 
+interface Product {
+  id: number;
+  title: string;
+  imageUrl: string;
+}
+
 const PurposeIngredientProducts = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -11,29 +17,124 @@ const PurposeIngredientProducts = () => {
   const navigate = useNavigate();
 
   const [searchQuery, setSearchQuery] = useState("");
-
-  const products = [
-    { id: 1, title: "제품1", imageUrl: "/images/product1.png" },
-    { id: 2, title: "제품2", imageUrl: "/images/product2.png" },
-    { id: 3, title: "제품3", imageUrl: "/images/product3.png" },
-    { id: 4, title: "제품4", imageUrl: "/images/product4.png" },
-    { id: 5, title: "제품5", imageUrl: "/images/product5.png" },
-  ];
+  const [products, setProducts] = useState<Product[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingCount, setLoadingCount] = useState(0); 
 
   useEffect(() => {
+    setIsLoading(true);
+    const supplementsFromState = location.state?.supplements || [];
+
+    const initialLoadTimer = setTimeout(() => {
+      if (supplementsFromState.length > 0) {
+        const mappedProducts: Product[] = supplementsFromState.map(
+          (item: [string, string], index: number) => ({
+            id: index + 1,
+            title: item[0],
+            imageUrl: `/images/${item[1]}`,
+          })
+        );
+        setProducts(mappedProducts);
+      } else {
+        setProducts([]);
+      }
+      setIsLoading(false);
+    }, 1000);
+
     window.scrollTo(0, 0);
-  }, []);
+
+    return () => clearTimeout(initialLoadTimer);
+  }, [location.state?.supplements]);
+
+    useEffect(() => {
+    // 로딩이 완료되었거나 제품이 없으면 실행하지 않음
+    if (isLoading || products.length === 0) return;
+
+    // 현재 로딩된 카드 개수가 전체 제품 개수보다 적을 때만 실행
+    if (loadingCount < products.length) {
+      const sequentialLoadTimer = setTimeout(() => {
+        // 모바일(2개씩)과 데스크톱(4개씩)의 로딩 단위를 설정
+        const columnCount = window.innerWidth >= 768 ? 4 : 2; 
+        setLoadingCount(prev => prev + columnCount);
+      }, 100); // ✨ 100ms 지연 후 다음 스켈레톤 표시
+
+      return () => clearTimeout(sequentialLoadTimer);
+    }
+  }, [isLoading, products, loadingCount]);
+
+  const filteredProducts = products.filter((product) =>
+    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  // 스켈레톤 카드 렌더링 함수
+  const renderSkeletonCard = () => (
+    <div className="flex flex-col items-center animate-pulse">
+      {/* 모바일 스켈레톤 */}
+      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
+      {/* PC 스켈레톤 */}
+      <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
+      <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
+    </div>
+  );
+
+  // 로딩 상태에 따라 스켈레톤을 렌더링하는 함수
+  const renderCards = (isMobile: boolean) => {
+    if (isLoading) {
+      const count = isMobile ? 2 : 4;
+      return Array.from({ length: count }).map((_, index) => (
+        <div key={index} className="w-full">
+          {renderSkeletonCard()}
+        </div>
+      ));
+    }
+
+    // 로딩이 끝났고 검색 결과가 없을 때
+    if (filteredProducts.length === 0 && searchQuery !== "") {
+      return (
+        <p className="w-full text-center text-gray-500 mt-5">검색 결과가 없습니다.</p>
+      );
+    }
+
+    // 로딩이 끝났고 검색 결과가 있을 때
+    return filteredProducts.map((product) => (
+      <div
+        key={product.id}
+        onClick={() => navigate(`/product/${product.id}`, { state: product })}
+        className="flex-shrink-0 flex flex-col items-center cursor-pointer"
+      >
+        <div
+          className={`${
+            isMobile ? "w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
+          } bg-white shadow-lg overflow-hidden`}
+        >
+          <img
+            src={product.imageUrl}
+            alt={product.title}
+            className={`${
+              isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
+            } mx-auto object-cover`}
+          />
+        </div>
+        <p
+          className={`${
+            isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] text-[22px]"
+          } font-medium text-center`}
+        >
+          {product.title}
+        </p>
+      </div>
+    ));
+  };
 
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="md:hidden">
-        <div className="w-[430px] mx-auto mt-[70px]">
+      <div className="sm:hidden">
+        <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">{ingredient}</h1>
           </div>
-
-          {/* 검색창 */}
           <div className="flex items-center w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
             <input
               type="text"
@@ -44,71 +145,30 @@ const PurposeIngredientProducts = () => {
             />
             <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
           </div>
-
-          {/* 카드 리스트 */}
           <div className="mt-[33px] grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
-            {products.map((product) => (
-            <div
-                key={product.id}
-                onClick={() => navigate(`/product/${product.id}`, { state: product })} 
-                className="w-[166px] h-[186px] flex-shrink-0 flex flex-col items-center"
-              >
-                <div className="w-[166px] h-[150px] bg-white rounded-xl shadow-lg overflow-hidden">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="w-[122px] h-[122px] mx-auto mt-[22px] object-cover"
-                  />
-                </div>
-                <p className="mt-[18px] h-[22px] text-[18px] font-medium text-center">
-                  {product.title}
-                </p>
-              </div>
-            ))}
+            {renderCards(true)}
           </div>
         </div>
       </div>
 
       {/* PC 전용 */}
-      <div className="hidden md:block w-full bg-[#FAFAFA] pb-[187px]">
-        <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.66] origin-top">
-            {/* 상단 헤더 라인: 제목 */}
-            <div className="flex justify-between items-center">
-              <h1 className="text-[44px] tracking-[-1.04px] font-semibold">{ingredient}</h1>
-            </div>
-
-          {/* 검색창 */}
-          <div className="flex items-center w-[1280px] h-[98px] mt-[44px] mx-auto px-[35.6px] rounded-full border-[#C7C7C7] border-[1px]">
+      <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
+        <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
+          <div className="flex justify-between items-center">
+            <h1 className="text-[30px] font-semibold">{ingredient}</h1>
+          </div>
+          <div className="flex items-center w-full h-[52px] mt-[26px] mx-auto px-[24px] rounded-full border-[#C7C7C7] border-[1px]">
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="제품을 입력해주세요."
-              className="flex-grow font-regular text-[#686666] text-[35.7px] outline-none"
+              placeholder="찾고 싶은 제품을 입력해주세요."
+              className="flex-grow font-regular text-[#686666] text-[16px] outline-none"
             />
-            <AiOutlineSearch className="text-[#686666] text-[57px] ml-2" />
+            <AiOutlineSearch className="text-[#686666] text-[37px] ml-1" />
           </div>
-
-          {/* 카드 리스트 */}
-          <div className="mt-[84px] grid grid-cols-4 gap-x-[40px] gap-y-[60px]">
-            {products.map((product) => (
-            <div
-                key={product.id}
-                onClick={() => navigate(`/product/${product.id}`, { state: product })} 
-                className="w-[290px] h-[306px] flex-shrink-0 flex flex-col items-center"
-              >
-                <div className="w-[290px] h-[240px] bg-white rounded-[24px] shadow-lg overflow-hidden">
-                  <img
-                    src={product.imageUrl}
-                    alt={product.title}
-                    className="w-[204px] h-[204px] mx-auto mt-[22px] object-cover"
-                  />
-                </div>
-                <p className="mt-[24px] h-[42px] text-[34px] font-semibold text-center">
-                  {product.title}
-                </p>
-              </div>
-            ))}
+          <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
+            {renderCards(false)}
           </div>
         </div>
       </div>

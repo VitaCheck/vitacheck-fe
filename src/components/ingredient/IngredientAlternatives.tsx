@@ -34,27 +34,37 @@ export default function IngredientAlternatives({ name }: Props) {
     );
   }
 
-  const items: IngredientAlternative[] = Array.isArray(data) ? data : [];
+  const items = Array.isArray(data) ? data : [];
 
   if (items.length === 0) {
     return (
-      <div className="flex justify-center items-center py-8">
+      <div className="flex flex-col items-center justify-center py-8">
         <img
           src="/images/PNG/성분 2-2/cat_character.png"
-          alt="부작용 및 주의사항"
-          className="w-full h-full object-cover rounded-md"
+          alt="대체식품 없음"
+          className="w-32 h-32 object-cover rounded-md mb-4"
         />
-        <div className="text-gray-500">대체 식품이 없습니다.</div>
+        <div className="text-gray-500 text-center">
+          <p className="text-lg font-medium mb-2">대체식품이 없습니다</p>
+          <p className="text-sm">
+            이 성분은 대체할 수 있는 식품이 등록되지 않았습니다.
+          </p>
+        </div>
       </div>
     );
   }
 
-  const renderIcon = (v: string) =>
-    v.startsWith("http") || v.startsWith("/") ? (
-      <img src={v} alt="" className="w-6 h-6 rounded object-cover" />
-    ) : (
-      <span className="text-lg font-medium">{v}</span>
-    );
+  const renderIcon = (v: string | undefined) => {
+    if (!v) {
+      return <span className="text-lg font-medium">🥗</span>; // 기본 이모지
+    }
+
+    if (v.startsWith("http") || v.startsWith("/")) {
+      return <img src={v} alt="" className="w-6 h-6 rounded object-cover" />;
+    } else {
+      return <span className="text-lg font-medium">{v}</span>;
+    }
+  };
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-5 sm:gap-x-8 md:gap-x-12 gap-y-4 sm:gap-y-8 md:gap-y-12 max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-5 pb-8">

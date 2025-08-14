@@ -79,7 +79,7 @@ const PurposeCardList = () => {
       })
       .catch((err) => {
         if (axios.isCancel(err)) { // 원본 axios.isCancel 사용
-          console.log('API 요청이 취소되었습니다.');
+          console.log('useEffect의 정리(cleanup) 함수가 실행되어 진행 중인 API 요청을 취소.');
         } else {
           console.error("목적 리스트 로드 실패:", err);
           setCards([]);
@@ -156,16 +156,15 @@ const PurposeCardList = () => {
   const renderCard = (card: Purpose, isSelected: boolean) => (
     <div
       onClick={() => toggleCard(card.code)}
-      className="w-full max-w-[110px] md:max-w-[290px] flex flex-col items-center cursor-pointer"
+      className="w-full flex flex-col items-center cursor-pointer"
     >
       <div
-        className={`w-[110px] h-[118px] md:w-[260px] md:h-[240px]
-          rounded-xl shadow-md relative md:rounded-3xl md:shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)]
+        className={`w-full aspect-[110/118] sm:w-full sm:aspect-[172/160] flex justify-center items-center
+          rounded-xl shadow-sm relative sm:rounded-[14px] sm:shadow-[1px_2px_8.2px_0px_rgba(0,0,0,0.16)]
           ${isSelected ? "bg-[#FFF8DC] border-1 border-[#FFEB9D]" : "bg-white border-1 border-transparent"}`}
       >
         <div
-          className={`top-[10px] left-[4px] w-[100px] h-[100px]
-            md:w-[190px] md:h-[190px] md:top-[25px] md:left-[35px] relative`}
+          className={`w-3/5 h-4/5 relative`}
         >
           <img
             src={card.imageUrl || imageMap[card.code] || "/images/default.png"}
@@ -174,23 +173,22 @@ const PurposeCardList = () => {
           />
         </div>
       </div>
-      <p className="mt-[18px] h-[22px] text-sm md:text-[34px] text-center font-semibold">
+      <p className="mt-[18px] text-[clamp(12px,5vw,20px)] sm:text-[20px] text-center font-semibold">
         {card.description}
       </p>
-    </div>
+    </div>  
   );
 
   // 스켈레톤 UI 렌더링 함수 (깜빡이는 효과 포함)
   const renderSkeletonCard = () => (
-    <div className="w-full max-w-[110px] md:max-w-[290px] flex flex-col items-center animate-pulse">
-      <div className="w-[110px] h-[118px] md:w-[260px] md:h-[240px] rounded-xl shadow-md relative md:rounded-3xl bg-gray-200"></div>
-      <div className="mt-[18px] h-[22px] w-2/3 bg-gray-200 rounded-full md:mt-[34px] md:h-[42px]"></div>
+    <div className="w-full sm:w-full flex flex-col items-center animate-pulse">
+      <div className="w-full aspect-[110/118] sm:aspect-[172/160] rounded-xl shadow-md relative sm:rounded-[14px] bg-gray-200"></div>
+      <div className="mt-[18px] h-[22px] w-2/3 bg-gray-200 rounded-full sm:mt-[22px] sm:h-[28px]"></div>
     </div>
   );
 
   // 모바일과 데스크톱 뷰를 위한 공통 렌더링 로직
-  const renderCardList = (isMobile: boolean) => {
-    const columnCount = isMobile ? 3 : 4;
+  const renderCardList = () => {
 
     return (
       (isLoading || loadingCount < cards.length)
@@ -212,13 +210,13 @@ const PurposeCardList = () => {
   return (
     <>
       {/* 모바일 */}
-      <div className="md:hidden w-full px-[20px] mx-auto mt-[70px] mb-[124px]">
-        <div className="flex flex-col ml-[18px]">
+      <div className="sm:hidden w-full px-[20px] mx-auto mt-[50px] mb-[124px]">
+        <div className="flex flex-col ml-[20px]">
           <h1 className="text-[35px] tracking-[-0.72px] font-medium">목적별</h1>
           <h2 className="text-sm text-[#808080] mt-[1px] font-medium">최대 3개 선택</h2>
         </div>
-        <div className="mt-[33px] grid grid-cols-3 gap-x-[20px] gap-y-[46px] px-[30px]">
-          {renderCardList(true)}
+        <div className="mt-[33px] grid grid-cols-3 gap-x-[20px] gap-y-[46px]">
+          {renderCardList()}
         </div>
         <div className="fixed bottom-0 left-0 right-0 h-[76px] bg-white z-10" />
         <button
@@ -241,24 +239,26 @@ const PurposeCardList = () => {
       </div>
 
       {/* 데스크탑 */}
-      <div className="hidden md:block w-full bg-[#FAFAFA] h-[1900px]">
-        <div className="max-w-[1280px] mx-auto pt-[100px] scale-[0.66] origin-top">
-          <div className="flex justify-between items-center mb-[6px]">
-            <h1 className="text-[44px] font-semibold">목적별</h1>
-            <button
-              onClick={goToProductList}
-              disabled={selectedIds.length === 0}
-              className={`w-[212px] h-[70px] rounded-full text-[28px] font-semibold flex justify-center items-center transition ${
-                selectedIds.length === 0 ? "bg-[#EEEEEE] cursor-not-allowed" : "bg-[#FFEB9D]"
-              }`}
-            >
-              영양제 확인
-            </button>
+      <div className="hidden sm:block w-full bg-[#FAFAFA] px-[20px]">
+        <div className="w-full pt-[70px] pb-[100px]">
+          <div className="max-w-[766px] mx-auto mb-[3px]">
+            <div className="flex justify-between items-center">
+              <h1 className="text-[30px] tracking-[-1px] font-semibold">목적별</h1>
+              <button
+                onClick={goToProductList}
+                disabled={selectedIds.length === 0}
+                className={`w-[142px] h-[46px] rounded-full text-[18px] tracking-[0.8px] font-semibold flex justify-center items-center transition ${
+                  selectedIds.length === 0 ? "bg-[#EEEEEE] cursor-not-allowed" : "bg-[#FFEB9D]"
+                }`}
+              >
+                영양제 확인
+              </button>
+            </div>
+            <h2 className="text-[16px] font-medium text-[#808080]">최대 3개 선택</h2>
           </div>
-          <h2 className="text-[24px] font-medium text-[#808080]">최대 3개 선택</h2>
 
-          <div className="grid grid-cols-4 gap-x-[40px] gap-y-[70px] mt-[60px]">
-            {renderCardList(false)}
+          <div className="grid grid-cols-4 items-center gap-x-[26px] gap-y-[46px] mt-[40px] max-w-[766px] mx-auto">
+            {renderCardList()}
           </div>
         </div>
       </div>
