@@ -42,59 +42,69 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   return (
     <div className="hidden sm:block w-full bg-[#FAFAFA] px-[50px]">
       <div className="max-w-[766px] mx-auto mb-[3px] pt-[70px] pb-[100px]">
-        {/* 제품 이미지, 브랜드명, 제품명 */}
-        <div className="flex justify-start gap-[54px] items-end">
-          <img
-            src={product.supplementImageUrl}
-            alt={product.supplementName}
-            className="w-[344px] h-[344px] rounded-[25px] shadow-lg object-cover"
-          />
-          <div className="flex flex-col gap-[120px]">
-            <div className="flex justify-between items-end w-[367px]">
-              <div className="flex flex-col gap-[4px]">
-                <h2 className="text-[21px] tracking-[-0.4px] text-[#757575] font-medium">
-                  {product.brandName || "브랜드"}
-                </h2>
-                <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold">
-                  {product.supplementName}
-                </h1>
-              </div>
-              <div className="flex justify-between w-[108px]">
-                <button
-                  onClick={onCopyUrl} // ✨ prop으로 받은 함수를 onClick에 연결
-                  className="rounded-full flex justify-center items-center w-[48px] h-[48px]
-                                       bg-white border-[#AAA] border-[0.3px]"
-                >
-                  <GoShareAndroid className="w-[28px] h-[28px]" />
-                </button>
-                <button
-                  onClick={toggleLike}
-                  className="rounded-full flex justify-center items-center w-[48px] h-[48px]
-                                       border-[#AAA] border-[0.3px]"
-                >
-                  {liked ? (
-                    <GoHeartFill className="w-[30px] h-[30px] text-[#FD657E]" />
-                  ) : (
-                    <GoHeart className="w-[30px] h-[30px] text-[#FD657E]" />
-                  )}
-                </button>
+        {/* 제품 이미지 + 브랜드명/제품명 */}
+        <div className="flex justify-between gap-6">
+          {/* 제품 이미지 */}
+          <div className="w-full max-w-[344px] aspect-square rounded-[25px] shadow-lg overflow-hidden">
+            <img
+              src={product.supplementImageUrl}
+              alt={product.supplementName}
+              className="w-full h-full object-contain"
+            />
+          </div>
+
+          {/* 브랜드명, 제품명 */}
+          <div className="flex flex-col w-full max-w-[367px] pt-[80px] justify-between">
+            <div>
+              <div className="flex items-end">
+                <div className="flex flex-col">
+                  <h2 className="text-[21px] tracking-[-0.4px] text-[#757575] font-medium">
+                    {product.brandName || "브랜드"}
+                  </h2>
+                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold">
+                    {product.supplementName}
+                  </h1>
+                </div>
+
+                {/* 공유 & 찜 버튼 */}
+                <div className="flex gap-2 ml-auto">
+                  <button
+                    onClick={onCopyUrl}
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white border-[#AAA] border-[0.3px]"
+                  >
+                    <GoShareAndroid className="w-[28px] h-[28px]" />
+                  </button>
+                  <button
+                    onClick={toggleLike}
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] border-[#AAA] border-[0.3px]"
+                  >
+                    {liked ? (
+                      <GoHeartFill className="w-[30px] h-[30px] text-[#FD657E]" />
+                    ) : (
+                      <GoHeart className="w-[30px] h-[30px] text-[#FD657E]" />
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
-            <div className="flex justify-between items-center w-[367px] gap-[14px] mb-[26px]">
-              <button className="border-[#9C9A9A] border-[0.6px] w-[290px] h-[62px] rounded-[14px] text-[20px] font-medium">
-                쿠팡 바로가기
-              </button>
-              <button
-                onClick={handleRegisterAlarm}
-                className="bg-[#FFEB9D] w-[290px] h-[62px] rounded-[14px] text-[20px] font-medium"
-              >
-                섭취알림 등록
-              </button>
+
+            <div>
+              <div className="flex flex-wrap gap-[14px] mb-[26px]">
+                <button className="border-[#9C9A9A] border-[0.6px] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium">
+                  쿠팡 바로가기
+                </button>
+                <button
+                  onClick={handleRegisterAlarm}
+                  className="bg-[#FFEB9D] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium"
+                >
+                  섭취알림 등록
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="mt-[84px] bg-[#F3F3F3] w-[766px] h-[4px]" />
+        <div className="mt-[84px] bg-[#F3F3F3] w-full h-[4px]" />
 
         {/* 브랜드 제품 리스트 */}
         <div className="w-full mx-auto mt-[27px]">

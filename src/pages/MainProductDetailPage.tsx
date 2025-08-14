@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import axios from "@/lib/axios";
 import MainDetailPageMobile from "@/components/Purpose/P3MMainDetailPage";
 import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
-import ShareModal from "@/components/Purpose/P3DShareModal"; // ShareModal 컴포넌트 import
+import ShareModal from "@/components/Purpose/P3DShareModal";
 
 interface Product {
   supplementId: number;
@@ -54,7 +54,7 @@ const ProductDetailPage = () => {
     const fetchBrandProducts = async (idToFetch: number) => {
       try {
         const brandResponse = await axios.get(
-          `http://3.35.50.61:8080/api/v1/supplements/brand`,
+          `http://vita-check.com/api/v1/supplements/brand`,
           {
             params: { id: idToFetch },
             headers: {
@@ -64,10 +64,6 @@ const ProductDetailPage = () => {
         );
 
         if (brandResponse.status === 200) {
-          console.log(
-            "브랜드 제품 목록 데이터:",
-            brandResponse.data.supplements
-          );
           setBrandProducts(brandResponse.data.supplements);
         } else {
           setBrandProducts([]);
@@ -82,7 +78,7 @@ const ProductDetailPage = () => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://3.35.50.61:8080/api/v1/supplements`,
+          `http://vita-check.com/api/v1/supplements`,
           {
             params: { id },
             headers: {
@@ -137,7 +133,7 @@ const ProductDetailPage = () => {
 
     try {
       await axios.post(
-        `http://3.35.50.61:8080/api/v1/supplements/${supplementId}/like`,
+        `http://vita-check.com/api/v1/supplements/${supplementId}/like`,
         {},
         {
           headers: {
