@@ -23,6 +23,11 @@ export interface Supplement {
   }[];
 }
 
+export interface PopularKeyword {
+  score: number;
+  keyword: string;
+}
+
 export interface SearchResultResponse {
   matchedIngredients: Ingredient[];
   supplements: {
@@ -51,3 +56,14 @@ export const searchSupplements = async (
     throw new Error("검색 실패");
   }
 };
+
+/** 인기 검색어 조회 */
+export async function getPopularKeywords(): Promise<PopularKeyword[]> {
+  const res = await api.get<{
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: PopularKeyword[];
+  }>("/api/v1/search/popular");
+  return res.data.result;
+}

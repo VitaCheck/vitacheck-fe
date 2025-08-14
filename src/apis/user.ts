@@ -8,15 +8,14 @@ export interface UserInfo {
   age: number;
   birthDate: string;
   phoneNumber: string;
+  profileImageUrl?: string;
 }
 
-// 사용자 정보 조회
 export const getUserInfo = async (): Promise<UserInfo> => {
   const response = await api.get("/api/v1/users/me");
   return response.data.result as UserInfo;
 };
 
-// 사용자 닉네임 업데이트
 export interface UpdateUserRequest {
   nickname?: string;
   birthDate?: string;
@@ -29,3 +28,42 @@ export const updateUserInfo = async (payload: UpdateUserRequest) => {
   });
   return res.data;
 };
+
+export const updateProfileImageUrl = async (profileImageUrl: string) => {
+  const res = await api.patch(
+    "/api/v1/users/me/profile-image",
+    { profileImageUrl },
+    { headers: { "Content-Type": "application/json" } }
+  );
+  return res.data;
+};
+
+export const getMyProfileImageUrl = async (): Promise<string | null> => {
+  const res = await api.get<{
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: string | null;
+  }>("/api/v1/users/me/profile-image", {
+    params: { _t: Date.now() },
+  });
+  return res.data.result ?? null;
+};
+
+export async function updateFcmTokenWithLocalStorageFetch() {
+  const fcmToken = localStorage.getItem("fcmToken");
+  const accessToken = localStorage.getItem("accessToken");
+  if (!fcmToken || !accessToken) return;
+
+  await fetch(
+    `${import.meta.env.VITE_SERVER_API_URL}/api/v1/users/me/fcm-token`,
+    {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify({ fcmToken }),
+    }
+  );
+}
