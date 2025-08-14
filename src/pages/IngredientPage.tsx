@@ -85,15 +85,28 @@ const IngredientPage = () => {
     setHasSearched(true);
     saveSearchHistory(trimmed);
 
-    // 간단한 검색 시뮬레이션 (실제로는 API 호출)
-    const mockResults = ["비타민A", "비타민B", "비타민C"].filter((item) =>
-      item.toLowerCase().includes(trimmed.toLowerCase())
-    );
+    // 비타민 계열인지 확인
+    const isVitamin = /^비타민[A-Z]?$/.test(trimmed);
 
-    if (mockResults.length === 0) {
-      setSearchResults([]);
+    if (isVitamin) {
+      // 비타민 계열: 리스트 표시
+      const mockResults = [
+        "비타민A",
+        "비타민B",
+        "비타민C",
+        "비타민D",
+        "비타민E",
+        "비타민K",
+      ].filter((item) => item.toLowerCase().includes(trimmed.toLowerCase()));
+
+      if (mockResults.length === 0) {
+        setSearchResults([]);
+      } else {
+        setSearchResults(mockResults);
+      }
     } else {
-      setSearchResults(mockResults);
+      // 다른 성분: 바로 상세 페이지로 이동
+      navigate(`/ingredient/${encodeURIComponent(trimmed)}`);
     }
   };
 
@@ -157,7 +170,7 @@ const IngredientPage = () => {
             className={`w-full outline-none ${
               isMobile
                 ? "text-lg bg-transparent text-gray-400 placeholder-gray-300"
-                : "text-gray-800 placeholder-gray-400"
+                : "text-base text-gray-800 placeholder-gray-400"
             }`}
           />
 
@@ -185,7 +198,7 @@ const IngredientPage = () => {
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img
-              src="/images/검색결과 없음 페이지/비타체크 캐릭터_0%_채도 낮춤.png"
+              src="/images/PNG/검색결과 없음 페이지/비타체크 캐릭터_0%_채도 낮춤.png"
               alt="검색 결과 없음"
               className="w-32 h-32 object-contain"
             />
@@ -201,7 +214,11 @@ const IngredientPage = () => {
             {searchResults.map((item) => (
               <Link
                 key={item}
-                to={`/ingredient/${encodeURIComponent(item)}`}
+                to={
+                  item.startsWith("비타민")
+                    ? `/ingredient/${encodeURIComponent(item)}`
+                    : `/ingredient/${encodeURIComponent(item)}`
+                }
                 className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
               >
                 <span className="font-semibold text-base">{item}</span>
@@ -322,7 +339,11 @@ const IngredientPage = () => {
               {filteredList.map((item) => (
                 <Link
                   key={item}
-                  to={`/ingredient/${encodeURIComponent(item)}`}
+                  to={
+                    item.startsWith("비타민")
+                      ? `/ingredient/${encodeURIComponent(item)}`
+                      : `/ingredient/${encodeURIComponent(item)}`
+                  }
                   className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
                 >
                   <span className="font-semibold text-base">{item}</span>
@@ -333,7 +354,14 @@ const IngredientPage = () => {
           ) : (
             <div className="grid grid-cols-5 gap-4 pb-10 pt-3">
               {filteredList.map((item) => (
-                <Link key={item} to={`/ingredient/${encodeURIComponent(item)}`}>
+                <Link
+                  key={item}
+                  to={
+                    item.startsWith("비타민")
+                      ? `/ingredient/${encodeURIComponent(item)}`
+                      : `/ingredient/${encodeURIComponent(item)}`
+                  }
+                >
                   <div className="bg-white px-6 py-10 rounded-xl shadow text-center font-semibold text-lg shadow-md transition">
                     {item}
                   </div>

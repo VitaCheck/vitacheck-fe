@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import searchIcon from "../../assets/search.png";
 import { fetchIngredientSearch } from "@/apis/ingredient";
 import { AxiosError } from "axios";
+import NoSearchResult from "./NoSearchResult";
 
 const IngredientSearchSection = () => {
   const location = useLocation();
@@ -35,18 +36,21 @@ const IngredientSearchSection = () => {
 
       const res = await fetchIngredientSearch(params);
 
-      const matched = res?.result?.matchedIngredients || res?.results || [];
+      // API 응답 구조에 맞춰 수정
+      const matched = res?.result || [];
       console.log("API 응답:", res);
       console.log("매칭된 성분:", matched);
 
       if (!matched || matched.length === 0) {
         setResults([]);
       } else {
-        const names = matched.map(
-          (item: { ingredientName: string }) => item.ingredientName
-        );
-        setResults(matched);
-        console.log("결과 저장됨:", names);
+        // API 응답 구조에 맞춰 매핑
+        const mappedResults = matched.map((item: any) => ({
+          ingredientId: item.id, // "id" 필드 사용
+          ingredientName: item.name, // "name" 필드 사용
+        }));
+        setResults(mappedResults);
+        console.log("결과 저장됨:", mappedResults);
       }
     } catch (err: unknown) {
       const axiosErr = err as AxiosError;
@@ -64,7 +68,9 @@ const IngredientSearchSection = () => {
   };
 
   const handleEnterKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleSearch();
+    if (e.key === "Enter" && !isLoading) {
+      handleSearch();
+    }
   };
 
   useEffect(() => {
@@ -104,7 +110,8 @@ const IngredientSearchSection = () => {
 
         <button
           onClick={handleSearch}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2"
+          disabled={isLoading}
+          className="absolute right-3 top-1/2 transform -translate-y-1/2 disabled:opacity-50"
         >
           <img src={searchIcon} alt="검색" className="w-5 h-5" />
         </button>
@@ -112,41 +119,53 @@ const IngredientSearchSection = () => {
 
       {/* 검색 결과 또는 검색 결과 없음 메시지 */}
       {isLoading ? (
-        <p className="text-center text-gray-500">검색 중...</p>
-      ) : hasSearched && results.length === 0 ? (
-        // ✅ 패딩 제거, 세로 정렬 + 촘촘한 간격
-        <div className="text-center flex flex-col items-center gap-1">
-          <img
-            src="/images/PNG/성분 2-2/cat_character.png"
-            alt="검색 결과 없음"
-            className="w-36 h-36 object-contain mb-1" // ← 아주 작은 간격
-          />
-          <p className="text-gray-500 text-base leading-tight">
-            일치하는 검색 결과가 없습니다.
-          </p>
+        <div className="flex justify-center items-center py-20">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <p className="text-gray-500 text-lg">검색 중...</p>
+          </div>
         </div>
-      ) : results.length > 0 ? (
-        <ul className="space-y-2">
-          {results.map((item) => (
-            <li key={item.ingredientId}>
-              <button
-                onClick={() =>
-                  navigate(
-                    `/ingredient/${encodeURIComponent(item.ingredientName)}`,
-                    {
-                      state: { id: item.ingredientId },
-                    }
-                  )
-                }
-                className="w-full flex justify-between items-center px-4 py-5 rounded-xl shadow-sm bg-white border border-gray-200"
-              >
-                <span>{item.ingredientName}</span>
-                <span className="text-gray-400">{">"}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      ) : null}
+      ) : (
+        hasSearched &&
+        !isLoading && (
+          <div className="space-y-4">
+            {results.length > 0 ? (
+              <>
+                <div className="text-center mb-6">
+                  <p className="text-gray-600 text-lg">
+                    <span className="font-semibold text-blue-600">
+                      {results.length}
+                    </span>
+                    개의 성분을 찾았습니다
+                  </p>
+                </div>
+                <div className="space-y-3">
+                  {results.map((result) => (
+                    <div
+                      key={result.ingredientId}
+                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
+                      onClick={() =>
+                        navigate(`/ingredient/${result.ingredientName}`)
+                      }
+                    >
+                      <span className="text-lg font-medium">
+                        {result.ingredientName}
+                      </span>
+                      <img
+                        src="/images/PNG/성분 1/arrow_forward_ios.png"
+                        alt="화살표"
+                        className="w-5 h-5"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </>
+            ) : (
+              <NoSearchResult />
+            )}
+          </div>
+        )
+      )}
     </div>
   );
 };

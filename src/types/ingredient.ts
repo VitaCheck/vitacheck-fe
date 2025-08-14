@@ -1,12 +1,4 @@
-// 성분 검색 결과 타입
-export interface IngredientSearchResult {
-  ingredientId: number;
-  ingredientName: string;
-  amount?: number;
-  unit?: string;
-}
-
-// 성분 검색 API 응답 타입
+// 스웨거 문서 기반 실제 API 응답 타입
 export interface IngredientSearchResponse {
   isSuccess: boolean;
   code: string;
@@ -14,43 +6,13 @@ export interface IngredientSearchResponse {
   result: IngredientSearchResult[];
 }
 
-// 대체 식품 타입
-export interface IngredientAlternative {
-  name: string;
-  imageOrEmoji: string;
-}
-
-// 영양제 타입
-export interface IngredientSupplement {
-  id: number;
-  name: string;
-  brand: string;
-  price: number;
-  rating: number;
+export interface IngredientSearchResult {
+  id: number; // 실제 API 응답에서는 "id"
+  name: string; // 실제 API 응답에서는 "name"
+  description?: string;
   imageUrl?: string;
 }
 
-// 성분 상세 정보 타입
-export interface IngredientDetail {
-  id: number;
-  name: string;
-  description: string;
-  effect: string;
-  caution: string;
-  gender?: "MALE" | "FEMALE" | "UNKNOWN";
-  age?: number;
-  upperLimit: number;
-  recommendedDosage: number;
-  unit: string;
-  subIngredients: Array<{
-    name: string;
-    imageOrEmoji: string;
-  }>;
-  alternatives: IngredientAlternative[];
-  supplements: IngredientSupplement[];
-}
-
-// 성분 상세 정보 API 응답 타입
 export interface IngredientDetailResponse {
   isSuccess: boolean;
   code: string;
@@ -58,18 +20,51 @@ export interface IngredientDetailResponse {
   result: IngredientDetail;
 }
 
-// 대체 식품 API 응답 타입
-export interface IngredientAlternativesResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: IngredientAlternative[];
+export interface IngredientDetail {
+  id: number;
+  name: string;
+  description?: string;
+  effect?: string;
+  caution?: string;
+  upperLimit?: number;
+  recommendedDosage?: number;
+  unit?: string;
+  subIngredients?: string[];
+  alternatives?: IngredientAlternative[];
+  supplements?: IngredientSupplement[];
 }
 
-// 영양제 API 응답 타입
-export interface IngredientSupplementsResponse {
-  isSuccess: boolean;
-  code: string;
-  message: string;
-  result: IngredientSupplement[];
+export interface IngredientAlternative {
+  name: string;
+  imageOrEmoji?: string;
 }
+
+export interface IngredientSupplement {
+  id: number;
+  name: string;
+  brand?: string;
+  price?: number;
+  rating?: number;
+  imageUrl?: string;
+}
+
+// 카드 리스트용 슬림 타입
+export type Supplement = Required<
+  Pick<IngredientSupplement, "id" | "name" | "imageUrl">
+>;
+
+// 기존 타입들 (하위 호환성을 위해 유지)
+export interface IngredientData {
+
+  name: string;
+  description: string;
+  effect: string;
+  caution: string;
+  upperLimit: number;
+  recommendedDosage: number;
+  unit: string;
+  subIngredients: string[];
+  alternatives: IngredientAlternative[];
+  supplements: IngredientSupplement[];
+}
+

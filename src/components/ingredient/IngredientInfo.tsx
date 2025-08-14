@@ -1,24 +1,12 @@
+import type { IngredientDetail } from "@/types/ingredient";
+
 interface Props {
   id: string;
-  data: {
-    name: string;
-    description: string;
-    effect: string;
-    caution: string;
-    upperLimit: number;
-    recommendedDosage: number;
-    unit: string;
-  };
+  data: IngredientDetail;
 }
 
 const IngredientInfo = ({ id, data }: Props) => {
   if (!id) return <div className="px-5 py-10">잘못된 접근입니다.</div>;
-
-  // 섭취량 퍼센트 계산 (권장량 / 상한량)
-  const dosagePercent =
-    data.upperLimit && data.recommendedDosage
-      ? Math.min((data.recommendedDosage / data.upperLimit) * 100, 100)
-      : 0;
 
   return (
     <div className="space-y-8 max-w-screen-md mx-auto px-5 py-5 sm:px-8">

@@ -1,6 +1,5 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { saveTokens, clearTokens } from "@/lib/auth";
 
 function parseHashParams(hash: string) {
   const h = hash.startsWith("#") ? hash.slice(1) : hash;
@@ -122,6 +121,7 @@ export default function SocialCallback() {
     clearTokens?.();
     navigate("/login?error=callback_mismatch", { replace: true });
   }, [navigate, query, params]);
+
 
   return <div className="p-6 text-center text-gray-600">로그인 처리 중...</div>;
 }
