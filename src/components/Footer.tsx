@@ -3,7 +3,6 @@ import Logo from "../assets/logo.svg";
 
 const Footer = () => {
   return (
-
     <footer className="w-full h-[100px] bg-white border-t border-gray-200 py-6 px-4 text-sm text-black hidden sm:block">
       <div className="flex flex-col items-center">
         {/* 로고 */}
@@ -18,7 +17,10 @@ const Footer = () => {
         {/* 링크 목록 */}
         <div className="relative w-full flex justify-center">
           {/* 가운데 개인정보처리방침 */}
-          <a href="#" className="mx-4 hover:underline">
+          <a
+            href="https://www.notion.so/233d3807f226800d82c4f689e39dc554?source=copy_link"
+            className="mx-4 hover:underline"
+          >
             개인정보처리방침
           </a>
 

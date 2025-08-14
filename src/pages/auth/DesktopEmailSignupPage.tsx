@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import TermsList from "@/components/terms/TermsList";
+import TermsAgreement from "@/components/terms/TermsAgreement";
 
 const EmailSignupPage = () => {
   const [email, setEmail] = useState("");
@@ -48,21 +50,6 @@ const EmailSignupPage = () => {
     const randomNick = `유저${Math.floor(Math.random() * 10000)}`;
     setNickname(randomNick);
   };
-
-  //   const handleSignup = async (e: React.FormEvent) => {
-  //     e.preventDefault();
-  //     setErrorMessage("");
-
-  //     if (password !== confirmPassword) {
-  //       setErrorMessage("비밀번호가 일치하지 않습니다.");
-  //       return;
-  //     }
-
-  //     if (!agrees.terms || !agrees.privacy) {
-  //       setErrorMessage("필수 약관에 동의해주세요.");
-  //       return;
-  //     }
-  //   };
 
   const handleSignup = (e: React.FormEvent) => {
     e.preventDefault();
@@ -241,63 +228,11 @@ const EmailSignupPage = () => {
               전체 동의
             </label>
 
-            {/* 개별 동의 */}
-            <div className="ml-[30px] space-y-2 text-[18px] font-medium text-[#6B6B6B]">
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={agrees.terms}
-                  onChange={() => handleCheckboxChange("terms")}
-                  className="appearance-none w-[28px] h-[28px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none relative"
-                />
-                <span className="absolute w-[28px] h-[28px] pointer-events-none flex justify-center items-center">
-                  {agrees.terms && (
-                    <img
-                      src="/images/check-white.png"
-                      alt="전체 동의 체크"
-                      className="w-[16px]"
-                    />
-                  )}
-                </span>
-                서비스 이용약관 동의 (필수)
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={agrees.privacy}
-                  onChange={() => handleCheckboxChange("privacy")}
-                  className="appearance-none w-[28px] h-[28px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none relative"
-                />
-                <span className="absolute w-[28px] h-[28px] pointer-events-none flex justify-center items-center">
-                  {agrees.privacy && (
-                    <img
-                      src="/images/check-white.png"
-                      alt="전체 동의 체크"
-                      className="w-[16px]"
-                    />
-                  )}
-                </span>
-                개인정보 수집 및 이용 동의 (필수)
-              </label>
-              <label className="flex items-center gap-2">
-                <input
-                  type="checkbox"
-                  checked={agrees.marketing}
-                  onChange={() => handleCheckboxChange("marketing")}
-                  className="appearance-none w-[28px] h-[28px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none relative"
-                />
-                <span className="absolute w-[28px] h-[28px] pointer-events-none flex justify-center items-center">
-                  {agrees.marketing && (
-                    <img
-                      src="/images/check-white.png"
-                      alt="전체 동의 체크"
-                      className="w-[16px]"
-                    />
-                  )}
-                </span>
-                마케팅 이용 동의 (선택)
-              </label>
-            </div>
+            {/* 전체 동의 영역 위/아래 구조는 그대로 두고 */}
+            <TermsAgreement
+              agrees={agrees}
+              handleCheckboxChange={handleCheckboxChange}
+            />
           </div>
 
           {errorMessage && (

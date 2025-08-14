@@ -2,6 +2,24 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
+// 파일 상단에 추가
+type JwtPayload = Record<string, any>;
+
+function decodeJwt(token: string): JwtPayload | null {
+  try {
+    const payload = token.split(".")[1];
+    const base64 = payload.replace(/-/g, "+").replace(/_/g, "/");
+    const json = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(json);
+  } catch {
+    return null;
+  }
+}
 
 type Gender = "MALE" | "FEMALE" | "OTHER";
 
@@ -19,12 +37,9 @@ const toBirthDate = (
   birthyear?: string | null,
   birthday?: string | null
 ) => {
-  // 1) 이미 YYYY-MM-DD라면 그대로
   if (birthDate && /^\d{4}-\d{2}-\d{2}$/.test(birthDate)) return birthDate;
-  // 2) birthyear + birthday(MM-DD) 조합
-  if (birthyear && birthday && /^\d{2}-\d{2}$/.test(birthday)) {
+  if (birthyear && birthday && /^\d{2}-\d{2}$/.test(birthday))
     return `${birthyear}-${birthday}`;
-  }
   return "";
 };
 
@@ -34,8 +49,6 @@ type StateByValues = {
   email: string;
   fullName?: string;
   next?: string;
-
-  // 원본 키가 state로 올 수도 있음
   gender?: string;
   birthDate?: string;
   birthyear?: string;
@@ -48,8 +61,6 @@ type StateByValues = {
 type StateByTempToken = {
   socialTempToken: string;
   next?: string;
-
-  // 토큰 플로우라도 미리 받은 값이 있을 수 있음
   gender?: string;
   birthDate?: string;
   birthyear?: string;
@@ -66,7 +77,7 @@ export default function SocialSignupForm() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  // ✅ 쿼리에서 값 추출 (네이버 원본 키와 우리 스펙 키 둘 다 대응)
+  // 쿼리 기본값(안전망)
   const fromQuery = useMemo(
     () => ({
       email: params.get("email") || "",
@@ -74,22 +85,99 @@ export default function SocialSignupForm() {
       provider: params.get("provider") || "",
       providerId: params.get("providerId") || "",
       next: params.get("next") || "",
-
-      // 네이버 원본 키
       birthyear: params.get("birthyear") || "",
       birthday: params.get("birthday") || "",
       mobile: params.get("mobile") || "",
-
-      // 우리 스펙 키로 오는 경우도 대비
       birthDate: params.get("birthDate") || "",
       phoneNumber: params.get("phoneNumber") || "",
-      gender: params.get("gender") || "", // M/F 또는 MALE/FEMALE/OTHER
+      gender: params.get("gender") || "",
       nickname: params.get("nickname") || "",
+      signupToken:
+        params.get("signupToken") ||
+        params.get("socialTempToken") ||
+        params.get("tempToken") ||
+        "",
     }),
     [params]
   );
 
-  // ✅ preset 만들기: state 우선, 없으면 쿼리 사용
+  // preset(state 우선 → query 보조)
+  // const preset = useMemo(() => {
+  //   const base = {
+  //     email: fromQuery.email,
+  //     fullNameFromState: fromQuery.fullName,
+  //     provider: fromQuery.provider,
+  //     providerId: fromQuery.providerId,
+  //     next: fromQuery.next,
+  //     gender: mapGender(fromQuery.gender),
+  //     birthDate: toBirthDate(
+  //       fromQuery.birthDate,
+  //       fromQuery.birthyear,
+  //       fromQuery.birthday
+  //     ),
+  //     phoneNumber: fromQuery.phoneNumber || fromQuery.mobile,
+  //     nickname: fromQuery.nickname,
+  //   };
+
+  //   if (state && "socialTempToken" in state) {
+  //     return {
+  //       mode: "token" as const,
+  //       socialTempToken: state.socialTempToken,
+  //       next: state.next ?? base.next,
+  //       email: base.email,
+  //       fullNameFromState: base.fullNameFromState,
+  //       provider: base.provider,
+  //       providerId: base.providerId,
+  //       gender: mapGender(state.gender) || base.gender,
+  //       birthDate:
+  //         toBirthDate(state.birthDate, state.birthyear, state.birthday) ||
+  //         base.birthDate,
+  //       phoneNumber: (state.phoneNumber || state.mobile) ?? base.phoneNumber,
+  //       nickname: state.nickname ?? base.nickname,
+  //     };
+  //   }
+
+  //   if (state && "provider" in state) {
+  //     return {
+  //       mode: "values" as const,
+  //       provider: state.provider ?? base.provider,
+  //       providerId: state.providerId ?? base.providerId,
+  //       email: state.email ?? base.email,
+  //       fullNameFromState: state.fullName ?? base.fullNameFromState,
+  //       next: state.next ?? base.next,
+  //       gender: mapGender(state.gender) || base.gender,
+  //       birthDate:
+  //         toBirthDate(
+  //           state.birthDate,
+  //           (state as any).birthyear,
+  //           (state as any).birthday
+  //         ) || base.birthDate,
+  //       phoneNumber:
+  //         (state.phoneNumber || (state as any).mobile) ?? base.phoneNumber,
+  //       nickname: state.nickname ?? base.nickname,
+  //     };
+  //   }
+
+  //   if (fromQuery.signupToken) {
+  //     return {
+  //       mode: "token" as const,
+  //       socialTempToken: fromQuery.signupToken,
+  //       next: base.next,
+  //       email: base.email,
+  //       fullNameFromState: base.fullNameFromState,
+  //       provider: base.provider,
+  //       providerId: base.providerId,
+  //       gender: base.gender,
+  //       birthDate: base.birthDate,
+  //       phoneNumber: base.phoneNumber,
+  //       nickname: base.nickname,
+  //     };
+  //   }
+
+  //   return { mode: "values" as const, ...base };
+  // }, [state, fromQuery]);
+
+  // ✅ preset 작성 (state 우선 → query 보조 → token payload 최후 보조)
   const preset = useMemo(() => {
     const base = {
       email: fromQuery.email,
@@ -97,7 +185,6 @@ export default function SocialSignupForm() {
       provider: fromQuery.provider,
       providerId: fromQuery.providerId,
       next: fromQuery.next,
-      // 가공
       gender: mapGender(fromQuery.gender),
       birthDate: toBirthDate(
         fromQuery.birthDate,
@@ -108,22 +195,44 @@ export default function SocialSignupForm() {
       nickname: fromQuery.nickname,
     };
 
+    // 공통: 토큰이 있으면 payload를 미리 파싱해서 보조로 쓴다
+    const tempTokenFromState =
+      state && "socialTempToken" in state ? state.socialTempToken : "";
+    const tempTokenFromQuery = fromQuery.signupToken;
+    const tokenToUse = tempTokenFromState || tempTokenFromQuery || "";
+    const claims = tokenToUse ? decodeJwt(tokenToUse) : null;
+    console.log("JWT Claims:", claims); // 🔍 여기에 추가
+
+    const fromToken = {
+      email: (claims?.email ?? claims?.user_email ?? "") as string,
+      fullName: (claims?.name ?? claims?.fullName ?? "") as string,
+      provider: (claims?.provider ?? claims?.iss ?? "") as string,
+      providerId: (claims?.providerId ?? claims?.sub ?? "") as string,
+      gender: mapGender(claims?.gender),
+      birthDate: (claims?.birthDate as string) || "",
+      phoneNumber: (claims?.phoneNumber as string) || "",
+    };
+
     if (state && "socialTempToken" in state) {
       return {
         mode: "token" as const,
         socialTempToken: state.socialTempToken,
         next: state.next ?? base.next,
 
-        email: base.email,
-        fullNameFromState: base.fullNameFromState,
-        provider: base.provider,
-        providerId: base.providerId,
+        // 우선순위: state 값 → query/base → token payload
+        email: base.email || fromToken.email,
+        fullNameFromState: base.fullNameFromState || fromToken.fullName,
+        provider: base.provider || fromToken.provider,
+        providerId: base.providerId || fromToken.providerId,
 
-        gender: mapGender(state.gender) || base.gender,
+        gender: mapGender(state.gender) || base.gender || fromToken.gender,
         birthDate:
           toBirthDate(state.birthDate, state.birthyear, state.birthday) ||
-          base.birthDate,
-        phoneNumber: (state.phoneNumber || state.mobile) ?? base.phoneNumber,
+          base.birthDate ||
+          fromToken.birthDate,
+        phoneNumber:
+          (state.phoneNumber || state.mobile) ??
+          (base.phoneNumber || fromToken.phoneNumber),
         nickname: state.nickname ?? base.nickname,
       };
     }
@@ -131,29 +240,53 @@ export default function SocialSignupForm() {
     if (state && "provider" in state) {
       return {
         mode: "values" as const,
-        provider: state.provider ?? base.provider,
-        providerId: state.providerId ?? base.providerId,
-        email: state.email ?? base.email,
-        fullNameFromState: state.fullName ?? base.fullNameFromState,
+        provider: state.provider ?? (base.provider || fromToken.provider),
+        providerId:
+          state.providerId ?? (base.providerId || fromToken.providerId),
+        email: state.email ?? (base.email || fromToken.email),
+        fullNameFromState:
+          state.fullName ?? (base.fullNameFromState || fromToken.fullName),
         next: state.next ?? base.next,
-
-        gender: mapGender(state.gender) || base.gender,
+        gender: mapGender(state.gender) || base.gender || fromToken.gender,
         birthDate:
           toBirthDate(
             state.birthDate,
             (state as any).birthyear,
             (state as any).birthday
-          ) || base.birthDate,
+          ) ||
+          base.birthDate ||
+          fromToken.birthDate,
         phoneNumber:
-          (state.phoneNumber || (state as any).mobile) ?? base.phoneNumber,
+          (state.phoneNumber || (state as any).mobile) ??
+          (base.phoneNumber || fromToken.phoneNumber),
         nickname: state.nickname ?? base.nickname,
       };
     }
 
+    if (fromQuery.signupToken) {
+      return {
+        mode: "token" as const,
+        socialTempToken: fromQuery.signupToken,
+        next: base.next,
+
+        // query가 비어 있으면 token payload로 채움
+        email: base.email || fromToken.email,
+        fullNameFromState: base.fullNameFromState || fromToken.fullName,
+        provider: base.provider || fromToken.provider,
+        providerId: base.providerId || fromToken.providerId,
+
+        gender: base.gender || fromToken.gender,
+        birthDate: base.birthDate || fromToken.birthDate,
+        phoneNumber: base.phoneNumber || fromToken.phoneNumber,
+        nickname: base.nickname,
+      };
+    }
+
+    // 완전 빈 경우
     return { mode: "values" as const, ...base };
   }, [state, fromQuery]);
 
-  // ✅ form 상태 (닉네임만 사용자가 입력)
+  // 폼 상태
   const [form, setForm] = useState({
     email: "",
     fullName: "",
@@ -175,23 +308,8 @@ export default function SocialSignupForm() {
       gender: ((preset as any).gender as Gender | "") ?? prev.gender,
       birthDate: (preset as any).birthDate ?? prev.birthDate,
       phoneNumber: (preset as any).phoneNumber ?? prev.phoneNumber,
-      // nickname은 사용자 입력 필드
     }));
   }, [preset]);
-
-  // 디버깅 로그 (지금 보이는 값 확인)
-  // useEffect(() => {
-  //   console.table({
-  //     email: form.email,
-  //     fullName: form.fullName,
-  //     provider: form.provider,
-  //     providerId: form.providerId,
-  //     gender: form.gender,
-  //     birthDate: form.birthDate,
-  //     phoneNumber: form.phoneNumber,
-  //     nickname: form.nickname,
-  //   });
-  // }, [form]);
 
   const onChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
@@ -217,25 +335,32 @@ export default function SocialSignupForm() {
         birthDate: form.birthDate,
         phoneNumber: form.phoneNumber,
       };
-      // ✅ 제미나이 추가: preset 객체에서 토큰을 가져옵니다.
+
       const socialTempToken =
-        preset.mode === "token" ? preset.socialTempToken : undefined;
+        (preset as any).mode === "token"
+          ? (preset as any).socialTempToken
+          : undefined;
 
-      console.log("🚀 before post"); // onSubmit 호출 확인용
-      console.log("✅ API로 전달하려는 토큰 값:", socialTempToken);
-      console.log("✅ 현재 preset 객체의 내용:", preset);
+      if (!(socialTempToken && socialTempToken.length > 0)) {
+        alert(
+          "임시 토큰이 만료되었거나 누락되었습니다. 다시 소셜 로그인 해주세요."
+        );
+        setSubmitting(false);
+        return;
+      }
 
-      // const res = await postSocialSignup(body);
+      // 개발 중 디버깅에만 사용
+      console.debug(
+        "[signup] using temp token:",
+        socialTempToken.slice(0, 12) + "..."
+      );
+
       const res = await postSocialSignup(body, socialTempToken);
-      console.log("✅ signup res.status:", res.status);
-      console.log("✅ signup res.data:", res.data);
-      console.log("✅ signup headers:", res.headers);
 
       const at =
         res.data?.result?.accessToken ||
         res.data?.accessToken ||
         res.headers?.authorization?.replace?.(/^Bearer\s+/i, "");
-
       const rt = res.data?.result?.refreshToken || res.data?.refreshToken || "";
       if (at) saveTokens?.(at, rt);
 
@@ -244,15 +369,12 @@ export default function SocialSignupForm() {
         replace: true,
       });
     } catch (err: any) {
-      if (err?.response) {
-        console.log("❌ signup error status:", err.response.status);
-        console.log("❌ signup error data:", err.response.data);
-        console.log("❌ signup error headers:", err.response.headers);
+      if (err?.response?.status === 401) {
+        alert("인증이 만료되었습니다. 다시 소셜 로그인 해주세요.");
       } else {
-        console.log("❌ signup error (no response):", err);
+        alert("회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.");
       }
       console.error(err);
-      alert("회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.");
     } finally {
       setSubmitting(false);
     }
@@ -262,7 +384,6 @@ export default function SocialSignupForm() {
     <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-4 p-6">
       <h1 className="text-xl font-semibold">추가 정보 입력</h1>
 
-      {/* 읽기 전용 표시 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">이메일</label>
         <input
@@ -303,7 +424,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 닉네임만 입력 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">닉네임</label>
         <input
@@ -316,7 +436,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 생년월일 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">생년월일</label>
         <input
@@ -328,7 +447,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 성별 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">성별</label>
         <input
@@ -339,7 +457,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 전화번호 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">전화번호</label>
         <input
