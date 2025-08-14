@@ -111,9 +111,18 @@ export default function DesktopAlarmAddToSearchPage() {
     try {
       const payload = {
         supplementId,
-        daysOfWeek: selectedDays,
-        times: Array.from(new Set(times.map(normalize))),
+        schedules: selectedDays
+          .map((day) =>
+            Array.from(new Set(times.map(normalize))).map((time) => ({
+              dayOfWeek: day,
+              time: time,
+            }))
+          )
+          .flat(),
       };
+
+      // 콘솔에 POST 데이터 출력
+      console.log("[POST] /api/v1/notifications/routines", payload);
       await axios.post("/api/v1/notifications/routines", payload);
       alert("알림이 추가되었습니다!");
       navigate("/alarm/settings", { replace: true });

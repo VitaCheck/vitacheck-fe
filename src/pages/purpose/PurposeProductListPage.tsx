@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import RecommendedProductSection from "@/components/Purpose/P2Section";
 import P2MDropdownPopup from "@/components/Purpose/P2MDropdownPopup";
 import useIsMobile from "@/hooks/useIsMobile";
+import React from "react";
 
 // API 응답 result 타입 정의
 interface SupplementInfo {
@@ -29,7 +30,6 @@ const PurposeProductList = () => {
     window.scrollTo(0, 0);
   }, []);
 
-
   const handleOpenPopup = () => {
     setIsPopupOpen(true);
   };
@@ -46,34 +46,34 @@ const PurposeProductList = () => {
 
   // 목적 코드와 한글 이름을 매핑하는 객체
   const purposeCodeMap: Record<string, string> = {
-    'EYE': '눈건강',
-    'BONE': '뼈건강',
-    'SLEEP_STRESS': '수면/스트레스',
-    'CHOLESTEROL': '혈중 콜레스테롤',
-    'FAT': '체지방',
-    'SKIN': '피부 건강',
-    'TIRED': '피로감',
-    'IMMUNE': '면역력',
-    'DIGEST': '소화/위 건강',
-    'ATHELETIC': '운동 능력',
-    'CLIMACTERIC': '여성 갱년기',
-    'TEETH': '치아/잇몸',
-    'HAIR_NAIL': '탈모/손톱 건강',
-    'BLOOD_PRESS': '혈압',
-    'NEUTRAL_FAT': '혈중 중성지방',
-    'ANEMIA': '빈혈',
-    'ANTIAGING': '노화/항산화',
-    'BRAIN': '두뇌활동',
-    'LIVER': '간 건강',
-    'BLOOD_CIRCULATION': '혈관/혈액순환',
-    'GUT_HEALTH': '장 건강',
-    'RESPIRATORY_HEALTH': '호흡기 건강',
-    'JOINT_HEALTH': '관절 건강',
-    'PREGNANT_HEALTH': '임산부/태아 건강',
-    'BLOOD_SUGAR': '혈당',
-    'THYROID_HEALTH': '갑상선 건강',
-    'WOMAN_HEALTH': '여성 건강',
-    'MAN_HEALTH': '남성 건강',
+    EYE: "눈건강",
+    BONE: "뼈건강",
+    SLEEP_STRESS: "수면/스트레스",
+    CHOLESTEROL: "혈중 콜레스테롤",
+    FAT: "체지방",
+    SKIN: "피부 건강",
+    TIRED: "피로감",
+    IMMUNE: "면역력",
+    DIGEST: "소화/위 건강",
+    ATHELETIC: "운동 능력",
+    CLIMACTERIC: "여성 갱년기",
+    TEETH: "치아/잇몸",
+    HAIR_NAIL: "탈모/손톱 건강",
+    BLOOD_PRESS: "혈압",
+    NEUTRAL_FAT: "혈중 중성지방",
+    ANEMIA: "빈혈",
+    ANTIAGING: "노화/항산화",
+    BRAIN: "두뇌활동",
+    LIVER: "간 건강",
+    BLOOD_CIRCULATION: "혈관/혈액순환",
+    GUT_HEALTH: "장 건강",
+    RESPIRATORY_HEALTH: "호흡기 건강",
+    JOINT_HEALTH: "관절 건강",
+    PREGNANT_HEALTH: "임산부/태아 건강",
+    BLOOD_SUGAR: "혈당",
+    THYROID_HEALTH: "갑상선 건강",
+    WOMAN_HEALTH: "여성 건강",
+    MAN_HEALTH: "남성 건강",
   };
 
   useEffect(() => {
@@ -91,11 +91,10 @@ const PurposeProductList = () => {
 
       console.log("📤 보내는 데이터:", JSON.stringify(payload, null, 2));
 
-
       // --- 👇 API 호출 대신 이 부분을 사용합니다. 👇 ---
       try {
         const mockData = {
-          '루테인': {
+          루테인: {
             purposes: ["눈건강", "수면/스트레스", "피로감"],
             supplements: [
               ["고려은단 비타민c 1000", "lutein.jpg"],
@@ -117,19 +116,19 @@ const PurposeProductList = () => {
               ["루테인17", "lutein.jpg"],
             ],
           },
-          '칼슘2': {
+          칼슘2: {
             purposes: ["뼈건강"],
             supplements: [["제품이름2", "omega3.jpg"]],
           },
-          '성분3_수면': {
+          성분3_수면: {
             purposes: ["수면/스트레스"],
             supplements: [["제품이름3", "omega3.jpg"]],
           },
-          '성분4_혈중콜레스테롤': {
+          성분4_혈중콜레스테롤: {
             purposes: ["혈중콜레스테롤"],
             supplements: [["제품이름4", "omega3.jpg"]],
           },
-          '성분5_체지방': {
+          성분5_체지방: {
             purposes: ["체지방"],
             supplements: [["제품이름5", "omega3.jpg"]],
           },
@@ -149,7 +148,7 @@ const PurposeProductList = () => {
   }, [selectedCodes, activePurpose]); // ✅ activePurpose를 의존성 배열에 추가
 
   // 제목 텍스트 처리
-  let titleText: string | JSX.Element = "";
+  let titleText: string | React.ReactNode = "";
   if (isMobile) {
     titleText =
       selected.length === 1
@@ -176,10 +175,16 @@ const PurposeProductList = () => {
 
   // ✅ 3. renderSections 함수 수정: activePurpose에 따라 정렬
   const renderSections = () => {
-    const translatedCodes = selectedCodes.map((code: string) => purposeCodeMap[code]).filter(Boolean);
-    const filteredData = Object.entries(data).filter(([_ingredientName, info]) => {
-      return info.purposes.some(purpose => translatedCodes.includes(purpose));
-    });
+    const translatedCodes = selectedCodes
+      .map((code: string) => purposeCodeMap[code])
+      .filter(Boolean);
+    const filteredData = Object.entries(data).filter(
+      ([_ingredientName, info]) => {
+        return info.purposes.some((purpose) =>
+          translatedCodes.includes(purpose)
+        );
+      }
+    );
 
     // 선택된 목적에 해당하는 데이터를 최상단으로 옮기는 로직
     const sortedData = [...filteredData].sort(([_, aInfo], [__, bInfo]) => {
@@ -231,7 +236,6 @@ const PurposeProductList = () => {
               rounded-[26px] border-[0.8px] border-[#AAA] text-black
               flex items-center justify-between"
             >
-
               <span>{activePurpose}</span>
               <div className="pointer-events-none absolute top-1/2 right-[8px] transform -translate-y-1/2">
                 <svg
@@ -241,20 +245,25 @@ const PurposeProductList = () => {
                   strokeWidth="2"
                   viewBox="0 0 24 24"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </div>
           </div>
         </div>
 
-        {!isLoading && (
-          renderSections().length > 0 ? (
+        {!isLoading &&
+          (renderSections().length > 0 ? (
             <div className="mt-[20px]">{renderSections()}</div>
           ) : (
-            <p className="mt-[20px] text-center text-gray-500">연관 제품이 없습니다.</p>
-          )
-        )}
+            <p className="mt-[20px] text-center text-gray-500">
+              연관 제품이 없습니다.
+            </p>
+          ))}
       </div>
 
       {/* PC 전용 */}
@@ -265,16 +274,17 @@ const PurposeProductList = () => {
               {titleText}
             </h1>
           </div>
-          {!isLoading && (
-            renderSections().length > 0 ? (
+          {!isLoading &&
+            (renderSections().length > 0 ? (
               <div className="mt-[40px]">{renderSections()}</div>
             ) : (
-              <p className="mt-[60px] text-center text-[20px] text-gray-500">연관 제품이 없습니다.</p>
-            )
-          )}
+              <p className="mt-[60px] text-center text-[20px] text-gray-500">
+                연관 제품이 없습니다.
+              </p>
+            ))}
         </div>
       </div>
-      
+
       {/* 팝업 렌더링. onSelect prop을 추가했습니다. */}
       {isPopupOpen && (
         <P2MDropdownPopup

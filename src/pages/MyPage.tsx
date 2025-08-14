@@ -294,7 +294,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => logout("/social-login")}
+                onClick={() => logout("/login")}
               />
             </div>
           )}

@@ -120,6 +120,7 @@ const ProductList = () => {
       {/* 제품 카드 */}
       <div className="flex overflow-x-auto gap-3">
         <ProductCard
+          id={0} // 현서 수정-또는 map의 index 사용: id={idx}
           imageSrc={Logo}
           name="제품 1"
           widthClass="w-[110px] md:w-[150px]"
@@ -127,6 +128,7 @@ const ProductList = () => {
           fontSizeClass="text-[15px] md:text-[20px]"
         />
         <ProductCard
+          id={0} // 또는 map의 index 사용: id={idx}
           imageSrc={Logo}
           name="제품 2"
           widthClass="w-[110px] md:w-[150px]"
@@ -134,6 +136,7 @@ const ProductList = () => {
           fontSizeClass="text-[15px] md:text-[20px]"
         />
         <ProductCard
+          id={0} // 또는 map의 index 사용: id={idx}
           imageSrc={Logo}
           name="제품 3"
           widthClass="w-[110px] md:w-[150px]"
