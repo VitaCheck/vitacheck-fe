@@ -1,16 +1,34 @@
 // /alarm
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
+
+type DayOfWeek = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
+type Schedule = { dayOfWeek: DayOfWeek; time: string };
+
+type RawSupplement = {
+  notificationRoutineId?: number;
+  id?: number;
+  supplementId?: number;
+  supplementName?: string;
+  name?: string;
+  supplementImageUrl?: string;
+  imageUrl?: string;
+  daysOfWeek?: string[];
+  times?: string[];
+  schedules?: Schedule[];
+  isTaken?: boolean;
+};
 
 type Supplement = {
   notificationRoutineId: number;
   supplementId: number;
   supplementName: string;
-  supplementImageUrl: string;
+  supplementImageUrl?: string;
   daysOfWeek: string[];
   times: string[];
+  isTaken: boolean; // ✅ 서버 진실값
 };
 
 type Props = {
@@ -19,23 +37,84 @@ type Props = {
   today: Date;
   setYear: React.Dispatch<React.SetStateAction<number>>;
   setMonth: React.Dispatch<React.SetStateAction<number>>;
+  // 아래 두 prop은 더 이상 사용하지 않지만, 상위 호환을 위해 유지
   checkedIds: string[];
   toggleChecked: (id: string) => void;
   getDaysInMonth: (year: number, month: number) => number;
 };
 
+const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
+const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
+// util: yyyy-MM-dd (로컬 타임존 기준)
+const fmtYmd = (d: Date) => {
+  const yyyy = d.getFullYear();
+  const mm = String(d.getMonth() + 1).padStart(2, "0");
+  const dd = String(d.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
+};
+
+const normalizeSupplement = (raw: RawSupplement): Supplement => {
+  const notificationRoutineId = Number(
+    raw.notificationRoutineId ?? raw.id ?? 0
+  );
+  const supplementId = Number(raw.supplementId ?? 0);
+  const supplementName = String(raw.supplementName ?? raw.name ?? "알 수 없음");
+  const supplementImageUrl = raw.supplementImageUrl ?? raw.imageUrl;
+
+  let daysOfWeek = Array.isArray(raw.daysOfWeek)
+    ? raw.daysOfWeek.filter(Boolean)
+    : undefined;
+  let times = Array.isArray(raw.times)
+    ? raw.times.filter(Boolean).map(fixTime)
+    : undefined;
+
+  const schedules = Array.isArray(raw.schedules) ? raw.schedules : undefined;
+
+  if ((!daysOfWeek || !daysOfWeek.length) && schedules) {
+    daysOfWeek = uniq(
+      schedules
+        .map((s) => s?.dayOfWeek)
+        .filter((v): v is DayOfWeek => Boolean(v))
+    );
+  }
+  if ((!times || !times.length) && schedules) {
+    times = uniq(schedules.map((s) => fixTime(s?.time)).filter(Boolean));
+  }
+
+  return {
+    notificationRoutineId,
+    supplementId,
+    supplementName,
+    supplementImageUrl,
+    daysOfWeek: daysOfWeek ?? [],
+    times: times ?? [],
+    isTaken: Boolean(raw.isTaken), // ✅ 서버 값 반영
+  };
+};
+
+const formatTimes = (times?: string[]) => {
+  const arr = Array.isArray(times) ? times.map(fixTime).filter(Boolean) : [];
+  if (!arr.length) return "—";
+  if (arr.length <= 3) return arr.join(" | ");
+  return arr.slice(0, 3).join(" | ") + " ...";
+};
+
+// ==== 컴포넌트 ====
 const MobileAlarmPage = ({
   year,
   month,
   today,
   setYear,
   setMonth,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   checkedIds,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   toggleChecked,
   getDaysInMonth,
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -66,25 +145,26 @@ const MobileAlarmPage = ({
   };
 
   const fetchSupplementsByDate = async (date: Date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
-    const formattedDate = `${yyyy}-${mm}-${dd}`;
-
     const res = await axios.get("/api/v1/notifications/routines", {
-      params: { date: formattedDate },
+      params: { date: fmtYmd(date) },
     });
-
-    setSupplements(res.data.result);
+    const listRaw: RawSupplement[] = Array.isArray(res?.data?.result)
+      ? res.data.result
+      : [];
+    setSupplements(listRaw.map(normalizeSupplement));
   };
 
   useEffect(() => {
     fetchSupplementsByDate(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
-  const percentComplete = supplements.length
-    ? Math.round((checkedIds.length / supplements.length) * 100)
-    : 0;
+  // ✅ 서버의 isTaken으로 진행률 계산
+  const percentComplete = useMemo(() => {
+    if (!supplements.length) return 0;
+    const taken = supplements.filter((s) => s.isTaken).length;
+    return Math.round((taken / supplements.length) * 100);
+  }, [supplements]);
 
   const getCatImage = () => {
     if (percentComplete === 100) return "/images/rate3.png";
@@ -92,8 +172,93 @@ const MobileAlarmPage = ({
     return "/images/rate1.png";
   };
 
-  const calendarCells = [];
+  // const handleItemToggle = async (id: number) => {
+  //   if (togglingIds.has(id)) return;
 
+  //   // 낙관적 업데이트: 로컬 isTaken 토글
+  //   setSupplements((prev) =>
+  //     prev.map((s) =>
+  //       s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
+  //     )
+  //   );
+  //   setTogglingIds((prev) => new Set(prev).add(id));
+
+  //   try {
+  //     const res = await axios.post(
+  //       `/api/v1/notifications/records/${id}/toggle`,
+  //       null,
+  //       { params: { date: fmtYmd(selectedDate) } }
+  //     );
+  //     const serverIsTaken = Boolean(res?.data?.result?.isTaken);
+
+  //     // 서버 값으로 확정
+  //     setSupplements((prev) =>
+  //       prev.map((s) =>
+  //         s.notificationRoutineId === id ? { ...s, isTaken: serverIsTaken } : s
+  //       )
+  //     );
+  //   } catch (err) {
+  //     console.error("섭취 토글 실패:", err);
+  //     // 롤백
+  //     setSupplements((prev) =>
+  //       prev.map((s) =>
+  //         s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
+  //       )
+  //     );
+  //     alert("섭취 상태 업데이트에 실패했습니다.");
+  //   } finally {
+  //     setTogglingIds((prev) => {
+  //       const n = new Set(prev);
+  //       n.delete(id);
+  //       return n;
+  //     });
+  //   }
+  // };
+  // ✅ 토글 -> 서버호출 -> 즉시 재조회(동일 date 파라미터)
+  const handleItemToggle = async (id: number) => {
+    if (togglingIds.has(id)) return;
+
+    // 낙관적 토글(원하면 유지, 불안하면 제거)
+    setSupplements((prev) =>
+      prev.map((s) =>
+        s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
+      )
+    );
+    setTogglingIds((prev) => new Set(prev).add(id));
+
+    try {
+      await axios.post(
+        `/api/v1/notifications/records/${id}/toggle`,
+        null,
+        { params: { date: fmtYmd(selectedDate) } } // 🔴 토글에도 date 명시
+      );
+
+      // 🔴 서버 진실값으로 동기화 (같은 date로 재조회)
+      const res = await axios.get("/api/v1/notifications/routines", {
+        params: { date: fmtYmd(selectedDate) },
+      });
+      const listRaw = Array.isArray(res?.data?.result) ? res.data.result : [];
+      setSupplements(listRaw.map(normalizeSupplement)); // (normalizeSupplement는 이전 메시지 코드 사용)
+    } catch (err) {
+      console.error("섭취 토글 실패:", err);
+      // 낙관적 토글 롤백
+      setSupplements((prev) =>
+        prev.map((s) =>
+          s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
+        )
+      );
+      alert("섭취 상태 업데이트에 실패했습니다.");
+    } finally {
+      setTogglingIds((prev) => {
+        const n = new Set(prev);
+        n.delete(id);
+        return n;
+      });
+    }
+  };
+
+  // 캘린더 셀 구성
+  const calendarCells = [];
   for (let i = firstDay - 1; i >= 0; i--) {
     calendarCells.push(
       <div
@@ -104,10 +269,7 @@ const MobileAlarmPage = ({
       </div>
     );
   }
-
-  for (let i = 1; i <= daysInMonth; i++) {
-    // const cellDate = new Date(year, month, i);
-
+  for (let i = 1; i <= getDaysInMonth(year, month); i++) {
     const isToday =
       today.getFullYear() === year &&
       today.getMonth() === month &&
@@ -119,14 +281,9 @@ const MobileAlarmPage = ({
 
     let className =
       "w-8 h-8 flex items-center justify-center text-sm cursor-pointer select-none rounded-full transition-all ";
-
-    if (isSelected) {
-      className += "bg-[#FFDB67] text-black font-semibold";
-    } else if (isToday) {
-      className += "bg-[#E7E7E7] text-black font-semibold";
-    } else {
-      className += "text-gray-800";
-    }
+    if (isSelected) className += "bg-[#FFDB67] text-black font-semibold";
+    else if (isToday) className += "bg-[#E7E7E7] text-black font-semibold";
+    else className += "text-gray-800";
 
     calendarCells.push(
       <div
@@ -138,7 +295,6 @@ const MobileAlarmPage = ({
       </div>
     );
   }
-
   while (calendarCells.length < 42) {
     calendarCells.push(
       <div
@@ -153,6 +309,7 @@ const MobileAlarmPage = ({
   return (
     <div className="md:hidden p-4 space-y-4">
       <h2 className="font-semibold text-[30px]">섭취 알림</h2>
+
       {supplements.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-2 py-4 rounded-lg bg-[#F4F4F4]">
           <span className="text-[20px] font-medium text-black">
@@ -219,99 +376,48 @@ const MobileAlarmPage = ({
       <div className="text-lg font-semibold">💊 나의 영양제</div>
 
       <div className="grid grid-cols-1 gap-4">
-        {/* {supplements.map(({ notificationRoutineId, supplementName, times }) => {
-          const isChecked = checkedIds.includes(
-            notificationRoutineId.toString()
-          );
-          return (
-            <div
-              key={notificationRoutineId}
-              className={`flex items-center justify-between px-4 py-4 rounded-2xl transition-colors ${
-                isChecked ? "bg-gray-100" : "bg-white border border-gray-300"
-              }`}
-            >
-              <div className="flex flex-col">
-                <span className="text-base font-semibold">
-                  {supplementName}
-                </span>
-                <span className="text-gray-500 text-sm">
-                  {times.join(" | ")}
-                </span>
-              </div>
+        {supplements.map(
+          ({ notificationRoutineId, supplementName, times, isTaken }) => {
+            const toggling = togglingIds.has(notificationRoutineId);
 
-              <label className="relative cursor-pointer w-5 h-5">
-                <input
-                  type="checkbox"
-                  id={notificationRoutineId.toString()}
-                  checked={isChecked}
-                  onChange={() =>
-                    toggleChecked(notificationRoutineId.toString())
-                  }
-                  className="sr-only peer"
-                />
-                <div
-                  className="w-5 h-5 rounded-sm border border-gray-400 
-             peer-checked:bg-[#FFC200] peer-checked:border-none 
-             flex items-center justify-center"
-                >
-                  <svg
-                    className="w-3 h-3 text-white hidden peer-checked:block"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 00-1.414 0L8 12.586 4.707 9.293a1 1 0 00-1.414 1.414l4 4a1 1 0 001.414 0l8-8a1 1 0 000-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </label>
-            </div>
-          );
-        })} */}
-        {supplements.map(({ notificationRoutineId, supplementName, times }) => {
-          const isChecked = checkedIds.includes(
-            notificationRoutineId.toString()
-          );
-
-          return (
-            <div
-              key={notificationRoutineId}
-              onClick={() => toggleChecked(notificationRoutineId.toString())}
-              className={`w-full h-[86px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
-                isChecked
-                  ? "bg-[#FFF8DC] border-none"
-                  : "bg-white border-[#9C9A9A]"
-              }`}
-            >
-              {/* 텍스트 영역 */}
-              <div className="flex flex-col">
-                <span className="text-[20px] font-semibold text-black">
-                  {supplementName}
-                </span>
-                <span className="text-[16px] text-[#808080]">
-                  {times.join(" | ")}
-                </span>
-              </div>
-
-              {/* 체크박스 */}
+            return (
               <div
-                className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
-                  isChecked ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
-                }`}
+                key={notificationRoutineId}
+                onClick={() => handleItemToggle(notificationRoutineId)}
+                className={`w-full h-[86px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
+                  isTaken
+                    ? "bg-[#FFF8DC] border-none"
+                    : "bg-white border-[#9C9A9A]"
+                } ${toggling ? "opacity-60 pointer-events-none" : ""}`}
               >
-                {isChecked && (
-                  <img
-                    src="/images/check.svg"
-                    alt="체크됨"
-                    className="w-[24px] h-[18px]"
-                  />
-                )}
+                {/* 텍스트 영역 */}
+                <div className="flex flex-col">
+                  <span className="text-[20px] font-semibold text-black">
+                    {supplementName}
+                  </span>
+                  <span className="text-[16px] text-[#808080]">
+                    {formatTimes(times)}
+                  </span>
+                </div>
+
+                {/* 체크박스 */}
+                <div
+                  className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
+                    isTaken ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
+                  }`}
+                >
+                  {isTaken && (
+                    <img
+                      src="/images/check.svg"
+                      alt="체크됨"
+                      className="w-[24px] h-[18px]"
+                    />
+                  )}
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          }
+        )}
       </div>
     </div>
   );

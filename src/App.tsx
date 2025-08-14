@@ -6,7 +6,6 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 // 페이지 컴포넌트
 import NotFoundPage from "./pages/NotFoundPage"; // 404 페이지
 import MainPage from "./pages/MainPage"; // 메인 페이지
-import SignInPage from "./pages/SignInPage"; // (예비) 기존 로그인 페이지
 import ObjectPage from "./pages/purpose/ObjectPage"; // 목적별 페이지
 import IngredientPage from "./pages/IngredientPage"; // 원료 목록 페이지
 import CombinationPage from "./pages/combination/CombinationPage"; // 조합 페이지
@@ -99,7 +98,10 @@ const router = createBrowserRouter([
       { path: "alarm", element: <AlarmPage /> },
       { path: "alarm/settings", element: <AlarmSettingsPage /> },
       { path: "alarm/settings/add", element: <DesktopAlarmAddPage /> },
-      { path: "alarm/settings/add/search", element: <DesktopAlarmAddToSearchPage /> },
+      {
+        path: "alarm/settings/add/search",
+        element: <DesktopAlarmAddToSearchPage />,
+      },
       { path: "alarm/settings/edit/:id", element: <DesktopAlarmEditPage /> },
 
       // 마이/스크랩/검색/설정
@@ -125,7 +127,10 @@ const router = createBrowserRouter([
       { path: "/social-signup", element: <SocialSignupForm /> },
 
       // (옵션) 별도 상세 경로 - 필요 시 유지
-      { path: "/ingredients/:ingredientName", element: <IngredientDetailPage /> },
+      {
+        path: "/ingredients/:ingredientName",
+        element: <IngredientDetailPage />,
+      },
     ],
   },
 ]);

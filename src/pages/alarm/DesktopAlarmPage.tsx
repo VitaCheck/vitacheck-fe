@@ -1,27 +1,23 @@
 // alarm
-
-import { useState, useEffect, type Dispatch, type SetStateAction } from "react";
+import {
+  useState,
+  useEffect,
+  type Dispatch,
+  type SetStateAction,
+  useMemo,
+} from "react";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
-import { useMemo } from "react";
+import type { Supplement } from "@/types/alarm";
+import { dbg, formatTimes, fmtYmd, normalizeSupplement } from "@/utils/alarm";
 
-interface Supplement {
-  notificationRoutineId: number;
-  supplementId: number;
-  supplementName: string;
-  supplementImageUrl: string;
-  daysOfWeek: string[];
-  times: string[];
-  isTaken: boolean; // ✅ 추가
-}
-
+// ==== 컴포넌트 ====
 interface Props {
   year: number;
   month: number;
   setYear: Dispatch<SetStateAction<number>>;
   setMonth: Dispatch<SetStateAction<number>>;
-  // checkedIds: string[];
   toggleChecked: (id: string) => void;
   today: Date;
   getDaysInMonth: (year: number, month: number) => number;
@@ -37,6 +33,7 @@ const DesktopAlarmPage = ({
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
   const [supplements, setSupplements] = useState<Supplement[]>([]);
+  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
   const navigate = useNavigate();
 
   const weekDays = ["일", "월", "화", "수", "목", "금", "토"];
@@ -52,7 +49,6 @@ const DesktopAlarmPage = ({
       setMonth((m) => m - 1);
     }
   };
-
   const onNextMonth = () => {
     if (month === 11) {
       setYear((y) => y + 1);
@@ -61,24 +57,14 @@ const DesktopAlarmPage = ({
       setMonth((m) => m + 1);
     }
   };
-
-  // const percentComplete = (() => {
-  //   if (!Array.isArray(checkedIds) || !Array.isArray(supplements)) return 0;
-  //   if (supplements.length === 0) return 0;
-  //   return Math.round((checkedIds.length / supplements.length) * 100);
-  // })();
+  const onClickDate = (day: number) =>
+    setSelectedDate(new Date(year, month, day));
 
   const percentComplete = useMemo(() => {
-    if (!supplements || supplements.length === 0) return 0;
+    if (!supplements.length) return 0;
     const takenCount = supplements.filter((s) => s.isTaken).length;
     return Math.round((takenCount / supplements.length) * 100);
   }, [supplements]);
-
-  // const getCatImage = () => {
-  //   if (percentComplete === 100) return "/images/rate3.png";
-  //   if (percentComplete > 0) return "/images/rate2.png";
-  //   return "/images/rate1.png";
-  // };
 
   const catImage = useMemo(() => {
     if (percentComplete === 100) return "/images/rate3.png";
@@ -86,56 +72,199 @@ const DesktopAlarmPage = ({
     return "/images/rate1.png";
   }, [percentComplete]);
 
-  const onClickDate = (day: number) => {
-    setSelectedDate(new Date(year, month, day));
-  };
+  // 요일 키 헬퍼
+  const DOW_KEYS: Array<"SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT"> =
+    ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
   const fetchSupplementsByDate = async (date: Date) => {
-    const yyyy = date.getFullYear();
-    const mm = String(date.getMonth() + 1).padStart(2, "0");
-    const dd = String(date.getDate()).padStart(2, "0");
-    const formattedDate = `${yyyy}-${mm}-${dd}`;
-
-    const res = await axios.get("/api/v1/notifications/routines", {
-      params: { date: formattedDate },
-    });
-
-    console.log("📦 영양제 리스트 응답:", res.data);
-    console.log(
-      "🥤 isTaken 체크용:",
-      res.data.result.map((r: any) => ({
-        id: r.notificationRoutineId,
-        isTaken: r.isTaken,
-      }))
-    );
-    setSupplements(res.data.result);
-  };
-
-  const toggleSupplementTaken = async (notificationRoutineId: number) => {
+    const ymd = fmtYmd(date);
+    const dowKey = DOW_KEYS[date.getDay()]; // 선택 날짜의 요일 키
     try {
-      const res = await axios.post(
-        `/api/v1/notifications/records/${notificationRoutineId}/toggle`
+      dbg("GET /routines", { date: ymd, dowKey });
+      const t0 = performance.now();
+      const res = await axios.get("/api/v1/notifications/routines", {
+        params: { date: ymd },
+      });
+      dbg(
+        "GET status/time",
+        res?.status,
+        `${Math.round(performance.now() - t0)}ms`
       );
 
-      const { isTaken } = res.data.result;
+      // 다양한 래퍼 대응 (result / data / content / items ...)
+      let listRaw: any[] = [];
+      const body = res?.data;
+      if (Array.isArray(body?.result)) listRaw = body.result;
+      else if (Array.isArray(body)) listRaw = body;
+      else if (Array.isArray(body?.data)) listRaw = body.data;
+      else if (Array.isArray(body?.result?.content))
+        listRaw = body.result.content;
+      else if (Array.isArray(body?.content)) listRaw = body.content;
+      else if (Array.isArray(body?.items)) listRaw = body.items;
 
-      // 현재 상태 업데이트 (옵셔널)
-      setSupplements((prev) =>
-        prev.map((s) =>
-          s.notificationRoutineId === notificationRoutineId
-            ? { ...s, isTaken }
-            : s
-        )
-      );
-    } catch (error) {
-      console.error("섭취 토글 실패:", error);
+      // 선택 요일에 해당하는 루틴만 남김
+      const filteredRaw = listRaw.filter((x) => {
+        const days = Array.isArray(x?.daysOfWeek)
+          ? x.daysOfWeek
+          : Array.isArray(x?.schedules)
+            ? x.schedules.map((s: any) => s?.dayOfWeek).filter(Boolean)
+            : [];
+
+        // days 정보가 없으면(매일/상시로 간주) 보여주고, 있으면 해당 요일만
+        return days.length === 0 ? true : days.includes(dowKey);
+      });
+
+      // times도 선택 요일 기준으로만 추출
+      const toTimesForDay = (x: any): string[] => {
+        if (Array.isArray(x?.times)) return x.times;
+        if (Array.isArray(x?.schedules)) {
+          return x.schedules
+            .filter((s: any) => s?.dayOfWeek === dowKey)
+            .map((s: any) => s?.time)
+            .filter((t: any) => typeof t === "string");
+        }
+        return [];
+      };
+
+      const normalized = filteredRaw.map((x) => {
+        const id =
+          x.notificationRoutineId ??
+          x.routineId ??
+          x.id ??
+          x.notificationId ??
+          0;
+
+        const isTaken =
+          typeof x.isTaken === "boolean"
+            ? x.isTaken
+            : typeof x.taken === "boolean"
+              ? x.taken
+              : false;
+
+        return {
+          notificationRoutineId: id,
+          supplementName: x.supplementName ?? x.name ?? "이름없음",
+          times: toTimesForDay(x),
+          isTaken,
+        } as Supplement;
+      });
+
+      setSupplements(normalized);
+    } catch (e) {
+      dbg("GET ERROR", e);
+      setSupplements([]);
     }
   };
 
+  // // GET: 해당 날짜 루틴 조회 (핵심 로그만)
+  // const fetchSupplementsByDate = async (date: Date) => {
+  //   const ymd = fmtYmd(date);
+  //   try {
+  //     dbg("GET /routines", { date: ymd });
+  //     const t0 = performance.now();
+  //     const res = await axios.get("/api/v1/notifications/routines", {
+  //       params: { date: ymd },
+  //     });
+  //     dbg(
+  //       "GET status/time",
+  //       res?.status,
+  //       `${Math.round(performance.now() - t0)}ms`
+  //     );
+
+  //     const listRaw: any[] = Array.isArray(res?.data?.result)
+  //       ? res.data.result
+  //       : [];
+  //     if (listRaw.length) {
+  //       // 서버 필드 현황 확인용(최소)
+  //       dbg("sample raw", {
+  //         keys: Object.keys(listRaw[0]),
+  //         taken: listRaw[0]?.taken,
+  //         isTaken: listRaw[0]?.isTaken,
+  //       });
+  //     }
+  //     setSupplements(listRaw.map(normalizeSupplement));
+  //   } catch (e) {
+  //     dbg("GET ERROR", e);
+  //   }
+  // };
+
+  // 최초/날짜 변경 시 조회
   useEffect(() => {
+    dbg("selectedDate →", fmtYmd(selectedDate));
     fetchSupplementsByDate(selectedDate);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
+  // POST: 섭취 토글 (핵심 로그만)
+  const toggleSupplementTaken = async (notificationRoutineId: number) => {
+    if (togglingIds.has(notificationRoutineId)) return;
+
+    const ymd = fmtYmd(selectedDate);
+    const before = supplements.find(
+      (s) => s.notificationRoutineId === notificationRoutineId
+    );
+    dbg("TOGGLE start", {
+      id: notificationRoutineId,
+      date: ymd,
+      beforeIsTaken: before?.isTaken,
+    });
+
+    // 낙관적 업데이트
+    setSupplements((prev) =>
+      prev.map((s) =>
+        s.notificationRoutineId === notificationRoutineId
+          ? { ...s, isTaken: !s.isTaken }
+          : s
+      )
+    );
+    setTogglingIds((prev) => new Set(prev).add(notificationRoutineId));
+
+    try {
+      const url = `/api/v1/notifications/records/${notificationRoutineId}/toggle?date=${ymd}`;
+      const t0 = performance.now();
+      const res = await axios.post(url);
+      dbg(
+        "TOGGLE status/time",
+        res?.status,
+        `${Math.round(performance.now() - t0)}ms`
+      );
+
+      const serverIsTaken = res?.data?.result?.isTaken;
+      dbg("TOGGLE serverIsTaken", serverIsTaken);
+
+      if (typeof serverIsTaken === "boolean") {
+        setSupplements((prev) =>
+          prev.map((s) =>
+            s.notificationRoutineId === notificationRoutineId
+              ? { ...s, isTaken: serverIsTaken }
+              : s
+          )
+        );
+      } else {
+        // 서버가 명시 안 주면 같은 날짜 재조회
+        await fetchSupplementsByDate(selectedDate);
+      }
+    } catch (error) {
+      dbg("TOGGLE ERROR", error);
+      // 롤백
+      setSupplements((prev) =>
+        prev.map((s) =>
+          s.notificationRoutineId === notificationRoutineId
+            ? { ...s, isTaken: !s.isTaken }
+            : s
+        )
+      );
+      alert("섭취 상태 업데이트에 실패했습니다.");
+    } finally {
+      setTogglingIds((prev) => {
+        const n = new Set(prev);
+        n.delete(notificationRoutineId);
+        return n;
+      });
+    }
+  };
+
+  // 캘린더 셀
   const calendarCells = [];
   for (let i = firstDay - 1; i >= 0; i--) {
     calendarCells.push(
@@ -147,13 +276,11 @@ const DesktopAlarmPage = ({
       </div>
     );
   }
-
   for (let i = 1; i <= daysInMonth; i++) {
     const isToday =
       today.getFullYear() === year &&
       today.getMonth() === month &&
       today.getDate() === i;
-
     const isSelected =
       selectedDate.getFullYear() === year &&
       selectedDate.getMonth() === month &&
@@ -161,14 +288,9 @@ const DesktopAlarmPage = ({
 
     let cellClass =
       "w-[54px] h-[54px] flex items-center justify-center text-[25px] cursor-pointer select-none rounded-full transition-all duration-200 ";
-
-    if (isSelected) {
-      cellClass += "bg-[#FFDB67] font-semibold text-black";
-    } else if (isToday) {
-      cellClass += "bg-[#E7E7E7] text-black font-semibold";
-    } else {
-      cellClass += "text-black";
-    }
+    if (isSelected) cellClass += "bg-[#FFDB67] font-semibold text-black";
+    else if (isToday) cellClass += "bg-[#E7E7E7] text-black font-semibold";
+    else cellClass += "text-black";
 
     calendarCells.push(
       <div
@@ -226,6 +348,7 @@ const DesktopAlarmPage = ({
             나의 영양제 관리
           </button>
         </div>
+
         <div className="flex items-center justify-center">
           {supplements.length === 0 ? (
             <div className="w-full max-w-md h-[104px] flex items-center justify-center rounded-xl bg-[#F4F4F4]">
@@ -252,40 +375,43 @@ const DesktopAlarmPage = ({
 
         <div className="space-y-4">
           {supplements.map(
-            ({ notificationRoutineId, supplementName, times, isTaken }) => (
-              <div
-                key={notificationRoutineId}
-                onClick={() => toggleSupplementTaken(notificationRoutineId)}
-                className={`w-[454px] h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border border-[#9C9A9A] cursor-pointer transition ${
-                  isTaken ? "bg-[#FFF8DC] border-none" : "bg-white"
-                }`}
-              >
-                {/* 텍스트 영역 */}
-                <div className="flex flex-col">
-                  <span className="text-[20px] font-semibold text-black">
-                    {supplementName}
-                  </span>
-                  <span className="text-[16px] text-[#808080]">
-                    {times.join(" | ")}
-                  </span>
-                </div>
-
-                {/* 체크박스 */}
+            ({ notificationRoutineId, supplementName, times, isTaken }) => {
+              const toggling = togglingIds.has(notificationRoutineId);
+              return (
                 <div
-                  className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
-                    isTaken ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
-                  }`}
+                  key={notificationRoutineId}
+                  onClick={() => toggleSupplementTaken(notificationRoutineId)}
+                  className={`w-[454px] h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
+                    isTaken
+                      ? "bg-[#FFF8DC] border-none border-transparent"
+                      : "bg-white border-[#9C9A9A]"
+                  } ${toggling ? "opacity-60 pointer-events-none" : ""}`}
                 >
-                  {isTaken && (
-                    <img
-                      src="/images/check.svg"
-                      alt="체크됨"
-                      className="w-[24px] h-[18px]"
-                    />
-                  )}
+                  <div className="flex flex-col">
+                    <span className="text-[20px] font-semibold text-black">
+                      {supplementName}
+                    </span>
+                    <span className="text-[16px] text-[#808080]">
+                      {formatTimes(times)}
+                    </span>
+                  </div>
+
+                  <div
+                    className={`w-[28px] h-[28px] rounded-[6px] border flex items-center justify-center ${
+                      isTaken ? "bg-[#FFC200] border-none" : "border-[#D9D9D9]"
+                    }`}
+                  >
+                    {isTaken && (
+                      <img
+                        src="/images/check.svg"
+                        alt="체크됨"
+                        className="w-[24px] h-[18px]"
+                      />
+                    )}
+                  </div>
                 </div>
-              </div>
-            )
+              );
+            }
           )}
         </div>
       </div>
