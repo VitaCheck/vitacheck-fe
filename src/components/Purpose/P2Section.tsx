@@ -40,9 +40,10 @@ const RecommendedProductSection = ({
         (item: [string, string], idx: number) => ({
           id: idx + 1,
           title: item[0],
-          imageUrl: `/images/${item[1]}`,
+          imageUrl: item[1].startsWith("http") ? item[1] : `/images/${item[1]}`,
         })
       );
+
       setProducts(mappedProducts.slice(0, maxItems));
       setCurrentPage(0);
     }

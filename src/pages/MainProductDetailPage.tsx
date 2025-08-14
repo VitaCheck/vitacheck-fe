@@ -1,14 +1,27 @@
-// src/pages/ProductDetailPage.tsx
-
 import { useParams, useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import axios from "@/lib/axios";
+import axios from "@/lib/axios"; // 설정된 axios 인스턴스 사용
 import MainDetailPageMobile from "@/components/Purpose/P3MMainDetailPage";
 import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
 import ShareModal from "@/components/Purpose/P3DShareModal";
+import LoginPromptModal from "@/components/Purpose/LoginPromptModal";
+
+// API 응답과 컴포넌트 내부에서 사용할 타입 정의
+interface ApiProduct {
+  supplementId: number;
+  brandName: string;
+  brandImageUrl: string | null;
+  supplementName: string;
+  supplementImageUrl: string;
+  liked: boolean;
+  coupangLink: string | null;
+  intakeTime: string;
+  ingredients: string[];
+  brandId: number;
+}
 
 interface Product {
-  supplementId: number;
+  id: number;
   brandName: string;
   brandImageUrl: string | null;
   supplementName: string;
@@ -26,20 +39,15 @@ interface BrandProduct {
   imageUrl: string;
 }
 
-const AUTH_TOKEN = import.meta.env.VITE_AUTH_TOKEN;
-
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const [product, setProduct] = useState<Product | null>(null);
   const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">(
-    "ingredient"
-  );
-  const [liked, setLiked] = useState(false);
-  const [showButton, setShowButton] = useState(true);
+  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const location = useLocation();
-  const [isModalOpen, setIsModalOpen] = useState(false); // 모달 상태 추가
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -51,110 +59,83 @@ const ProductDetailPage = () => {
       return;
     }
 
-    const fetchBrandProducts = async (idToFetch: number) => {
-      try {
-        const brandResponse = await axios.get(
-          `http://vita-check.com/api/v1/supplements/brand`,
-          {
-            params: { id: idToFetch },
-            headers: {
-              accept: "*/*",
-            },
-          }
-        );
-
-        if (brandResponse.status === 200) {
-          setBrandProducts(brandResponse.data.supplements);
-        } else {
-          setBrandProducts([]);
-        }
-      } catch (error) {
-        console.error("브랜드 제품 목록을 불러오는데 실패했습니다:", error);
-        setBrandProducts([]);
-      }
-    };
-
-    const fetchProduct = async () => {
+    const fetchProductAndBrandDetails = async () => {
       setIsLoading(true);
+      const accessToken = localStorage.getItem('accessToken');
+
       try {
-        const response = await axios.get(
-          `http://vita-check.com/api/v1/supplements`,
-          {
-            params: { id },
-            headers: {
-              "X-User-Id": 987,
-              Authorization: `Bearer ${AUTH_TOKEN}`,
-            },
-          }
+        const productResponse = await axios.get<ApiProduct>(`/api/v1/supplements`, {
+          params: { id },
+          headers: {
+            Authorization: accessToken ? `Bearer ${accessToken}` : "",
+          },
+        });
+        
+        console.log("--- 페이지 로드 시 서버가 직접 보내준 데이터 ---", productResponse.data);
+        const fetchedProduct = productResponse.data;
+        const mappedProduct: Product = {
+            id: fetchedProduct.supplementId,
+            ...fetchedProduct
+        };
+        setProduct(mappedProduct);
+        
+        console.log("✅ 제품 상세 정보 로드 성공", fetchedProduct);
+
+        // 브랜드 제품 목록 요청
+        const brandIdToFetch = fetchedProduct.brandId || fetchedProduct.supplementId;
+        const brandResponse = await axios.get<{ supplements: BrandProduct[] }>(
+          `/api/v1/supplements/brand`, { params: { id: brandIdToFetch } }
         );
+        setBrandProducts(brandResponse.data.supplements);
 
-        if (response.status === 200) {
-          console.log("제품 상세 페이지 데이터:", response.data);
-          const productData = response.data;
-          setProduct(productData);
-          setLiked(productData.liked);
-
-          const brandIdOrSupplementId =
-            productData.brandId || productData.supplementId;
-          fetchBrandProducts(brandIdOrSupplementId);
-        } else {
-          setProduct(null);
-        }
       } catch (error) {
-        console.error("제품 정보를 불러오는데 실패했습니다:", error);
+        console.error("❌ 제품 정보를 불러오는데 실패했습니다:", error);
         setProduct(null);
       } finally {
         setIsLoading(false);
       }
     };
 
-    fetchProduct();
+    fetchProductAndBrandDetails();
   }, [id]);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      const currentY = window.scrollY;
-      setShowButton(currentY < 150);
-    };
-
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
-
   const toggleLike = async () => {
-    if (!product) {
-      console.error("제품 정보가 없어 좋아요를 누를 수 없습니다.");
-      return;
-    }
-    const supplementId = product.supplementId;
-    const newLikedState = !liked;
+    if (!product) return;
 
-    setLiked(newLikedState);
+    const accessToken = localStorage.getItem('accessToken');
+    console.log("--- 찜 버튼 클릭 시점 ---");
+    console.log("[1] localStorage에서 'accessToken'을 찾습니다...");
+    console.log(`[2] 찾은 토큰 값:`, accessToken);
+
+    // [핵심] 1. 로그인 여부 확인
+    if (!accessToken) {
+      // 로그인이 안 되어 있으면 로그인 안내 모달 표시
+      console.log("❌ [3] 토큰이 없으므로 로그인 안내 모달을 켭니다.");
+      setIsLoginModalOpen(true);
+      return; // API 요청 중단
+    }
+
+    // [핵심] 2. 로그인 상태라면 찜 API 요청
+    console.log("✅ [3] 토큰이 있으므로 찜하기 API를 호출합니다.");
+    const newLikedState = !product.liked;
+
+    // UI 즉시 업데이트 (Optimistic Update)
+    setProduct(prev => prev ? { ...prev, liked: newLikedState } : null);
 
     try {
-      await axios.post(
-        `http://vita-check.com/api/v1/supplements/${supplementId}/like`,
-        {},
-        {
-          headers: {
-            Authorization: `Bearer ${AUTH_TOKEN}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      if (newLikedState) {
-        console.log("찜한 상태로 요청되었습니다.");
-      } else {
-        console.log("찜을 취소했습니다.");
-      }
+      await axios.post(`/api/v1/supplements/${product.id}/like`, {}, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+      });
+      console.log(`✅ 찜 상태 서버 업데이트 성공: ${newLikedState}`);
     } catch (error) {
-      console.error("좋아요 상태 업데이트에 실패했습니다:", error);
-      setLiked(!newLikedState);
+      console.error("❌ 찜 상태 업데이트 실패:", error);
+      // 실패 시 UI 원상 복구
+      setProduct(prev => prev ? { ...prev, liked: !newLikedState } : null);
     }
   };
 
-  // URL 복사 로직 추가
   const handleCopyUrl = async () => {
     try {
       await navigator.clipboard.writeText(window.location.href);
@@ -164,14 +145,11 @@ const ProductDetailPage = () => {
     }
   };
 
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
+  const handleCloseModal = () => setIsModalOpen(false);
+  const handleCloseLoginModal = () => setIsLoginModalOpen(false);
 
   if (isLoading) {
-    return (
-      <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>
-    );
+    return <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>;
   }
 
   if (!product) {
@@ -186,27 +164,27 @@ const ProductDetailPage = () => {
     <>
       <MainDetailPageMobile
         product={product}
-        liked={liked}
+        liked={product.liked}
         toggleLike={toggleLike}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        showButton={showButton}
+        showButton={true} // 스크롤 관련 로직은 일단 제거
         brandProducts={brandProducts}
-        brandId={product.brandId ?? product.supplementId}
+        brandId={product.brandId ?? product.id}
       />
       <MainDetailPageDesktop
         product={product}
-        liked={liked}
+        liked={product.liked}
         toggleLike={toggleLike}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         brandProducts={brandProducts}
-        brandId={product.brandId ?? product.supplementId}
+        brandId={product.brandId ?? product.id}
         onCopyUrl={handleCopyUrl}
       />
 
-      {/* 최상위 컴포넌트에서 모달을 렌더링 */}
       <ShareModal isOpen={isModalOpen} onClose={handleCloseModal} />
+      <LoginPromptModal isOpen={isLoginModalOpen} onClose={handleCloseLoginModal} />
     </>
   );
 };
