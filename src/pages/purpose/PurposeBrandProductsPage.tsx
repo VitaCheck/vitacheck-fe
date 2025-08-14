@@ -21,6 +21,12 @@ const PurposeBrandProducts = () => {
   const [products, setProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+
+  useEffect(() => {
+    // URL에서 가져온 브랜드 이름을 콘솔에 출력하는 코드
+    console.log("현재 브랜드 이름:", brand);
+  }, [brand]);
+
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
@@ -36,7 +42,7 @@ const PurposeBrandProducts = () => {
     const fetchBrandProducts = async () => {
       setIsLoading(true);
       try {
-        const brandResponse = await axios.get(`http://3.35.50.61:8080/api/v1/supplements/brand`, {
+        const brandResponse = await axios.get(`http://vita-check.com/api/v1/supplements/brand`, {
           params: { id: brandId },
           headers: {
             'accept': '*/*',

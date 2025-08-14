@@ -36,6 +36,11 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
   const handlePrevPage = () => {
     setCurrentPage((prev) => prev - 1);
   };
+
+  const navigateToBrandProducts = () => {
+    const encodedBrandName = encodeURIComponent(brandName);
+    navigate(`/brandproducts?brand=${encodedBrandName}&id=${brandId}`);
+  };
   
   return (
     <>
@@ -57,7 +62,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
             <span className="text-[20px] tracking-[-0.4px] font-medium">{brandName}</span>
           </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brandName}&id=${brandId}`)}
+            onClick={navigateToBrandProducts}
             className="w-[80px] h-[30px] bg-[#EEEEEE] rounded-[20px]
                        flex justify-center items-center cursor-pointer"
           >
@@ -113,7 +118,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
             <span className="text-[22px] tracking-[-0.5px] font-medium">{brandName}</span>
           </div>
           <button
-            onClick={() => navigate(`/brandproducts?brand=${brandName}&id=${brandId}`)}
+            onClick={navigateToBrandProducts}
               className="w-[74px] h-[20px] flex items-center justify-between cursor-pointer"
             >
               <span className="text-[16px] text-[#6B6B6B] font-medium">전체보기</span>
