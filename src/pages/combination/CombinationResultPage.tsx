@@ -100,6 +100,47 @@ export default function CombinationResultPage() {
        isOverUpperLimit,
      };
   }
+// 모든 게이지에서 공통 점선 위치(디자인 기준)
+const REC_LINE_POS = 45;   // 권장선 45%
+const UPPER_LINE_POS = 80; // 상한선 80%
+
+// per-item으로 채워질 길이(%) 계산: 권장/상한에 맞춰 자연스러운 길이
+function computeFillPercent(ing: IngredientResult) {
+  const total = ing.totalAmount ?? 0;
+  const rec   = ing.recommendedAmount ?? null;
+  const upper = ing.upperAmount ?? null;
+
+  if (upper && upper > 0) {
+    if (rec && rec > 0) {
+      if (total <= rec) {
+        const r = total / rec;
+        return Math.max(0, Math.min(100, r * REC_LINE_POS));
+      }
+      if (total <= upper) {
+        const r = (total - rec) / Math.max(upper - rec, 1e-6);
+        return Math.max(0, Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS)));
+      }
+      return 100; // 상한 초과는 100%로 캡
+    }
+    // 권장 없음: 0~upper → 0~UPPER_LINE_POS
+    const r = total / upper;
+    return Math.max(0, Math.min(100, r <= 1 ? r * UPPER_LINE_POS : 100));
+  }
+
+  if (rec && rec > 0) {
+    const r = total / rec;
+    return Math.max(0, Math.min(100, r <= 1 ? r * REC_LINE_POS : 100));
+  }
+
+  // 권장/상한 둘 다 없으면 살짝만 표시
+  return Math.min(REC_LINE_POS, total > 0 ? REC_LINE_POS * 0.7 : 0);
+}
+
+function isOverUpper(ing: IngredientResult) {
+  const total = ing.totalAmount ?? 0;
+  const upper = ing.upperAmount ?? null;
+  return !!(upper && upper > 0 && total > upper);
+}
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -523,7 +564,7 @@ export default function CombinationResultPage() {
       {/* 모바일 섭취알림 버튼 */}
       <div className="md:hidden mt-4 flex justify-center">
         <button
-          onClick={() => navigate("/알림-편집-1")}
+          onClick={() => navigate("/alarm/settings")}
           className="w-[370px] h-[54px] bg-[#FFEB9D] rounded-[14px] flex justify-center items-center mt-2"
         >
           <span className="text-[20px] font-medium">섭취알림 등록하기 →</span>
@@ -662,130 +703,78 @@ export default function CombinationResultPage() {
              {/* 모바일 섭취량 그래프 */}
        {filteredIngredients && filteredIngredients.length > 0 ? (
          <div className="md:hidden space-y-4 px-2 ml-5 ">
-          {/* 권장/상한 라벨 - 한 번만 표시 */}
-          <div className="relative w-[370px] h-[20px] mt-3 mb-1 ml-8">
-            {filteredIngredients[0] && (() => {
-              const firstIngredient = filteredIngredients[0];
-              const {
-                recPct,
-                upperPct,
-              } = calcGauge(firstIngredient);
-              
-              return (
-                <>
-                  {recPct != null && (
-                    <span
-                      className={`absolute text-[16px] font-medium text-[#000000] font-pretendard`}
-                      style={{ 
-                        left: `calc(${recPct}% + 28px)`,
-                        top: '0px',
-                        zIndex: 10
-                      }}
-                    >
-                      권장
-                    </span>
-                  )}
-                  {upperPct != null && (
-                    <span
-                      className={`absolute text-[16px] font-medium text-[#000000] font-pretendard`}
-                      style={{ 
-                        left: `calc(${upperPct}% - 10px)`,
-                        top: '0px',
-                        zIndex: 10
-                      }}
-                    >
-                      상한
-                    </span>
-                  )}
-                </>
-              );
-            })()}
-          </div>
+          {/* 권장/상한 라벨 - 공통 위치 */}
+<div className="relative w-[370px] h-[24px] mt-3 mb-1 ml-8">
+  <span
+    className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+    style={{ left: `${REC_LINE_POS}%` }}
+  >권장</span>
+  <span
+    className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+    style={{ left: `${UPPER_LINE_POS}%` }}
+  >상한</span>
+</div>
+
           
-          {filteredIngredients.slice(0, showAllIngredients ? filteredIngredients.length : 5).map((ingredient) => {
-              const { ingredientName } = ingredient;
-              const {
-                widthPct,
-                recPct,
-                upperPct,
-                unit,
-                total,
-                isFallbackGuide,
-                yellowWidth,
-                orangeLeft,
-                orangeWidth,
-                redLeft,
-                redWidth,
-                isOverUpperLimit,
-              } = calcGauge(ingredient);
+{filteredIngredients
+  .slice(0, showAllIngredients ? filteredIngredients.length : 5)
+  .map((ingredient) => {
+    const { ingredientName } = ingredient;
 
-              return (
-                <div
-                  key={ingredientName}
-                  className="flex justify-start items-center w-[370px]"
-                >
-                  {/* 이름 + 꺾쇠 */}
-                  <div
-                    className="flex items-center cursor-pointer w-[120px]"
-                    onClick={() =>
-                      navigate(
-                        `/ingredient?name=${encodeURIComponent(ingredientName)}`
-                      )
-                    }
-                  >
-                     <span className="inline-block text-[18px] font-medium font-pretendard" style={{ lineHeight: "100%", letterSpacing: "-2%" }}>
-                       {ingredientName}
-                     </span>
-                     <img
-                       src={vitaminArrow}
-                       alt="화살표"
-                       className="ml-3 mt-1"
-                       style={{ width: 20, height: 15 }}
-                     />
-                   </div>
+    // ✅ 항목별 채움 비율/초과여부 계산
+    const fillPct = computeFillPercent(ingredient);
+    const over    = isOverUpper(ingredient);
 
-                  {/* 게이지(라벨 포함) */}
-                  <div className="flex-1">
-                    {/* 바 + 가이드선 + 퍼센트/수치 */}
-                    <div className="relative w-[240px] h-[40px] bg-[#EFEFEF] rounded-full">
-                      {/* 노랑(권장 이하) */}
-                      <div
-                        className="absolute h-[40px] bg-[#FFE17E] rounded-full"
-                        style={{ width: `${yellowWidth}%` }}
-                      />
-                      {/* 주황(권장~상한) */}
-                      {orangeWidth > 0 && (
-                        <div
-                          className="absolute h-[40px] bg-[#FFCC66]"
-                          style={{
-                            left: `${orangeLeft}%`,
-                            width: `${orangeWidth}%`,
-                          }}
-                        />
-                      )}
-                      {/* 빨강(상한 초과) */}
-                      {redWidth > 0 && (
-                        <div
-                          className="absolute h-[24px] bg-[#FF7E7E] rounded-r-full"
-                          style={{ left: `${redLeft}%`, width: `${redWidth}%` }}
-                        />
-                      )}
+    return (
+      <div key={ingredientName} className="flex justify-start items-center w-[370px]">
+        {/* 이름 + 꺾쇠 */}
+        <div
+          className="flex items-center cursor-pointer w-[120px]"
+          onClick={() =>
+            navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
+          }
+        >
+          <span
+            className="inline-block text-[18px] font-medium font-pretendard"
+            style={{ lineHeight: "100%", letterSpacing: "-2%" }}
+          >
+            {ingredientName}
+          </span>
+          <img
+            src={vitaminArrow}
+            alt="화살표"
+            className="ml-3 mt-1"
+            style={{ width: 20, height: 15 }}
+          />
+        </div>
 
-                      {/* 가이드/기준선 */}
-                      <div
-                        className="absolute top-0 h-full border-l-2 border-dashed"
-                        style={{ left: `${recPct}%`, borderColor: "#000000" }}
-                      />
-                      <div
-                        className="absolute top-0 h-full border-l-2 border-dashed"
-                        style={{ left: `${upperPct}%`, borderColor: "#000000" }}
-                      />
-                    </div>
-                  </div>
-                </div>
-              );
-            }
-          )}
+        {/* 게이지 (공통 점선 + 단색 채움) */}
+        <div className="flex-1">
+          <div className="relative w-[240px] h-[40px] bg-[#EFEFEF] rounded-full overflow-hidden">
+            {/* 채워진 막대: 상한 이하 노랑 / 초과 시 전체 빨강 */}
+            <div
+              className="absolute top-0 left-0 h-full rounded-full"
+              style={{
+                width: `${fillPct}%`,
+                background: over ? "#FF7E7E" : "#FFE17E",
+              }}
+            />
+
+            {/* 권장/상한 점선: 전 항목 공통 위치 */}
+            <div
+              className="absolute top-0 h-full border-l-2 border-dashed z-10"
+              style={{ left: `${REC_LINE_POS}%`, borderColor: "#000000" }}
+            />
+            <div
+              className="absolute top-0 h-full border-l-2 border-dashed z-10"
+              style={{ left: `${UPPER_LINE_POS}%`, borderColor: "#000000" }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  })}
+
           
           {/* 모바일 더보기 버튼 */}
           {filteredIngredients.length > 5 && !showAllIngredients && (
@@ -832,118 +821,72 @@ export default function CombinationResultPage() {
   <div className="hidden md:block w-full">
     {/* 상단 라벨: 이름 칼럼 폭과 정렬을 맞추기 위해 동일한 그리드 사용 */}
     <div className="grid grid-cols-[200px_1fr] items-center gap-6 w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-5">
-      <div /> {/* 이름 영역과 정렬 맞춤용 빈 칸 */}
-      <div className="relative h-6">
-        {(() => {
-          const first = filteredIngredients[0];
-          const { recPct, upperPct } = calcGauge(first);
-          return (
-            <>
-              {recPct != null && (
-                <span
-                  className="absolute text-[18px] lg:text-[20px] font-medium text-black font-pretendard"
-                  style={{ left: `calc(${recPct}% + 12px)` }}
-                >
-                  권장
-                </span>
-              )}
-              {upperPct != null && (
-                <span
-                  className="absolute text-[18px] lg:text-[20px] font-medium text-black font-pretendard"
-                  style={{ left: `calc(${upperPct}% + 12px)` }}
-                >
-                  상한
-                </span>
-              )}
-            </>
-          );
-        })()}
-      </div>
-    </div>
+  <div />
+  <div className="relative h-6">
+    <span
+      className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+      style={{ left: `${REC_LINE_POS}%` }}
+    >
+      권장
+    </span>
+    <span
+      className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+      style={{ left: `${UPPER_LINE_POS}%` }}
+    >
+      상한
+    </span>
+  </div>
+</div>
+
 
     {/* 게이지 리스트 */}
     <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-2 space-y-5">
-      {filteredIngredients
-        .slice(0, showAllIngredients ? filteredIngredients.length : 5)
-        .map((ingredient) => {
-          const { ingredientName } = ingredient;
-          const {
-            widthPct,
-            recPct,
-            upperPct,
-            unit,
-            total,
-            isFallbackGuide,
-            yellowWidth,
-            orangeLeft,
-            orangeWidth,
-            redLeft,
-            redWidth,
-          } = calcGauge(ingredient);
+    {filteredIngredients
+  .slice(0, showAllIngredients ? filteredIngredients.length : 5)
+  .map((ingredient) => {
+    const { ingredientName } = ingredient;
 
-          return (
+    // ✅ 항목별 채움 비율/초과여부
+    const fillPct = computeFillPercent(ingredient);
+    const over    = isOverUpper(ingredient);
+
+    return (
+      <div key={ingredientName} className="grid grid-cols-[200px_1fr] items-center gap-6 w-full">
+        {/* 이름 + 꺾쇠 */}
+        <div
+          className="flex items-center h-[48px] cursor-pointer"
+          onClick={() =>
+            navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
+          }
+        >
+          <span className="text-[20px] lg:text-[24px] font-medium">{ingredientName}</span>
+          <img src={vitaminArrow} alt="화살표" className="ml-3 mt-1" style={{ width: 25, height: 20 }} />
+        </div>
+
+        {/* 게이지(공통 점선 + 단색 채움) */}
+        <div className="relative w-full">
+          <div className="relative w-full h-[48px] lg:h-[56px] bg-[#EFEFEF] rounded-full overflow-hidden">
             <div
-              key={ingredientName}
-              className="grid grid-cols-[200px_1fr] items-center gap-6 w-full"
-            >
-              {/* 이름 + 꺾쇠 (고정폭 200px) */}
-              <div
-                className="flex items-center h-[48px] cursor-pointer"
-                onClick={() =>
-                  navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
-                }
-              >
-                <span className="text-[20px] lg:text-[24px] font-medium">
-                  {ingredientName}
-                </span>
-                <img
-                  src={vitaminArrow}
-                  alt="화살표"
-                  className="ml-3 mt-1"
-                  style={{ width: 25, height: 20 }}
-                />
-              </div>
+              className="absolute top-0 left-0 h-full rounded-full"
+              style={{
+                width: `${fillPct}%`,
+                background: over ? "#FF7E7E" : "#FFE17E",
+              }}
+            />
+            <div
+              className="absolute top-0 h-full border-l-2 border-dashed z-10"
+              style={{ left: `${REC_LINE_POS}%`, borderColor: "#000000" }}
+            />
+            <div
+              className="absolute top-0 h-full border-l-2 border-dashed z-10"
+              style={{ left: `${UPPER_LINE_POS}%`, borderColor: "#000000" }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  })}
 
-              {/* 게이지 바 (가변폭: 1fr → 항상 가용폭 100%) */}
-              <div className="relative w-full">
-                <div className="relative w-full h-[48px] lg:h-[56px] bg-[#E9E9E9] rounded-full">
-                  {/* 노랑(권장 이하) */}
-                  <div
-                    className="absolute h-full bg-[#FFE17E] rounded-full"
-                    style={{ width: `${yellowWidth}%` }}
-                  />
-                  {/* 주황(권장~상한) */}
-                  {orangeWidth > 0 && (
-                    <div
-                      className="absolute h-full bg-[#FFCC66]"
-                      style={{
-                        left: `${orangeLeft}%`,
-                        width: `${orangeWidth}%`,
-                      }}
-                    />
-                  )}
-                  {/* 빨강(상한 초과) */}
-                  {redWidth > 0 && (
-                    <div
-                      className="absolute h-full bg-[#FF7E7E] rounded-r-full"
-                      style={{ left: `${redLeft}%`, width: `${redWidth}%` }}
-                    />
-                  )}
-
-                  {/* 기준선(권장/상한) */}
-                  <div
-                    className="absolute top-0 h-full border-l-2 border-dashed"
-                    style={{ left: `${recPct}%`, borderColor: "#000000" }}
-                  />
-                  <div
-                    className="absolute top-0 h-full border-l-2 border-dashed"
-                    style={{ left: `${upperPct}%`, borderColor: "#000000" }}
-                  />
-                </div>
-              </div>
-            </div>
-          );
-        })}
 
       {/* PC 더보기 버튼 */}
       {filteredIngredients.length > 5 && !showAllIngredients && (
@@ -996,30 +939,30 @@ export default function CombinationResultPage() {
               카드를 눌러서 확인해 보세요 !
             </p>
           </div>
-          <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-            <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-              {cautionCombinations.map((combo: Combination) => (
-                <FlipCard name={combo.name} description={combo.description} />
-              ))}
-            </div>
-          </div>
+                     <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+             <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
+               {cautionCombinations.map((combo: Combination) => (
+                 <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+               ))}
+             </div>
+           </div>
 
-          {/* 💻 PC - 주의 조합 */}
-          <div className="hidden md:block px-[230px]">
-            <h2 className="text-[32px] font-bold text-black mb-1 mt-25">
-              주의가 필요한 조합 TOP 5
-            </h2>
-            <span className="text-[22px] font-semibold text-[#6B6B6B]">
-              카드를 눌러서 확인해 보세요 !
-            </span>
-            <div className="flex justify-start mt-8">
-              <div className="flex gap-[50px]">
-                {cautionCombinations.map((combo: Combination) => (
-                  <FlipCard name={combo.name} description={combo.description} />
-                ))}
-              </div>
-            </div>
-          </div>
+                     {/* 💻 PC - 주의 조합 */}
+           <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] mt-10">
+             <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
+               주의가 필요한 조합 TOP 5
+             </h2>
+             <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
+               카드를 눌러서 확인해 보세요 !
+             </span>
+             <div className="flex justify-center mt-8 mb-15">
+               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
+                 {cautionCombinations.map((combo: Combination) => (
+                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                 ))}
+               </div>
+             </div>
+           </div>
         </>
       )}
       {/* ===== 궁합이 좋은 조합 ===== */}
@@ -1034,30 +977,30 @@ export default function CombinationResultPage() {
               카드를 눌러서 확인해 보세요 !
             </p>
           </div>
-          <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-            <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
-              {goodCombinations.map((combo: Combination) => (
-                <FlipCard name={combo.name} description={combo.description} />
-              ))}
-            </div>
-          </div>
+                     <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+             <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
+               {goodCombinations.map((combo: Combination) => (
+                 <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+               ))}
+             </div>
+           </div>
 
-          {/* 💻 PC - 좋은 조합 */}
-          <div className="hidden md:block px-[230px]">
-            <h2 className="text-[32px] font-bold text-black mb-1 mt-20">
-              궁합이 좋은 조합 TOP 5
-            </h2>
-            <span className="text-[22px] font-semibold text-[#6B6B6B]">
-              카드를 눌러서 확인해 보세요 !
-            </span>
-            <div className="flex justify-start">
-              <div className="flex gap-[50px] mt-8 mb-20">
-                {goodCombinations.map((combo: Combination) => (
-                  <FlipCard name={combo.name} description={combo.description} />
-                ))}
-              </div>
-            </div>
-          </div>
+                     {/* 💻 PC - 좋은 조합 */}
+           <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
+             <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
+               궁합이 좋은 조합 TOP 5
+             </h2>
+             <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
+               카드를 눌러서 확인해 보세요 !
+             </span>
+             <div className="flex justify-center mt-8 mb-20">
+               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
+                 {goodCombinations.map((combo: Combination) => (
+                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                 ))}
+               </div>
+             </div>
+           </div>
         </>
       )}
     </div>

@@ -286,7 +286,7 @@ const CombinationPage = () => {
                   title="삭제"
                 >
                   <img
-                    src="/src/assets/delete.png"
+                    src="/images/PNG/조합 2-1/delete.png"
                     alt="삭제 아이콘"
                     className="w-[16px] h-[16px] mt-[2px]"
                   />
@@ -318,7 +318,7 @@ const CombinationPage = () => {
                 title="삭제"
               >
                 <img
-                  src="/src/assets/delete.png"
+                  src="/images/PNG/조합 2-1/delete.png"
                   alt="삭제 아이콘"
                   className="w-[28px] h-[28px] mt-[2.5px]"
                 />
@@ -471,7 +471,7 @@ const CombinationPage = () => {
 
         {/* 카드 목록 */}
         <div className="flex justify-center mt-8 mb-15">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1150px]">
+          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
             {isLoading
               ? // 로딩 중일 때 스켈레톤 카드 5개 표시
                 Array.from({ length: 5 }).map((_, index) => (
@@ -547,7 +547,7 @@ const CombinationPage = () => {
 
         {/* 카드 목록 */}
         <div className="flex justify-center mt-8 mb-20">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1150px]">
+          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
             {isLoading
               ? // 로딩 중일 때 스켈레톤 카드 5개 표시
                 Array.from({ length: 5 }).map((_, index) => (
