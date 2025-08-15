@@ -262,7 +262,7 @@ const DesktopAlarmSettingsPage = () => {
           <div
             ref={menuRef}
             role="menu"
-            className="absolute right-0 top-[72px] w-[466px] h-[310px] rounded-2xl shadow-xl bg-white border border-gray-100 p-4 z-50"
+            className="absolute right-0 top-[72px] w-[466px] rounded-2xl shadow-xl bg-white border border-gray-100 p-4 z-50"
           >
             <div className="px-2 py-1 text-[22px] text-black font-medium">
               영양제 추가하기
@@ -279,7 +279,10 @@ const DesktopAlarmSettingsPage = () => {
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition"
             >
               <span className="inline-flex items-center justify-center w-[70px] h-[70px] rounded-full bg-gray-100">
-                <FiSearch className="text-xl w-[48px] h-[48px]" />
+                <img
+                  src="/images/search.png"
+                  className="text-xl w-[48px] h-[48px]"
+                />
               </span>
               <div className="text-left">
                 <div className="text-[20px] font-semibold">제품 검색하기</div>
@@ -298,9 +301,12 @@ const DesktopAlarmSettingsPage = () => {
               className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-gray-50 transition"
             >
               <span className="inline-flex items-center justify-center w-[70px] h-[70px] rounded-full bg-gray-100">
-                <FiType className="text-xl w-[48px] h-[48px]" />
+                <img
+                  src="/images/text.png"
+                  className="text-xl w-[48px] h-[48px]"
+                />
               </span>
-              <div className="text-[16px] font-semibold">직접 입력하기</div>
+              <div className="text-[20px] font-semibold">직접 입력하기</div>
             </button>
           </div>
         )}

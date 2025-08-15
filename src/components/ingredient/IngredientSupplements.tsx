@@ -301,6 +301,7 @@ const IngredientSupplements = ({ data }: Props) => {
         {filteredProducts.map((product) => (
           <div key={product.id} className="flex justify-center">
             <ProductCard
+              id={product.id} // 현서 수정
               name={product.name}
               imageSrc={product.imageUrl} // string 보장
             />

@@ -1,9 +1,12 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import TermsList from "@/components/terms/TermsList";
 import TermsAgreement from "@/components/terms/TermsAgreement";
+import { postPreSignup } from "@/apis/auth";
+import { setPreSignupToken, setPreSignupData } from "@/utils/signup";
+import { useTerms } from "@/apis/terms";
+import { resolveAgreedTermIds } from "@/utils/terms";
 
-const EmailSignupPage = () => {
+const DesktopEmailSignupPage = () => {
   const [email, setEmail] = useState("");
   const [isEmailValid, setIsEmailValid] = useState(false);
   const [password, setPassword] = useState("");
@@ -17,8 +20,11 @@ const EmailSignupPage = () => {
     privacy: false,
     marketing: false,
   });
+
   const [errorMessage, setErrorMessage] = useState("");
   const navigate = useNavigate();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { data: allTerms } = useTerms(); // react-query라 중복 호출돼도 de-dupe됨
 
   const validateEmail = (email: string) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -51,22 +57,42 @@ const EmailSignupPage = () => {
     setNickname(randomNick);
   };
 
-  const handleSignup = (e: React.FormEvent) => {
+  const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isSubmitting) return; // ✅ 중복 제출 방지
     setErrorMessage("");
 
     if (password !== confirmPassword) {
       setErrorMessage("비밀번호가 일치하지 않습니다.");
       return;
     }
-
     if (!agrees.terms || !agrees.privacy) {
       setErrorMessage("필수 약관에 동의해주세요.");
       return;
     }
 
+    // ✅ 동적으로 약관 ID 계산
+    const agreedTermIds = resolveAgreedTermIds(allTerms, {
+      terms: agrees.terms,
+      privacy: agrees.privacy,
+      marketing: agrees.marketing,
+    });
+
     try {
-      // 다음 페이지에서 꺼내 쓸 데이터 저장
+      setIsSubmitting(true);
+      const { preSignupToken } = await postPreSignup({
+        email,
+        password,
+        nickname,
+        agreedTermIds,
+      });
+
+      // 🔎 콘솔에서 토큰 확인
+      console.debug("[pre-signup] token:", preSignupToken);
+
+      setPreSignupToken(preSignupToken);
+      setPreSignupData({ email, nickname, agreedTermIds });
+
       sessionStorage.setItem(
         "signupData",
         JSON.stringify({
@@ -77,10 +103,23 @@ const EmailSignupPage = () => {
         })
       );
 
-      navigate("/signup/email/detail");
-    } catch (error) {
-      setErrorMessage("임시 저장에 실패했습니다. 다시 시도해주세요.");
-      console.error("Signup failed:", error);
+      navigate("/signup/email/detail", { replace: true });
+    } catch (error: any) {
+      console.error("pre-signup failed:", error);
+      const status = error?.response?.status;
+      if (status === 409) {
+        setErrorMessage(
+          "이미 가입된 이메일입니다. 로그인 또는 비밀번호 찾기를 이용해 주세요."
+        );
+      } else if (status === 400) {
+        setErrorMessage("입력 형식을 확인해 주세요. (이메일/비밀번호 규칙)");
+      } else {
+        setErrorMessage(
+          "일시적인 오류가 발생했습니다. 잠시 후 다시 시도해 주세요."
+        );
+      }
+    } finally {
+      setIsSubmitting(false); // ✅ 로딩 종료
     }
   };
 
@@ -230,8 +269,12 @@ const EmailSignupPage = () => {
 
             {/* 전체 동의 영역 위/아래 구조는 그대로 두고 */}
             <TermsAgreement
-              agrees={agrees}
-              handleCheckboxChange={handleCheckboxChange}
+              agrees={{
+                terms: agrees.terms,
+                privacy: agrees.privacy,
+                marketing: agrees.marketing,
+              }}
+              handleCheckboxChange={(key) => handleCheckboxChange(key)}
             />
           </div>
 
@@ -243,7 +286,7 @@ const EmailSignupPage = () => {
             type="submit"
             className="w-full h-[83px] bg-[#FFE88D] text-black text-[22px] font-bold py-3 rounded-lg transition-colors"
           >
-            다음
+            {isSubmitting ? "처리 중..." : "다음"}
           </button>
         </form>
       </main>
@@ -251,4 +294,4 @@ const EmailSignupPage = () => {
   );
 };
 
-export default EmailSignupPage;
+export default DesktopEmailSignupPage;

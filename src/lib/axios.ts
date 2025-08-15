@@ -14,4 +14,14 @@ instance.interceptors.request.use((config) => {
   return config;
 });
 
+instance.interceptors.request.use((config) => {
+  if (config.url?.includes("/api/v1/auth/signup")) {
+    console.debug(
+      "[request → /auth/signup] headers.Authorization:",
+      config.headers?.Authorization
+    );
+  }
+  return config;
+});
+
 export default instance;
