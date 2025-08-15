@@ -69,9 +69,6 @@ const router = createBrowserRouter([
     children: [
       { index: true, element: <MainPage /> },
 
-      // (필요 시 교체) 기존 로그인 페이지
-      // { path: "login", element: <SignInPage /> },
-
       // 자체 로그인/회원가입
       { path: "login/email", element: <EmailLoginPage /> },
       { path: "signup/email", element: <EmailSignupPage /> },
