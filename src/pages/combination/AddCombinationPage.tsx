@@ -3,10 +3,10 @@ import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import CombinationProductCard from "../../components/combination/CombinationProductCard";
 import ExpandableProductGroup from "../../components/combination/ExpandableProductGroup";
 import SadCat from "../../../public/images/rate1.png";
-import { FiSearch, FiX } from "react-icons/fi";
+import searchIcon from "../../assets/search.png";
 import axios from "@/lib/axios";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import { useInView } from "react-intersection-observer";
+import deleteIcon from "@/assets/delete.png";
+
 
 interface Product {
   supplementId: number;
@@ -145,7 +145,7 @@ const AddCombinationPage = () => {
       </h1>
 
       {/* 조합추가 - PC 버전 */}
-      <h1 className="hidden md:block font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
+      <h1 className="hidden md:block font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
         조합 추가
       </h1>
 
@@ -170,22 +170,22 @@ const AddCombinationPage = () => {
             onClick={handleSearch}
             className="text-gray-400 text-xl ml-[-18px]"
           >
-            <FiSearch />
+            <img src={searchIcon} alt="검색" className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* 검색창 - PC */}
       <div className="hidden md:flex justify-center mb-3">
-        <div className="w-[1400px] h-[85px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
+        <div className="w-[1000px] h-[70px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
           <input
             type="text"
             className="flex-1 h-full bg-transparent outline-none
         placeholder:font-Pretendard placeholder:font-medium
         placeholder:text-black placeholder:opacity-40
         placeholder:leading-[30px] placeholder:tracking-[-0.02em]
-        placeholder:text-[30px] 
-        text-[30px] leading-[30px]"
+        placeholder:text-[23px] 
+        text-[23px] leading-[30px]"
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -194,7 +194,7 @@ const AddCombinationPage = () => {
             }}
           />
           <button onClick={handleSearch} className="text-gray-400 text-2xl">
-            <FiSearch />
+            <img src={searchIcon} alt="검색" className="w-6 h-6" />
           </button>
         </div>
       </div>
@@ -261,11 +261,8 @@ const AddCombinationPage = () => {
                 className="text-[16px] text-[#8A8A8A]"
                 title="삭제"
               >
-                <img
-                  src="/src/assets/delete.png"
-                  alt="삭제 아이콘"
-                  className="w-[28px] h-[28px] mt-[2.5px]"
-                />
+                <img src={deleteIcon} alt="삭제 아이콘" className="w-[28px] h-[28px] mt-[2.5px]" />
+
               </button>
             </div>
           ))}
@@ -302,8 +299,11 @@ const AddCombinationPage = () => {
               </div>
 
               {/* PC 카드 */}
-              <div className="hidden md:flex px-[230px] mt-[50px] gap-[60px]">
-                <div className="grid grid-cols-3 gap-[40px] w-[980px]">
+              <div className="hidden md:flex px-[230px] mt-[50px]">
+              <div
+  className="grid grid-cols-3 gap-x-[120px] gap-y-[40px] justify-items-center"
+  style={{ width: "calc(100vw - 230px - 250px - 250px - 60px)" }}
+>
                   {results.map((item: Product) => (
                     <CombinationProductCard
                       key={item.supplementId}
@@ -320,28 +320,51 @@ const AddCombinationPage = () => {
           ) : (
             query && (
               <>
-                <div className="block md:hidden flex flex-col items-center justify-center mt-20">
-                  <img
-                    src={SadCat}
-                    alt="검색 결과 없음"
-                    className="w-[160px] mt-5 mb-2"
-                  />
-                  <p className="font-pretendard font-medium text-[24px] leading-[120%] tracking-[-0.02em] text-[#808080] text-center">
-                    일치하는 검색 결과가 없습니다.
-                  </p>
-                </div>
+                {isLoading ? (
+                  // 로딩 중 표시
+                  <>
+                    <div className="block md:hidden flex flex-col items-center justify-center mt-20">
+                      <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-[#FFEB9D]"></div>
+                      <p className="font-pretendard font-medium text-[24px] leading-[120%] tracking-[-0.02em] text-[#808080] text-center mt-4">
+                        검색 중...
+                      </p>
+                    </div>
 
-                {/* PC 전용: 검색 결과 없음 */}
-                <div className="hidden md:flex flex-col items-center justify-center mt-20">
-                  <img
-                    src={SadCat}
-                    alt="검색 결과 없음"
-                    className="w-[200px] mt-5 mb-2"
-                  />
-                  <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080]">
-                    일치하는 검색 결과가 없습니다.
-                  </p>
-                </div>
+                    {/* PC 전용: 로딩 중 */}
+                    <div className="hidden md:flex flex-col items-center justify-center mt-20">
+                      <div className="animate-spin rounded-full h-20 w-20 border-b-10 border-[#FFEB9D]"></div>
+                      <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080] mt-4">
+                        검색 중...
+                      </p>
+                    </div>
+                  </>
+                ) : (
+                  // 검색 결과 없음 표시
+                  <>
+                    <div className="block md:hidden flex flex-col items-center justify-center mt-20">
+                      <img
+                        src={SadCat}
+                        alt="검색 결과 없음"
+                        className="w-[160px] mt-5 mb-2"
+                      />
+                      <p className="font-pretendard font-medium text-[24px] leading-[120%] tracking-[-0.02em] text-[#808080] text-center">
+                        일치하는 검색 결과가 없습니다.
+                      </p>
+                    </div>
+
+                    {/* PC 전용: 검색 결과 없음 */}
+                    <div className="hidden md:flex flex-col items-center justify-center mt-20">
+                      <img
+                        src={SadCat}
+                        alt="검색 결과 없음"
+                        className="w-[200px] mt-5 mb-2"
+                      />
+                      <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080]">
+                        일치하는 검색 결과가 없습니다.
+                      </p>
+                    </div>
+                  </>
+                )}
               </>
             )
           )}
@@ -363,16 +386,16 @@ const AddCombinationPage = () => {
               }}
             >
               {/* 분석 시작 버튼 */}
-              <div className="w-[314px] flex-shrink-0">
+              <div className="w-[300px] flex-shrink-0 ml-[80px]">
                 <button
                   onClick={handleAnalyze}
-                  className="w-full h-[80px] bg-[#FFEB9D] rounded-[59px] text-[30px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center mt-[10px] mb-[30px]"
+                  className="w-[250px] h-[70px] bg-[#FFEB9D] rounded-[59px] text-[30px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center mt-[10px] mb-[30px] ml-[45px]"
                 >
                   분석 시작
                 </button>
 
                 {selectedItems.length > 0 && (
-                  <div className="bg-[#F2F2F2] border border-[#9C9A9A] rounded-[36px] px-[34px] py-[33px] flex flex-col gap-10 flex:1">
+                  <div className="bg-[#F2F2F2] border border-[#9C9A9A] rounded-[36px] px-[34px] py-[33px] flex flex-col gap-10 flex:1 ml-[50px]">
                     {selectedItems.map((item, idx) => (
                       <div
                         key={idx}
@@ -391,9 +414,9 @@ const AddCombinationPage = () => {
 
                         <img
                           src={item.imageUrl}
-                          className="w-[120px] h-[120px] object-contain mb-4"
+                          className="w-[120px] h-[120px] object-contain mt-4"
                         />
-                        <p className="text-sm text-center font-medium leading-tight">
+                        <p className="text-[20px] text-center font-medium leading-tight mt-3">
                           {item.supplementName}
                         </p>
                       </div>

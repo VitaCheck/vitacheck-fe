@@ -251,8 +251,8 @@ export default function CombinationResultPage() {
      }
    }, [selectedItems]);
 
-  const CARD_W = 270;
-  const GAP_W = 22.76;
+  const CARD_W = 250;
+  const GAP_W = 8;
   const PAGE_COUNT = 4;
   const PAGE_W = CARD_W * PAGE_COUNT + GAP_W * (PAGE_COUNT - 1);
 
@@ -390,20 +390,20 @@ export default function CombinationResultPage() {
       </h1>
       {/* 조합분석 - PC 버전 제목 + 버튼 수평 정렬 */}
       <div className="hidden md:flex justify-between items-start px-[230px] pt-[50px] mb-8">
-        <h1 className="font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em]">
+        <h1 className="font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em]">
           조합 분석
         </h1>
 
-        <div className="flex gap-4">
+                 <div className="flex gap-4 ml-[250px]">
           <button
             onClick={handleRecombination}
-            className="w-[150px] h-[70px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
+            className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
           >
             재조합
           </button>
           <button
             onClick={() => navigate("/alarm/settings")}
-            className={`w-[280px] h-[70px] font-bold ${
+            className={`w-[280px] h-[55px] font-bold ${
               checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
             } rounded-[62.5px] flex items-center justify-center`}
           >
@@ -413,16 +413,16 @@ export default function CombinationResultPage() {
       </div>
       {/* PC 슬라이더 */}
       <div className="hidden md:block px-4">
-        <div className="relative w-full max-w-[1430px] h-[300px] bg-white border border-[#B2B2B2] rounded-[45.51px] mx-auto px-[60px] py-[30px] overflow-hidden">
+        <div className="relative w-full max-w-[1050px] h-[300px] bg-white border border-[#B2B2B2] rounded-[45.51px] mx-auto px-[60px] py-[30px] overflow-hidden">
         <div className="mx-auto" style={{ width: `${PAGE_W}px` }}> 
           <div
             ref={scrollRef}
-            className="flex gap-[22.76px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
+            className="flex gap-[8px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
           >
             {selectedItems.map((item: SupplementItem) => (
               <div
                 key={item.supplementId}
-                className={`w-[270px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0 snap-start
+                className={`w-[239px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0 snap-start
           ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
               >
                 <img
@@ -442,7 +442,7 @@ export default function CombinationResultPage() {
                 <p
                   className="text-center font-pretendard font-medium mt-1"
                   style={{
-                    fontSize: "23px",
+                    fontSize: "18px",
                     lineHeight: "100%",
                     letterSpacing: "-0.02em",
                     color: "#000000",
@@ -530,9 +530,9 @@ export default function CombinationResultPage() {
         </button>
       </div>
       {/* PC 섭취량 탭 - 전체 / 초과 */}
-      <div className="hidden md:flex flex-col items-center mt-[60px] relative">
+      <div className="hidden md:flex flex-col items-center mt-[55px] relative">
         {/* 탭 버튼 */}
-        <div className="flex justify-center gap-[450px] w-full z-10">
+        <div className="flex justify-center gap-[350px] w-full z-10">
           {["전체", "초과"].map((tab) => (
             <div
               key={tab}
@@ -540,7 +540,7 @@ export default function CombinationResultPage() {
               onClick={() => setActiveTab(tab as "전체" | "초과")}
             >
                              <span
-                 className={`w-[100px] h-[58px] font-pretendard font-semibold text-[42px] leading-[120%] tracking-[-0.02em] text-center ${
+                 className={`w-[100px] h-[58px] font-pretendard font-semibold text-[35px] leading-[120%] tracking-[-0.02em] text-center ${
                    activeTab === tab 
                      ? (tab === "초과" ? "text-[#E70000]" : "text-black") 
                      : "text-[#9C9A9A]"
@@ -556,10 +556,10 @@ export default function CombinationResultPage() {
         <img
           src={activeTab === "초과" ? selectionLine2 : selectionLine1}
           alt="선택 라인"
-          className="mt-4"
+          className="mt-1"
           style={{
-            width: "1300px",
-            height: "6px",
+            width: "1100px",
+            height: "5px",
             opacity: 1,
           }}
         />
@@ -603,7 +603,7 @@ export default function CombinationResultPage() {
       {activeTab === "초과" && (
         <>
                        {/* PC 버전 */}
-             <div className="hidden md:flex justify-center mt-2">
+             <div className="hidden md:flex justify-center mt-5">
             <div 
               className="flex items-center justify-center"
               style={{
@@ -766,7 +766,7 @@ export default function CombinationResultPage() {
                       {/* 빨강(상한 초과) */}
                       {redWidth > 0 && (
                         <div
-                          className="absolute h-[24px] bg-[#FF7070] rounded-r-full"
+                          className="absolute h-[24px] bg-[#FF7E7E] rounded-r-full"
                           style={{ left: `${redLeft}%`, width: `${redWidth}%` }}
                         />
                       )}
@@ -827,163 +827,162 @@ export default function CombinationResultPage() {
          </div>
        )}
 
-             {/* PC 섭취량 그래프 */}
-       {filteredIngredients && filteredIngredients.length > 0 ? (
-         <div className="hidden md:flex flex-col items-center space-y-6 px-[60px] mt-5 w-full">
-
-<div
-      className="relative w-[800px] h-[24px] mb-6"
-      style={{ marginLeft: 'calc(200px + 24px)' }} // 왼쪽 "이름 영역(200px) + 간격(24px)"
-    >
-      {(() => {
-        const first = filteredIngredients[0];
-        const { recPct, upperPct } = calcGauge(first);
-        return (
-          <>
-            {recPct != null && (
-              <span
-                className="absolute text-[25px] font-medium text-black font-pretendard"
-                style={{ left: `calc(${recPct}% + 15px)` }}
-              >
-                권장
-              </span>
-            )}
-            {upperPct != null && (
-              <span
-                className="absolute text-[25px] font-medium text-black font-pretendard"
-                style={{ left: `calc(${upperPct}% + 15px)` }}
-              >
-                상한
-              </span>
-            )}
-          </>
-        );
-      })()}
+            {/* PC 섭취량 그래프 */}
+{filteredIngredients && filteredIngredients.length > 0 ? (
+  <div className="hidden md:block w-full">
+    {/* 상단 라벨: 이름 칼럼 폭과 정렬을 맞추기 위해 동일한 그리드 사용 */}
+    <div className="grid grid-cols-[200px_1fr] items-center gap-6 w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-5">
+      <div /> {/* 이름 영역과 정렬 맞춤용 빈 칸 */}
+      <div className="relative h-6">
+        {(() => {
+          const first = filteredIngredients[0];
+          const { recPct, upperPct } = calcGauge(first);
+          return (
+            <>
+              {recPct != null && (
+                <span
+                  className="absolute text-[18px] lg:text-[20px] font-medium text-black font-pretendard"
+                  style={{ left: `calc(${recPct}% + 12px)` }}
+                >
+                  권장
+                </span>
+              )}
+              {upperPct != null && (
+                <span
+                  className="absolute text-[18px] lg:text-[20px] font-medium text-black font-pretendard"
+                  style={{ left: `calc(${upperPct}% + 12px)` }}
+                >
+                  상한
+                </span>
+              )}
+            </>
+          );
+        })()}
+      </div>
     </div>
-    
-          {filteredIngredients.slice(0, showAllIngredients ? filteredIngredients.length : 5).map((ingredient) => {
-            const { ingredientName } = ingredient;
-            const {
-              widthPct,
-              recPct,
-              upperPct,
-              unit,
-              total,
-              isFallbackGuide,
-              yellowWidth,
-              orangeLeft,
-              orangeWidth,
-              redLeft,
-              redWidth,
-              isOverUpperLimit,
-            } = calcGauge(ingredient);
 
-            return (
+    {/* 게이지 리스트 */}
+    <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-2 space-y-5">
+      {filteredIngredients
+        .slice(0, showAllIngredients ? filteredIngredients.length : 5)
+        .map((ingredient) => {
+          const { ingredientName } = ingredient;
+          const {
+            widthPct,
+            recPct,
+            upperPct,
+            unit,
+            total,
+            isFallbackGuide,
+            yellowWidth,
+            orangeLeft,
+            orangeWidth,
+            redLeft,
+            redWidth,
+          } = calcGauge(ingredient);
+
+          return (
+            <div
+              key={ingredientName}
+              className="grid grid-cols-[200px_1fr] items-center gap-6 w-full"
+            >
+              {/* 이름 + 꺾쇠 (고정폭 200px) */}
               <div
-                key={ingredientName}
-                className="flex flex-col gap-2 w-full max-w-[1100px]"
+                className="flex items-center h-[48px] cursor-pointer"
+                onClick={() =>
+                  navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
+                }
               >
-                <div className="flex items-center justify-between w-full">
-                  {/* 이름 + 꺾쇠 */}
+                <span className="text-[20px] lg:text-[24px] font-medium">
+                  {ingredientName}
+                </span>
+                <img
+                  src={vitaminArrow}
+                  alt="화살표"
+                  className="ml-3 mt-1"
+                  style={{ width: 25, height: 20 }}
+                />
+              </div>
+
+              {/* 게이지 바 (가변폭: 1fr → 항상 가용폭 100%) */}
+              <div className="relative w-full">
+                <div className="relative w-full h-[48px] lg:h-[56px] bg-[#E9E9E9] rounded-full">
+                  {/* 노랑(권장 이하) */}
                   <div
-                    className="flex items-center w-[200px] h-[48px] cursor-pointer"
-                    onClick={() =>
-                      navigate(
-                        `/ingredient?name=${encodeURIComponent(ingredientName)}`
-                      )
-                    }
-                  >
-                    <span className="text-[24px] font-medium">
-                      {ingredientName}
-                    </span>
-                    <img
-                      src={vitaminArrow}
-                      alt="화살표"
-                      className="ml-3 mt-1"
-                      style={{ width: 25, height: 20 }}
+                    className="absolute h-full bg-[#FFE17E] rounded-full"
+                    style={{ width: `${yellowWidth}%` }}
+                  />
+                  {/* 주황(권장~상한) */}
+                  {orangeWidth > 0 && (
+                    <div
+                      className="absolute h-full bg-[#FFCC66]"
+                      style={{
+                        left: `${orangeLeft}%`,
+                        width: `${orangeWidth}%`,
+                      }}
                     />
-                  </div>
+                  )}
+                  {/* 빨강(상한 초과) */}
+                  {redWidth > 0 && (
+                    <div
+                      className="absolute h-full bg-[#FF7E7E] rounded-r-full"
+                      style={{ left: `${redLeft}%`, width: `${redWidth}%` }}
+                    />
+                  )}
 
-                  {/* 게이지 바 + 라벨 */}
-                  <div className="relative w-[800px]">
-                    
-                    {/* 게이지 바 */}
-                    <div className="relative w-full h-[56px] bg-[#E9E9E9] rounded-full">
-                      {/* 노랑 */}
-                      <div
-                        className="absolute h-full bg-[#FFE17E] rounded-full"
-                        style={{ width: `${yellowWidth}%` }}
-                      />
-                      {/* 주황 */}
-                      {orangeWidth > 0 && (
-                        <div
-                          className="absolute h-full bg-[#FFCC66]"
-                          style={{
-                            left: `${orangeLeft}%`,
-                            width: `${orangeWidth}%`,
-                          }}
-                        />
-                      )}
-                      {/* 빨강 */}
-                      {redWidth > 0 && (
-                        <div
-                          className="absolute h-full bg-[#FF7070] rounded-r-full"
-                          style={{ left: `${redLeft}%`, width: `${redWidth}%` }}
-                        />
-                      )}
-
-                      {/* 가이드/기준선 */}
-                      <div
-                        className="absolute top-0 h-full border-l-2 border-dashed"
-                        style={{ left: `${recPct}%`, borderColor: "#000000" }}
-                      />
-                      <div
-                        className="absolute top-0 h-full border-l-2 border-dashed"
-                        style={{ left: `${upperPct}%`, borderColor: "#000000" }}
-                      />
-                    </div>
-                  </div>
+                  {/* 기준선(권장/상한) */}
+                  <div
+                    className="absolute top-0 h-full border-l-2 border-dashed"
+                    style={{ left: `${recPct}%`, borderColor: "#000000" }}
+                  />
+                  <div
+                    className="absolute top-0 h-full border-l-2 border-dashed"
+                    style={{ left: `${upperPct}%`, borderColor: "#000000" }}
+                  />
                 </div>
               </div>
-            );
-          })}
-        
-        {/* PC 더보기 버튼 */}
-        {filteredIngredients.length > 5 && !showAllIngredients && (
-          <div className="flex flex-col items-center justify-center mt-8 w-full">
-            <img
-              src="/images/PNG/조합 3-1/펼쳐보기 arrow.png"
-              alt="더보기"
-              className="w-[55px] h-[20px] cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setShowAllIngredients(true)}
-            />
-            <p className="text-[18px] text-[#666] mt-5 font-pretendard">
-              클릭하여 모든 성분 보기
-            </p>
-          </div>
-        )}
-        
-        {/* PC 접기 버튼 */}
-        {filteredIngredients.length > 5 && showAllIngredients && (
-          <div className="flex flex-col items-center justify-center w-full mt-3">
-            <img
-              src="/images/PNG/조합 3-1/Frame 499.png"
-              alt="접기"
-              className="w-[1100px] h-[92px] cursor-pointer hover:opacity-80 transition-opacity"
-              onClick={() => setShowAllIngredients(false)}
-            />
-          </div>
-        )}
+            </div>
+          );
+        })}
+
+      {/* PC 더보기 버튼 */}
+      {filteredIngredients.length > 5 && !showAllIngredients && (
+        <div className="flex flex-col items-center justify-center mt-6 w-full">
+          <img
+            src="/images/PNG/조합 3-1/펼쳐보기 arrow.png"
+            alt="더보기"
+            className="w-[55px] h-[20px] cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setShowAllIngredients(true)}
+          />
+          <p className="text-[16px] lg:text-[18px] text-[#666] mt-3 font-pretendard">
+            클릭하여 모든 성분 보기
+          </p>
         </div>
-       ) : (
-         <div className="hidden md:flex flex-col items-center px-[60px] mt-20 text-center text-gray-500">
-           {ingredientResults.length === 0 
-             ? "영양제를 선택해주세요." 
-             : activeTab === "초과" 
-               ? "초과된 성분이 없습니다." 
-               : "데이터를 불러오는 중입니다..."}
-         </div>
-       )}
+      )}
+
+      {/* PC 접기 버튼 */}
+      {filteredIngredients.length > 5 && showAllIngredients && (
+        <div className="flex flex-col items-center justify-center w-full mt-3">
+          <img
+            src="/images/PNG/조합 3-1/Frame 499.png"
+            alt="접기"
+            className="w-full max-w-[1100px] h-[92px] cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={() => setShowAllIngredients(false)}
+          />
+        </div>
+      )}
+    </div>
+  </div>
+) : (
+  <div className="hidden md:flex flex-col items-center px-[60px] mt-20 text-center text-gray-500">
+    {ingredientResults.length === 0
+      ? "영양제를 선택해주세요."
+      : activeTab === "초과"
+      ? "초과된 성분이 없습니다."
+      : "데이터를 불러오는 중입니다..."}
+  </div>
+)}
+
 
       {/* ⚠️ 주의가 필요한 조합 */}
       {cautionCombinations?.length > 0 && (
