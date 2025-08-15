@@ -15,6 +15,7 @@ interface MobileProps {
   showButton: boolean;
   brandProducts: any[];
   brandId: number;
+  intakeTime: string;
 }
 
 const MainDetailPageMobile: React.FC<MobileProps> = ({
@@ -152,7 +153,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 탭 내용 */}
       <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed mb-[120px]">
-        {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
+        {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab intakeTime={product.intakeTime} />}
       </div>
 
       {isSharePopupOpen && (

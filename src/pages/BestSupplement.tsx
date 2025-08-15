@@ -3,8 +3,6 @@ import { useNavigate } from "react-router-dom";
 import BSMDropdownPopup from "@/components/BestSupplement/BSMDropdownPopup";
 import axios from "axios";
 
-// --- [수정 1] API 응답 구조와 타입을 정확하게 일치시킵니다 ---
-// API가 실제로 보내주는 데이터의 타입
 interface ApiProduct {
   supplementId: number;
   supplementName: string;
@@ -13,7 +11,7 @@ interface ApiProduct {
   searchCount: number;
 }
 
-// 우리 컴포넌트 내부에서 사용하기 편하게 정제한 데이터 타입
+
 interface Product {
   id: number;
   title: string;
@@ -21,7 +19,6 @@ interface Product {
   brand: string;
 }
 
-// API 응답 전체를 감싸는 타입
 interface ApiResponse {
   isSuccess: boolean;
   code: string;
@@ -32,6 +29,7 @@ interface ApiResponse {
     totalElements: number;
   };
 }
+
 // -----------------------------------------------------------
 
 export default function BestSupplement() {
@@ -41,7 +39,7 @@ export default function BestSupplement() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // 드롭다운 상태
+  // 드롭다운
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
@@ -64,23 +62,30 @@ export default function BestSupplement() {
       setError(null);
 
       try {
-        // [수정 2] 프록시를 사용하기 위해 상대 경로('/api')로 요청합니다.
-        const response = await axios.get<ApiResponse>(`/api/v1/supplements/popular-supplements`, {
-          params: {
-            ageGroup: apiAgeGroup,
-            page: 0,
-            size: 8,
-          },
-        });
+        console.log("[Debug] API 호출 시작. ageGroup:", apiAgeGroup);
+
+        // ✅ 절대 URL로 변경
+        const response = await axios.get<ApiResponse>(
+          `https://vita-check.com/api/v1/supplements/popular-supplements`,
+          {
+            params: {
+              ageGroup: apiAgeGroup,
+              page: 0,
+              size: 8,
+            },
+          }
+        );
+
+        console.log("[Debug] API 응답:", response.data);
 
         if (response.data.isSuccess) {
-          // [수정 3] API 데이터를 우리 컴포넌트의 Product 형태로 변환(매핑)합니다.
-          const newProducts = response.data.result.content.map(apiProduct => ({
+          const newProducts = response.data.result.content.map((apiProduct) => ({
             id: apiProduct.supplementId,
             title: apiProduct.supplementName,
             imageUrl: apiProduct.imageUrl,
             brand: apiProduct.brandName,
           }));
+          console.log("[Debug] 변환된 상품 목록:", newProducts);
           setProducts(newProducts);
         } else {
           setError(response.data.message);
@@ -88,9 +93,8 @@ export default function BestSupplement() {
         }
       } catch (err: any) {
         console.error("API 호출 중 에러 발생:", err);
-        // CORS 에러일 경우, 콘솔에 관련 에러 메시지가 나타납니다.
         if (err.message.includes("Network Error")) {
-          setError("네트워크 오류 또는 CORS 정책 위반. 프록시 설정을 확인하세요.");
+          setError("네트워크 오류 또는 CORS 정책 위반.");
         } else {
           setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
         }
@@ -101,10 +105,10 @@ export default function BestSupplement() {
     };
 
     fetchSupplements();
-    // selectedAgeGroup이 변경될 때마다 이 useEffect가 다시 실행됩니다.
   }, [selectedAgeGroup]);
 
-  // 외부 클릭 시 드롭다운 닫기
+
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
@@ -115,7 +119,7 @@ export default function BestSupplement() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Skeleton 카드 (변경 없음)
+
   const renderSkeletonCard = (isMobile: boolean) => (
     <div className="flex flex-col items-center animate-pulse">
       {isMobile ? (
@@ -127,7 +131,7 @@ export default function BestSupplement() {
     </div>
   );
   
-  // 에러 또는 데이터 없음 메시지 표시 (변경 없음)
+
   const renderEmptyOrError = () => (
     <div className="col-span-full h-[200px] flex items-center justify-center text-center text-gray-500">
       {error ? (

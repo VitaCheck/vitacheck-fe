@@ -1,6 +1,10 @@
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 
-const IngredientTab = () => {
+interface TimingTabProps {
+  intakeTime: string;
+}
+
+const TimingTab = ({ intakeTime }: TimingTabProps) => {
   return (
     <>
       {/* 모바일 전용 */}
@@ -15,8 +19,7 @@ const IngredientTab = () => {
 
           <div className="flex justify-center items-center bg-white border-[#AAAAAA] border-[0.5px] rounded-[16px] w-[356px] h-[81px]">
             <div className="w-[294px] h-[30px] flex justify-between items-center">
-              <p className="font-medium text-[21px]">⏰</p>
-              <p className="font-medium text-[21px]">언제든 먹어도 괜찮아요</p>
+              <p className="font-medium text-[21px]">{intakeTime}</p>
               <p className="bg-[#EEEEEE] font-semibold text-[12px] w-[43px] h-[26px] flex justify-center items-center rounded-[20px]">1 포</p>
             </div>
           </div>
@@ -37,26 +40,8 @@ const IngredientTab = () => {
           </div>
           <div className="flex flex-col justify-center items-center w-full mt-[26px] border-[#AAAAAA] border-1 rounded-[18px]">
             <div className="flex justify-between w-full px-[40px] py-[30px]">
-              <div className="flex gap-[14px]">
-                <img
-                  src="/images/PNG/MainPurpose/clock.png"
-                  alt="시계"
-                  className="w-[37px] object-contain"
-                />
-                <span className="font-medium text-center text-[22px]">언제든 먹어도 괜찮아요</span>
-              </div>
+              <p className="font-medium text-[21px]">{intakeTime}</p>
               <span className="bg-[#EEEEEE] rounded-full text-[18px] px-[18px] py-[4px] font-medium">1 포</span>
-            </div>
-            <div className="flex justify-between w-full px-[40px] py-[30px]">
-              <div className="flex gap-[14px]">
-                <img
-                  src="/images/PNG/MainPurpose/clock.png"
-                  alt="시계"
-                  className="w-[37px] object-contain"
-                />
-                <span className="font-medium text-center text-[22px]">언제든 먹어도 괜찮아요</span>
-              </div>
-              <span className="bg-[#EEEEEE] rounded-full text-[18px] px-[18px] py-[4px] font-medium">1 캡슐</span>
             </div>
           </div>
         </div>
@@ -65,4 +50,4 @@ const IngredientTab = () => {
   );    
 };
 
-export default IngredientTab;
+export default TimingTab;

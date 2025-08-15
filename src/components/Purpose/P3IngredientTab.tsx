@@ -1,6 +1,6 @@
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 
 interface Nutrient {
@@ -12,8 +12,15 @@ interface Nutrient {
 
 const IngredientTab = () => {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const [nutrientData, setNutrientData] = useState<Nutrient[]>([]);
   const firstNutrientName = nutrientData[0]?.name ?? "";
+
+const goToIngredientPage = () => {
+  if (!firstNutrientName) return;
+  navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
+};
+
 
   useEffect(() => {
     if (id) {
@@ -27,7 +34,7 @@ const IngredientTab = () => {
             },
           });
 
-          console.log("💊 INGREDIENT TAB API 응답 데이터:", response.data);
+          // console.log("💊 INGREDIENT TAB API 응답 데이터:", response.data);
 
           // 응답 데이터 매핑
           const mapped = response.data.ingredients.map((ing: any) => ({
@@ -51,9 +58,12 @@ const IngredientTab = () => {
     <>
       {/* 모바일 전용 */}
       <div className="sm:hidden">
-        <div className="flex flex-col items-center w-full mt-[28px]">
+        <div className="flex flex-col items-center w-full mt-[28px] mb-[50px]">
           <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
-            <span className="font-Regular text-[14px] tracking-[-0.32px]">
+            <span
+              onClick={goToIngredientPage}
+              className="font-Regular text-[14px] tracking-[-0.32px] cursor-pointer"
+            >
               {firstNutrientName}에 대해 더 자세히 알고 싶다면 ?
             </span>
             <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />
@@ -71,7 +81,10 @@ const IngredientTab = () => {
                 key={nutrient.name}
                 className="flex items-center justify-between"
               >
-                <div className="flex justify-center items-center gap-[15px]">
+                <div
+                  onClick={goToIngredientPage}
+                  className="flex justify-center items-center gap-[15px] cursor-pointer"
+                >
                   <span className="h-[26px] tracking-[-0.432px] font-medium">{nutrient.name}</span>
                   <MdOutlineArrowForwardIos className="text-[16px]" />
                 </div>
@@ -102,7 +115,10 @@ const IngredientTab = () => {
         <div className="flex flex-col items-center w-[567px] mt-[36px]">
           <div className="flex items-center justify-between w-full h-[67px] bg-[#F2F2F2] rounded-[16px] px-[25px]">
             <div className="flex-1 text-center">
-              <span className="font-Regular text-[22px] tracking-[-1px]">
+              <span 
+                onClick={goToIngredientPage} 
+                className="font-Regular text-[22px] tracking-[-1px] cursor-pointer"
+              >
                 {firstNutrientName}에 대해 더 자세히 알고 싶다면 ?
               </span>
             </div>
@@ -120,7 +136,10 @@ const IngredientTab = () => {
                 key={nutrient.name}
                 className="flex items-center justify-between"
               >
-                <div className="flex justify-center items-center gap-[15px]">
+                <div
+                  onClick={goToIngredientPage}
+                  className="flex justify-center items-center gap-[15px] cursor-pointer"
+                >
                   <span className="text-[22px] tracking-[-0.4px] font-medium">{nutrient.name}</span>
                   <MdOutlineArrowForwardIos className="text-[16px]" />
                 </div>

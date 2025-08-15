@@ -43,7 +43,6 @@ const RecommendedProductSection = ({
           imageUrl: item[1].startsWith("http") ? item[1] : `/images/${item[1]}`,
         })
       );
-
       setProducts(mappedProducts.slice(0, maxItems));
       setCurrentPage(0);
     }
@@ -74,7 +73,7 @@ const RecommendedProductSection = ({
     isLoading,
     paginatedProducts,
     goToIngredientPage,
-    goToAllIngredientPage, // props로 받은 함수를 그대로 사용
+    goToAllIngredientPage,
     currentPage,
     totalPages,
     handleNextPage,
