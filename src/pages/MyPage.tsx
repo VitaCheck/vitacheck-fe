@@ -20,7 +20,7 @@ function MyPage() {
 
   const handleLogout = async () => {
     alert("로그아웃 되었습니다.");
-    await logout("/social-login"); //토큰/캐시 삭제 후 /social-login으로 이동
+    await logout("/login"); //토큰/캐시 삭제 후 /social-login으로 이동
   };
 
   const goToMain = () => {
