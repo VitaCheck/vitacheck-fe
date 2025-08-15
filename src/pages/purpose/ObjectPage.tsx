@@ -65,7 +65,7 @@ const PurposeCardList = () => {
       .get("/api/v1/purposes", { signal })
       .then((res) => {
         const list = res.data.result;
-        
+
         if (Array.isArray(list)) {
           const updatedList = list.map((item: Purpose) => ({
             ...item,
@@ -78,8 +78,11 @@ const PurposeCardList = () => {
         }
       })
       .catch((err) => {
-        if (axios.isCancel(err)) { // 원본 axios.isCancel 사용
-          console.log('useEffect의 정리(cleanup) 함수가 실행되어 진행 중인 API 요청을 취소.');
+        if (axios.isCancel(err)) {
+          // 원본 axios.isCancel 사용
+          console.log(
+            "useEffect의 정리(cleanup) 함수가 실행되어 진행 중인 API 요청을 취소."
+          );
         } else {
           console.error("목적 리스트 로드 실패:", err);
           setCards([]);
@@ -88,7 +91,7 @@ const PurposeCardList = () => {
       .finally(() => {
         setIsLoading(false);
       });
-    
+
     return () => {
       controller.abort();
     };
@@ -102,8 +105,10 @@ const PurposeCardList = () => {
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            const index = parseInt(entry.target.getAttribute("data-index") as string);
-            
+            const index = parseInt(
+              entry.target.getAttribute("data-index") as string
+            );
+
             // 현재 보여줘야 하는 카드의 인덱스가 아니면 건너뜁니다.
             if (index !== loadingCount) return;
 
@@ -111,7 +116,7 @@ const PurposeCardList = () => {
             setTimeout(() => {
               // 모바일(3개씩)과 데스크톱(4개씩)의 로딩 단위를 통합
               const columnCount = window.innerWidth >= 768 ? 4 : 3;
-              setLoadingCount(prev => prev + columnCount);
+              setLoadingCount((prev) => prev + columnCount);
             }, 100);
           }
         });
@@ -135,9 +140,9 @@ const PurposeCardList = () => {
     setSelectedIds((prev) =>
       prev.includes(code)
         ? prev.filter((v) => v !== code)
-        : prev.length < 3
-        ? [...prev, code]
-        : prev
+        : prev.length < 1
+          ? [...prev, code]
+          : prev
     );
   };
 
@@ -163,9 +168,7 @@ const PurposeCardList = () => {
           rounded-xl shadow-sm relative sm:rounded-[14px] sm:shadow-[1px_2px_8.2px_0px_rgba(0,0,0,0.16)]
           ${isSelected ? "bg-[#FFF8DC] border-1 border-[#FFEB9D]" : "bg-white border-1 border-transparent"}`}
       >
-        <div
-          className={`w-3/5 h-4/5 relative`}
-        >
+        <div className={`w-3/5 h-4/5 relative`}>
           <img
             src={card.imageUrl || imageMap[card.code] || "/images/default.png"}
             alt={card.description}
@@ -176,7 +179,7 @@ const PurposeCardList = () => {
       <p className="mt-[18px] text-[clamp(12px,4vw,20px)] sm:text-[20px] text-center font-semibold">
         {card.description}
       </p>
-    </div>  
+    </div>
   );
 
   // 스켈레톤 UI 렌더링 함수 (깜빡이는 효과 포함)
@@ -189,22 +192,22 @@ const PurposeCardList = () => {
 
   // 모바일과 데스크톱 뷰를 위한 공통 렌더링 로직
   const renderCardList = () => {
-
-    return (
-      (isLoading || loadingCount < cards.length)
-        ? Array.from({ length: cards.length }).map((_, index) => (
-            <div key={index} data-index={index} className="card-container">
-              {index < loadingCount
-                ? renderCard(cards[index], selectedIds.includes(cards[index].code))
-                : renderSkeletonCard()}
-            </div>
-          ))
-        : cards.map((card) => (
-            <div key={card.code}>
-              {renderCard(card, selectedIds.includes(card.code))}
-            </div>
-          ))
-    );
+    return isLoading || loadingCount < cards.length
+      ? Array.from({ length: cards.length }).map((_, index) => (
+          <div key={index} data-index={index} className="card-container">
+            {index < loadingCount
+              ? renderCard(
+                  cards[index],
+                  selectedIds.includes(cards[index].code)
+                )
+              : renderSkeletonCard()}
+          </div>
+        ))
+      : cards.map((card) => (
+          <div key={card.code}>
+            {renderCard(card, selectedIds.includes(card.code))}
+          </div>
+        ));
   };
 
   return (
@@ -213,7 +216,9 @@ const PurposeCardList = () => {
       <div className="sm:hidden w-full px-[20px] mx-auto mt-[50px] mb-[124px]">
         <div className="flex flex-col ml-[20px]">
           <h1 className="text-[35px] tracking-[-0.72px] font-medium">목적별</h1>
-          <h2 className="text-sm text-[#808080] mt-[1px] font-medium">최대 3개 선택</h2>
+          <h2 className="text-sm text-[#808080] mt-[1px] font-medium">
+            최대 1개 선택
+          </h2>
         </div>
         <div className="mt-[33px] px-[15px] grid grid-cols-3 gap-x-[20px] gap-y-[46px]">
           {renderCardList()}
@@ -224,7 +229,9 @@ const PurposeCardList = () => {
           disabled={selectedIds.length === 0}
           className={`fixed bottom-[42px] left-[20px] right-[20px] h-[68px] rounded-4xl z-50 transition-all duration-200
             flex justify-center items-center ${
-              selectedIds.length === 0 ? "bg-[#EEEEEE] cursor-not-allowed" : "bg-[#FFEB9D]"
+              selectedIds.length === 0
+                ? "bg-[#EEEEEE] cursor-not-allowed"
+                : "bg-[#FFEB9D]"
             }`}
         >
           <span className="text-black text-xl font-semibold">
@@ -243,18 +250,24 @@ const PurposeCardList = () => {
         <div className="w-full pt-[70px] pb-[100px]">
           <div className="max-w-[766px] mx-auto mb-[3px]">
             <div className="flex justify-between items-center">
-              <h1 className="text-[30px] tracking-[-1px] font-semibold">목적별</h1>
+              <h1 className="text-[30px] tracking-[-1px] font-semibold">
+                목적별
+              </h1>
               <button
                 onClick={goToProductList}
                 disabled={selectedIds.length === 0}
                 className={`w-[142px] h-[46px] rounded-full text-[18px] tracking-[0.8px] font-semibold flex justify-center items-center transition ${
-                  selectedIds.length === 0 ? "bg-[#EEEEEE] cursor-not-allowed" : "bg-[#FFEB9D]"
+                  selectedIds.length === 0
+                    ? "bg-[#EEEEEE] cursor-not-allowed"
+                    : "bg-[#FFEB9D]"
                 }`}
               >
                 영양제 확인
               </button>
             </div>
-            <h2 className="text-[16px] font-medium text-[#808080]">최대 3개 선택</h2>
+            <h2 className="text-[16px] font-medium text-[#808080]">
+              최대 1개 선택
+            </h2>
           </div>
 
           <div className="grid grid-cols-4 items-center gap-x-[26px] gap-y-[46px] mt-[40px] max-w-[766px] mx-auto">

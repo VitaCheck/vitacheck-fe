@@ -1,7 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: number;
@@ -21,9 +20,9 @@ const PurposeIngredientProducts = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const batchSize = window.innerWidth >= 768 ? 4 : 2; // PC:4개, 모바일:2개
+  const batchSize = window.innerWidth >= 768 ? 4 : 2;
 
-  // 1️⃣ 초기 데이터 로드
+  // 초기 데이터 로드
   useEffect(() => {
     setIsLoading(true);
     const supplementsFromState = location.state?.supplements || [];
@@ -34,7 +33,9 @@ const PurposeIngredientProducts = () => {
           (item: [string, string], index: number) => ({
             id: index + 1,
             title: item[0],
-            imageUrl: item[1].startsWith("http") ? item[1] : `/images/${item[1]}`,
+            imageUrl: item[1].startsWith("http")
+              ? item[1]
+              : `/images/${item[1]}`,
           })
         );
         setProducts(mappedProducts);
@@ -49,13 +50,20 @@ const PurposeIngredientProducts = () => {
     return () => clearTimeout(initialLoadTimer);
   }, [location.state?.supplements]);
 
-  // 2️⃣ 무한 스크롤
+  // 무한 스크롤
   useEffect(() => {
     if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && !isLoading && displayProducts.length < products.length) {
-          const nextBatch = products.slice(displayProducts.length, displayProducts.length + batchSize);
+        if (
+          entries[0].isIntersecting &&
+          !isLoading &&
+          displayProducts.length < products.length
+        ) {
+          const nextBatch = products.slice(
+            displayProducts.length,
+            displayProducts.length + batchSize
+          );
           setDisplayProducts((prev) => [...prev, ...nextBatch]);
         }
       },
@@ -70,11 +78,12 @@ const PurposeIngredientProducts = () => {
     product.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 3️⃣ 스켈레톤 카드
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
-      <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      {/* 모바일 */}
+      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
       <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
+      {/* PC */}
       <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
       <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
     </div>
@@ -91,7 +100,11 @@ const PurposeIngredientProducts = () => {
     }
 
     if (filteredProducts.length === 0 && searchQuery !== "") {
-      return <p className="w-full text-center text-gray-500 mt-5">검색 결과가 없습니다.</p>;
+      return (
+        <p className="w-full text-center text-gray-500 mt-5">
+          검색 결과가 없습니다.
+        </p>
+      );
     }
 
     return filteredProducts.map((product) => (
@@ -102,7 +115,9 @@ const PurposeIngredientProducts = () => {
       >
         <div
           className={`${
-            isMobile ? "w-full max-w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
+            isMobile
+              ? "w-full max-w-[166px] h-[150px] rounded-xl"
+              : "w-full h-[160px] rounded-[16px]"
           } bg-white shadow-lg overflow-hidden`}
         >
           <img
@@ -110,13 +125,17 @@ const PurposeIngredientProducts = () => {
             alt={product.title}
             loading="lazy"
             className={`${
-              isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
+              isMobile
+                ? "w-[122px] h-[122px] mt-[22px]"
+                : "w-[135px] h-[135px] mt-[14px]"
             } mx-auto object-cover`}
           />
         </div>
         <p
           className={`${
-            isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] text-[22px]"
+            isMobile
+              ? "mt-[18px] h-[22px] text-[18px]"
+              : "mt-[16px] text-[22px]"
           } font-medium text-center`}
         >
           {product.title}
@@ -129,9 +148,11 @@ const PurposeIngredientProducts = () => {
     <>
       {/* 모바일 */}
       <div className="sm:hidden">
-        <div className="max-w-[430px] mx-auto mt-[50px] pb-[100px]">
+        <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
-            <h1 className="text-[30px] tracking-[-0.6px] font-medium">{ingredient}</h1>
+            <h1 className="text-[30px] tracking-[-0.6px] font-medium">
+              {ingredient}
+            </h1>
           </div>
           <div className="mx-[32px]">
             <div className="flex items-center w-full max-w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
@@ -145,8 +166,7 @@ const PurposeIngredientProducts = () => {
               <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
             </div>
           </div>
-          <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center
-                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+          <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
           <div ref={loadMoreRef}></div>
@@ -156,9 +176,7 @@ const PurposeIngredientProducts = () => {
       {/* PC */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
-          <div className="flex justify-between items-center">
-            <h1 className="text-[30px] font-semibold">{ingredient}</h1>
-          </div>
+          <h1 className="text-[30px] font-semibold">{ingredient}</h1>
           <div className="flex items-center w-full h-[52px] mt-[26px] mx-auto px-[24px] rounded-full border-[#C7C7C7] border-[1px]">
             <input
               type="text"
