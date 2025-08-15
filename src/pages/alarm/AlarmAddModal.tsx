@@ -5,7 +5,7 @@ import { uploadImageToCloudinary } from "@/utils/cloudinary";
 
 interface Props {
   onClose: () => void;
-  onCreated?: () => void; // ✅ 생성 후 부모 리스트 재조회용(선택)
+  onCreated?: () => void;
 }
 
 type DayEn = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";

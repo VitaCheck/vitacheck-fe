@@ -1,7 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
-import Picker from "react-mobile-picker";
+import { useEffect, useState } from "react";
+// ⬇️ react-mobile-picker 제거
+// import Picker from "react-mobile-picker";
 import axios from "@/lib/axios";
 import { uploadImageToCloudinary } from "@/utils/cloudinary";
+import TimePickerModal from "./TimePickerModal"; // ⬅️ 추가
 
 // ==== 타입 ====
 type DayEn = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
@@ -33,7 +35,6 @@ const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
 const unique = <T,>(arr: T[]) => Array.from(new Set(arr));
 
 const normalizeRoutine = (raw: any) => {
-  // 단건/목록 응답을 하나의 내부 형태로 정규화
   const supplementName: string = String(raw?.supplementName ?? raw?.name ?? "");
   const supplementImageUrl: string | null =
     raw?.supplementImageUrl ?? raw?.imageUrl ?? null;
@@ -69,11 +70,11 @@ const normalizeRoutine = (raw: any) => {
 interface Props {
   id: number;
   onClose: () => void;
-  onSaved?: () => void; // ✅ 추가
+  onSaved?: () => void;
 }
 
 const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
-  // 폼 상태 (EN 코드로 들고 있다가 렌더만 한글 표시)
+  // 폼 상태
   const [name, setName] = useState("");
   const [days, setDays] = useState<DayEn[]>([]);
   const [times, setTimes] = useState<string[]>([]);
@@ -81,17 +82,17 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [showImagePicker, setShowImagePicker] = useState(false);
+
+  // ✅ 시간 피커 모달 상태 (추가/편집 공용)
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null); // null이면 "추가", 숫자면 해당 인덱스 편집
+  const [timePickerDefault, setTimePickerDefault] = useState<
+    { hour: string; minute: string } | undefined
+  >(undefined);
+
   const [saving, setSaving] = useState(false);
 
-  // 시간 선택용 피커
-  const selections = {
-    hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
-    minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
-  };
-  const [pickerValue, setPickerValue] = useState({ hour: "09", minute: "00" });
-
-  // 초기 로드 (데스크탑과 동일한 로직: 목록을 받아서 find)
+  // 초기 로드
   useEffect(() => {
     (async () => {
       try {
@@ -126,12 +127,44 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     );
   };
 
-  const handleAddTime = () => {
-    const newTime = fixTime(`${pickerValue.hour}:${pickerValue.minute}`);
+  // ✅ 시간 추가/편집 오픈
+  const openAddTime = () => {
+    setEditingIndex(null);
+    setTimePickerDefault({ hour: "09", minute: "00" });
+    setShowTimePicker(true);
+  };
+
+  const openEditTime = (index: number) => {
+    const t = times[index] ?? "09:00";
+    const [h, m] = t.split(":");
+    setEditingIndex(index);
+    setTimePickerDefault({ hour: h, minute: m });
+    setShowTimePicker(true);
+  };
+
+  // ✅ 시간 삭제
+  const removeTime = (index: number) => {
+    setTimes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  // ✅ TimePickerModal 완료 처리 (추가/편집 공용)
+  const handleConfirmTime = (v: { hour: string; minute: string }) => {
+    const newTime = `${v.hour}:${v.minute}`;
     setTimes((prev) => {
-      const next = unique([...prev, newTime]).sort();
-      return next;
+      let next = [...prev];
+      if (editingIndex === null) {
+        // 추가
+        next = unique([...next, newTime]);
+      } else {
+        // 편집
+        next[editingIndex] = newTime;
+        next = unique(next);
+      }
+      return next.sort();
     });
+    setShowTimePicker(false);
+    setEditingIndex(null);
+    setTimePickerDefault(undefined);
   };
 
   const formatTime = (time: string) => {
@@ -174,7 +207,7 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
         imageUrl = uploaded;
       }
 
-      // 데스크탑과 동일한 API 흐름: schedules 기반 custom upsert
+      // schedules 기반 custom upsert
       const schedules: Schedule[] = days.flatMap((d) =>
         times.map((t) => ({ dayOfWeek: d, time: fixTime(t) }))
       );
@@ -182,12 +215,12 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
       const payload = {
         notificationRoutineId: Number(id),
         name: name.trim(),
-        imageUrl, // undefined면 필드 생략되어도 OK (백엔드에서 처리)
+        imageUrl,
         schedules,
       };
 
       await axios.post("/api/v1/notifications/routines/custom", payload);
-      if (onSaved) onSaved();
+      onSaved?.();
       alert("알림이 저장되었습니다!");
       onClose();
     } catch (err: any) {
@@ -281,104 +314,50 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
           })}
         </div>
 
-        {/* 추가된 시간 리스트 */}
+        {/* 추가된 시간 리스트 (편집/삭제 가능) */}
         {times.length > 0 && (
           <div className="flex flex-col gap-2 mt-4">
             {times.map((t, idx) => (
-              <div
-                key={t}
-                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white"
+              <button
+                key={`${t}-${idx}`}
+                type="button"
+                onClick={() => openEditTime(idx)}
+                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white text-left"
+                title="탭하여 시간 편집"
               >
                 <span className="text-[16px] text-[#AAAAAA]">
                   복용 시간 {idx + 1}
                 </span>
-                <span className="text-[16px] font-semibold text-[#4D4D4D]">
-                  {formatTime(t)}
-                </span>
-              </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[16px] font-semibold text-[#4D4D4D]">
+                    {formatTime(t)}
+                  </span>
+                  <span
+                    role="button"
+                    aria-label="시간 삭제"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTime(idx);
+                    }}
+                    className="text-[#AAAAAA] text-[18px] leading-none px-2"
+                  >
+                    ×
+                  </span>
+                </div>
+              </button>
             ))}
           </div>
         )}
 
-        {/* 복용 시간 추가 버튼 */}
+        {/* 시간 추가 버튼 */}
         <div className="flex justify-center mt-4">
           <button
             className="w-full h-[60px] border border-[#AAAAAA] text-[#AAAAAA] rounded-[10px] px-3 py-2 bg-white mx-auto"
-            onClick={() => setShowTimePicker(true)}
+            onClick={openAddTime}
           >
             복용 시간 추가
           </button>
         </div>
-
-        {/* 시간 선택 모달 */}
-        {showTimePicker && (
-          <div
-            className="fixed inset-0 bg-black/40 flex items-end z-50"
-            onClick={() => setShowTimePicker(false)}
-          >
-            <div
-              className="w-full bg-white rounded-t-2xl px-6 py-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative flex justify-center items-center w-full mx-auto h-[180px]">
-                <div className="absolute top-1/2 -translate-y-1/2 w-full h-[36px] bg-[#F1F1F1] rounded-md z-0" />
-                <div className="relative z-10 flex gap-3">
-                  <Picker
-                    value={pickerValue}
-                    onChange={setPickerValue}
-                    height={180}
-                    itemHeight={36}
-                    className="flex gap-3"
-                  >
-                    <Picker.Column
-                      name="hour"
-                      className="flex flex-col items-center"
-                    >
-                      {selections.hour.map((h) => (
-                        <Picker.Item
-                          key={h}
-                          value={h}
-                          className="text-[24px] leading-[36px]"
-                        >
-                          {h}
-                        </Picker.Item>
-                      ))}
-                    </Picker.Column>
-
-                    <div className="flex items-center justify-center text-[24px] w-[20px]">
-                      :
-                    </div>
-
-                    <Picker.Column
-                      name="minute"
-                      className="flex flex-col items-center"
-                    >
-                      {selections.minute.map((m) => (
-                        <Picker.Item
-                          key={m}
-                          value={m}
-                          className="text-[24px] leading-[36px]"
-                        >
-                          {m}
-                        </Picker.Item>
-                      ))}
-                    </Picker.Column>
-                  </Picker>
-                </div>
-              </div>
-
-              <button
-                className="w-full mt-4 h-[50px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-bold"
-                onClick={() => {
-                  handleAddTime();
-                  setShowTimePicker(false);
-                }}
-              >
-                시간 추가
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* 이미지 선택 모달 */}
         {showImagePicker && (
@@ -427,6 +406,19 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
               </div>
             </div>
           </div>
+        )}
+
+        {/* ✅ 시간 선택 모달 (추가/편집 공용) */}
+        {showTimePicker && (
+          <TimePickerModal
+            onClose={() => {
+              setShowTimePicker(false);
+              setEditingIndex(null);
+              setTimePickerDefault(undefined);
+            }}
+            onConfirm={handleConfirmTime}
+            defaultValue={timePickerDefault} // 편집 시 현재값, 추가 시 09:00
+          />
         )}
       </div>
     </div>
