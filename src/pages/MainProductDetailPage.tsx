@@ -43,12 +43,14 @@ const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
   // console.log("URL에서 받은 id:", id);
-  // console.log("location.state로 받은 product:", location.state); 
+  // console.log("location.state로 받은 product:", location.state);
   const state = location.state as { product?: Product } | undefined;
-  const [product, setProduct] = useState<Product | null>(state?.product || null);
+  const [product, setProduct] = useState<Product | null>(null);
   const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
   const [isLoading, setIsLoading] = useState(!state?.product);
-  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
+  const [activeTab, setActiveTab] = useState<"ingredient" | "timing">(
+    "ingredient"
+  );
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
@@ -57,35 +59,55 @@ const ProductDetailPage = () => {
   }, [location.pathname]);
 
   useEffect(() => {
-    if (!id || product) return;
+    if (!id) return;
 
     const fetchProductAndBrandDetails = async () => {
       setIsLoading(true);
       const accessToken = localStorage.getItem("accessToken");
 
       try {
-        const productResponse = await axios.get<ApiProduct>(`/api/v1/supplements`, {
-          params: { id },
-          headers: {
-            Authorization: accessToken ? `Bearer ${accessToken}` : "",
-          },
-        });
+        // 서버에서 항상 제품 정보 가져오기 (liked 상태 포함)
+        const accessToken = localStorage.getItem("accessToken");
+        const productResponse = await axios.get<ApiProduct>(
+          `/api/v1/supplements`,
+          {
+            params: { id },
+            headers: {
+              Authorization: accessToken ? `Bearer ${accessToken}` : "",
+            },
+          }
+        );
 
         console.log("💊 제품 API 응답 데이터:", productResponse.data);
 
-        const fetchedProduct = productResponse.data;
-        const mappedProduct: Product = { id: fetchedProduct.supplementId, ...fetchedProduct };
+        const fetchedProduct: ApiProduct = productResponse.data;
+        const mappedProduct: Product = {
+          id: fetchedProduct.supplementId,
+          ...fetchedProduct,
+        };
+
         setProduct(mappedProduct);
 
-        // 브랜드 제품 목록 요청
-        const brandIdToFetch = fetchedProduct.brandId || fetchedProduct.supplementId;
+        // ✅ 페이지 처음 로드 시 찜 상태 출력
+        console.log(
+          "💖 페이지 로드 시 서버 찜 상태:",
+          mappedProduct.liked ? "찜 되어 있음" : "찜 안 되어 있음"
+        );
+
+        const brandIdToFetch =
+          fetchedProduct.brandId || fetchedProduct.supplementId;
         const brandResponse = await axios.get<{ supplements: BrandProduct[] }>(
           `/api/v1/supplements/brand`,
           { params: { id: brandIdToFetch } }
         );
         setBrandProducts(brandResponse.data.supplements);
-      } catch (error) {
+      } catch (error: any) {
         console.error("❌ 제품 정보를 불러오는데 실패했습니다:", error);
+
+        if (error.response?.status === 401) {
+          setIsLoginModalOpen(true);
+        }
+
         setProduct(null);
       } finally {
         setIsLoading(false);
@@ -93,26 +115,51 @@ const ProductDetailPage = () => {
     };
 
     fetchProductAndBrandDetails();
-  }, [id, product]);
+  }, [id]);
 
+  // -----------찜 기능  ----------------
   const toggleLike = async () => {
     if (!product) return;
+
     const accessToken = localStorage.getItem("accessToken");
+
+    // 1️⃣ 로그인 안 되어 있으면 모달 띄우고 종료
     if (!accessToken) {
       setIsLoginModalOpen(true);
+      console.log("💡 로그인 필요: 찜 기능 사용 불가");
       return;
     }
 
+    console.log(
+      "현재 찜 상태:",
+      product.liked ? "찜 되어 있음" : "찜 안 되어 있음"
+    );
+
     const newLikedState = !product.liked;
+
+    // 화면에 즉시 반영
     setProduct((prev) => (prev ? { ...prev, liked: newLikedState } : null));
 
+    console.log("찜 토글 후 상태:", newLikedState ? "찜 했다" : "찜 해제했다");
+
     try {
-      await axios.post(`/api/v1/supplements/${product.id}/like`, {}, {
-        headers: { Authorization: `Bearer ${accessToken}` },
-      });
+      await axios.post(
+        `/api/v1/supplements/${product.id}/like`,
+        { supplementId: product.id },
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("✅ 서버에 찜 상태 반영 완료");
     } catch (error) {
       console.error("❌ 찜 상태 업데이트 실패:", error);
+
+      // 실패하면 상태 되돌리기
       setProduct((prev) => (prev ? { ...prev, liked: !newLikedState } : null));
+      console.log("⏪ 서버 실패로 상태 되돌림");
     }
   };
 
@@ -129,7 +176,9 @@ const ProductDetailPage = () => {
   const handleCloseLoginModal = () => setIsLoginModalOpen(false);
 
   if (isLoading) {
-    return <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>;
+    return (
+      <p className="mt-[122px] text-center">제품 정보를 불러오는 중입니다...</p>
+    );
   }
 
   if (!product) {
@@ -166,7 +215,10 @@ const ProductDetailPage = () => {
       />
 
       <ShareModal isOpen={isModalOpen} onClose={handleCloseModal} />
-      <LoginPromptModal isOpen={isLoginModalOpen} onClose={handleCloseLoginModal} />
+      <LoginPromptModal
+        isOpen={isLoginModalOpen}
+        onClose={handleCloseLoginModal}
+      />
     </>
   );
 };
