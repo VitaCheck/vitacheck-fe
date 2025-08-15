@@ -10,6 +10,7 @@ export default function SocialCallback() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
+  // 쿼리/해시 파싱은 한 번만
   const query = useMemo(() => {
     const isNew = (params.get("isNew") ?? "").toLowerCase() === "true";
     const provider = params.get("provider") ?? "";
@@ -17,7 +18,7 @@ export default function SocialCallback() {
     const email = params.get("email") ?? "";
     const fullName = params.get("fullName") ?? "";
 
-    // 임시 토큰은 쿼리 우선, 없으면 fragment에서 조회
+    // 임시/가입 토큰: 쿼리 우선, 없으면 해시(fragment)에서
     const hashParams = parseHashParams(window.location.hash);
     const signupToken =
       params.get("signupToken") ??
@@ -31,6 +32,7 @@ export default function SocialCallback() {
     const at = params.get("accessToken") ?? "";
     const rt = params.get("refreshToken") ?? "";
     const next = params.get("next") ?? "";
+
     return {
       isNew,
       provider,
@@ -45,106 +47,36 @@ export default function SocialCallback() {
   }, [params]);
 
   useEffect(() => {
-<<<<<<< HEAD
-    const isNew = params.get("isNew") === "true";
-    const provider = params.get("provider") || "";
-    const providerId = params.get("providerId") || "";
-    const email = params.get("email") || "";
-
-    // 서버가 쿼리로 토큰을 바로 주는 경우(기존 유저)
-    const at = params.get("accessToken");
-    const rt = params.get("refreshToken");
-    if (at && rt && !isNew) {
-      localStorage.setItem("accessToken", at);
-      localStorage.setItem("refreshToken", rt);
-      navigate("/", { replace: true });
+    // 1) 기존 유저: access/refresh 토큰이 둘 다 오면 로그인 처리
+    if (!query.isNew && query.at && query.rt) {
+      localStorage.setItem("accessToken", query.at);
+      localStorage.setItem("refreshToken", query.rt);
+      navigate(query.next || "/", { replace: true });
       return;
     }
 
-    // 신규 유저면 소셜 회원가입 폼으로 이동
-    navigate("/social-signup", {
-      replace: true,
-      state: { email, provider, providerId },
-    });
-  }, [navigate, params]);
-=======
-    const {
-      isNew,
-      provider,
-      providerId,
-      email,
-      fullName,
-      signupToken,
-      at,
-      rt,
-      next,
-    } = query;
-
-    // URL에서 토큰 흔적 제거
-    let cleaned = false;
-    if (window.location.hash) {
-      history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search
-      );
-      cleaned = true;
-    }
+    // 2) 신규 유저 또는 임시/가입 토큰 보유: 회원가입 폼으로 이동
     if (
-      !cleaned &&
-      (params.get("signupToken") ||
-        params.get("socialTempToken") ||
-        params.get("tempToken"))
+      query.isNew ||
+      (!!query.signupToken &&
+        (query.provider || query.email || query.providerId))
     ) {
-      const u = new URL(window.location.href);
-      u.searchParams.delete("signupToken");
-      u.searchParams.delete("socialTempToken");
-      u.searchParams.delete("tempToken");
-      history.replaceState(
-        null,
-        "",
-        u.pathname + (u.search ? "?" + u.searchParams.toString() : "")
-      );
-    }
-
-    // 기존 유저: access/refresh 둘 다 있으면 바로 로그인
-    if (!isNew && at && rt) {
-      saveTokens(at, rt);
-      const safeNext = next?.startsWith("/") ? next : "/";
-      navigate(safeNext, { replace: true });
-      return;
-    }
-
-    // 신규 유저: isNew가 없어도 임시 토큰이 있으면 신규 플로우로 보냄
-    if ((isNew || !at) && signupToken) {
       navigate("/social-signup", {
         replace: true,
         state: {
-          socialTempToken: signupToken,
-          provider,
-          providerId,
-          email,
-          fullName,
-          next,
+          email: query.email,
+          provider: query.provider,
+          providerId: query.providerId,
+          ...(query.fullName ? { fullName: query.fullName } : {}),
+          ...(query.signupToken ? { signupToken: query.signupToken } : {}),
         },
       });
       return;
     }
 
-    // 값 전달 방식(임시 토큰 없이 기본값만 온 경우)
-    if (isNew && provider && providerId && email) {
-      navigate("/social-signup", {
-        replace: true,
-        state: { provider, providerId, email, fullName, next },
-      });
-      return;
-    }
-
-    // 실패 시 로그인으로 회수
-    clearTokens?.();
-    navigate("/login?error=callback_mismatch", { replace: true });
-  }, [navigate, query, params]);
->>>>>>> ecbdb229be4411bbd946253f5c7ed762752f57f9
+    // 3) 어떤 조건도 만족하지 않으면 로그인 페이지로
+    navigate("/login", { replace: true });
+  }, [navigate, query]);
 
   return <div className="p-6 text-center text-gray-600">로그인 처리 중...</div>;
 }
