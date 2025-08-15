@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: "deploy-dev"
+  group: deploy-dev
   cancel-in-progress: true
 
 jobs:
@@ -39,7 +39,7 @@ jobs:
 
       - name: Resolve pnpm store path
         id: pnpm-cache
-        run: echo "STORE_PATH=$(pnpm store path | tr -d '\n')" >> $GITHUB_OUTPUT
+        run: echo "STORE_PATH=$(pnpm store path | tr -d '\n')" >> "$GITHUB_OUTPUT"
 
       - name: Cache pnpm store
         uses: actions/cache@v4
@@ -52,19 +52,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      
-
       - name: Debug: list auth pages
         run: |
           git ls-files src/pages/auth || true
           ls -la src/pages/auth || true
           grep -R "EmailSignup" -n src || true
 
-
       - name: Build
-        run: pnpm run build
         env:
           VITE_SERVER_API_URL: ${{ secrets.VITE_SERVER_API_URL }}
+        run: pnpm run build
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
@@ -83,11 +80,4 @@ jobs:
       - name: Upload index.html (no-cache)
         run: |
           aws s3 cp ./dist/index.html "s3://${S3_BUCKET}/index.html" \
-            --cache-control "no-cache" \
-            --content-type "text/html; charset=utf-8"
-
-      - name: Create CloudFront invalidation
-        run: |
-          aws cloudfront create-invalidation \
-            --distribution-id "${CLOUDFRONT_DISTRIBUTION_ID}" \
-            --paths "/*"
+            --
