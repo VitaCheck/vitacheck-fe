@@ -18,7 +18,7 @@ const Footer = () => {
         <div className="relative w-full flex justify-center">
           {/* 가운데 개인정보처리방침 */}
           <a
-            href="https://www.notion.so/233d3807f226800d82c4f689e39dc554?source=copy_link"
+            href="https://radical-weeder-fbc.notion.site/233d3807f226800d82c4f689e39dc554?source=copy_link"
             className="mx-4 hover:underline"
           >
             개인정보처리방침
@@ -26,7 +26,7 @@ const Footer = () => {
 
           {/* 좌측 */}
           <a
-            href="#"
+            href="https://radical-weeder-fbc.notion.site/233d3807f22680d8a2c3dfd45e504b6f?source=copy_link"
             className="absolute left-1/2 -translate-x-[160px] hover:underline"
           >
             이용약관
@@ -34,7 +34,7 @@ const Footer = () => {
 
           {/* 우측 */}
           <a
-            href="https://instagram.com"
+            href="https://www.instagram.com/vitacheck.official/"
             target="_blank"
             rel="noopener noreferrer"
             className="absolute left-1/2 translate-x-[110px] hover:underline"
