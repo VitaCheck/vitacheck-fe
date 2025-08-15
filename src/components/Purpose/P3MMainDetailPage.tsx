@@ -50,8 +50,8 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
     <div className="sm:hidden flex flex-col">
       <div className="mx-auto mt-[70px] mb-[24px] flex flex-col items-center">
         {/* 제품 이미지, 브랜드명, 제품명 */}
-        <div className="flex flex-col w-[338px] mx-[46px]">
-          <div className="relative w-[338px] h-[338px]">
+        <div className="flex flex-col w-full max-w-[338px] mx-[46px]">
+          <div className="relative w-full max-w-[338px] h-[338px]">
             <img
               src={product.supplementImageUrl}
               alt={product.supplementName}
@@ -86,14 +86,14 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
         </div>
 
         <div
-          className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-[430px] h-[103px] bg-white z-10
+          className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] h-[103px] bg-white z-10
             transition-all duration-300 ease-in-out
             ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
           `}
         />
         <button
           onClick={() => navigate("/alarm")}
-          className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-[366px] h-[58px] rounded-[71px] z-50
+          className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-full max-w-[366px] h-[58px] rounded-[71px] z-50
             transition-all duration-300 ease-in-out flex justify-center items-center
             bg-[#FFEB9D] text-black text-[20px] font-medium
             ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
@@ -103,11 +103,11 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
         </button>
 
         {/* 상세정보 / 쿠팡 바로가기 */}
-        <div className="flex justify-center mx-auto w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
-          <div className="w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
+        <div className="flex justify-center mx-auto w-full max-w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
+          <div className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
             상세정보
           </div>
-          <div className="w-[154px] h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
+          <div className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
             쿠팡 바로가기
           </div>
         </div>
@@ -130,10 +130,10 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 탭 UI */}
       <div className="flex flex-col items-center w-full border-b-[#F3F3F3] border-b-[4px] gap-[6px]">
-        <div className="flex justify-between w-[265px] relative">
+        <div className="flex justify-between w-full max-w-[265px] relative">
           {[
             { key: "ingredient", label: "성분 함량" },
-            { key: "timing", label: "섭취 시기" },
+            { key: "timing", label: "섭취 방법" },
           ].map((tab) => (
             <button
               key={tab.key}

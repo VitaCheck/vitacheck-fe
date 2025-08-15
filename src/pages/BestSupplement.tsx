@@ -56,27 +56,29 @@ export default function BestSupplement() {
 
   useEffect(() => {
     const apiAgeGroup = selectedAgeGroup === "전체 연령" ? "전체" : selectedAgeGroup;
+    const apiGender =
+      selectedGender === "전체 성별"
+        ? "전체"
+        : selectedGender === "남성"
+        ? "MALE"
+        : "FEMALE";
 
     const fetchSupplements = async () => {
       setIsLoading(true);
       setError(null);
 
       try {
-        console.log("[Debug] API 호출 시작. ageGroup:", apiAgeGroup);
-
-        // ✅ 절대 URL로 변경
         const response = await axios.get<ApiResponse>(
           `https://vita-check.com/api/v1/supplements/popular-supplements`,
           {
             params: {
               ageGroup: apiAgeGroup,
+              gender: apiGender,
               page: 0,
               size: 8,
             },
           }
         );
-
-        console.log("[Debug] API 응답:", response.data);
 
         if (response.data.isSuccess) {
           const newProducts = response.data.result.content.map((apiProduct) => ({
@@ -85,7 +87,6 @@ export default function BestSupplement() {
             imageUrl: apiProduct.imageUrl,
             brand: apiProduct.brandName,
           }));
-          console.log("[Debug] 변환된 상품 목록:", newProducts);
           setProducts(newProducts);
         } else {
           setError(response.data.message);
@@ -93,11 +94,7 @@ export default function BestSupplement() {
         }
       } catch (err: any) {
         console.error("API 호출 중 에러 발생:", err);
-        if (err.message.includes("Network Error")) {
-          setError("네트워크 오류 또는 CORS 정책 위반.");
-        } else {
-          setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
-        }
+        setError("데이터를 불러오는 데 실패했습니다. 잠시 후 다시 시도해주세요.");
         setProducts([]);
       } finally {
         setIsLoading(false);
@@ -105,8 +102,7 @@ export default function BestSupplement() {
     };
 
     fetchSupplements();
-  }, [selectedAgeGroup]);
-
+  }, [selectedAgeGroup, selectedGender]);
 
 
   useEffect(() => {
@@ -165,7 +161,7 @@ export default function BestSupplement() {
         <div
           key={product.id}
           onClick={() => navigate(`/product/${product.id}`, { state: product })}
-          className="flex-shrink-0 flex flex-col items-center cursor-pointer relative"
+          className="flex-shrink-0 flex w-full flex-col items-center cursor-pointer relative"
         >
           <div
             className={`${
@@ -179,14 +175,14 @@ export default function BestSupplement() {
           </div>
           <div
             className={`${
-              isMobile ? "w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
+              isMobile ? "w-full max-w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
             } bg-white shadow-lg overflow-hidden`}
           >
             <img
               src={product.imageUrl}
               alt={product.title}
               className={`${
-                isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
+                isMobile ? "w-full max-w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
               } mx-auto object-cover`}
             />
           </div>
@@ -206,7 +202,7 @@ export default function BestSupplement() {
     <>
       {/* 모바일 버전 */}
       <div className="sm:hidden">
-        <div className="mx-auto mt-[50px] pb-[100px]">
+        <div className="mx-auto mt-[50px] w-full pb-[100px]">
           <div className="flex flex-col ml-[38px] items-start gap-[27px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">인기 영양제</h1>
             <div className="flex items-center h-[38px] gap-[8px] w-full">
@@ -214,7 +210,9 @@ export default function BestSupplement() {
               <div ref={dropdownRef} className="relative min-w-[91px] h-full cursor-pointer">
                 <div
                   onClick={() => setIsPopupOpen(true)}
-                  className="w-full h-full max-w-[120px] truncate text-[16px] font-medium pl-[10px] pr-[15px] rounded-[26px] bg-[#FFEB9D] text-black border-none flex items-center justify-center gap-[5px] select-none"
+                  className="w-full h-full max-w-[120px] truncate text-[16px] font-medium pl-[10px] pr-[15px] 
+                              rounded-[26px] bg-[#FFEB9D] text-black border-none 
+                              flex items-center justify-center gap-[5px] select-none"
                 >
                   <span className="pl-[10px] truncate">{selectedGender}</span>
                   <svg
@@ -259,12 +257,13 @@ export default function BestSupplement() {
               </div>
             </div>
           </div>
-          <div className="mt-[34px] w-[430px] grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+          <div className="mt-[34px] max-w-[430px] w-full mx-auto justify-items-center
+                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
         </div>
       </div>
-
+                
       {/* PC 버전 */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
@@ -309,7 +308,7 @@ export default function BestSupplement() {
               </div>
 
               {/* 연령대 버튼 */}
-              <div className="flex gap-[8px] h-full overflow-x-auto whitespace-nowrap flex-1">
+              <div className="flex gap-[8px] h-full overflow-x-auto whitespace-nowrap hide-scrollbar flex-1">
                 {ageGroups.map((age) => (
                   <button
                     key={age}

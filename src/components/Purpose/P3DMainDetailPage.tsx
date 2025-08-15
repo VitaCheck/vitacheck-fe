@@ -127,7 +127,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
           <div className="flex justify-between w-[502.7px] relative">
             {[
               { key: "ingredient", label: "성분 함량" },
-              { key: "timing", label: "섭취 시기" },
+              { key: "timing", label: "섭취 방법" },
             ].map((tab) => (
               <button
                 key={tab.key}

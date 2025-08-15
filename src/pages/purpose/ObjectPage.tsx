@@ -173,7 +173,7 @@ const PurposeCardList = () => {
           />
         </div>
       </div>
-      <p className="mt-[18px] text-[clamp(12px,5vw,20px)] sm:text-[20px] text-center font-semibold">
+      <p className="mt-[18px] text-[clamp(12px,4vw,20px)] sm:text-[20px] text-center font-semibold">
         {card.description}
       </p>
     </div>  
@@ -215,7 +215,7 @@ const PurposeCardList = () => {
           <h1 className="text-[35px] tracking-[-0.72px] font-medium">목적별</h1>
           <h2 className="text-sm text-[#808080] mt-[1px] font-medium">최대 3개 선택</h2>
         </div>
-        <div className="mt-[33px] grid grid-cols-3 gap-x-[20px] gap-y-[46px]">
+        <div className="mt-[33px] px-[15px] grid grid-cols-3 gap-x-[20px] gap-y-[46px]">
           {renderCardList()}
         </div>
         <div className="fixed bottom-0 left-0 right-0 h-[76px] bg-white z-10" />

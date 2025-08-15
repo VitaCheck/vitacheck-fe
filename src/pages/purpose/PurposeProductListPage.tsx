@@ -88,31 +88,43 @@ const PurposeProductList = () => {
   };
 
   // ---------------- API 호출 ----------------
-  useEffect(() => {
-    if (!selectedCodes || selectedCodes.length === 0 || Object.keys(data).length > 0) {
+useEffect(() => {
+  if (!selectedCodes || selectedCodes.length === 0 || Object.keys(data).length > 0) {
+    setIsLoading(false);
+    return;
+  }
+
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        "https://vita-check.com/api/v1/supplements/by-purposes",
+        { purposeNames: selectedCodes }
+      );
+      console.log("API response:", response.data);
+
+      const content = response.data?.result?.content || [];
+      const mappedData: ResultData = {};
+
+      content.forEach((item: any) => {
+        mappedData[item.ingredientName] = {
+          purposes: item.data?.purposes || [],
+          supplements: item.data?.supplements || [],
+        };
+      });
+
+      setData(mappedData);
+    } catch (error) {
+      console.error("❌ API 호출 실패:", error);
+      setData({});
+    } finally {
       setIsLoading(false);
-      return; // 이미 데이터 있으면 API 호출 건너뛰기
     }
+  };
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const response = await axios.post(
-          "https://vita-check.com/api/v1/supplements/by-purposes",
-          { purposeNames: selectedCodes }
-        );
-        console.log("API response:", response.data);
-        setData(response.data.result as ResultData);
-      } catch (error) {
-        console.error("❌ API 호출 실패:", error);
-        setData({});
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  fetchData();
+}, [selectedCodes]);
 
-    fetchData();
-  }, [selectedCodes]);
 
   // ---------------- 무한 스크롤 ----------------
   useEffect(() => {
@@ -179,7 +191,7 @@ const PurposeProductList = () => {
 
   // ---------------- 스켈레톤 ----------------
   const SkeletonSection = () => (
-    <div className="animate-pulse mt-[20px] mx-4 sm:mx-0 bg-gray-100 rounded-[20px] mb-4 h-[150px]"></div>
+    <div className="animate-pulse mt-[20px] mx-6 sm:mx-0 bg-gray-100 rounded-[20px] mb-4 h-[150px]"></div>
   );
 
   // 제목
