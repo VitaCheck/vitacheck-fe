@@ -1,35 +1,15 @@
-// /alarm
+// /alarm - Mobile
 import React, { useEffect, useMemo, useState } from "react";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
-
-type DayOfWeek = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
-type Schedule = { dayOfWeek: DayOfWeek; time: string };
-
-type RawSupplement = {
-  notificationRoutineId?: number;
-  id?: number;
-  supplementId?: number;
-  supplementName?: string;
-  name?: string;
-  supplementImageUrl?: string;
-  imageUrl?: string;
-  daysOfWeek?: string[];
-  times?: string[];
-  schedules?: Schedule[];
-  isTaken?: boolean;
-};
-
-type Supplement = {
-  notificationRoutineId: number;
-  supplementId: number;
-  supplementName: string;
-  supplementImageUrl?: string;
-  daysOfWeek: string[];
-  times: string[];
-  isTaken: boolean; // ✅ 서버 진실값
-};
+import type { DayOfWeek, Supplement } from "@/types/alarm";
+import {
+  fmtYmd,
+  normalizeSupplement,
+  fixTime,
+  formatTimes,
+} from "@/utils/alarm";
 
 type Props = {
   year: number;
@@ -37,79 +17,36 @@ type Props = {
   today: Date;
   setYear: React.Dispatch<React.SetStateAction<number>>;
   setMonth: React.Dispatch<React.SetStateAction<number>>;
-  // 아래 두 prop은 더 이상 사용하지 않지만, 상위 호환을 위해 유지
-  checkedIds: string[];
-  toggleChecked: (id: string) => void;
+  checkedIds: string[]; // (호환용) 미사용
+  toggleChecked: (id: string) => void; // (호환용) 미사용
   getDaysInMonth: (year: number, month: number) => number;
 };
 
-const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
-const uniq = <T,>(arr: T[]) => Array.from(new Set(arr));
-// util: yyyy-MM-dd (로컬 타임존 기준)
-const fmtYmd = (d: Date) => {
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-};
+const DOW_KEYS: DayOfWeek[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+const uniq = <T,>(a: T[]) => Array.from(new Set(a));
 
-const normalizeSupplement = (raw: RawSupplement): Supplement => {
-  const notificationRoutineId = Number(
-    raw.notificationRoutineId ?? raw.id ?? 0
+/** 선택 요일의 시간만 추출 + HH:mm 정규화(+고유/정렬) */
+const timesForDay = (s: Supplement, dow: DayOfWeek): string[] => {
+  if (Array.isArray(s.schedules) && s.schedules.length) {
+    const onlyDay = s.schedules
+      .filter((sch) => sch?.dayOfWeek === dow)
+      .map((sch) => fixTime(sch?.time))
+      .filter(Boolean);
+    return uniq(onlyDay).sort((x, y) => x.localeCompare(y));
+  }
+  return uniq((s.times ?? []).map(fixTime).filter(Boolean)).sort((x, y) =>
+    x.localeCompare(y)
   );
-  const supplementId = Number(raw.supplementId ?? 0);
-  const supplementName = String(raw.supplementName ?? raw.name ?? "알 수 없음");
-  const supplementImageUrl = raw.supplementImageUrl ?? raw.imageUrl;
-
-  let daysOfWeek = Array.isArray(raw.daysOfWeek)
-    ? raw.daysOfWeek.filter(Boolean)
-    : undefined;
-  let times = Array.isArray(raw.times)
-    ? raw.times.filter(Boolean).map(fixTime)
-    : undefined;
-
-  const schedules = Array.isArray(raw.schedules) ? raw.schedules : undefined;
-
-  if ((!daysOfWeek || !daysOfWeek.length) && schedules) {
-    daysOfWeek = uniq(
-      schedules
-        .map((s) => s?.dayOfWeek)
-        .filter((v): v is DayOfWeek => Boolean(v))
-    );
-  }
-  if ((!times || !times.length) && schedules) {
-    times = uniq(schedules.map((s) => fixTime(s?.time)).filter(Boolean));
-  }
-
-  return {
-    notificationRoutineId,
-    supplementId,
-    supplementName,
-    supplementImageUrl,
-    daysOfWeek: daysOfWeek ?? [],
-    times: times ?? [],
-    isTaken: Boolean(raw.isTaken), // ✅ 서버 값 반영
-  };
 };
 
-const formatTimes = (times?: string[]) => {
-  const arr = Array.isArray(times) ? times.map(fixTime).filter(Boolean) : [];
-  if (!arr.length) return "—";
-  if (arr.length <= 3) return arr.join(" | ");
-  return arr.slice(0, 3).join(" | ") + " ...";
-};
-
-// ==== 컴포넌트 ====
 const MobileAlarmPage = ({
   year,
   month,
   today,
   setYear,
   setMonth,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  checkedIds,
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  toggleChecked,
+  checkedIds, // eslint-disable-line @typescript-eslint/no-unused-vars
+  toggleChecked, // eslint-disable-line @typescript-eslint/no-unused-vars
   getDaysInMonth,
 }: Props) => {
   const [selectedDate, setSelectedDate] = useState(today);
@@ -130,7 +67,6 @@ const MobileAlarmPage = ({
       setMonth((m) => m - 1);
     }
   };
-
   const onNextMonth = () => {
     if (month === 11) {
       setYear((y) => y + 1);
@@ -139,19 +75,81 @@ const MobileAlarmPage = ({
       setMonth((m) => m + 1);
     }
   };
-
-  const onClickDate = (day: number) => {
+  const onClickDate = (day: number) =>
     setSelectedDate(new Date(year, month, day));
-  };
 
+  /** 데스크탑과 동일한 규칙: /routines + /records 병합 */
   const fetchSupplementsByDate = async (date: Date) => {
-    const res = await axios.get("/api/v1/notifications/routines", {
-      params: { date: fmtYmd(date) },
-    });
-    const listRaw: RawSupplement[] = Array.isArray(res?.data?.result)
-      ? res.data.result
-      : [];
-    setSupplements(listRaw.map(normalizeSupplement));
+    const ymd = fmtYmd(date);
+    const dowKey = DOW_KEYS[date.getDay()];
+    const tzOffset = -new Date().getTimezoneOffset();
+
+    const [routinesRes, recordsRes] = await Promise.allSettled([
+      axios.get("/api/v1/notifications/routines", {
+        params: { date: ymd, tzOffset },
+      }),
+      axios.get("/api/v1/notifications/records", {
+        params: { date: ymd, tzOffset },
+      }),
+    ]);
+
+    // records → Map<routineId, isTaken>
+    let recordMap = new Map<number, boolean>();
+    if (recordsRes.status === "fulfilled") {
+      const body = recordsRes.value.data;
+      const list: any[] = Array.isArray(body?.result)
+        ? body.result
+        : Array.isArray(body)
+          ? body
+          : Array.isArray(body?.data)
+            ? body.data
+            : Array.isArray(body?.content)
+              ? body.content
+              : [];
+      recordMap = new Map(
+        list.map((it: any) => {
+          const id = Number(
+            it?.notificationRoutineId ?? it?.routineId ?? it?.id ?? 0
+          );
+          const taken =
+            typeof it?.isTaken === "boolean"
+              ? it.isTaken
+              : typeof it?.taken === "boolean"
+                ? it.taken
+                : it?.status === "TAKEN";
+          return [id, Boolean(taken)];
+        })
+      );
+    }
+
+    // routines 정규화 + 요일 필터/시간 추출 + records 병합
+    let rawList: any[] = [];
+    if (routinesRes.status === "fulfilled") {
+      const body = routinesRes.value.data;
+      rawList = Array.isArray(body?.result)
+        ? body.result
+        : Array.isArray(body)
+          ? body
+          : Array.isArray(body?.data)
+            ? body.data
+            : Array.isArray(body?.content)
+              ? body.content
+              : [];
+    }
+
+    const normalized: Supplement[] = rawList
+      .map(normalizeSupplement)
+      .filter(
+        (s) =>
+          (s.daysOfWeek?.length ?? 0) === 0 || s.daysOfWeek.includes(dowKey)
+      )
+      .map((s) => {
+        const id = s.notificationRoutineId;
+        const mergedIsTaken = recordMap.get(id) ?? s.isTaken;
+        return { ...s, isTaken: mergedIsTaken, times: timesForDay(s, dowKey) };
+      });
+
+    setSupplements(normalized);
   };
 
   useEffect(() => {
@@ -159,7 +157,7 @@ const MobileAlarmPage = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedDate]);
 
-  // ✅ 서버의 isTaken으로 진행률 계산
+  // 진행률(서버 isTaken 기준)
   const percentComplete = useMemo(() => {
     if (!supplements.length) return 0;
     const taken = supplements.filter((s) => s.isTaken).length;
@@ -172,53 +170,11 @@ const MobileAlarmPage = ({
     return "/images/rate1.png";
   };
 
-  // const handleItemToggle = async (id: number) => {
-  //   if (togglingIds.has(id)) return;
-
-  //   // 낙관적 업데이트: 로컬 isTaken 토글
-  //   setSupplements((prev) =>
-  //     prev.map((s) =>
-  //       s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
-  //     )
-  //   );
-  //   setTogglingIds((prev) => new Set(prev).add(id));
-
-  //   try {
-  //     const res = await axios.post(
-  //       `/api/v1/notifications/records/${id}/toggle`,
-  //       null,
-  //       { params: { date: fmtYmd(selectedDate) } }
-  //     );
-  //     const serverIsTaken = Boolean(res?.data?.result?.isTaken);
-
-  //     // 서버 값으로 확정
-  //     setSupplements((prev) =>
-  //       prev.map((s) =>
-  //         s.notificationRoutineId === id ? { ...s, isTaken: serverIsTaken } : s
-  //       )
-  //     );
-  //   } catch (err) {
-  //     console.error("섭취 토글 실패:", err);
-  //     // 롤백
-  //     setSupplements((prev) =>
-  //       prev.map((s) =>
-  //         s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
-  //       )
-  //     );
-  //     alert("섭취 상태 업데이트에 실패했습니다.");
-  //   } finally {
-  //     setTogglingIds((prev) => {
-  //       const n = new Set(prev);
-  //       n.delete(id);
-  //       return n;
-  //     });
-  //   }
-  // };
-  // ✅ 토글 -> 서버호출 -> 즉시 재조회(동일 date 파라미터)
+  // 토글 → 서버값 우선 확정, 없으면 재조회
   const handleItemToggle = async (id: number) => {
     if (togglingIds.has(id)) return;
 
-    // 낙관적 토글(원하면 유지, 불안하면 제거)
+    // 낙관적 토글
     setSupplements((prev) =>
       prev.map((s) =>
         s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
@@ -227,21 +183,14 @@ const MobileAlarmPage = ({
     setTogglingIds((prev) => new Set(prev).add(id));
 
     try {
-      await axios.post(
-        `/api/v1/notifications/records/${id}/toggle`,
-        null,
-        { params: { date: fmtYmd(selectedDate) } } // 🔴 토글에도 date 명시
-      );
-
-      // 🔴 서버 진실값으로 동기화 (같은 date로 재조회)
-      const res = await axios.get("/api/v1/notifications/routines", {
+      await axios.post(`/api/v1/notifications/records/${id}/toggle`, null, {
         params: { date: fmtYmd(selectedDate) },
       });
-      const listRaw = Array.isArray(res?.data?.result) ? res.data.result : [];
-      setSupplements(listRaw.map(normalizeSupplement)); // (normalizeSupplement는 이전 메시지 코드 사용)
+
+      // 동일 날짜 재조회(응답에 isTaken이 없을 수 있으므로)
+      await fetchSupplementsByDate(selectedDate);
     } catch (err) {
-      console.error("섭취 토글 실패:", err);
-      // 낙관적 토글 롤백
+      // 롤백
       setSupplements((prev) =>
         prev.map((s) =>
           s.notificationRoutineId === id ? { ...s, isTaken: !s.isTaken } : s
@@ -359,18 +308,14 @@ const MobileAlarmPage = ({
              flex items-center justify-center
              gap-[10px] text-black text-[20px] font-medium 
              border border-[#AAAAAA] rounded-[18px] transition"
+        onClick={() => navigate("/alarm/settings")}
       >
-        <div
-          onClick={() => navigate("/alarm/settings")}
-          className="flex items-center gap-[10px]"
-        >
-          <img
-            src="/images/medical_services.png"
-            alt="메디컬 아이콘"
-            className="w-[28px]"
-          />
-          <span>나의 영양제 관리</span>
-        </div>
+        <img
+          src="/images/medical_services.png"
+          alt="메디컬 아이콘"
+          className="w-[28px]"
+        />
+        <span>나의 영양제 관리</span>
       </button>
 
       <div className="text-lg font-semibold">💊 나의 영양제</div>

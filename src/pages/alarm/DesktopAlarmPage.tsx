@@ -156,38 +156,6 @@ const DesktopAlarmPage = ({
     }
   };
 
-  // // GET: 해당 날짜 루틴 조회 (핵심 로그만)
-  // const fetchSupplementsByDate = async (date: Date) => {
-  //   const ymd = fmtYmd(date);
-  //   try {
-  //     dbg("GET /routines", { date: ymd });
-  //     const t0 = performance.now();
-  //     const res = await axios.get("/api/v1/notifications/routines", {
-  //       params: { date: ymd },
-  //     });
-  //     dbg(
-  //       "GET status/time",
-  //       res?.status,
-  //       `${Math.round(performance.now() - t0)}ms`
-  //     );
-
-  //     const listRaw: any[] = Array.isArray(res?.data?.result)
-  //       ? res.data.result
-  //       : [];
-  //     if (listRaw.length) {
-  //       // 서버 필드 현황 확인용(최소)
-  //       dbg("sample raw", {
-  //         keys: Object.keys(listRaw[0]),
-  //         taken: listRaw[0]?.taken,
-  //         isTaken: listRaw[0]?.isTaken,
-  //       });
-  //     }
-  //     setSupplements(listRaw.map(normalizeSupplement));
-  //   } catch (e) {
-  //     dbg("GET ERROR", e);
-  //   }
-  // };
-
   // 최초/날짜 변경 시 조회
   useEffect(() => {
     dbg("selectedDate →", fmtYmd(selectedDate));
