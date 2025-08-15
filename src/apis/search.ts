@@ -28,6 +28,12 @@ export interface PopularKeyword {
   keyword: string;
 }
 
+export interface RecentProduct {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
 export interface SearchResultResponse {
   matchedIngredients: Ingredient[];
   supplements: {
@@ -66,4 +72,36 @@ export async function getPopularKeywords(): Promise<PopularKeyword[]> {
     result: PopularKeyword[];
   }>("/api/v1/search/popular");
   return res.data.result;
+}
+
+/** 최근 검색어 조회 */
+export async function getRecentKeywords(limit = 10): Promise<string[]> {
+  const token =
+    localStorage.getItem("accessToken") ||
+    sessionStorage.getItem("accessToken");
+
+  const res = await api.get("/recent", {
+    params: { limit },
+    headers: token ? { Authorization: `Bearer ${token}` } : undefined,
+  });
+
+  if (res.data?.isSuccess && Array.isArray(res.data.result)) {
+    return res.data.result;
+  }
+  return [];
+}
+
+/** 최근 본 상품 조회 */
+export async function getRecentProducts(limit = 5): Promise<RecentProduct[]> {
+  const res = await api.get<{
+    isSuccess: boolean;
+    code: string;
+    message: string;
+    result: RecentProduct[];
+  }>("/me/recent-products", { params: { limit } });
+
+  if (res.data?.isSuccess && Array.isArray(res.data.result)) {
+    return res.data.result;
+  }
+  return [];
 }
