@@ -14,45 +14,39 @@ import IngredientTabs from "@/components/ingredient/IngredientTabs";
 import IngredientInfo from "@/components/ingredient/IngredientInfo";
 import IngredientAlternatives from "@/components/ingredient/IngredientAlternatives";
 import IngredientSupplements from "@/components/ingredient/IngredientSupplements";
-import { FiShare2, FiHeart, FiLink } from "react-icons/fi";
+import { FiShare2, FiHeart } from "react-icons/fi";
 
-// ---- Kakao 타입 선언(선택)
 declare global {
   interface Window {
     Kakao?: any;
   }
 }
 
-// 로컬에서만 사용하는 QueryClient 인스턴스
 const queryClient = new QueryClient();
 
-// 640px 이하 = 모바일, 641px 이상 = PC
 const BREAKPOINT = 640;
 const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
 
-/* -------------------------- 공통 훅/유틸 -------------------------- */
+/* 공통 훅 */
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState<boolean>(() =>
     typeof window !== "undefined" ? window.innerWidth <= BREAKPOINT : true
   );
-
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= BREAKPOINT);
     window.addEventListener("resize", onResize);
     onResize();
     return () => window.removeEventListener("resize", onResize);
   }, []);
-
   return isMobile;
 };
 
-// 링크 복사
+/* 클립보드 */
 async function copyToClipboard(text: string) {
   try {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    // fallback
     const el = document.createElement("textarea");
     el.value = text;
     el.style.position = "fixed";
@@ -71,32 +65,25 @@ async function copyToClipboard(text: string) {
   }
 }
 
-// Kakao SDK 로더 (필요할 때만 로드)
+/* Kakao 로더 */
 async function ensureKakaoReady(): Promise<boolean> {
   if (!KAKAO_APP_KEY) return false;
-
-  // 이미 로드/초기화 되었으면 OK
   if (window.Kakao) {
     try {
-      if (!window.Kakao.isInitialized()) {
-        window.Kakao.init(KAKAO_APP_KEY);
-      }
+      if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_APP_KEY);
       return true;
     } catch {
       return false;
     }
   }
-
-  // 스크립트 동적 로드
   await new Promise<void>((resolve, reject) => {
-    const script = document.createElement("script");
-    script.src = "https://developers.kakao.com/sdk/js/kakao.js";
-    script.async = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject();
-    document.head.appendChild(script);
+    const s = document.createElement("script");
+    s.src = "https://developers.kakao.com/sdk/js/kakao.js";
+    s.async = true;
+    s.onload = () => resolve();
+    s.onerror = () => reject();
+    document.head.appendChild(s);
   }).catch(() => {});
-
   if (!window.Kakao) return false;
   try {
     window.Kakao.init(KAKAO_APP_KEY);
@@ -106,7 +93,7 @@ async function ensureKakaoReady(): Promise<boolean> {
   }
 }
 
-// 바텀시트(모바일 공유 UI)
+/* 모바일 공유 바텀시트 */
 function ShareSheet({
   open,
   onClose,
@@ -119,10 +106,8 @@ function ShareSheet({
   onCopy: () => void;
 }) {
   if (!open) return null;
-
   const KAKAO_ICON = "/images/PNG/성분 2-1/kakao.png";
   const LINK_ICON = "/images/PNG/성분 2-1/link.png";
-
   return (
     <div className="fixed inset-0 z-50">
       <button
@@ -130,18 +115,14 @@ function ShareSheet({
         className="absolute inset-0 bg-black/40"
         onClick={onClose}
       />
-      {/* sheet */}
       <div
         className="absolute left-0 right-0 bottom-0 w-full"
         style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
         <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
-          {/* title */}
           <div className="px-5 pt-6 pb-4">
             <h3 className="text-[15px] font-semibold text-center">공유하기</h3>
           </div>
-
-          {/* Kakao share */}
           <button
             onClick={onKakao}
             className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
@@ -156,10 +137,7 @@ function ShareSheet({
             </span>
             <span className="text-[15px]">카카오톡으로 공유하기</span>
           </button>
-
           <div className="h-px w-full bg-gray-200" />
-
-          {/* Copy link */}
           <button
             onClick={onCopy}
             className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
@@ -174,7 +152,6 @@ function ShareSheet({
             </span>
             <span className="text-[15px]">링크 복사하기</span>
           </button>
-
           <div className="h-4" />
         </div>
       </div>
@@ -182,7 +159,7 @@ function ShareSheet({
   );
 }
 
-// 단순 확인 모달(PC + 모바일 복사완료 공용)
+/* 확인 모달 */
 function ConfirmModal({
   open,
   onClose,
@@ -217,7 +194,7 @@ function ConfirmModal({
   );
 }
 
-/* -------------------------- 페이지 본문 -------------------------- */
+/* ------------------ 페이지 ------------------ */
 const IngredientDetailInner = () => {
   const [activeTab, setActiveTab] = useState<
     "info" | "alternatives" | "supplements"
@@ -229,12 +206,12 @@ const IngredientDetailInner = () => {
   const isMobile = useIsMobile();
   const { ingredientName } = useParams<{ ingredientName: string }>();
 
-  // 탭 변경 시 히스토리에 추가
-  const handleTabChange = (newTab: "info" | "alternatives" | "supplements") => {
-    setTabHistory((prev) => [...prev, newTab]);
-    setActiveTab(newTab);
+  // 제목/탭/액션 공통 래퍼(네비 안쪽 그리드와 좌우 정렬 맞춤)
+  const WRAP = "mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8";
 
-    // 브라우저 히스토리에 탭 상태 추가
+  const handleTabChange = (newTab: "info" | "alternatives" | "supplements") => {
+    setTabHistory((p) => [...p, newTab]);
+    setActiveTab(newTab);
     window.history.pushState(
       { tab: newTab, history: [...tabHistory, newTab] },
       "",
@@ -242,16 +219,14 @@ const IngredientDetailInner = () => {
     );
   };
 
-  // 뒤로가기 처리
   const handleBackClick = () => {
     if (tabHistory.length > 1) {
-      const newHistory = tabHistory.slice(0, -1);
-      const previousTab = newHistory[newHistory.length - 1];
-      setTabHistory(newHistory);
-      setActiveTab(previousTab);
-
+      const h = tabHistory.slice(0, -1);
+      const prev = h[h.length - 1];
+      setTabHistory(h);
+      setActiveTab(prev);
       window.history.replaceState(
-        { tab: previousTab, history: newHistory },
+        { tab: prev, history: h },
         "",
         window.location.href
       );
@@ -261,69 +236,58 @@ const IngredientDetailInner = () => {
     }
   };
 
-  // 브라우저 뒤로가기/앞으로가기 버튼 처리
   useEffect(() => {
-    const handlePopState = (event: PopStateEvent) => {
-      if (event.state && event.state.tab && event.state.history) {
-        setActiveTab(event.state.tab);
-        setTabHistory(event.state.history);
+    const onPop = (e: PopStateEvent) => {
+      if (e.state?.tab && e.state?.history) {
+        setActiveTab(e.state.tab);
+        setTabHistory(e.state.history);
       } else if (tabHistory.length > 1) {
         handleBackClick();
       }
     };
-
-    // 초기 히스토리 상태
     window.history.replaceState(
       { tab: "info", history: ["info"] },
       "",
       window.location.href
     );
-
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, [tabHistory]);
 
   const { data, isLoading, isError } = useQuery<IngredientDetail>({
     queryKey: ["ingredientDetail", ingredientName],
     queryFn: async () => {
       if (!ingredientName) throw new Error("Ingredient name is required");
-      const response = await fetchIngredientDetail(ingredientName);
-      return response;
+      return await fetchIngredientDetail(ingredientName);
     },
-    enabled: !!ingredientName && typeof ingredientName !== "undefined",
+    enabled: !!ingredientName,
     staleTime: 60_000,
   });
 
-  // 찜하기
   const likeMutation = useMutation({
     mutationFn: toggleIngredientLike,
     onSuccess: (res) => {
-      if (res?.result?.isLiked !== undefined) {
-        setLiked(res.result.isLiked);
-      }
+      if (res?.result?.isLiked !== undefined) setLiked(res.result.isLiked);
     },
     onError: () => setLiked((prev) => !prev),
   });
 
   const handleLikeClick = () => {
     if (!data?.id) return;
-    setLiked((prev) => !prev); // 낙관적 업데이트
+    setLiked((prev) => !prev);
     likeMutation.mutate(data.id);
   };
 
-  // 공유 상태
   const [sheetOpen, setSheetOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const shareUrl = useMemo(() => window.location.href, []);
   const shareTitle = useMemo(() => data?.name ?? "VitaCheck", [data]);
 
-  // ★ 모바일에서는 항상 우리 바텀시트 사용 (Web Share API 사용 안 함)
   async function onClickShare() {
     if (isMobile) {
       setSheetOpen(true);
       return;
     }
-    // PC: 바로 복사 + 확인 모달
     const ok = await copyToClipboard(shareUrl);
     setConfirmOpen(ok);
   }
@@ -350,9 +314,7 @@ const IngredientDetailInner = () => {
         });
         setSheetOpen(false);
         return;
-      } catch {
-        // 실패 시 아래 폴백
-      }
+      } catch {}
     }
     const ok = await copyToClipboard(shareUrl);
     setSheetOpen(false);
@@ -365,7 +327,6 @@ const IngredientDetailInner = () => {
     setConfirmOpen(ok);
   }
 
-  // 렌더링 분기
   if (!ingredientName)
     return (
       <div className="px-5 py-10">잘못된 접근입니다. 성분명이 없습니다.</div>
@@ -405,16 +366,11 @@ const IngredientDetailInner = () => {
   const result = data;
 
   return (
-    <div
-      className={`px-5 sm:px-10 ${
-        isMobile ? "pt-3 pb-5" : "py-10"
-      } max-w-screen-xl mx-auto`}
-    >
-      {/* 헤더: 모든 해상도에서 좌측 제목, 우측 액션 */}
-      <div className="mb-4 flex items-center justify-between sm:mb-6">
-        <h1 className="text-xl font-bold sm:text-2xl">{result.name}</h1>
-
-        <div className="flex space-x-3">
+    <div className={`${isMobile ? "pt-3 pb-5" : "py-10"}`}>
+      {/* 제목 + 액션: 네비와 같은 내부 폭/인셋 */}
+      <div className={`${WRAP} mb-4 sm:mb-6 flex items-center`}>
+        <h1 className="text-xl sm:text-2xl font-bold">{result.name}</h1>
+        <div className="ml-auto flex space-x-3">
           <button
             onClick={onClickShare}
             className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 hover:border-gray-300"
@@ -446,26 +402,26 @@ const IngredientDetailInner = () => {
         </div>
       </div>
 
-      {/* 탭: 제목과 같은 시작선(좌측)에서 시작 */}
-      <div className="mb-6">
+      {/* 탭: 같은 래퍼로 좌우 정렬 통일 */}
+      <div className={`${WRAP} mb-6`}>
         <IngredientTabs activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
 
-      {activeTab === "info" && (
-        <IngredientInfo id={ingredientName!} data={result} />
-      )}
+      {/* 본문: 폭이 넓어지면 읽기 폭 제한 */}
+      <div className={`${WRAP}`}>
+        {activeTab === "info" && (
+          <IngredientInfo id={ingredientName!} data={result} />
+        )}
+        {activeTab === "alternatives" && (
+          <IngredientAlternatives
+            name={result.name}
+            subIngredients={result.subIngredients}
+            alternatives={result.alternatives}
+          />
+        )}
+        {activeTab === "supplements" && <IngredientSupplements data={result} />}
+      </div>
 
-      {activeTab === "alternatives" && (
-        <IngredientAlternatives
-          name={result.name}
-          subIngredients={result.subIngredients}
-          alternatives={result.alternatives}
-        />
-      )}
-
-      {activeTab === "supplements" && <IngredientSupplements data={result} />}
-
-      {/* 공유 UI */}
       <ShareSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
@@ -481,13 +437,11 @@ const IngredientDetailInner = () => {
   );
 };
 
-/* -------------------------- Provider 래퍼 -------------------------- */
-const IngredientDetailPage = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <IngredientDetailInner />
-    </QueryClientProvider>
-  );
-};
+/* Provider */
+const IngredientDetailPage = () => (
+  <QueryClientProvider client={queryClient}>
+    <IngredientDetailInner />
+  </QueryClientProvider>
+);
 
 export default IngredientDetailPage;

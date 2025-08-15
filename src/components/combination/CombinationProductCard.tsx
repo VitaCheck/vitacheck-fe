@@ -65,7 +65,7 @@ export default function CombinationProductCard({
         onClick={onToggle}
         className={`hidden md:block relative box-border cursor-default
         ${isSelected ? "bg-[#EEEEEE]" : "bg-white"}
-        w-[299px] h-[246px] rounded-[25px] p-[30px]
+        w-[230px] h-[220px] rounded-[25px] p-[30px]
         shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg`}
       >
         <button
@@ -73,16 +73,18 @@ export default function CombinationProductCard({
             e.stopPropagation();
             onToggle();
           }}
-          className="absolute top-[10px] left-[245px] text-[40px] text-[#1C1B1F]"
+          className={`absolute top-[10px] left-[190px] text-[#1C1B1F] ${
+            isSelected ? "text-[22px] mt-2 font-bold" : "text-[35px]"
+          }`}
         >
           {isSelected ? "—" : "+"}
         </button>
         <img
           src={item.imageUrl}
           alt={item.supplementName}
-          className="mx-auto w-[145px] h-[145px] object-contain mt-2"
+          className="mx-auto w-[130px] h-[120px] object-contain"
         />
-        <p className="text-center font-pretendard font-medium text-[20px] tracking-[-0.02em] leading-[100%] mt-4">
+        <p className="text-center font-pretendard font-medium text-[20px] tracking-[-0.02em] leading-[100%] mt-2">
           {item.supplementName}
         </p>
       </div>
