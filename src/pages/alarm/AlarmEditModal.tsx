@@ -1,112 +1,211 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Picker from "react-mobile-picker";
 import axios from "@/lib/axios";
+import { uploadImageToCloudinary } from "@/utils/cloudinary";
+
+// ==== 타입 ====
+type DayEn = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
+type Schedule = { dayOfWeek: DayEn; time: string };
+
+// ==== 요일/표시 ====
+const EN_TO_KO: Record<DayEn, string> = {
+  SUN: "일",
+  MON: "월",
+  TUE: "화",
+  WED: "수",
+  THU: "목",
+  FRI: "금",
+  SAT: "토",
+};
+const KO_TO_EN: Record<string, DayEn> = {
+  일: "SUN",
+  월: "MON",
+  화: "TUE",
+  수: "WED",
+  목: "THU",
+  금: "FRI",
+  토: "SAT",
+};
+const DAY_ORDER: DayEn[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+// ==== 유틸 ====
+const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
+const unique = <T,>(arr: T[]) => Array.from(new Set(arr));
+
+const normalizeRoutine = (raw: any) => {
+  // 단건/목록 응답을 하나의 내부 형태로 정규화
+  const supplementName: string = String(raw?.supplementName ?? raw?.name ?? "");
+  const supplementImageUrl: string | null =
+    raw?.supplementImageUrl ?? raw?.imageUrl ?? null;
+
+  let daysOfWeek: DayEn[] | undefined = Array.isArray(raw?.daysOfWeek)
+    ? raw.daysOfWeek.filter(Boolean)
+    : undefined;
+  let times: string[] | undefined = Array.isArray(raw?.times)
+    ? raw.times.filter(Boolean).map(fixTime)
+    : undefined;
+
+  const schedules: Schedule[] | undefined = Array.isArray(raw?.schedules)
+    ? raw.schedules
+    : undefined;
+
+  if ((!daysOfWeek || !daysOfWeek.length) && schedules) {
+    daysOfWeek = unique(
+      schedules.map((s) => s?.dayOfWeek).filter((v): v is DayEn => Boolean(v))
+    );
+  }
+  if ((!times || !times.length) && schedules) {
+    times = unique(schedules.map((s) => fixTime(s?.time)).filter(Boolean));
+  }
+
+  return {
+    supplementName,
+    supplementImageUrl: supplementImageUrl ?? null,
+    daysOfWeek: daysOfWeek ?? [],
+    times: times ?? [],
+  };
+};
 
 interface Props {
   id: number;
   onClose: () => void;
+  onSaved?: () => void; // ✅ 추가
 }
 
-const AlarmEditModal = ({ id, onClose }: Props) => {
+const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
+  // 폼 상태 (EN 코드로 들고 있다가 렌더만 한글 표시)
   const [name, setName] = useState("");
-  const [days, setDays] = useState<string[]>([]);
+  const [days, setDays] = useState<DayEn[]>([]);
   const [times, setTimes] = useState<string[]>([]);
-  const [image, setImage] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [saving, setSaving] = useState(false);
 
-  const DAY_MAP: Record<string, string> = {
-    SUN: "일",
-    MON: "월",
-    TUE: "화",
-    WED: "수",
-    THU: "목",
-    FRI: "금",
-    SAT: "토",
-  };
-
+  // 시간 선택용 피커
   const selections = {
     hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
     minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
   };
-  const [pickerValue, setPickerValue] = useState({
-    hour: "09",
-    minute: "00",
-  });
+  const [pickerValue, setPickerValue] = useState({ hour: "09", minute: "00" });
 
+  // 초기 로드 (데스크탑과 동일한 로직: 목록을 받아서 find)
   useEffect(() => {
-    axios.get("/api/v1/notifications/routines").then((res) => {
-      const routine = res.data.result.find(
-        (r: any) => r.notificationRoutineId === id
-      );
-      if (routine) {
-        setName(routine.supplementName);
-        // 영어 → 한글 요일 변환
-        const convertedDays = routine.daysOfWeek.map(
-          (day: string) => DAY_MAP[day]
+    (async () => {
+      try {
+        const res = await axios.get("/api/v1/notifications/routines");
+        const all = Array.isArray(res?.data?.result) ? res.data.result : [];
+        const routine = all.find(
+          (r: any) => Number(r?.notificationRoutineId) === Number(id)
         );
-        setDays(convertedDays);
-        // setDays(routine.daysOfWeek);
+        if (!routine) throw new Error("해당 루틴이 없습니다.");
 
-        setTimes(routine.times);
-        setPreviewUrl(routine.supplementImageUrl);
+        const norm = normalizeRoutine(routine);
+        setName(norm.supplementName);
+        setDays(
+          unique(norm.daysOfWeek).sort(
+            (a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b)
+          )
+        );
+        setTimes(unique(norm.times).sort());
+        setPreviewUrl(norm.supplementImageUrl);
+      } catch (e) {
+        console.error("루틴 불러오기 실패:", e);
+        alert("알림 정보를 불러오지 못했습니다.");
+        onClose();
       }
-    });
-  }, [id]);
+    })();
+  }, [id, onClose]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setShowImagePicker(false);
-    }
-  };
-
-  const toggleDay = (day: string) => {
+  const toggleDay = (ko: string) => {
+    const en = KO_TO_EN[ko];
     setDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+      prev.includes(en) ? prev.filter((d) => d !== en) : [...prev, en]
     );
   };
 
   const handleAddTime = () => {
-    const newTime = `${pickerValue.hour}:${pickerValue.minute}`;
-    if (!times.includes(newTime)) {
-      setTimes([...times, newTime]);
-    }
+    const newTime = fixTime(`${pickerValue.hour}:${pickerValue.minute}`);
+    setTimes((prev) => {
+      const next = unique([...prev, newTime]).sort();
+      return next;
+    });
   };
 
   const formatTime = (time: string) => {
-    const [hourStr, minute] = time.split(":");
-    const hour = parseInt(hourStr, 10);
+    const [h, m] = time.split(":");
+    const hour = parseInt(h, 10);
     const isPM = hour >= 12;
     const displayHour = hour % 12 === 0 ? 12 : hour % 12;
     return `${isPM ? "오후" : "오전"} ${displayHour
       .toString()
-      .padStart(2, "0")}:${minute}`;
+      .padStart(2, "0")}:${m}`;
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setShowImagePicker(false);
   };
 
   const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append("supplementName", name);
-    formData.append("weekDays", JSON.stringify(days));
-    formData.append("intakeTimes", JSON.stringify(times));
-    if (image) {
-      formData.append("image", image);
+    if (!name.trim()) return alert("영양제 이름을 입력해 주세요.");
+    if (!days.length) return alert("복용 요일을 선택해 주세요.");
+    if (!times.length) return alert("복용 시간을 한 개 이상 추가해 주세요.");
+    if (times.some((t) => !/^\d{2}:\d{2}$/.test(t)))
+      return alert("시간 형식이 올바르지 않습니다.");
+
+    try {
+      setSaving(true);
+
+      // 이미지 변경 시 업로드
+      let imageUrl = previewUrl ?? undefined;
+      if (imageFile) {
+        const uploaded = await uploadImageToCloudinary(imageFile);
+        if (!uploaded) {
+          alert("이미지 업로드에 실패했습니다.");
+          setSaving(false);
+          return;
+        }
+        imageUrl = uploaded;
+      }
+
+      // 데스크탑과 동일한 API 흐름: schedules 기반 custom upsert
+      const schedules: Schedule[] = days.flatMap((d) =>
+        times.map((t) => ({ dayOfWeek: d, time: fixTime(t) }))
+      );
+
+      const payload = {
+        notificationRoutineId: Number(id),
+        name: name.trim(),
+        imageUrl, // undefined면 필드 생략되어도 OK (백엔드에서 처리)
+        schedules,
+      };
+
+      await axios.post("/api/v1/notifications/routines/custom", payload);
+      if (onSaved) onSaved();
+      alert("알림이 저장되었습니다!");
+      onClose();
+    } catch (err: any) {
+      console.error("알림 저장 실패:", err?.response ?? err);
+      alert(
+        err?.response?.data?.message ??
+          "알림 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
+    } finally {
+      setSaving(false);
     }
-
-    await axios.post(`/api/v1/notifications/routines`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
-
-    onClose();
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+      onClick={onClose}
     >
       <div
         className="w-full bg-white rounded-t-3xl px-6 pt-5 pb-10 h-[70%] overflow-y-auto animate-slide-up"
@@ -118,8 +217,12 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
             취소
           </button>
           <span className="text-gray-500 font-bold text-[25px]">알림 수정</span>
-          <button className="font-bold text-[23px]" onClick={handleSubmit}>
-            저장
+          <button
+            className="font-bold text-[23px]"
+            onClick={handleSubmit}
+            disabled={saving}
+          >
+            {"저장"}
           </button>
         </div>
 
@@ -161,19 +264,21 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
           복용 요일 선택
         </label>
         <div className="flex justify-between mb-4">
-          {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <button
-              key={day}
-              className={`w-[47.5px] h-[47.5px] rounded-[9.5px] border border-[#AAAAAA] ${
-                days.includes(day)
-                  ? "bg-[#808080] text-white"
-                  : "bg-white text-black"
-              }`}
-              onClick={() => toggleDay(day)}
-            >
-              {day}
-            </button>
-          ))}
+          {DAY_ORDER.map((en) => {
+            const ko = EN_TO_KO[en];
+            const active = days.includes(en);
+            return (
+              <button
+                key={en}
+                className={`w-[47.5px] h-[47.5px] rounded-[9.5px] border border-[#AAAAAA] ${
+                  active ? "bg-[#808080] text-white" : "bg-white text-black"
+                }`}
+                onClick={() => toggleDay(ko)}
+              >
+                {ko}
+              </button>
+            );
+          })}
         </div>
 
         {/* 추가된 시간 리스트 */}
