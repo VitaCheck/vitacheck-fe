@@ -2,8 +2,8 @@ name: Deploy to S3 + CloudFront
 
 on:
   push:
-    branches: ["dev"] # 필요하면 main 으로 변경
-  workflow_dispatch: # 수동 실행도 허용
+    branches: ["dev"]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -16,8 +16,6 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      # 선택: CI에서 Vite ENV를 주입하고 싶으면 아래 사용
-      # VITE_SERVER_API_URL: ${{ secrets.VITE_SERVER_API_URL }}
       AWS_REGION: ${{ secrets.AWS_REGION }}
       S3_BUCKET: ${{ secrets.S3_BUCKET }}
       CLOUDFRONT_DISTRIBUTION_ID: ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }}
@@ -32,11 +30,12 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      - name: Setup PNPM
-        uses: pnpm/action-setup@v4
-        with:
-          version: 9
-          run_install: false
+      # pnpm 활성화
+      - name: Enable pnpm via corepack
+        run: |
+          corepack enable
+          corepack prepare pnpm@9 --activate
+          pnpm -v
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
