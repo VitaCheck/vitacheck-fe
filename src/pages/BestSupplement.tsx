@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import BSMDropdownPopup from "@/components/BestSupplement/BSMDropdownPopup";
 
+
 // ---------------------- 타입 정의 ----------------------
 interface ApiProduct {
   supplementId: number;
