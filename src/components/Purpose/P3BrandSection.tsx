@@ -47,7 +47,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
       {/* 모바일 전용 */}
       <div className="sm:hidden">
         {/* 브랜드 이미지와 브랜드명 */}
-        <div className="flex items-center justify-between w-[338px] gap-[18px]">
+        <div className="flex items-center justify-between w-full max-w-[338px] gap-[18px]">
           <div className="flex items-center justify-center gap-[10px]">
             {/* brandImageUrl이 null일 경우 <img>를 렌더링하지 않습니다. */}
             <div className="w-[40px] h-[40px] rounded-[36px] border-[0.5px] border-gray-300 flex items-center justify-center overflow-hidden">
@@ -72,7 +72,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
         </div>
 
         {/* 카드 리스트 */}
-        <div className="w-[388px] overflow-x-auto hide-scrollbar">
+        <div className="w-full max-w-[300px] overflow-x-auto hide-scrollbar">
           <div className="flex gap-[24px] mt-[24px] mb-[22px]">
             {productsToDisplay.length === 0 ? (
               <p className="text-center w-full">제품이 없습니다.</p>
@@ -83,11 +83,11 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                   onClick={() => navigate(`/product/${product.id}`, { state: product })}
                   className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
                 >
-                  <div className="w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
+                  <div className="w-full max-w-[154px] h-[140px] bg-white rounded-xl shadow-lg overflow-hidden">
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="w-[109px] h-[109px] mx-auto px-[22px] py-[15px] object-cover"
+                      className="w-full max-w-[109px] h-[109px] mx-auto px-[22px] py-[15px] object-cover"
                     />
                   </div>
                   <p className="mt-[17px] text-[17px] font-medium text-center">
