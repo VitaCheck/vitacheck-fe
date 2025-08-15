@@ -1,4 +1,8 @@
 import axios from "axios";
+console.debug(
+  "[ENV] VITE_SERVER_API_URL =",
+  import.meta.env.VITE_SERVER_API_URL
+);
 
 // 공개 엔드포인트: 인증 헤더를 추가하지 않음 (CORS preflight 회피)
 const PUBLIC_PATH_PREFIXES: string[] = [
