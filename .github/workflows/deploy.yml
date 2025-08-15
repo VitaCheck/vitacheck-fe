@@ -24,18 +24,33 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Node만 설치 (❌ cache: pnpm 제거)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "pnpm"
 
-      # pnpm 활성화
+      # ✅ pnpm 활성화 (corepack)
       - name: Enable pnpm via corepack
         run: |
+          node -v
           corepack enable
           corepack prepare pnpm@9 --activate
+          which pnpm
           pnpm -v
+
+      # ✅ pnpm 스토어 캐시 (선택이지만 강력 추천)
+      - name: Resolve pnpm store path
+        id: pnpm-cache
+        run: echo "STORE_PATH=$(pnpm store path | tr -d '\n')" >> $GITHUB_OUTPUT
+
+      - name: Cache pnpm store
+        uses: actions/cache@v4
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
