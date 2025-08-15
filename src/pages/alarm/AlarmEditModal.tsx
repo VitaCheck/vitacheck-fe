@@ -1,15 +1,11 @@
 import { useEffect, useState } from "react";
-// ⬇️ react-mobile-picker 제거
-// import Picker from "react-mobile-picker";
 import axios from "@/lib/axios";
 import { uploadImageToCloudinary } from "@/utils/cloudinary";
-import TimePickerModal from "./TimePickerModal"; // ⬅️ 추가
+import TimePickerModal from "./TimePickerModal";
 
-// ==== 타입 ====
 type DayEn = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
 type Schedule = { dayOfWeek: DayEn; time: string };
 
-// ==== 요일/표시 ====
 const EN_TO_KO: Record<DayEn, string> = {
   SUN: "일",
   MON: "월",
@@ -30,7 +26,6 @@ const KO_TO_EN: Record<string, DayEn> = {
 };
 const DAY_ORDER: DayEn[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
 
-// ==== 유틸 ====
 const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
 const unique = <T,>(arr: T[]) => Array.from(new Set(arr));
 
@@ -70,11 +65,10 @@ const normalizeRoutine = (raw: any) => {
 interface Props {
   id: number;
   onClose: () => void;
-  onSaved?: () => void;
+  onSaved?: () => void; // 저장/삭제 후 부모 갱신용
 }
 
 const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
-  // 폼 상태
   const [name, setName] = useState("");
   const [days, setDays] = useState<DayEn[]>([]);
   const [times, setTimes] = useState<string[]>([]);
@@ -82,17 +76,15 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
   const [showImagePicker, setShowImagePicker] = useState(false);
-
-  // ✅ 시간 피커 모달 상태 (추가/편집 공용)
   const [showTimePicker, setShowTimePicker] = useState(false);
-  const [editingIndex, setEditingIndex] = useState<number | null>(null); // null이면 "추가", 숫자면 해당 인덱스 편집
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
   const [timePickerDefault, setTimePickerDefault] = useState<
     { hour: string; minute: string } | undefined
   >(undefined);
 
   const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false); // ✅ 삭제 상태
 
-  // 초기 로드
   useEffect(() => {
     (async () => {
       try {
@@ -127,7 +119,6 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     );
   };
 
-  // ✅ 시간 추가/편집 오픈
   const openAddTime = () => {
     setEditingIndex(null);
     setTimePickerDefault({ hour: "09", minute: "00" });
@@ -142,21 +133,16 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     setShowTimePicker(true);
   };
 
-  // ✅ 시간 삭제
   const removeTime = (index: number) => {
     setTimes((prev) => prev.filter((_, i) => i !== index));
   };
 
-  // ✅ TimePickerModal 완료 처리 (추가/편집 공용)
   const handleConfirmTime = (v: { hour: string; minute: string }) => {
     const newTime = `${v.hour}:${v.minute}`;
     setTimes((prev) => {
       let next = [...prev];
-      if (editingIndex === null) {
-        // 추가
-        next = unique([...next, newTime]);
-      } else {
-        // 편집
+      if (editingIndex === null) next = unique([...next, newTime]);
+      else {
         next[editingIndex] = newTime;
         next = unique(next);
       }
@@ -195,7 +181,6 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     try {
       setSaving(true);
 
-      // 이미지 변경 시 업로드
       let imageUrl = previewUrl ?? undefined;
       if (imageFile) {
         const uploaded = await uploadImageToCloudinary(imageFile);
@@ -207,7 +192,6 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
         imageUrl = uploaded;
       }
 
-      // schedules 기반 custom upsert
       const schedules: Schedule[] = days.flatMap((d) =>
         times.map((t) => ({ dayOfWeek: d, time: fixTime(t) }))
       );
@@ -234,6 +218,29 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     }
   };
 
+  // ✅ 삭제
+  const handleDelete = async () => {
+    if (deleting) return;
+    const ok = window.confirm("정말 이 알림을 삭제할까요?");
+    if (!ok) return;
+
+    try {
+      setDeleting(true);
+      await axios.delete(`/api/v1/notifications/routines/${id}`);
+      onSaved?.();
+      alert("알림을 삭제했습니다.");
+      onClose();
+    } catch (err: any) {
+      console.error("알림 삭제 실패:", err?.response ?? err);
+      alert(
+        err?.response?.data?.message ??
+          "알림 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
@@ -255,7 +262,7 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
             onClick={handleSubmit}
             disabled={saving}
           >
-            {"저장"}
+            {saving ? "저장 중…" : "저장"}
           </button>
         </div>
 
@@ -359,56 +366,19 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
           </button>
         </div>
 
-        {/* 이미지 선택 모달 */}
-        {showImagePicker && (
-          <div
-            className="fixed inset-0 bg-black/40 flex items-end z-50"
-            onClick={() => setShowImagePicker(false)}
+        {/* 알림 삭제 버튼 */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`w-full h-[60px] rounded-[10px] text-[18px] font-semibold
+              ${deleting ? "bg-[#E5E5E5] text-[#9E9E9E] cursor-not-allowed" : "bg-[#EEEEEE] text-[#333333]"}`}
           >
-            <div
-              className="w-full bg-white rounded-t-2xl px-6 py-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p className="text-[18px] font-semibold mb-4">
-                제품 사진 추가하기
-              </p>
+            {"알림 삭제"}
+          </button>
+        </div>
 
-              <div className="flex flex-col">
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 border-b border-[#D9D9D9] cursor-pointer flex items-center">
-                  <img
-                    src="/images/cameraModal.png"
-                    alt="camera icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
-                  />
-                  카메라로 촬영하기
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 cursor-pointer flex items-center">
-                  <img
-                    src="/images/galleryModal.png"
-                    alt="gallery icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
-                  />
-                  사진 앨범에서 선택하기
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* ✅ 시간 선택 모달 (추가/편집 공용) */}
+        {/* 시간 선택 모달 */}
         {showTimePicker && (
           <TimePickerModal
             onClose={() => {
@@ -417,7 +387,7 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
               setTimePickerDefault(undefined);
             }}
             onConfirm={handleConfirmTime}
-            defaultValue={timePickerDefault} // 편집 시 현재값, 추가 시 09:00
+            defaultValue={timePickerDefault}
           />
         )}
       </div>
