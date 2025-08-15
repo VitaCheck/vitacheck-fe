@@ -1,7 +1,6 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
 
 interface Product {
   id: number;
@@ -21,9 +20,9 @@ const PurposeIngredientProducts = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   const loadMoreRef = useRef<HTMLDivElement>(null);
-  const batchSize = window.innerWidth >= 768 ? 4 : 2; // PC:4개, 모바일:2개
+  const batchSize = window.innerWidth >= 768 ? 4 : 2;
 
-  // 1️⃣ 초기 데이터 로드
+  // 초기 데이터 로드
   useEffect(() => {
     setIsLoading(true);
     const supplementsFromState = location.state?.supplements || [];
@@ -49,7 +48,7 @@ const PurposeIngredientProducts = () => {
     return () => clearTimeout(initialLoadTimer);
   }, [location.state?.supplements]);
 
-  // 2️⃣ 무한 스크롤
+  // 무한 스크롤
   useEffect(() => {
     if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver(
@@ -70,15 +69,14 @@ const PurposeIngredientProducts = () => {
     product.title.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // 3️⃣ 스켈레톤 카드
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
-      {/* 모바일 스켈레톤 */}
-      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg md:hidden"></div>
-      <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full md:hidden"></div>
-      {/* PC 스켈레톤 */}
-      <div className="hidden md:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
-      <div className="hidden md:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
+      {/* 모바일 */}
+      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
+      {/* PC */}
+      <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
+      <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
     </div>
   );
 
@@ -129,8 +127,8 @@ const PurposeIngredientProducts = () => {
 
   return (
     <>
-      {/* 모바일 전용 */}
-      <div className="md:hidden">
+      {/* 모바일 */}
+      <div className="sm:hidden">
         <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">{ingredient}</h1>
@@ -147,20 +145,17 @@ const PurposeIngredientProducts = () => {
               <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
             </div>
           </div>
-          <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center
-                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+          <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
           <div ref={loadMoreRef}></div>
         </div>
       </div>
 
-      {/* PC 전용 */}
-      <div className="hidden md:block w-full px-[40px] bg-[#FAFAFA]">
+      {/* PC */}
+      <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
-          <div className="flex justify-between items-center">
-            <h1 className="text-[30px] font-semibold">{ingredient}</h1>
-          </div>
+          <h1 className="text-[30px] font-semibold">{ingredient}</h1>
           <div className="flex items-center w-full h-[52px] mt-[26px] mx-auto px-[24px] rounded-full border-[#C7C7C7] border-[1px]">
             <input
               type="text"
