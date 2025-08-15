@@ -60,22 +60,22 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
               <button
                 onClick={handleSharePopupOpen}
-                className="w-[32px] h-[32px] flex items-center justify-center">
+                className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center">
                 <GoShareAndroid className="w-[26px] h-[26px] cursor-pointer text-black" />
               </button>
               <button
                 onClick={toggleLike}
-                className="w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                className="w-[32px] h-[32px] bg-white rounded-full flex items-center justify-center cursor-pointer"
               >
                 {liked ? (
-                  <GoHeartFill className="w-[26px] h-[26px] text-[#FD657E]" />
+                  <GoHeartFill className="w-[24px] h-[24px] text-[#FD657E]" />
                 ) : (
-                  <GoHeart className="w-[26px] h-[26px] text-[#FD657E]" />
+                  <GoHeart className="w-[24px] h-[24px] text-[#FD657E]" />
                 )}
               </button>
             </div>
           </div>
-          <div className="mt-[21px] px-[5px] py-[10px]">
+          <div className="mt-[21px] px-[10px] py-[10px]">
             <h2 className="text-[20px] tracking-[-0.4px] text-[#757575] font-medium">
               {product.brandName || "브랜드"}
             </h2>
@@ -118,7 +118,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 브랜드 제품 리스트 */}
       <div className="w-full mx-auto mt-[28px]">
-        <div className="flex flex-col min-w-0 items-center ml-[46px]">
+        <div className="flex flex-col items-center ml-[46px]">
           <MainDetailPageBrandSection
             brandName={product.brandName}
             brandImageUrl={product.brandImageUrl}

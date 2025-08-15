@@ -62,7 +62,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                   <h2 className="text-[21px] tracking-[-0.4px] text-[#757575] font-medium">
                     {product.brandName || "브랜드"}
                   </h2>
-                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold">
+                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] mr-[10px] font-bold">
                     {product.supplementName}
                   </h1>
                 </div>

@@ -66,10 +66,10 @@ const goToIngredientPage = () => {
             <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />
           </div>
 
-          <div className="mt-[24px] ml-[148px] w-[203px] flex justify-center gap-[41px]">
+          {/* <div className="mt-[24px] ml-[180px] w-[203px] flex justify-center gap-[41px]">
             <span className="text-[13px] font-medium">권장</span>
             <span className="text-[13px] font-medium">상한</span>
-          </div>
+          </div> */}
 
           {/* 성분 함량 그래프 */}
           <div className="flex flex-col gap-[28px] mt-[15px] w-full max-w-[351px]">
@@ -82,7 +82,7 @@ const goToIngredientPage = () => {
                   onClick={goToIngredientPage}
                   className="flex justify-center items-center gap-[15px] cursor-pointer"
                 >
-                  <span className="h-[26px] tracking-[-0.432px] font-medium">{nutrient.name}</span>
+                  <span className="h-full tracking-[-0.432px] font-medium">{nutrient.name}</span>
                   <MdOutlineArrowForwardIos className="text-[16px]" />
                 </div>
                 
@@ -100,6 +100,19 @@ const goToIngredientPage = () => {
                     className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
                     style={{ left: `${nutrient.upperLimit}%` }}
                   />
+
+                  <span
+                    className="absolute -top-5 text-[13px] font-medium"
+                    style={{ left: `${nutrient.recommended}%`, transform: "translateX(-50%)" }}
+                  >
+                    권장
+                  </span>
+                  <span
+                    className="absolute -top-5 text-[13px] font-medium"
+                    style={{ left: `${nutrient.upperLimit}%`, transform: "translateX(-50%)" }}
+                  >
+                    상한
+                  </span>
                 </div>
               </div>
             ))}

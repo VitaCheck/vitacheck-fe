@@ -18,9 +18,9 @@ const TimingTab = ({ intakeTime }: TimingTabProps) => {
           </div>
 
           <div className="flex justify-center items-center bg-white border-[#AAAAAA] border-[0.5px] rounded-[16px] w-[356px] h-[81px]">
-            <div className="w-[294px] h-[30px] flex justify-between items-center">
-              <p className="font-medium text-[21px]">{intakeTime}</p>
-              <p className="bg-[#EEEEEE] font-semibold text-[12px] w-[43px] h-[26px] flex justify-center items-center rounded-[20px]">1 포</p>
+            <div className="w-full max-w-[294px] py-[25px] gap-[20px] flex justify-between items-center">
+              <p className="font-medium text-[20px]">{intakeTime}</p>
+              <p className="bg-[#EEEEEE] font-semibold text-[12px] h-[26px] px-[12px] flex justify-center items-center rounded-[20px]">1 포</p>
             </div>
           </div>
         </div>
