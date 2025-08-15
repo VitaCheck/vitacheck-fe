@@ -30,14 +30,15 @@ const PurposeIngredientProducts = () => {
     const initialLoadTimer = setTimeout(() => {
       if (supplementsFromState.length > 0) {
         const mappedProducts: Product[] = supplementsFromState.map(
-          (item: [string, string], index: number) => ({
-            id: index + 1,
-            title: item[0],
-            imageUrl: item[1].startsWith("http")
-              ? item[1]
-              : `/images/${item[1]}`,
+          (item: { id: number; name: string; imageUrl: string }, index: number) => ({
+            id: item.id,
+            title: item.name,
+            imageUrl: item.imageUrl.startsWith("http")
+              ? item.imageUrl
+              : `/images/${item.imageUrl}`,
           })
         );
+
         setProducts(mappedProducts);
         setDisplayProducts(mappedProducts.slice(0, batchSize));
       } else {
@@ -81,7 +82,7 @@ const PurposeIngredientProducts = () => {
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
       {/* 모바일 */}
-      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
       <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
       {/* PC */}
       <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
@@ -126,7 +127,7 @@ const PurposeIngredientProducts = () => {
             loading="lazy"
             className={`${
               isMobile
-                ? "w-[122px] h-[122px] mt-[22px]"
+                ? "w-full max-w-[122px] h-[122px] mt-[22px]"
                 : "w-[135px] h-[135px] mt-[14px]"
             } mx-auto object-cover`}
           />
@@ -148,7 +149,7 @@ const PurposeIngredientProducts = () => {
     <>
       {/* 모바일 */}
       <div className="sm:hidden">
-        <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
+        <div className="w-full max-w-[430px] mx-auto mt-[100px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">
               {ingredient}

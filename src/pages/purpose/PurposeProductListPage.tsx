@@ -7,10 +7,17 @@ import axios from "@/lib/axios";
 import React from "react";
 
 // API 응답 result 타입 정의
+interface Supplement {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
 interface SupplementInfo {
   purposes: string[];
-  supplements: [string, string][];
+  supplements: Supplement[];
 }
+
 
 type ResultData = Record<string, SupplementInfo>;
 
