@@ -10,7 +10,7 @@ import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
 import { useEffect, useState } from "react";
-import { getUserInfo, type UserInfo } from "@/apis/user";
+import { getMyProfileImageUrl, getUserInfo, type UserInfo } from "@/apis/user";
 import { useLogout } from "@/hooks/useLogout";
 
 function MyPage() {
@@ -28,26 +28,33 @@ function MyPage() {
   };
 
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null);
+  const [profileUrl, setProfileUrl] = useState<string | null>(null);
+  const [, setProfileLoading] = useState<boolean>(false);
 
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("accessToken");
       if (!token) {
-        setUserLoadFailed(true); // 토큰 없으면 실패 처리
+        setUserLoadFailed(true);
         return;
       }
-
       try {
         const user = await getUserInfo();
         setUserInfo(user);
+        setProfileLoading(true);
+        const url = await getMyProfileImageUrl();
+        setProfileUrl(url); // null이면 기본 이미지로 대체
       } catch (error) {
-        console.error("유저 정보 불러오기 실패", error);
-        setUserLoadFailed(true); // 실패 시 true
+        console.error("유저 정보/프로필 이미지 불러오기 실패", error);
+        setUserLoadFailed(true);
+      } finally {
+        setProfileLoading(false);
       }
     };
-
     fetchUser();
   }, []);
+
+  const imgSrc = userLoadFailed ? Profile : (profileUrl ?? ProfileCat);
 
   return (
     <div className="min-h-screen flex flex-col sm:mr-[18%] sm:ml-[18%]">
@@ -81,10 +88,9 @@ function MyPage() {
         {/* 사용자 정보 카드 */}
         <div className="w-[90%] h-[25vh] sm:h-auto bg-white rounded-2xl px-6 py-8 sm:py-4 flex items-center relative shadow">
           <img
-            // src={ProfileCat}
-            src={userLoadFailed ? Profile : ProfileCat}
+            src={imgSrc}
             alt="profile"
-            className="w-[100px] h-[100px] rounded-[30px] mr-6 object-cover"
+            className="w-[100px] h-[100px] rounded-[50px] mr-6 object-cover border-gray-300 border"
           />
 
           <div className="flex-1">

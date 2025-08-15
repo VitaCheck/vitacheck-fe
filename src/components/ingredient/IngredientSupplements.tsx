@@ -239,7 +239,7 @@ const IngredientSupplements = ({ data }: Props) => {
         {filteredProducts.map((product) => (
           <div key={product.id} className="flex justify-center">
             <ProductCard
-              id={product.id}
+              id={product.id} 
               name={product.name}
               imageSrc={product.imageUrl}
             />

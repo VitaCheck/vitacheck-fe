@@ -45,9 +45,8 @@ const AddCombinationPage = () => {
     try {
       setIsLoading(true);
       const res = await axios.get("/api/v1/supplements/search", {
-        params: { keyword: search },
+        params: { keyword: search, page: 0, size: 20 },
       });
-      console.log("API 응답 확인:", res.data); // 구조 반드시 확인
       setResults(res.data.result?.supplements?.content || []);
     } catch (error) {
       console.error("검색 실패:", error);
@@ -225,7 +224,11 @@ const AddCombinationPage = () => {
                   className="text-[16px] text-[#8A8A8A]"
                   title="삭제"
                 >
-                  <FiX />
+                  <img 
+                    src="/images/PNG/조합 2-1/delete.png" 
+                    alt="삭제" 
+                    className="w-4 h-4 mt-0.5"
+                  />
                 </button>
               </div>
             ))}
@@ -299,7 +302,7 @@ const AddCombinationPage = () => {
               </div>
 
               {/* PC 카드 */}
-              <div className="hidden md:flex px-[230px] mt-[50px] mb-[60px] gap-[60px]">
+              <div className="hidden md:flex px-[230px] mt-[50px] gap-[60px]">
                 <div className="grid grid-cols-3 gap-[40px] w-[980px]">
                   {results.map((item: Product) => (
                     <CombinationProductCard
@@ -349,14 +352,14 @@ const AddCombinationPage = () => {
           <>
             {/* PC 분석 목록 */}
             <div
-              className="hidden lg:block sticky top-[150px]"
+              className="hidden lg:block sticky top-[30px]"
               style={{
                 width: "314px",
                 height: "fit-content",
-                maxHeight: "calc(100vh - 180px)", // 화면 아래 footer 넘지 않게
                 right: "250px",
                 gap: "22px",
                 opacity: 1,
+                marginTop: "50px",
               }}
             >
               {/* 분석 시작 버튼 */}
@@ -369,7 +372,7 @@ const AddCombinationPage = () => {
                 </button>
 
                 {selectedItems.length > 0 && (
-                  <div className="bg-[#F2F2F2] border border-[#9C9A9A] rounded-[36px] px-[34px] py-[33px] flex flex-col gap-10">
+                  <div className="bg-[#F2F2F2] border border-[#9C9A9A] rounded-[36px] px-[34px] py-[33px] flex flex-col gap-10 flex:1">
                     {selectedItems.map((item, idx) => (
                       <div
                         key={idx}
@@ -414,7 +417,7 @@ const AddCombinationPage = () => {
               }}
             >
               {/* 상단: 제목 & 시작 버튼 */}
-              <div className="flex justify-between items-center mb-3">
+              <div className="flex justify-between items-center mb-1">
                 <h3 className="font-pretendard font-bold text-[22px] leading-[120%] tracking-[-0.02em] px-3">
                   분석 목록
                 </h3>
@@ -425,7 +428,7 @@ const AddCombinationPage = () => {
                   <img
                     src="/src/assets/시작.png"
                     alt="분석 시작"
-                    className="w-[67px] h-[32px] mr-1 object-contain"
+                    className="w-[80px] h-[40px] mr-1.5 object-contain"
                   />
                 </button>
               </div>

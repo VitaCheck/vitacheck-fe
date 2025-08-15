@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import ShareLinkPopup from './P3MShareLinkPopup';
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
-import MainDetailPageBrandSection from "./P3BrandSection"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import IngredientTab from "./P3IngredientTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
-import TimingTab from "./P3TimingTab"; // 경로는 실제 파일 위치에 맞게 조정하세요.
+import MainDetailPageBrandSection from "./P3BrandSection";
+import IngredientTab from "./P3IngredientTab";
+import TimingTab from "./P3TimingTab";
+
 interface MobileProps {
   product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
   liked: boolean;
@@ -127,7 +128,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
       </div>
 
       {/* 탭 UI */}
-      <div className="flex flex-col items-center w-full border-b-[#F3F3F3] border-b-[4px] mt-[47px] gap-[6px]">
+      <div className="flex flex-col items-center w-full border-b-[#F3F3F3] border-b-[4px] gap-[6px]">
         <div className="flex justify-between w-[265px] relative">
           {[
             { key: "ingredient", label: "성분 함량" },
