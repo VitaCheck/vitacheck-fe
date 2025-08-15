@@ -14,27 +14,38 @@ interface SupplementInfo {
 
 type ResultData = Record<string, SupplementInfo>;
 
-const ITEMS_PER_PAGE = 5; // 한 번에 보여줄 섹션 수
+const ITEMS_PER_PAGE = 10;
 
 const PurposeProductList = () => {
-  const location = useLocation();
+  const location = useLocation() as {
+    state: {
+      selectedDescriptions?: string[];
+      selectedCodes?: string[];
+      activePurpose?: string;
+      cachedData?: ResultData;
+    };
+  };
   const navigate = useNavigate();
-  const selected = location.state?.selectedDescriptions || [];
-  const selectedCodes = location.state?.selectedCodes || [];
   const isMobile = useIsMobile();
 
-  const [data, setData] = useState<ResultData>({});
-  const [isLoading, setIsLoading] = useState(true);
-  const [isPopupOpen, setIsPopupOpen] = useState(false);
-  const [activePurpose, setActivePurpose] = useState<string>(selected[0]);
+  const selected = location.state?.selectedDescriptions || [];
+  const selectedCodes = location.state?.selectedCodes || [];
   
+  const [data, setData] = useState<ResultData>(location.state?.cachedData || {});
+  const [isLoading, setIsLoading] = useState(!location.state?.cachedData);
+  const [isPopupOpen, setIsPopupOpen] = useState(false);
+  const [activePurpose, setActivePurpose] = useState<string>(location.state?.activePurpose || selected[0] || "");
+
   // 무한 스크롤 관련
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
   const loaderRef = useRef<HTMLDivElement | null>(null);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
 
+  // ---------------- 스크롤 복원 ----------------
   useEffect(() => {
     window.scrollTo(0, 0);
+    window.history.scrollRestoration = "manual";
+    return () => { window.history.scrollRestoration = "auto"; };
   }, []);
 
   const handleOpenPopup = () => setIsPopupOpen(true);
@@ -78,24 +89,19 @@ const PurposeProductList = () => {
 
   // ---------------- API 호출 ----------------
   useEffect(() => {
+    if (!selectedCodes || selectedCodes.length === 0 || Object.keys(data).length > 0) {
+      setIsLoading(false);
+      return; // 이미 데이터 있으면 API 호출 건너뛰기
+    }
+
     const fetchData = async () => {
-      if (selectedCodes.length === 0) {
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
-
-      const payload = {
-        purposeNames: selectedCodes,
-      };
-
       try {
         const response = await axios.post(
           "https://vita-check.com/api/v1/supplements/by-purposes",
-          payload
+          { purposeNames: selectedCodes }
         );
-
+        console.log("API response:", response.data);
         setData(response.data.result as ResultData);
       } catch (error) {
         console.error("❌ API 호출 실패:", error);
@@ -118,7 +124,7 @@ const PurposeProductList = () => {
         setTimeout(() => {
           setVisibleCount((prev) => prev + ITEMS_PER_PAGE);
           setIsFetchingMore(false);
-        }, 500); // 스켈레톤 보이게 살짝 지연
+        }, 500);
       }
     }, { threshold: 1.0 });
 
@@ -129,9 +135,8 @@ const PurposeProductList = () => {
   // ---------------- 데이터 정렬 ----------------
   const getSortedData = () => {
     const translatedSelected = selectedCodes.map((code: string) => purposeCodeMap[code]).filter(Boolean);
-
     const filteredData = Object.entries(data).filter(([_, info]) =>
-      info.purposes.some((purpose) => translatedSelected.includes(purpose))
+      info.purposes?.some(purpose => translatedSelected.includes(purpose))
     );
 
     const sortedData = [...filteredData].sort(([_, aInfo], [__, bInfo]) => {
@@ -152,7 +157,7 @@ const PurposeProductList = () => {
 
     return visibleData.map(([ingredientName, info]) => {
       const translatedSelected = selectedCodes.map((code: string) => purposeCodeMap[code]);
-      const uniquePurposes = Array.from(new Set(info.purposes)).filter((p) => translatedSelected.includes(p));
+      const uniquePurposes = Array.from(new Set(info.purposes)).filter(p => translatedSelected.includes(p));
 
       return (
         <div key={ingredientName} className="flex flex-col">
@@ -163,7 +168,7 @@ const PurposeProductList = () => {
             isLoading={false}
             goToAllIngredientPage={() =>
               navigate(`/ingredientproducts?ingredient=${encodeURIComponent(ingredientName)}`, {
-                state: { supplements: info.supplements },
+                state: { supplements: info.supplements, cachedData: data, activePurpose }
               })
             }
           />
@@ -210,7 +215,14 @@ const PurposeProductList = () => {
         </div>
 
         {isLoading ? (
-          Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => <SkeletonSection key={i} />)
+          <>
+            <p className="mt-[20px] mb-[20px] text-center text-gray-500">
+              목적별 영양제를 조회 중입니다...
+            </p>
+            {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+              <SkeletonSection key={i} />
+            ))}
+          </>
         ) : renderSections().length > 0 ? (
           <>
             <div className="mt-[20px]">{renderSections()}</div>
@@ -229,7 +241,14 @@ const PurposeProductList = () => {
             <h1 className="text-[30px] tracking-[-1px] font-semibold">{titleText}</h1>
           </div>
           {isLoading ? (
-            Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => <SkeletonSection key={i} />)
+            <>
+              <p className="mt-[20px] mb-[20px] text-center text-gray-500">
+                목적별 영양제를 조회 중입니다...
+              </p>
+              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
+                <SkeletonSection key={i} />
+              ))}
+            </>
           ) : renderSections().length > 0 ? (
             <>
               <div className="mt-[40px]">{renderSections()}</div>

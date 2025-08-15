@@ -14,6 +14,7 @@ interface DesktopProps {
   setActiveTab: (tab: "ingredient" | "timing") => void;
   brandProducts: any[];
   brandId: number;
+  intakeTime: string;
   onCopyUrl: () => void;
 }
 
@@ -146,7 +147,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
 
         {/* 탭 내용 */}
         <div className="flex flex-col items-center mx-auto mt-[16px] text-[10px] leading-relaxed">
-          {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
+          {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab intakeTime={product.intakeTime} />}
         </div>
       </div>
     </div>

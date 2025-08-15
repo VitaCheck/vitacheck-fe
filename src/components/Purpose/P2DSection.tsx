@@ -14,7 +14,7 @@ interface RecommendedProductSectionDesktopProps {
   paginatedProducts: Product[];
   isLoading: boolean;
   goToIngredientPage: () => void;
-  goToAllIngredientPage: () => void;
+   goToAllIngredientPage: () => void;
   currentPage: number;
   totalPages: number;
   handleNextPage: () => void;
