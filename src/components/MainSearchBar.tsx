@@ -4,7 +4,6 @@ import Search from "../assets/search.svg";
 import X from "../assets/X.svg";
 import SearchOptionsModal from "./SearchOptionsModal";
 
-// 전역 커스텀 이벤트 타입 선언 (타입스크립트 경고 방지)
 declare global {
   interface WindowEventMap {
     "focus-global-search": CustomEvent<void>;
@@ -15,13 +14,11 @@ const SearchBar = () => {
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
-
-  // ✨ 포커스용 ref
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFocus = () => {
-    // 모바일은 검색 페이지로 라우팅
     if (window.innerWidth < 640) {
+      // 모바일이면 검색 페이지로
       navigate("/search");
     }
   };
@@ -29,16 +26,17 @@ const SearchBar = () => {
   const handleClear = () => setQuery("");
   const toggleModal = () => setShowModal((prev) => !prev);
 
-  // ✨ 외부에서 포커스 트리거하는 커스텀 이벤트 리스너
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && query.trim()) {
+      navigate(`/searchresult?query=${encodeURIComponent(query.trim())}`);
+    }
+  };
+
   useEffect(() => {
     const focusHandler = () => {
-      // 헤더가 이미 렌더된 상태에서 안전하게 포커스
       inputRef.current?.focus();
       inputRef.current?.select();
-      // 필요하면 스크롤 가운데로
-      // inputRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
     };
-
     window.addEventListener("focus-global-search", focusHandler);
     return () =>
       window.removeEventListener("focus-global-search", focusHandler);
@@ -55,6 +53,7 @@ const SearchBar = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
+          onKeyDown={handleKeyDown}
         />
 
         {query && (
