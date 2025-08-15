@@ -41,6 +41,11 @@ export default function DesktopAlarmAddToSearchPage() {
     if (isMobile) navigate("/alarm/settings");
   }, [isMobile, navigate]);
 
+  const [supplementName, setSupplementName] = useState("");
+  useEffect(() => {
+    setSupplementName(detail?.supplementName ?? "");
+  }, [detail?.supplementName]);
+
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -153,27 +158,43 @@ export default function DesktopAlarmAddToSearchPage() {
         </button>
       </div>
 
-      {/* 제품 카드: 이미지 + 이름만 */}
+      {/* 제품 카드: 이미지 + 이름 (세로 배치) */}
       <div className="mt-8">
         {loading ? (
           <div className="w-full h-[120px] bg-gray-100 rounded-xl animate-pulse" />
         ) : loadErr ? (
           <div className="text-red-500 text-sm">{loadErr}</div>
         ) : (
-          <div className="flex items-center gap-4 bg-white rounded-[20px] p-4 shadow">
-            <div className="w-[96px] h-[96px] rounded-xl overflow-hidden bg-gray-50">
-              {detail?.supplementImageUrl && (
+          <div className="flex flex-col gap-6">
+            {/* 이미지 박스 */}
+            <div className="w-[272px] h-[248px] bg-white rounded-[20px] flex items-center justify-center overflow-hidden">
+              {detail?.supplementImageUrl ? (
                 <img
                   src={detail.supplementImageUrl}
-                  alt={detail.supplementName}
+                  alt={detail?.supplementName ?? "supplement"}
                   className="w-full h-full object-cover"
+                />
+              ) : (
+                <img
+                  src="/images/camera.png"
+                  alt="camera icon"
+                  className="w-[102.5px] h-[92.25px]"
                 />
               )}
             </div>
-            <div className="flex-1">
-              <div className="text-lg font-semibold">
-                {detail?.supplementName}
-              </div>
+
+            {/* 영양제 이름 */}
+            <div className="flex flex-col">
+              <label className="font-semibold text-[24px] text-[#6B6B6B] mb-[20px]">
+                영양제 이름
+              </label>
+              <input
+                type="text"
+                className="w-full h-[73px] border border-[#AAAAAA] rounded-xl px-4 py-2 text-[22px] text-[#202020] bg-white"
+                placeholder="예: 멀티비타민"
+                value={supplementName}
+                onChange={(e) => setSupplementName(e.target.value)}
+              />
             </div>
           </div>
         )}

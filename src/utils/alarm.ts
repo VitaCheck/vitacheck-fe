@@ -1,3 +1,4 @@
+// src/utils/alarm.ts
 import type { Supplement, Schedule } from "../types/alarm";
 
 // ===== 최소 디버그 유틸 =====

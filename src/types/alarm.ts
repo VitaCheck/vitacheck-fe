@@ -1,5 +1,5 @@
 // 타입 정의
-
+// types/alarm.ts
 export type DayOfWeek = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
 
 export interface Schedule {
