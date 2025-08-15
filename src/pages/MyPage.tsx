@@ -15,8 +15,6 @@ import { useLogout } from "@/hooks/useLogout";
 
 function MyPage() {
   const navigate = useNavigate();
-  const logout = useLogout();
-  const [userLoadFailed, setUserLoadFailed] = useState(false);
 
   const handleLogout = async () => {
     alert("로그아웃 되었습니다.");
@@ -112,7 +110,7 @@ function MyPage() {
               onClick={
                 () =>
                   userLoadFailed
-                    ? navigate("/login") // 로그인 안되어있으면 로그인 페이지 이동
+                    ? navigate("/login/email") // 로그인 안되어있으면 로그인 페이지 이동
                     : navigate("/mypage/edit") // 로그인 되어있으면 내 정보 수정 이동
               }
             >
@@ -140,7 +138,9 @@ function MyPage() {
           <button
             className="hidden sm:flex items-center absolute right-6 top-1/2 -translate-y-1/2 bg-white border border-[#AAAAAA] rounded-[25px] px-4 py-1 cursor-pointer text-[13px]"
             onClick={() =>
-              userLoadFailed ? navigate("/login") : navigate("/mypage/edit")
+              userLoadFailed
+                ? navigate("/login/email")
+                : navigate("/mypage/edit")
             }
           >
             <span className="mr-2">
@@ -300,7 +300,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => logout("/login")}
+                onClick={() => logout("/social-login")}
               />
             </div>
           )}

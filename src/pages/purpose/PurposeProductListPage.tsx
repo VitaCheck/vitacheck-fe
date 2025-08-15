@@ -94,33 +94,67 @@ useEffect(() => {
     return;
   }
 
-  const fetchData = async () => {
-    setIsLoading(true);
-    try {
-      const response = await axios.post(
-        "https://vita-check.com/api/v1/supplements/by-purposes",
-        { purposeNames: selectedCodes }
-      );
-      console.log("API response:", response.data);
+      setIsLoading(true);
 
-      const content = response.data?.result?.content || [];
-      const mappedData: ResultData = {};
+      const payload = {
+        purposeNames: selectedCodes,
+      };
 
-      content.forEach((item: any) => {
-        mappedData[item.ingredientName] = {
-          purposes: item.data?.purposes || [],
-          supplements: item.data?.supplements || [],
+      console.log("📤 보내는 데이터:", JSON.stringify(payload, null, 2));
+
+
+      // --- 👇 API 호출 대신 이 부분을 사용합니다. 👇 ---
+      try {
+        const mockData = {
+          '루테인': {
+            purposes: ["눈건강"],
+            supplements: [
+              ["고려은단 비타민c 1000", "lutein.jpg"],
+              ["솔가 비타민D3 5000IU", "lutein.jpg"],
+              ["종근당건강 프로메가 오메가3", "lutein.jpg"],
+              ["루테인4", "lutein.jpg"],
+              ["루테인5", "lutein.jpg"],
+              ["루테인6", "lutein.jpg"],
+              ["루테인7", "lutein.jpg"],
+              ["루테인8", "lutein.jpg"],
+              ["루테인9", "lutein.jpg"],
+              ["루테인10", "lutein.jpg"],
+              ["루테인11", "lutein.jpg"],
+              ["루테인12", "lutein.jpg"],
+              ["루테인13", "lutein.jpg"],
+              ["루테인14", "lutein.jpg"],
+              ["루테인15", "lutein.jpg"],
+              ["루테인16", "lutein.jpg"],
+              ["루테인17", "lutein.jpg"],
+            ],
+          },
+          '칼슘2': {
+            purposes: ["뼈건강"],
+            supplements: [["제품이름2", "omega3.jpg"]],
+          },
+          '성분3_수면': {
+            purposes: ["수면/스트레스"],
+            supplements: [["제품이름3", "omega3.jpg"]],
+          },
+          '성분4_혈중콜레스테롤': {
+            purposes: ["혈중콜레스테롤"],
+            supplements: [["제품이름4", "omega3.jpg"]],
+          },
+          '성분5_체지방': {
+            purposes: ["체지방"],
+            supplements: [["제품이름5", "omega3.jpg"]],
+          },
         };
-      });
-
-      setData(mappedData);
-    } catch (error) {
-      console.error("❌ API 호출 실패:", error);
-      setData({});
-    } finally {
-      setIsLoading(false);
-    }
-  };
+        setData(mockData as unknown as ResultData);
+        console.log("✅ Mock 데이터 로드 완료:", mockData);
+      } catch (error) {
+        console.error("❌ 목업 데이터 로드 중 오류 발생:", error);
+        setData({});
+      } finally {
+        setIsLoading(false);
+      }
+      // --- 👆 API 호출 대신 이 부분을 사용합니다. 👆 ---
+    };
 
   fetchData();
 }, [selectedCodes]);
@@ -208,9 +242,9 @@ useEffect(() => {
 
   return (
     <>
-      {/* 모바일 */}
-      <div className="sm:hidden w-full mx-auto pb-[50px]">
-        <div className="sm:hidden flex items-center gap-[22px] mt-[50px]">
+      {/* 모바일 전용 */}
+      <div className="md:hidden w-full mx-auto pb-[50px]">
+        <div className="md:hidden flex items-center gap-[22px] mt-[50px]">
           <div className="ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-semibold">{titleText}</h1>
           </div>
@@ -226,49 +260,21 @@ useEffect(() => {
           </div>
         </div>
 
-        {isLoading ? (
-          <>
-            <p className="mt-[20px] mb-[20px] text-center text-gray-500">
-              목적별 영양제를 조회 중입니다...
-            </p>
-            {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
-              <SkeletonSection key={i} />
-            ))}
-          </>
-        ) : renderSections().length > 0 ? (
-          <>
-            <div className="mt-[20px]">{renderSections()}</div>
-            {isFetchingMore && Array.from({ length: 2 }).map((_, i) => <SkeletonSection key={`more-${i}`} />)}
-            <div ref={loaderRef}></div>
-          </>
-        ) : (
-          <p className="mt-[20px] text-center text-gray-500">연관 제품이 없습니다.</p>
+        {!isLoading && Object.keys(data).length > 0 && (
+          <div className="mt-[20px]">{renderSections()}</div>
         )}
       </div>
 
-      {/* PC */}
-      <div className="hidden sm:block w-full bg-[#FAFAFA] px-[40px]">
+      {/* PC 전용 */}
+      <div className="hidden md:block w-full bg-[#FAFAFA] px-[40px]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
             <h1 className="text-[30px] tracking-[-1px] font-semibold">{titleText}</h1>
           </div>
           {isLoading ? (
-            <>
-              <p className="mt-[20px] mb-[20px] text-center text-gray-500">
-                목적별 영양제를 조회 중입니다...
-              </p>
-              {Array.from({ length: ITEMS_PER_PAGE }).map((_, i) => (
-                <SkeletonSection key={i} />
-              ))}
-            </>
-          ) : renderSections().length > 0 ? (
-            <>
-              <div className="mt-[40px]">{renderSections()}</div>
-              {isFetchingMore && Array.from({ length: 2 }).map((_, i) => <SkeletonSection key={`more-${i}`} />)}
-              <div ref={loaderRef}></div>
-            </>
+            <p className="mt-[40px]">데이터를 불러오는 중입니다...</p>
           ) : (
-            <p className="mt-[40px] text-center text-gray-500">연관 제품이 없습니다.</p>
+            <div className="mt-[40px]">{renderSections()}</div>
           )}
         </div>
       </div>

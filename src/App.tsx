@@ -39,12 +39,10 @@ import EmailLoginPage from "./pages/auth/EmailLoginPage"; // 자체 로그인 �
 import EmailSignupPage from "./pages/auth/EmailSignupPage"; // 자체 회원가입 페이지
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPage"; // 자체 회원가입 상세 페이지
 
-// 목적별 상품 관련
-import BestSupplement from "./pages/BestSupplement"; // 베스트 영양제 페이지
-import PurposeProductList from "./pages/purpose/PurposeProductListPage"; // 목적별 상품 목록
-import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage"; // 원료별 상품 목록
-import ProductDetailPage from "./pages/MainProductDetailPage"; // 상품 상세 페이지
-import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage"; // 브랜드별 상품 목록
+import PurposeProductList from "./pages/purpose/PurposeProductListPage";
+import PurposeIngredientProducts from "./pages/purpose/PurposeIngredientProductsPage";
+import ProductDetailPage from "./pages/MainProductDetailPage";
+import PurposeBrandProducts from "./pages/purpose/PurposeBrandProductsPage";
 
 // 레이아웃 & 기타 페이지
 import RootLayout from "./layout/RootLayout"; // 전체 레이아웃
@@ -54,11 +52,7 @@ import SearchResultPage from "./pages/SearchResultPage"; // 검색 결과 페이
 
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-// OAuth 리다이렉트
-import OauthRedirect from "./pages/auth/OauthRedirect"; // 소셜 로그인 리다이렉트 처리
-
-// React Query 클라이언트 생성
+import OauthRedirect from "./pages/auth/OauthRedirect";
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -99,31 +93,80 @@ const router = createBrowserRouter([
         path: "alarm/settings/add/search",
         element: <DesktopAlarmAddToSearchPage />,
       },
-      { path: "alarm/settings/edit/:id", element: <DesktopAlarmEditPage /> },
+      {
+        path: "alarm/settings/edit/:id",
+        element: <DesktopAlarmEditPage />,
+      },
+      {
+        path: "mypage", //마이 페이지
+        element: <MyPage />,
+      },
+      {
+        path: "/scrap", // 마이페이지-스크랩
+        element: <ScrapPage />,
+      },
+      {
+        path: "/search", // 검색창
+        element: <SearchPage />,
+      },
+      {
+        path: "/searchresult", // 검색 결과
+        element: <SearchResultPage />,
+      },
+      {
+        path: "notificationCenter",
+        element: <NotificationCenterPage />,
+      },
+      {
+        path: "setting",
+        element: <NotificationSettingsPage />,
+      },
+      {
+        path: "mypage/edit", // 마이페이지 수정
+        element: <EditProfilePage />,
+      },
+      {
+        path: "add-combination",
+        element: <AddCombinationPage />,
+      },
+      {
+        path: "combination-result", // 분석 결과 페이지
+        element: <CombinationResultPage />,
+      },
 
-      // 마이/스크랩/검색/설정
-      { path: "mypage", element: <MyPage /> },
-      { path: "/scrap", element: <ScrapPage /> },
-      { path: "/search", element: <SearchPage /> },
-      { path: "/searchresult", element: <SearchResultPage /> },
-      { path: "notificationCenter", element: <NotificationCenterPage /> },
-      { path: "setting", element: <NotificationSettingsPage /> },
-      { path: "mypage/edit", element: <EditProfilePage /> },
+      {
+        path: "products",
+        element: <PurposeProductList />,
+      },
+      {
+        path: "ingredientproducts",
+        element: <PurposeIngredientProducts />,
+      },
+      {
+        path: "brandproducts",
+        element: <PurposeBrandProducts />,
+      },
+      {
+        path: "product/:id",
+        element: <ProductDetailPage />,
+      },
+      {
+        path: "login",
+        element: <SocialLogin />,
+      },
+      {
+        path: "/oauth-redirect",
+        element: <OauthRedirect />,
+      },
+      // {
+      //   path: "/auth/:provider/callback", // google|kakao|naver
+      //   element: <SocialCallback />,
+      // },
+      {
+        path: "/social-signup",
+        element: <SocialSignupForm />,
+      },
 
-      // 상품/리스트
-      { path: "bestsupplement", element: <BestSupplement /> },
-      { path: "products", element: <PurposeProductList /> },
-      { path: "ingredientproducts", element: <PurposeIngredientProducts /> },
-      { path: "brandproducts", element: <PurposeBrandProducts /> },
-      { path: "product/:id", element: <ProductDetailPage /> },
-
-      // 소셜 로그인
-      { path: "login", element: <SocialLogin /> },
-      { path: "/oauth-redirect", element: <OauthRedirect /> },
-      // { path: "/auth/:provider/callback", element: <SocialCallback /> },
-      { path: "/social-signup", element: <SocialSignupForm /> },
-
-      // (옵션) 별도 상세 경로 - 필요 시 유지
       {
         path: "/ingredients/:ingredientName",
         element: <IngredientDetailPage />,

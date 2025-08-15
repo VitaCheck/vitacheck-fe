@@ -173,7 +173,7 @@ const PurposeCardList = () => {
           />
         </div>
       </div>
-      <p className="mt-[18px] text-[clamp(12px,4vw,20px)] sm:text-[20px] text-center font-semibold">
+      <p className="mt-[18px] h-[22px] text-sm md:text-[20px] text-center font-semibold">
         {card.description}
       </p>
     </div>  
