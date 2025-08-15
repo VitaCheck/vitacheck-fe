@@ -4,6 +4,7 @@ import { Link, useNavigate } from "react-router-dom";
 import catImage from "../assets/cat.png";
 import searchIcon from "../assets/search.png";
 import downIcon from "../assets/arrow_drop_down.png";
+import Navbar from "@/components/NavBar";
 import {
   fetchIngredientSearch,
   fetchPopularIngredients,
@@ -173,6 +174,7 @@ const IngredientPage = () => {
     item.toLowerCase().includes(searchKeyword.toLowerCase())
   );
 
+  // 모바일에서는 전역 헤더 숨김(있으면)
   useEffect(() => {
     if (!isMobile) return;
     const headerEl = document.querySelector("header");
@@ -188,6 +190,11 @@ const IngredientPage = () => {
 
   return (
     <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
+      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      <div className="md:hidden">
+        <Navbar />
+      </div>
+
       <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">
         성분별
       </h1>
@@ -236,7 +243,7 @@ const IngredientPage = () => {
       {/* 로딩 스피너 */}
       {isLoading && (
         <div className="flex justify-center items-center py-8">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-500"></div>
         </div>
       )}
 
@@ -320,7 +327,8 @@ const IngredientPage = () => {
               isMobile ? "text-sm text-left" : "text-base"
             } font-medium text-black leading-relaxed`}
           >
-            효능, 섭취 시기, 권장 섭취량 등<br />
+            효능, 섭취 시기, 권장 섭취량 등
+            <br />
             다양한 정보를 알 수 있어요!
           </p>
         </section>
@@ -333,44 +341,119 @@ const IngredientPage = () => {
             <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
               연령대별 자주 찾는 성분 TOP 5
             </h2>
-            <button
-              onClick={toggleAgeModal}
-              className="text-sm font-semibold rounded-full pl-3 pr-6 py-1 bg-[#FFEB9D] appearance-none flex items-center gap-2"
-            >
-              {selected}
-              <img src={downIcon} alt="드롭다운" className="w-5 h-5" />
-            </button>
+            <div className="relative">
+              <button
+                onClick={toggleAgeModal}
+                className={`text-sm font-semibold rounded-full pl-3 pr-6 py-1 appearance-none flex items-center gap-2 whitespace-nowrap ${
+                  isMobile
+                    ? "bg-[#FFEB9D] min-w-[80px] justify-center"
+                    : "bg-white border border-gray-200 shadow-sm"
+                }`}
+              >
+                {selected}
+                <img src={downIcon} alt="드롭다운" className="w-6 h-5" />
+              </button>
+
+              {/* 나이 선택 모달 */}
+              {showAgeModal && (
+                <>
+                  {/* PC 버전: 드롭다운 형태 */}
+                  {!isMobile && (
+                    <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 min-w-[200px]">
+                      <div className="p-3">
+                        {[
+                          "10대",
+                          "20대",
+                          "30대",
+                          "40대",
+                          "50대",
+                          "60대 이상",
+                          "전체 연령",
+                        ].map((age) => (
+                          <button
+                            key={age}
+                            onClick={() => handleChange(age)}
+                            className={`w-full text-left px-3 py-2 rounded-lg font-medium transition-colors ${
+                              selected === age
+                                ? "bg-[#FFEB9D] text-black"
+                                : "text-gray-700 hover:bg-gray-50"
+                            }`}
+                          >
+                            {age}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
           </div>
 
-          {/* 나이 선택 모달 */}
-          {showAgeModal && (
-            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-              <div className="bg-white rounded-2xl p-6 max-w-sm w-full mx-4">
-                <h3 className="text-lg font-semibold text-center mb-4">
-                  연령 선택
-                </h3>
-                <div className="grid grid-cols-3 gap-3">
-                  {[
-                    "10대",
-                    "20대",
-                    "30대",
-                    "40대",
-                    "50대",
-                    "60대 이상",
-                    "전체 연령",
-                  ].map((age) => (
-                    <button
-                      key={age}
-                      onClick={() => handleChange(age)}
-                      className={`px-4 py-3 rounded-xl font-medium transition-colors ${
-                        selected === age
-                          ? "bg-[#FFEB9D] text-black"
-                          : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                    >
-                      {age}
-                    </button>
-                  ))}
+          {/* 모바일 버전: 하단에서 올라오는 모달 */}
+          {/* 모바일 버전: 하단에서 올라오는 모달 */}
+          {showAgeModal && isMobile && (
+            <div className="fixed inset-0 z-50">
+              {/* 🔹 어두운 오버레이 */}
+              <button
+                aria-label="모달 닫기"
+                className="absolute inset-0 bg-black/40"
+                onClick={toggleAgeModal}
+              />
+
+              {/* 바텀시트 */}
+              <div
+                className="absolute bottom-0 left-0 right-0 bg-white rounded-t-3xl p-6"
+                style={{
+                  paddingBottom: "max(16px, env(safe-area-inset-bottom))",
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="flex justify-center mb-4">
+                  <div className="w-12 h-1 bg-gray-300 rounded-full"></div>
+                </div>
+
+                <div className="mb-4">
+                  <h3 className="text-lg font-semibold text-left mb-2">
+                    연령 선택
+                  </h3>
+                  <div className="w-full h-px bg-gray-300"></div>
+                </div>
+
+                <div className="space-y-3">
+                  {/* 위쪽 행: 10대, 20대, 30대, 40대 */}
+                  <div className="grid grid-cols-4 gap-3">
+                    {["10대", "20대", "30대", "40대"].map((age) => (
+                      <button
+                        key={age}
+                        onClick={() => handleChange(age)}
+                        className={`px-4 py-3 rounded-xl font-medium transition-colors ${
+                          selected === age
+                            ? "bg-[#FFEB9D] text-black"
+                            : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* 아래쪽 행: 50대, 60대 이상, 전체 연령 */}
+                  <div className="flex gap-3 justify-center">
+                    {["50대", "60대 이상", "전체 연령"].map((age) => (
+                      <button
+                        key={age}
+                        onClick={() => handleChange(age)}
+                        className={`px-4 py-3 rounded-xl font-medium transition-colors ${
+                          selected === age
+                            ? "bg-[#FFEB9D] text-black"
+                            : "bg-white border border-gray-200 text-gray-700 hover:bg-gray-50"
+                        }`}
+                      >
+                        {age}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
@@ -410,7 +493,7 @@ const IngredientPage = () => {
             </div>
           ) : (
             <div
-              className={`grid gap-4 pb-10 pt-3 ${
+              className={`grid gap-4 pb-10 pt-3 justify-start ${
                 popularIngredients.length === 1
                   ? "grid-cols-1"
                   : popularIngredients.length === 2

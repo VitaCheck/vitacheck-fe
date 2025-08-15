@@ -35,7 +35,7 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
         <button
           key={tab.key}
           onClick={() => setActiveTab(tab.key)}
-          className="pb-2 font-semibold text-lg transition-all duration-200 relative"
+          className="pb-2 font-semibold text-mb transition-all duration-200 relative"
         >
           <span
             className={activeTab === tab.key ? "text-black" : "text-gray-400"}
@@ -50,37 +50,32 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
     </div>
   ) : (
     // PC 버전: 3개 탭이 화면 축소(간격/패딩/폰트만 점진 축소)
-    <div
-      className="
-        inline-flex w-full flex-nowrap
-        gap-[clamp(8px,1.6vw,15px)]
-        border-b border-gray-300
-        px-[clamp(8px,2vw,24px)]
-        mb-8
-      "
-    >
-      {tabList.map((tab) => (
-        <button
-          key={tab.key}
-          onClick={() => setActiveTab(tab.key)}
-          className={`
-            flex-1 min-w-0               /* 세 탭을 균등 분배, 화면 줄면 함께 축소 */
-            px-[clamp(12px,1.8vw,25px)]  /* 최대에선 기존 px-25, 축소 시 부드럽게 감소 */
-            py-[clamp(8px,1.2vw,12px)]   /* 기존 py-3 상한 유지 */
-            font-semibold text-[clamp(12px,0.95vw,14px)] /* 폰트도 살짝만 축소 */
-            rounded-t-xl shadow-md border-gray-200
-            ${
-              activeTab === tab.key
-                ? "bg-[#FFE17E] border-t-transparent border-l-transparent border-r-transparent"
-                : "bg-white"
-            }
-          `}
-        >
-          <span className="block text-center whitespace-nowrap break-keep leading-tight">
-            {tab.label}
-          </span>
-        </button>
-      ))}
+    <div className="border-b border-gray-300 mb-8">
+      {/* 탭 컨테이너: 최대 720px, 화면이 작아지면 60vw, 더 작으면 340px */}
+      <div className="mx-auto h-13 w-[clamp(400px,90vw,800px)] flex gap-5 px-2">
+        {tabList.map((tab) => (
+          <button
+            key={tab.key}
+            onClick={() => setActiveTab(tab.key)}
+            className={`
+          flex-1 min-w-0
+          px-[clamp(10px,1.2vw,20px)]
+          py-[clamp(8px,1.0vw,12px)]
+          font-semibold text-[clamp(13px,0.95vw,15px)]
+          rounded-t-xl shadow-md border border-gray-200
+          ${
+            activeTab === tab.key
+              ? "bg-[#FFE17E] border-b-transparent"
+              : "bg-white"
+          }
+        `}
+          >
+            <span className="block text-center whitespace-nowrap leading-tight">
+              {tab.label}
+            </span>
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
