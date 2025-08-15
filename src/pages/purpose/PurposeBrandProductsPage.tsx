@@ -1,6 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
@@ -19,19 +19,13 @@ const PurposeBrandProducts = () => {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [products, setProducts] = useState<Product[]>([]);
+  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const batchSize = window.innerWidth >= 768 ? 4 : 2; // PC:4개, 모바일:2개
 
-  useEffect(() => {
-    // URL에서 가져온 브랜드 이름을 콘솔에 출력하는 코드
-    console.log("현재 브랜드 이름:", brand);
-  }, [brand]);
-
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname]);
-
-
+  // 1️⃣ 초기 데이터 로드
   useEffect(() => {
     if (!brandId) {
       setIsLoading(false);
@@ -42,22 +36,28 @@ const PurposeBrandProducts = () => {
     const fetchBrandProducts = async () => {
       setIsLoading(true);
       try {
-        const brandResponse = await axios.get(`http://vita-check.com/api/v1/supplements/brand`, {
-          params: { id: brandId },
-          headers: {
-            'accept': '*/*',
-          },
-        });
+        const response = await axios.get(
+          `http://vita-check.com/api/v1/supplements/brand`,
+          {
+            params: { id: brandId },
+            headers: { accept: "*/*" },
+          }
+        );
 
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        if (brandResponse.status === 200) {
-          const fetchedProducts = brandResponse.data.supplements.map((item: any) => ({
-            id: item.id,
-            title: item.name,
-            imageUrl: item.imageUrl,
-          }));
-          setProducts(fetchedProducts);
+        await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 표시용
+
+        if (response.status === 200) {
+          const mappedProducts: Product[] = response.data.supplements.map(
+            (item: any) => ({
+              id: item.id,
+              title: item.name,
+              imageUrl: item.imageUrl.startsWith("http")
+                ? item.imageUrl
+                : `/images/${item.imageUrl}`,
+            })
+          );
+          setProducts(mappedProducts);
+          setDisplayProducts(mappedProducts.slice(0, batchSize));
         } else {
           setProducts([]);
         }
@@ -70,54 +70,64 @@ const PurposeBrandProducts = () => {
     };
 
     fetchBrandProducts();
-  }, [brandId]); // brandId가 변경될 때마다 재실행
+    window.scrollTo(0, 0);
+  }, [brandId]);
 
+  // 2️⃣ 무한 스크롤
+  useEffect(() => {
+    if (!loadMoreRef.current) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (
+          entries[0].isIntersecting &&
+          !isLoading &&
+          displayProducts.length < products.length
+        ) {
+          const nextBatch = products.slice(
+            displayProducts.length,
+            displayProducts.length + batchSize
+          );
+          setDisplayProducts((prev) => [...prev, ...nextBatch]);
+        }
+      },
+      { threshold: 1 }
+    );
+    observer.observe(loadMoreRef.current);
+    return () => observer.disconnect();
+  }, [isLoading, displayProducts, products]);
 
-  // 스켈레톤 카드 렌더링 함수
-  const renderSkeletonCard = (isMobile: boolean) => (
+  // 3️⃣ 스켈레톤 카드
+  const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
-      {/* 모바일 스켈레톤 */}
-      {isMobile && (
-        <>
-          <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg"></div>
-          <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
-        </>
-      )}
-      {/* PC 스켈레톤 */}
-      {!isMobile && (
-        <>
-          <div className="w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
-          <div className="mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
-        </>
-      )}
+      <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
+      <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
+      <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
     </div>
   );
 
-  // 조건부로 카드 또는 스켈레톤을 렌더링하는 함수
+  const filteredProducts = displayProducts.filter((product) =>
+    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const renderCards = (isMobile: boolean) => {
-    // 로딩 중일 때 스켈레톤을 렌더링
     if (isLoading) {
-      const skeletonCount = isMobile ? 2 : 4;
-      return Array.from({ length: skeletonCount }).map((_, index) => (
+      const count = isMobile ? 2 : 4;
+      return Array.from({ length: count }).map((_, index) => (
         <div key={index} className="w-full">
-          {renderSkeletonCard(isMobile)}
+          {renderSkeletonCard()}
         </div>
       ));
     }
 
-    // 로딩 완료 후 검색 필터링
-    const filteredProducts = products.filter((product) =>
-      product.title.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-
-    // 검색 결과가 없을 때
     if (filteredProducts.length === 0 && searchQuery !== "") {
       return (
-        <p className="w-full text-center text-gray-500 mt-5 col-span-2 sm:col-span-4">검색 결과가 없습니다.</p>
+        <p className="w-full text-center text-gray-500 mt-5">
+          검색 결과가 없습니다.
+        </p>
       );
     }
 
-    // 실제 제품 카드 렌더링
     return filteredProducts.map((product) => (
       <div
         key={product.id}
@@ -126,20 +136,27 @@ const PurposeBrandProducts = () => {
       >
         <div
           className={`${
-            isMobile ? "w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
+            isMobile
+              ? "w-full max-w-[166px] h-[150px] rounded-xl"
+              : "w-full h-[160px] rounded-[16px]"
           } bg-white shadow-lg overflow-hidden`}
         >
           <img
             src={product.imageUrl}
             alt={product.title}
+            loading="lazy"
             className={`${
-              isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"
+              isMobile
+                ? "w-[122px] h-[122px] mt-[22px]"
+                : "w-[135px] h-[135px] mt-[14px]"
             } mx-auto object-cover`}
           />
         </div>
         <p
           className={`${
-            isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] text-[22px]"
+            isMobile
+              ? "mt-[18px] h-[22px] text-[18px]"
+              : "mt-[16px] text-[22px]"
           } font-medium text-center`}
         >
           {product.title}
@@ -150,29 +167,37 @@ const PurposeBrandProducts = () => {
 
   return (
     <>
-      {/* 모바일 버전 */}
+      {/* 모바일 */}
       <div className="sm:hidden">
-        <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
+        <div className="max-w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
-            <h1 className="text-[30px] tracking-[-0.6px] font-medium">{brand}</h1>
+            <h1 className="text-[30px] tracking-[-0.6px] font-medium">
+              {brand}
+            </h1>
           </div>
-          <div className="flex items-center w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="찾고 싶은 제품을 입력해주세요."
-              className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
-            />
-            <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
+          <div className="mx-[32px]">
+            <div className="flex items-center w-full max-w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="찾고 싶은 제품을 입력해주세요."
+                className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
+              />
+              <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
+            </div>
           </div>
-          <div className="mt-[33px] grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+          <div
+            className="mt-[33px] max-w-[430px] w-full justify-items-center
+                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]"
+          >
             {renderCards(true)}
           </div>
+          <div ref={loadMoreRef}></div>
         </div>
       </div>
 
-      {/* PC 버전 */}
+      {/* PC */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <div className="flex justify-between items-center">
@@ -191,6 +216,7 @@ const PurposeBrandProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
+          <div ref={loadMoreRef}></div>
         </div>
       </div>
     </>
