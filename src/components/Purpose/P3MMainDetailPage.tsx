@@ -118,7 +118,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 브랜드 제품 리스트 */}
       <div className="w-full mx-auto mt-[28px]">
-        <div className="flex flex-col items-center ml-[46px]">
+        <div className="flex flex-col min-w-0 items-center ml-[46px]">
           <MainDetailPageBrandSection
             brandName={product.brandName}
             brandImageUrl={product.brandImageUrl}

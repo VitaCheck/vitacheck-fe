@@ -10,7 +10,7 @@ const TimingTab = ({ intakeTime }: TimingTabProps) => {
       {/* 모바일 전용 */}
       <div className="sm:hidden">
         <div className="flex flex-col items-center px-[10px] mt-[28px] w-full h-[235px] gap-y-[24px]">
-          <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
+          <div className="flex items-center justify-center w-full max-w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span className="font-Regular text-[14px] tracking-[-0.32px]">
                 오메가 3에 대해 더 자세히 알고 싶다면 ?
             </span>

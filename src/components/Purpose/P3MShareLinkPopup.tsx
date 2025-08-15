@@ -39,11 +39,11 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
     <>
       <div
         className="fixed inset-0 flex items-end justify-center z-50 bg-gray-800/50"
-        onClick={handleBackgroundClick} // 배경 클릭 이벤트
+        onClick={handleBackgroundClick} 
       >
         <div
           className="bg-white rounded-t-4xl shadow-lg relative w-full text-center"
-          onClick={handlePopupClick} // 팝업 내부 클릭 이벤트 버블링 방지
+          onClick={handlePopupClick}
         >
           <div className="flex flex-col items-start">
             <div className='ml-[32px]'>

@@ -59,7 +59,7 @@ const goToIngredientPage = () => {
       {/* 모바일 전용 */}
       <div className="sm:hidden">
         <div className="flex flex-col items-center w-full mt-[28px] mb-[50px]">
-          <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
+          <div className="flex items-center justify-center w-full max-w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span
               onClick={goToIngredientPage}
               className="font-Regular text-[14px] tracking-[-0.32px] cursor-pointer"
@@ -75,11 +75,11 @@ const goToIngredientPage = () => {
           </div>
 
           {/* 성분 함량 그래프 */}
-          <div className="flex flex-col gap-[28px] mt-[15px] w-[351px]">
+          <div className="flex flex-col gap-[28px] mt-[15px] w-full max-w-[351px]">
             {nutrientData.map((nutrient) => (
               <div 
                 key={nutrient.name}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-[30px]"
               >
                 <div
                   onClick={goToIngredientPage}
@@ -134,7 +134,7 @@ const goToIngredientPage = () => {
             {nutrientData.map((nutrient) => (
               <div
                 key={nutrient.name}
-                className="flex items-center justify-between"
+                className="flex items-center justify-between gap-[30px]"
               >
                 <div
                   onClick={goToIngredientPage}
