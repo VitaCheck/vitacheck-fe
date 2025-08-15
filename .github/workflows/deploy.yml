@@ -30,11 +30,12 @@ jobs:
           node-version: "20"
           cache: "pnpm"
 
-      # pnpm 활성화
+      # pnpm 활성화 (corepack)
       - name: Enable pnpm via corepack
         run: |
           corepack enable
           corepack prepare pnpm@9 --activate
+          which pnpm
           pnpm -v
 
       - name: Install dependencies
