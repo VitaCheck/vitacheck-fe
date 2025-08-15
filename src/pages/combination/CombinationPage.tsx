@@ -25,6 +25,7 @@ const CombinationPage = () => {
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const placeholder = "제품을 입력해주세요.";
 
   useEffect(() => {
@@ -37,6 +38,7 @@ const CombinationPage = () => {
   useEffect(() => {
     const fetchCombinations = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get("/api/v1/combinations/recommend");
         const result = response.data.result;
 
@@ -51,6 +53,8 @@ const CombinationPage = () => {
         console.error("조합 추천 데이터를 불러오는 데 실패했습니다.", error);
         setGoodCombinations([]);
         setRiskyCombinations([]);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -78,21 +82,33 @@ const CombinationPage = () => {
   };
 
   const formatIngredientNameForPC = (ingredientName: string) => {
-    if (ingredientName.includes('+')) {
-      const parts = ingredientName.split('+').map(part => part.trim());
-      if (parts.every(part => part.length < 7)) {
+    if (ingredientName.includes("+")) {
+      const parts = ingredientName.split("+").map((part) => part.trim());
+      if (parts.every((part) => part.length < 7)) {
         return ingredientName;
       }
-      return parts.map((part, index) => {
-        if (index === 0) {
-          return part;
-        } else {
-          return `\n+\n${part}`;
-        }
-      }).join('');
+      return parts
+        .map((part, index) => {
+          if (index === 0) {
+            return part;
+          } else {
+            return `\n+\n${part}`;
+          }
+        })
+        .join("");
     }
     return ingredientName;
   };
+
+  // 로딩 스켈레톤 카드 컴포넌트
+  const LoadingSkeletonCard = ({ isMobile }: { isMobile: boolean }) => (
+    <div
+      className={`${isMobile ? "w-[150px] h-[135px]" : "w-[230px] h-[155px]"} bg-gray-200 rounded-[14px] animate-pulse relative overflow-hidden`}
+    >
+      {/* 반짝이는 효과 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer" />
+    </div>
+  );
 
   const FlipCard: React.FC<FlipCardProps> = ({ name, description }) => {
     const [flipped, setFlipped] = useState(false);
@@ -158,7 +174,7 @@ const CombinationPage = () => {
               className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
               style={{ backfaceVisibility: "hidden" }}
             >
-              <span style={{ whiteSpace: 'pre-line' }}>
+              <span style={{ whiteSpace: "pre-line" }}>
                 {formatIngredientNameForPC(name)}
               </span>
               <img
@@ -195,7 +211,7 @@ const CombinationPage = () => {
         조합 추가
       </h1>
       {/* 조합추가 - PC 버전 */}
-      <h1 className="hidden md:block font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
+      <h1 className="hidden md:block font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
         조합 추가
       </h1>
       {/* 검색창 - 모바일 */}
@@ -222,15 +238,15 @@ const CombinationPage = () => {
       </div>
       {/* 검색창 - PC */}
       <div className="hidden md:flex justify-center mb-3">
-        <div className="w-[1400px] h-[85px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
+        <div className="w-[1000px] h-[70px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
           <input
             type="text"
             className="flex-1 h-full bg-transparent outline-none
         placeholder:font-Pretendard placeholder:font-medium
         placeholder:text-black placeholder:opacity-40
         placeholder:leading-[30px] placeholder:tracking-[-0.02em]
-        placeholder:text-[30px] 
-        text-[30px] leading-[30px]"
+        placeholder:text-[23px] 
+        text-[23px] leading-[30px]"
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -430,13 +446,18 @@ const CombinationPage = () => {
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
         <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-          {riskyCombinations.map((combo) => (
-            <FlipCard
-              key={combo.id}
-              name={combo.name}
-              description={combo.description}
-            />
-          ))}
+          {isLoading
+            ? // 로딩 중일 때 스켈레톤 카드 5개 표시
+              Array.from({ length: 5 }).map((_, index) => (
+                <LoadingSkeletonCard key={index} isMobile={true} />
+              ))
+            : riskyCombinations.map((combo) => (
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
+              ))}
         </div>
       </div>
       {/* PC용 제목 및 카드 wrapper - 주의가 필요한 조합 */}
@@ -449,15 +470,20 @@ const CombinationPage = () => {
         </span>
 
         {/* 카드 목록 */}
-        <div className="flex justify-center mt-8">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px]">
-            {riskyCombinations.map((combo) => (
-              <FlipCard
-                key={combo.id}
-                name={combo.name}
-                description={combo.description}
-              />
-            ))}
+        <div className="flex justify-center mt-8 mb-15">
+          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1150px]">
+            {isLoading
+              ? // 로딩 중일 때 스켈레톤 카드 5개 표시
+                Array.from({ length: 5 }).map((_, index) => (
+                  <LoadingSkeletonCard key={index} isMobile={false} />
+                ))
+              : riskyCombinations.map((combo) => (
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
+                ))}
           </div>
         </div>
       </div>
@@ -496,18 +522,23 @@ const CombinationPage = () => {
       {/* 조합 카드들 - 모바일 */}
       <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
         <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
-          {goodCombinations.map((combo) => (
-            <FlipCard
-              key={combo.id}
-              name={combo.name}
-              description={combo.description}
-            />
-          ))}
+          {isLoading
+            ? // 로딩 중일 때 스켈레톤 카드 5개 표시
+              Array.from({ length: 5 }).map((_, index) => (
+                <LoadingSkeletonCard key={index} isMobile={true} />
+              ))
+            : goodCombinations.map((combo) => (
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
+              ))}
         </div>
       </div>
       {/* PC용 제목 및 카드 wrapper - 궁합이 좋은 조합 */}
-      <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
-        <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-20 text-left">
+      <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] ">
+        <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
           궁합이 좋은 조합 TOP 5
         </h2>
         <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
@@ -515,15 +546,20 @@ const CombinationPage = () => {
         </span>
 
         {/* 카드 목록 */}
-        <div className="flex justify-center">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] mt-8 mb-20">
-            {goodCombinations.map((combo) => (
-              <FlipCard
-                key={combo.id}
-                name={combo.name}
-                description={combo.description}
-              />
-            ))}
+        <div className="flex justify-center mt-8 mb-20">
+          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1150px]">
+            {isLoading
+              ? // 로딩 중일 때 스켈레톤 카드 5개 표시
+                Array.from({ length: 5 }).map((_, index) => (
+                  <LoadingSkeletonCard key={index} isMobile={false} />
+                ))
+              : goodCombinations.map((combo) => (
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
+                ))}
           </div>
         </div>
       </div>
