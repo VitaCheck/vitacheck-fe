@@ -24,11 +24,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Node만 설치 (❌ cache: pnpm 제거)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
+      # ✅ pnpm 활성화 (corepack)
       - name: Enable pnpm via corepack
         run: |
           node -v
@@ -36,7 +38,7 @@ jobs:
           corepack prepare pnpm@9 --activate
           which pnpm
           pnpm -v
-
+      # ✅ pnpm 스토어 캐시 (선택이지만 강력 추천)
       - name: Resolve pnpm store path
         id: pnpm-cache
         run: echo "STORE_PATH=$(pnpm store path | tr -d '\n')" >> $GITHUB_OUTPUT
@@ -48,18 +50,8 @@ jobs:
           key: ${{ runner.os }}-pnpm-${{ hashFiles('pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-
-
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-
-      
-
-      - name: Debug: list auth pages
-        run: |
-          git ls-files src/pages/auth || true
-          ls -la src/pages/auth || true
-          grep -R "EmailSignup" -n src || true
-
 
       - name: Build
         run: pnpm run build
@@ -79,13 +71,11 @@ jobs:
             --exclude "index.html" \
             --cache-control "public,max-age=31536000,immutable" \
             --delete
-
       - name: Upload index.html (no-cache)
         run: |
           aws s3 cp ./dist/index.html "s3://${S3_BUCKET}/index.html" \
             --cache-control "no-cache" \
             --content-type "text/html; charset=utf-8"
-
       - name: Create CloudFront invalidation
         run: |
           aws cloudfront create-invalidation \
