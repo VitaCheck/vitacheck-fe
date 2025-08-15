@@ -83,13 +83,30 @@ export default function SearchResultPage() {
               </div>
             ) : (
               /* 제품 카드 */
-              <div className="flex flex-wrap justify-start gap-x-2 sm:gap-x-4 gap-y-6 mt-5">
+              <div
+                className="
+    grid
+    [grid-template-columns:repeat(auto-fill,minmax(156px,1fr))]
+    gap-x-3 gap-y-6
+    sm:[grid-template-columns:repeat(auto-fill,minmax(172px,1fr))]
+    sm:gap-x-10
+    md:[grid-template-columns:repeat(auto-fill,minmax(188px,1fr))]
+    md:gap-x-6
+    mt-5
+  "
+              >
                 {results.map((product) => (
                   <ProductCard
                     key={product.supplementId}
                     id={product.supplementId}
                     imageSrc={product.imageUrl}
                     name={product.supplementName}
+                    // 그리드 셀 폭에 꽉 차도록
+                    widthClass="w-full"
+                    // 화면 크기에 따라 카드 높이 조절
+                    heightClass="h-[150px] sm:h-[160px] md:h-[180px]"
+                    // 글자 크기도 반응형
+                    fontSizeClass="text-[14px] sm:text-[15px] md:text-[16px]"
                   />
                 ))}
               </div>
