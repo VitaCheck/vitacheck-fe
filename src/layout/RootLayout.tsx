@@ -32,6 +32,7 @@ const RootLayout = () => {
   ];
 
   const isMain = location.pathname === "/";
+  const isIngredient = location.pathname.startsWith("/ingredient");
 
   // 모바일이고, 특정 경로에 해당할 때만 숨김
   const hideNavbar = isMobile && hideNavbarRoutes.includes(location.pathname);
@@ -40,7 +41,9 @@ const RootLayout = () => {
     ? ""
     : isMain
       ? "pt-48 sm:pt-20"
-      : "pt-17 sm:pt-20";
+      : isIngredient
+        ? "sm:pt-20"
+        : "pt-17 sm:pt-20";
 
   return (
     <div className="font-[Pretendard] h-full flex flex-col">
