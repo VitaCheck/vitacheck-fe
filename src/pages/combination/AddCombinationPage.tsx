@@ -5,8 +5,6 @@ import ExpandableProductGroup from "../../components/combination/ExpandableProdu
 import SadCat from "../../../public/images/rate1.png";
 import searchIcon from "../../assets/search.png";
 import axios from "@/lib/axios";
-import deleteIcon from "@/assets/delete.png";
-
 
 interface Product {
   supplementId: number;
@@ -261,7 +259,10 @@ const AddCombinationPage = () => {
                 className="text-[16px] text-[#8A8A8A]"
                 title="삭제"
               >
-                <img src={deleteIcon} alt="삭제 아이콘" className="w-[28px] h-[28px] mt-[2.5px]" />
+                <img 
+                src="/images/PNG/조합 2-1/delete.png"
+                alt="삭제 아이콘" 
+                className="w-[28px] h-[28px] mt-[2.5px]" />
 
               </button>
             </div>
@@ -449,7 +450,7 @@ const AddCombinationPage = () => {
                   className="bg-transparent p-0 border-none" // 버튼 배경 제거 및 여백 제거
                 >
                   <img
-                    src="/src/assets/시작.png"
+                    src="/images/PNG/조합 2-1/시작.png"
                     alt="분석 시작"
                     className="w-[80px] h-[40px] mr-1.5 object-contain"
                   />
