@@ -1,10 +1,11 @@
-import React, { useState } from 'react';
-import ShareLinkPopup from './P3MShareLinkPopup';
+import React, { useState } from "react";
+import ShareLinkPopup from "./P3MShareLinkPopup";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
 import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
+import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
 
 interface MobileProps {
   product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
@@ -29,7 +30,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 }) => {
   const navigate = useNavigate();
 
-    // 공유 팝업의 열림/닫힘 상태를 관리하는 state
+  // 공유 팝업의 열림/닫힘 상태를 관리하는 state
   const [isSharePopupOpen, setIsSharePopupOpen] = useState(false);
 
   // 공유 팝업을 열기 위한 함수
@@ -44,7 +45,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
   // 현재 페이지의 URL을 공유 링크로 사용
   const currentUrl = window.location.href;
-
+  const [openAlarmModal, setOpenAlarmModal] = useState(false);
 
   return (
     <div className="sm:hidden flex flex-col">
@@ -60,7 +61,8 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
               <button
                 onClick={handleSharePopupOpen}
-                className="w-[32px] h-[32px] flex items-center justify-center">
+                className="w-[32px] h-[32px] flex items-center justify-center"
+              >
                 <GoShareAndroid className="w-[26px] h-[26px] cursor-pointer text-black" />
               </button>
               <button
@@ -92,15 +94,22 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
           `}
         />
         <button
-          onClick={() => navigate("/alarm")}
+          onClick={() => setOpenAlarmModal(true)}
           className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-full max-w-[366px] h-[58px] rounded-[71px] z-50
-            transition-all duration-300 ease-in-out flex justify-center items-center
-            bg-[#FFEB9D] text-black text-[20px] font-medium
-            ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-          `}
+    transition-all duration-300 ease-in-out flex justify-center items-center
+    bg-[#FFEB9D] text-black text-[20px] font-medium
+    ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
+  `}
         >
           섭취알림 등록하기
         </button>
+        <AlarmAddToSearchModal
+          open={openAlarmModal}
+          onClose={() => setOpenAlarmModal(false)}
+          supplementId={product.supplementId ?? product.id}
+          supplementName={product.supplementName}
+          supplementImageUrl={product.supplementImageUrl}
+        />
 
         {/* 상세정보 / 쿠팡 바로가기 */}
         <div className="flex justify-center mx-auto w-full max-w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
@@ -112,7 +121,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
           </div>
         </div>
       </div>
-      
+
       {/* 회색 선 (수정된 부분) */}
       <div className="mt-[24px] bg-[#F3F3F3] w-full h-[4px]" />
 
@@ -153,7 +162,11 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 탭 내용 */}
       <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed mb-[120px]">
-        {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab intakeTime={product.intakeTime} />}
+        {activeTab === "ingredient" ? (
+          <IngredientTab />
+        ) : (
+          <TimingTab intakeTime={product.intakeTime} />
+        )}
       </div>
 
       {isSharePopupOpen && (
