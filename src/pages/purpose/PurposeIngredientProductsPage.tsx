@@ -73,7 +73,7 @@ const PurposeIngredientProducts = () => {
   // 3️⃣ 스켈레톤 카드
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
-      <div className="w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+      <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
       <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
       <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
       <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
@@ -102,7 +102,7 @@ const PurposeIngredientProducts = () => {
       >
         <div
           className={`${
-            isMobile ? "w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
+            isMobile ? "w-full max-w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"
           } bg-white shadow-lg overflow-hidden`}
         >
           <img
@@ -129,21 +129,24 @@ const PurposeIngredientProducts = () => {
     <>
       {/* 모바일 */}
       <div className="sm:hidden">
-        <div className="w-[430px] mx-auto mt-[50px] pb-[100px]">
+        <div className="max-w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">{ingredient}</h1>
           </div>
-          <div className="flex items-center w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="찾고 싶은 제품을 입력해주세요."
-              className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
-            />
-            <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
+          <div className="mx-[32px]">
+            <div className="flex items-center w-full max-w-[366px] h-[52px] mt-[20px] mx-auto px-4 py-2 rounded-full border-[#C7C7C7] border-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="찾고 싶은 제품을 입력해주세요."
+                className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
+              />
+              <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
+            </div>
           </div>
-          <div className="mt-[33px] grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+          <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center
+                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
           <div ref={loadMoreRef}></div>
