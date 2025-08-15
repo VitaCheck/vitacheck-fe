@@ -4,6 +4,14 @@ import { Link, useNavigate } from "react-router-dom";
 import catImage from "../assets/cat.png";
 import searchIcon from "../assets/search.png";
 import downIcon from "../assets/arrow_drop_down.png";
+import {
+  fetchIngredientSearch,
+  fetchPopularIngredients,
+} from "@/apis/ingredient";
+import type {
+  IngredientSearchResult,
+  PopularIngredient,
+} from "@/types/ingredient";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -23,10 +31,39 @@ const IngredientPage = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [showAgeModal, setShowAgeModal] = useState(false);
-  const [searchResults, setSearchResults] = useState<string[]>([]);
+  const [searchResults, setSearchResults] = useState<IngredientSearchResult[]>(
+    []
+  );
   const [hasSearched, setHasSearched] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [popularIngredients, setPopularIngredients] = useState<
+    PopularIngredient[]
+  >([]);
+  const [isLoadingPopular, setIsLoadingPopular] = useState(false);
   const isMobile = useIsMobile();
   const navigate = useNavigate();
+
+  // 인기성분 데이터 로드
+  const loadPopularIngredients = async (ageGroup: string) => {
+    setIsLoadingPopular(true);
+    try {
+      const response = await fetchPopularIngredients(ageGroup);
+      console.log("🔥 [UI] loadPopularIngredients 응답:", response);
+
+      if (response && response.result) {
+        console.log("🔥 [UI] 인기성분 데이터 설정:", response.result);
+        setPopularIngredients(response.result);
+      } else {
+        console.log("🔥 [UI] 응답에 result가 없음");
+        setPopularIngredients([]);
+      }
+    } catch (error) {
+      console.error("🔥 [UI] 인기성분 로드 실패:", error);
+      setPopularIngredients([]);
+    } finally {
+      setIsLoadingPopular(false);
+    }
+  };
 
   useEffect(() => {
     document.title = "성분별";
@@ -34,7 +71,15 @@ const IngredientPage = () => {
     if (saved) {
       setSearchHistory(JSON.parse(saved));
     }
+
+    // 초기 인기성분 로드
+    loadPopularIngredients(selected);
   }, []);
+
+  // popularIngredients 상태 변화 추적
+  useEffect(() => {
+    console.log("🔥 [UI] popularIngredients 상태 변화:", popularIngredients);
+  }, [popularIngredients]);
 
   const saveSearchHistory = (keyword: string) => {
     const trimmed = keyword.trim();
@@ -68,6 +113,8 @@ const IngredientPage = () => {
   const handleChange = (age: string) => {
     setSelected(age);
     setShowAgeModal(false);
+    // 연령대 변경 시 새로운 인기성분 로드
+    loadPopularIngredients(age);
   };
 
   const toggleAgeModal = () => {
@@ -78,35 +125,28 @@ const IngredientPage = () => {
     setSearchKeyword(e.target.value);
   };
 
-  const submitSearch = () => {
+  const submitSearch = async () => {
     const trimmed = searchKeyword.trim();
     if (trimmed.length === 0) return;
 
     setHasSearched(true);
+    setIsLoading(true);
     saveSearchHistory(trimmed);
 
-    // 비타민 계열인지 확인
-    const isVitamin = /^비타민[A-Z]?$/.test(trimmed);
+    try {
+      // 실제 API 호출로 성분 검색
+      const response = await fetchIngredientSearch({ keyword: trimmed });
 
-    if (isVitamin) {
-      // 비타민 계열: 리스트 표시
-      const mockResults = [
-        "비타민A",
-        "비타민B",
-        "비타민C",
-        "비타민D",
-        "비타민E",
-        "비타민K",
-      ].filter((item) => item.toLowerCase().includes(trimmed.toLowerCase()));
-
-      if (mockResults.length === 0) {
-        setSearchResults([]);
+      if (response && response.result) {
+        setSearchResults(response.result);
       } else {
-        setSearchResults(mockResults);
+        setSearchResults([]);
       }
-    } else {
-      // 다른 성분: 바로 상세 페이지로 이동
-      navigate(`/ingredient/${encodeURIComponent(trimmed)}`);
+    } catch (error) {
+      console.error("성분 검색 실패:", error);
+      setSearchResults([]);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -193,8 +233,15 @@ const IngredientPage = () => {
         </div>
       </section>
 
+      {/* 로딩 스피너 */}
+      {isLoading && (
+        <div className="flex justify-center items-center py-8">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+        </div>
+      )}
+
       {/* 검색 결과 또는 검색 결과 없음 메시지 */}
-      {hasSearched && searchResults.length === 0 ? (
+      {!isLoading && hasSearched && searchResults.length === 0 ? (
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
             <img
@@ -207,21 +254,17 @@ const IngredientPage = () => {
             일치하는 검색 결과가 없습니다.
           </p>
         </div>
-      ) : searchResults.length > 0 ? (
+      ) : !isLoading && searchResults.length > 0 ? (
         <div className="mb-8">
           <h3 className="text-lg font-semibold mb-4 pl-2">검색 결과</h3>
           <div className="grid grid-cols-1 gap-3">
             {searchResults.map((item) => (
               <Link
-                key={item}
-                to={
-                  item.startsWith("비타민")
-                    ? `/ingredient/${encodeURIComponent(item)}`
-                    : `/ingredient/${encodeURIComponent(item)}`
-                }
+                key={item.id}
+                to={`/ingredient/${encodeURIComponent(item.name)}`}
                 className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
               >
-                <span className="font-semibold text-base">{item}</span>
+                <span className="font-semibold text-base">{item.name}</span>
                 <FiChevronRight size={20} className="text-gray-500" />
               </Link>
             ))}
@@ -334,36 +377,58 @@ const IngredientPage = () => {
           )}
 
           {/* 성분 리스트 */}
-          {isMobile ? (
+          {isLoadingPopular ? (
+            <div className="flex justify-center items-center py-8">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+              <span className="ml-3 text-gray-500">
+                인기성분을 불러오는 중...
+              </span>
+            </div>
+          ) : popularIngredients.length === 0 ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-2">
+                해당 연령대의 인기성분이 없습니다.
+              </p>
+              <p className="text-sm text-gray-400">
+                다른 연령대를 선택해보세요!
+              </p>
+            </div>
+          ) : isMobile ? (
             <div className="grid grid-cols-1 gap-3 pb-10">
-              {filteredList.map((item) => (
+              {popularIngredients.map((item, index) => (
                 <Link
-                  key={item}
-                  to={
-                    item.startsWith("비타민")
-                      ? `/ingredient/${encodeURIComponent(item)}`
-                      : `/ingredient/${encodeURIComponent(item)}`
-                  }
+                  key={item.id || `popular-${index}`}
+                  to={`/ingredient/${encodeURIComponent(item.ingredientName)}`}
                   className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
                 >
-                  <span className="font-semibold text-base">{item}</span>
+                  <span className="font-semibold text-base">
+                    {item.ingredientName}
+                  </span>
                   <FiChevronRight size={20} className="text-gray-500" />
                 </Link>
               ))}
             </div>
           ) : (
-            <div className="grid grid-cols-5 gap-4 pb-10 pt-3">
-              {filteredList.map((item) => (
+            <div
+              className={`grid gap-4 pb-10 pt-3 ${
+                popularIngredients.length === 1
+                  ? "grid-cols-1"
+                  : popularIngredients.length === 2
+                    ? "grid-cols-2"
+                    : popularIngredients.length === 3
+                      ? "grid-cols-3"
+                      : popularIngredients.length === 4
+                        ? "grid-cols-4"
+                        : "grid-cols-5"
+              }`}
+            >
+              {popularIngredients.map((item, index) => (
                 <Link
-                  key={item}
-                  to={
-                    item.startsWith("비타민")
-                      ? `/ingredient/${encodeURIComponent(item)}`
-                      : `/ingredient/${encodeURIComponent(item)}`
-                  }
+                  key={item.id || `popular-${index}`}
+                  to={`/ingredient/${encodeURIComponent(item.ingredientName)}`}
                 >
-                  <div className="bg-white px-6 py-10 rounded-xl shadow text-center font-semibold text-lg shadow-md transition">
-                    {item}
+                  <div className="bg-white px-6 py-10 rounded-xl shadow text-center font-semibold text-lg shadow-md transition hover:shadow-lg w-full h-32 flex items-center justify-center">
+                    {item.ingredientName}
                   </div>
                 </Link>
               ))}

@@ -17,6 +17,7 @@ const IngredientSearchSection = () => {
   >([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSearch = async () => {
     const trimmed = keyword.trim();
@@ -25,6 +26,7 @@ const IngredientSearchSection = () => {
     try {
       setIsLoading(true);
       setHasSearched(true);
+      setError(null);
 
       const params: {
         keyword?: string;
@@ -55,6 +57,7 @@ const IngredientSearchSection = () => {
     } catch (err: unknown) {
       const axiosErr = err as AxiosError;
       console.error("검색 실패:", axiosErr.response?.data || axiosErr.message);
+      setError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
       setResults([]);
     } finally {
       setIsLoading(false);
@@ -116,6 +119,13 @@ const IngredientSearchSection = () => {
           <img src={searchIcon} alt="검색" className="w-5 h-5" />
         </button>
       </div>
+
+      {/* 에러 메시지 */}
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-600 text-center">{error}</p>
+        </div>
+      )}
 
       {/* 검색 결과 또는 검색 결과 없음 메시지 */}
       {isLoading ? (

@@ -27,21 +27,25 @@ const IngredientInfo = ({ id, data }: Props) => {
       </section>
 
       {/* 부작용 및 주의사항 */}
-      <h2 className="font-semibold text-2xl mb-2">부작용 및 주의사항</h2>
+      <section>
+        <h2 className="font-semibold text-2xl mb-2">부작용 및 주의사항</h2>
 
-      <section className="flex items-start gap-4">
-        {/* 왼쪽 이미지 */}
-        <div className="flex w-20 h-20">
-          <img
-            src="/images/PNG/성분 2-1/caution.png"
-            alt="부작용 이미지"
-            className="w-full h-full rounded-md"
-          />
-        </div>
+        <div className="flex items-start gap-4">
+          {/* 왼쪽 이미지 */}
+          <div className="flex w-20 h-20">
+            <img
+              src="/images/PNG/성분 2-1/caution.png"
+              alt="부작용 이미지"
+              className="w-full h-full rounded-md"
+            />
+          </div>
 
-        {/* 오른쪽 텍스트 영역 */}
-        <div className="flex-1">
-          <p className="text-sm">{data.caution || "부작용 정보가 없습니다."}</p>
+          {/* 오른쪽 텍스트 영역 */}
+          <div className="flex-1">
+            <p className="text-sm">
+              {data.caution || "부작용 정보가 없습니다."}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -130,7 +134,11 @@ const IngredientInfo = ({ id, data }: Props) => {
               );
             })()}
           </div>
-        ) : null}
+        ) : (
+          <p className="text-sm text-gray-500 mt-2">
+            권장 섭취량 정보가 등록되지 않았습니다.
+          </p>
+        )}
       </section>
     </div>
   );

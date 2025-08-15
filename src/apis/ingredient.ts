@@ -18,7 +18,7 @@ export const fetchIngredientSearch = async ({
   console.log("🔍 [API] 파라미터:", { ingredientName, keyword, brand });
 
   try {
-    // 실제 API 엔드포인트 사용
+    // 스웨거 문서 기반 실제 API 엔드포인트
     const url = "/api/v1/ingredients/search";
 
     // keyword 파라미터가 우선순위를 가짐
@@ -36,8 +36,23 @@ export const fetchIngredientSearch = async ({
     const { data } = await axios.get<IngredientSearchResponse>(url, { params });
     console.log("🔍 [API] 실제 API 응답:", data);
 
-    if (!data.isSuccess) {
+    // API 응답 구조 검증
+    if (!data || typeof data !== "object") {
+      throw new Error("잘못된 API 응답 형식입니다.");
+    }
+
+    // isSuccess가 없는 경우에도 result가 있으면 성공으로 처리
+    if (data.isSuccess === false) {
       throw new Error(data.message || "검색에 실패했습니다.");
+    }
+
+    // result가 배열이 아니면 빈 배열로 처리
+    if (!Array.isArray(data.result)) {
+      console.warn("🔍 [API] result가 배열이 아님:", data.result);
+      return {
+        ...data,
+        result: [],
+      };
     }
 
     return data;
@@ -47,6 +62,16 @@ export const fetchIngredientSearch = async ({
     if (error.response) {
       console.error("🔍 [API] 에러 응답 상태:", error.response.status);
       console.error("🔍 [API] 에러 응답 데이터:", error.response.data);
+
+      // 404 에러인 경우 빈 결과 반환
+      if (error.response.status === 404) {
+        return {
+          isSuccess: true,
+          code: "200",
+          message: "검색 결과가 없습니다.",
+          result: [],
+        };
+      }
     } else if (error.request) {
       console.error(
         "🔍 [API] 요청은 보냈지만 응답을 받지 못함:",
@@ -78,7 +103,8 @@ export const fetchIngredientDetail = async (name: string | number) => {
 
     console.log("🏠 [API] 검색 응답:", searchResponse.data);
 
-    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+    // 검색 응답 검증
+    if (!searchResponse.data || !searchResponse.data.result) {
       throw new Error(`검색 결과가 없습니다: ${ingredientName}`);
     }
 
@@ -104,17 +130,22 @@ export const fetchIngredientDetail = async (name: string | number) => {
     );
 
     console.log("🏠 [API] 상세 정보 응답:", detailResponse.data);
-    console.log(
-      "🏠 [API] 상세 정보 응답 구조:",
-      JSON.stringify(detailResponse.data, null, 2)
-    );
 
-    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
-      console.warn(
-        "🏠 [API] 응답 데이터 구조가 예상과 다름:",
-        detailResponse.data
+    // 상세 정보 응답 검증
+    if (!detailResponse.data) {
+      throw new Error("상세 정보 응답이 없습니다.");
+    }
+
+    // isSuccess가 false인 경우 에러 처리
+    if (detailResponse.data.isSuccess === false) {
+      throw new Error(
+        detailResponse.data.message || "상세 정보를 가져올 수 없습니다."
       );
-      throw new Error(`Ingredient detail not found for: ${ingredientName}`);
+    }
+
+    // result가 없는 경우 에러 처리
+    if (!detailResponse.data.result) {
+      throw new Error("상세 정보 결과가 없습니다.");
     }
 
     const result = detailResponse.data.result;
@@ -139,13 +170,22 @@ export const fetchIngredientDetail = async (name: string | number) => {
       console.error("🏠 [API] 에러 응답 상태:", error.response.status);
       console.error("🏠 [API] 에러 응답 데이터:", error.response.data);
       console.error("🏠 [API] 에러 응답 헤더:", error.response.headers);
+
+      // 404 에러인 경우 더 명확한 메시지
+      if (error.response.status === 404) {
+        throw new Error(`성분을 찾을 수 없습니다: ${ingredientName}`);
+      }
     } else if (error.request) {
       console.error(
         "🏠 [API] 요청은 보냈지만 응답을 받지 못함:",
         error.request
       );
+      throw new Error(
+        "서버에 연결할 수 없습니다. 네트워크 연결을 확인해주세요."
+      );
     } else {
       console.error("🏠 [API] 요청 설정 중 에러:", error.message);
+      throw error;
     }
 
     throw error;
@@ -168,7 +208,7 @@ export const fetchIngredientAlternatives = async (name: string | number) => {
       }
     );
 
-    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+    if (!searchResponse.data || !searchResponse.data.result) {
       return [];
     }
 
@@ -191,12 +231,8 @@ export const fetchIngredientAlternatives = async (name: string | number) => {
       `/api/v1/ingredients/${ingredientId}`
     );
     console.log("🥗 [API] 상세 정보 응답:", detailResponse.data);
-    console.log(
-      "🥗 [API] 상세 정보 응답 구조:",
-      JSON.stringify(detailResponse.data, null, 2)
-    );
 
-    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
+    if (!detailResponse.data || !detailResponse.data.result) {
       console.warn(
         "🥗 [API] 응답 데이터 구조가 예상과 다름:",
         detailResponse.data
@@ -250,7 +286,7 @@ export const fetchIngredientSupplements = async (name: string | number) => {
       }
     );
 
-    if (!searchResponse.data.isSuccess || !searchResponse.data.result) {
+    if (!searchResponse.data || !searchResponse.data.result) {
       return [];
     }
 
@@ -273,12 +309,8 @@ export const fetchIngredientSupplements = async (name: string | number) => {
       `/api/v1/ingredients/${ingredientId}`
     );
     console.log("💊 [API] 상세 정보 응답:", detailResponse.data);
-    console.log(
-      "💊 [API] 상세 정보 응답 구조:",
-      JSON.stringify(detailResponse.data, null, 2)
-    );
 
-    if (!detailResponse.data.isSuccess || !detailResponse.data.result) {
+    if (!detailResponse.data || !detailResponse.data.result) {
       console.warn(
         "💊 [API] 응답 데이터 구조가 예상과 다름:",
         detailResponse.data
@@ -326,7 +358,7 @@ export const classifyIngredientSearch = async (keyword: string) => {
   try {
     const searchResponse = await fetchIngredientSearch({ keyword });
 
-    if (!searchResponse.isSuccess || !searchResponse.result) {
+    if (!searchResponse || !searchResponse.result) {
       return { isVitamin: false, results: [], shouldShowList: false };
     }
 
@@ -345,5 +377,89 @@ export const classifyIngredientSearch = async (keyword: string) => {
   } catch (error) {
     console.error("🔍 [API] 성분 분류 실패:", error);
     return { isVitamin: false, results: [], shouldShowList: false };
+  }
+};
+
+// 성분 찜하기 API
+export const toggleIngredientLike = async (ingredientId: number) => {
+  console.log("❤️ [API] toggleIngredientLike 호출됨");
+  console.log("❤️ [API] 요청 성분 ID:", ingredientId);
+
+  try {
+    const url = `/api/v1/ingredients/${ingredientId}/like`;
+    console.log("❤️ [API] 요청 URL:", url);
+
+    const { data } = await axios.post(url);
+    console.log("❤️ [API] 찜하기 API 응답:", data);
+
+    return data;
+  } catch (error: any) {
+    console.error("❤️ [API] 찜하기 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("❤️ [API] 에러 응답 상태:", error.response.status);
+      console.error("❤️ [API] 에러 응답 데이터:", error.response.data);
+    } else if (error.request) {
+      console.error(
+        "❤️ [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("❤️ [API] 요청 설정 중 에러:", error.message);
+    }
+
+    throw error;
+  }
+};
+
+// 인기성분 TOP 5 조회 API
+export const fetchPopularIngredients = async (ageGroup?: string) => {
+  console.log("🔥 [API] fetchPopularIngredients 호출됨");
+  console.log("🔥 [API] 요청 연령대:", ageGroup || "전체");
+
+  try {
+    // 스웨거 문서 기반 올바른 엔드포인트
+    let url = "/popular-ingredients";
+
+    // ageGroup은 필수 파라미터이므로 반드시 포함
+    if (ageGroup && ageGroup !== "전체 연령") {
+      url += `?ageGroup=${encodeURIComponent(ageGroup)}`;
+
+      // limit 파라미터 추가 (TOP 5를 위해 5로 설정)
+      url += `&limit=5`;
+    } else {
+      // 전체 연령인 경우 기본값으로 limit만 설정
+      url += `?limit=5`;
+    }
+
+    console.log("🔥 [API] 요청 URL:", url);
+    console.log("🔥 [API] 백엔드로 전송할 ageGroup:", ageGroup);
+
+    const { data } = await axios.get(url);
+    console.log("🔥 [API] 인기성분 API 응답:", data);
+
+    return data;
+  } catch (error: any) {
+    console.error("🔥 [API] 인기성분 API 호출 실패:", error);
+
+    if (error.response) {
+      console.error("🔥 [API] 에러 응답 상태:", error.response.status);
+      console.error("🔥 [API] 에러 응답 데이터:", error.response.data);
+
+      // 500 에러인 경우 더 자세한 정보 로깅
+      if (error.response.status === 500) {
+        console.error("🔥 [API] 요청했던 URL:", error.config?.url);
+        console.error("🔥 [API] 요청했던 파라미터:", error.config?.params);
+      }
+    } else if (error.request) {
+      console.error(
+        "🔥 [API] 요청은 보냈지만 응답을 받지 못함:",
+        error.request
+      );
+    } else {
+      console.error("🔥 [API] 요청 설정 중 에러:", error.message);
+    }
+
+    throw error;
   }
 };
