@@ -1,4 +1,4 @@
-// product/:id
+// src/components/Purpose/P3DMainDetailPage.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
@@ -6,13 +6,41 @@ import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
 
+// Ingredient 타입 정의
+interface Ingredient {
+  name: string;
+  amount: string;
+}
+
+// Product 타입 정의
+interface Product {
+  id: number;
+  brandId: number;
+  brandName: string;
+  brandImageUrl: string | null;
+  supplementName: string;
+  supplementImageUrl: string;
+  liked: boolean;
+  coupangLink: string | null;
+  intakeTime: string;
+  ingredients: Ingredient[];
+}
+
+// BrandProduct 타입 정의
+interface BrandProduct {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
+// DesktopProps 수정
 interface DesktopProps {
-  product: any;
+  product: Product;
   liked: boolean;
   toggleLike: () => void;
   activeTab: "ingredient" | "timing";
   setActiveTab: (tab: "ingredient" | "timing") => void;
-  brandProducts: any[];
+  brandProducts: BrandProduct[];
   brandId: number;
   intakeTime: string;
   onCopyUrl: () => void;
@@ -25,13 +53,13 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   activeTab,
   setActiveTab,
   brandProducts,
-  onCopyUrl, // ✨ prop으로 받아서 사용
+  onCopyUrl,
 }) => {
   const navigate = useNavigate();
 
   // 알람 등록 버튼 클릭 핸들러
   const handleRegisterAlarm = () => {
-    const id = product?.supplementId ?? product?.id;
+    const id = product?.id ?? product?.brandId;
     if (!id) {
       console.error("supplementId 없음");
       return;
@@ -114,7 +142,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               brandName={product.brandName}
               brandImageUrl={product.brandImageUrl}
               brandProducts={brandProducts}
-              brandId={product.brandId ?? product.supplementId}
+              brandId={product.brandId ?? product.id}
             />
           </div>
         </div>
@@ -131,7 +159,9 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as "ingredient" | "timing")}
+                onClick={() =>
+                  setActiveTab(tab.key as "ingredient" | "timing")
+                }
                 className={`relative text-[22px] tracking-[-0.42px] font-medium transition-colors pb-[10px] duration-300 ${
                   activeTab === tab.key ? "text-black" : "text-[#9C9A9A]"
                 }`}
@@ -147,7 +177,15 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
 
         {/* 탭 내용 */}
         <div className="flex flex-col items-center mx-auto mt-[16px] text-[10px] leading-relaxed">
-          {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab intakeTime={product.intakeTime} />}
+          {activeTab === "ingredient" ? (
+            <IngredientTab supplementId={product.id} />
+
+          ) : (
+            <TimingTab
+              intakeTime={product.intakeTime}
+              ingredientName={product.ingredients[0]?.name ?? ""}
+            />
+          )}
         </div>
       </div>
     </div>

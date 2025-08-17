@@ -68,8 +68,8 @@ const RecommendedProductSectionMobile = ({
       </div>
 
       {/* 카드 리스트 */}
-      <div className="w-full overflow-x-scroll hide-scrollbar mx-auto ml-[6px]">
-        <div className="flex gap-[24px] px-[38px] mt-[24px] mb-[22px]">
+      <div className="w-full overflow-x-auto hide-scrollbar">
+        <div className="inline-flex gap-[24px] px-6 ml-4 mt-6 mb-5">
           {isLoading ? (
             renderSkeletons(4)
           ) : paginatedProducts.length === 0 ? (
@@ -88,7 +88,7 @@ const RecommendedProductSectionMobile = ({
                     className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                   />
                 </div>
-                <p className="mt-[18px] text-[17px] font-medium text-center">
+                <p className="mt-[12px] text-[17px] font-medium text-center">
                   {product.title}
                 </p>
               </div>
@@ -96,6 +96,7 @@ const RecommendedProductSectionMobile = ({
           )}
         </div>
       </div>
+
 
       {/* 전체보기 버튼 */}
       <div className="flex items-center justify-center mb-[18px] w-full">

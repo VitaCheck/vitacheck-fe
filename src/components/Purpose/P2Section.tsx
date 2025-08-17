@@ -8,9 +8,15 @@ import useMediaQuery from "@/hooks/useMediaQuery";
 interface RecommendedProductSectionProps {
   ingredientName: string;
   purposes: string[];
-  supplements: [string, string][];
+  supplements: Supplement[];
   isLoading: boolean;
   goToAllIngredientPage: () => void;
+}
+
+interface Supplement {
+  id: number;
+  name: string;
+  imageUrl: string;
 }
 
 interface Product {
@@ -31,23 +37,24 @@ const RecommendedProductSection = ({
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = isMobile ? 4 : 4; // 모바일/PC 모두 4개씩
   const maxItems = 16;
 
   useEffect(() => {
     if (supplements) {
-      const mappedProducts: Product[] = supplements.map(
-        (item: [string, string], idx: number) => ({
-          id: idx + 1,
-          title: item[0],
-          imageUrl: item[1]?.startsWith("http") ? item[1] : `/images/${item[1]}`,
-        })
-      );
+      const mappedProducts: Product[] = supplements.map((item) => ({
+        id: item.id,
+        title: item.name,
+        imageUrl: item.imageUrl.startsWith("http")
+          ? item.imageUrl
+          : `/images/${item.imageUrl}`,
+      }));
       setProducts(mappedProducts.slice(0, maxItems));
       setCurrentPage(0);
     }
   }, [supplements]);
 
+  const itemsPerPage = isMobile ? products.length : 4;
+  
   const totalPages = Math.ceil(products.length / itemsPerPage);
   const paginatedProducts = products.slice(
     currentPage * itemsPerPage,
