@@ -19,8 +19,10 @@ const PurposeIngredientProducts = () => {
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const batchSize = window.innerWidth >= 768 ? 4 : 2;
+  const mobileLoadMoreRef = useRef<HTMLDivElement>(null);
+  const pcLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const batchSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 4 : 2;
 
   // 초기 데이터 로드
   useEffect(() => {
@@ -49,31 +51,62 @@ const PurposeIngredientProducts = () => {
 
     window.scrollTo(0, 0);
     return () => clearTimeout(initialLoadTimer);
-  }, [location.state?.supplements]);
+  }, [location.state?.supplements, batchSize]);
+
+    const loadNextBatch = () => {
+    if (isLoading || displayProducts.length >= products.length) {
+      return;
+    }
+
+    const nextBatch = products.slice(
+      displayProducts.length,
+      displayProducts.length + batchSize
+    );
+    setDisplayProducts((prev) => [...prev, ...nextBatch]);
+  };
 
   // 무한 스크롤
   useEffect(() => {
-    if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !isLoading &&
-          displayProducts.length < products.length
-        ) {
-          const nextBatch = products.slice(
-            displayProducts.length,
-            displayProducts.length + batchSize
-          );
-          setDisplayProducts((prev) => [...prev, ...nextBatch]);
+        if (entries[0].isIntersecting) {
+          loadNextBatch();
         }
       },
       { threshold: 1 }
     );
 
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [isLoading, displayProducts, products]);
+    // 각 ref의 current 요소가 존재할 경우에만 관찰 시작
+    const mobileRef = mobileLoadMoreRef.current;
+    if (mobileRef) {
+      observer.observe(mobileRef);
+    }
+
+    const pcRef = pcLoadMoreRef.current;
+    if (pcRef) {
+      observer.observe(pcRef);
+    }
+
+    if (pcRef && !isLoading) {
+        // pcRef의 상단 위치가 뷰포트 높이보다 작으면 -> 즉, 화면에 보이면
+        const isPcRefVisible = pcRef.getBoundingClientRect().top <= window.innerHeight;
+
+        // pcRef가 보이고, 더 불러올 제품이 있다면
+        if (isPcRefVisible && displayProducts.length < products.length) {
+            loadNextBatch();
+        }
+    }
+
+    // cleanup 함수: 컴포넌트가 unmount될 때 관찰 중단
+    return () => {
+      if (mobileRef) {
+        observer.unobserve(mobileRef);
+      }
+      if (pcRef) {
+        observer.unobserve(pcRef);
+      }
+    };
+  }, [isLoading, displayProducts, products, batchSize]);
 
   const filteredProducts = displayProducts.filter((product) =>
     product.title.toLowerCase().includes(searchQuery.toLowerCase())
@@ -91,7 +124,7 @@ const PurposeIngredientProducts = () => {
   );
 
   const renderCards = (isMobile: boolean) => {
-    if (isLoading) {
+    if (isLoading && displayProducts.length === 0) {
       const count = isMobile ? 2 : 4;
       return Array.from({ length: count }).map((_, index) => (
         <div key={index} className="w-full">
@@ -135,9 +168,9 @@ const PurposeIngredientProducts = () => {
         <p
           className={`${
             isMobile
-              ? "mt-[18px] h-[22px] text-[18px]"
-              : "mt-[16px] text-[22px]"
-          } font-medium text-center`}
+              ? "mt-[18px] h-[54px] text-[18px]" // 높이를 2줄 분량(예: 54px)으로 수정
+              : "mt-[16px] h-[60px] text-[22px]" // PC도 일관성을 위해 높이 추가
+          } font-medium text-center line-clamp-2`} // line-clamp-2 추가
         >
           {product.title}
         </p>
@@ -170,7 +203,7 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
-          <div ref={loadMoreRef}></div>
+          <div ref={mobileLoadMoreRef} style={{ height: "1px" }}></div>
         </div>
       </div>
 
@@ -191,7 +224,7 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
-          <div ref={loadMoreRef}></div>
+          <div ref={pcLoadMoreRef} style={{ height: "1px" }}></div>
         </div>
       </div>
     </>

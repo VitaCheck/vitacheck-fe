@@ -254,7 +254,7 @@ const PurposeProductList = () => {
     <>
       {/* 모바일 */}
       <div className="sm:hidden w-full mx-auto pb-[50px]">
-        <div className="sm:hidden flex items-center gap-[22px] mt-[50px]">
+        <div className="flex items-center gap-[22px] mt-[50px]">
           <div className="ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-semibold">
               {titleText}

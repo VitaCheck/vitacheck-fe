@@ -1,6 +1,7 @@
+// src/components/Purpose/P3IngredientTab.tsx
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 interface Nutrient {
@@ -10,56 +11,60 @@ interface Nutrient {
   upperLimit: number;
 }
 
-const IngredientTab = () => {
-  const { id } = useParams<{ id: string }>();
+interface IngredientTabProps {
+  supplementId: number;
+  onFirstNutrientChange?: React.Dispatch<React.SetStateAction<string>>;
+}
+
+const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutrientChange }) => {
   const navigate = useNavigate();
   const [nutrientData, setNutrientData] = useState<Nutrient[]>([]);
   const firstNutrientName = nutrientData[0]?.name ?? "";
 
-const goToIngredientPage = () => {
-  if (!firstNutrientName) return;
-  navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
-};
+  const goToIngredientPage = () => {
+    if (!firstNutrientName) return;
+    navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
+  };
 
+useEffect(() => {
+  if (!supplementId) return;
 
-  useEffect(() => {
-    if (id) {
-      const fetchSupplementDetails = async () => {
-        try {
-          const apiURL = `http://vita-check.com/api/v1/supplements/detail`;
-          const response = await axios.get(apiURL, {
-            params: { id },
-            headers: {
-              accept: "*/*",
-            },
-          });
+  const fetchSupplementDetails = async () => {
+    try {
+      const apiURL = `http://vita-check.com/api/v1/supplements/detail`;
+      const response = await axios.get(apiURL, {
+        params: { id: supplementId },
+        headers: { accept: "*/*" },
+      });
 
-          // console.log("💊 INGREDIENT TAB API 응답 데이터:", response.data);
+      const mapped = response.data.ingredients.map((ing: any) => ({
+        name: ing.name,
+        intake: Math.min(ing.visualization.normalizedAmountPercent, 100),
+        recommended: ing.visualization.recommendedStartPercent,
+        upperLimit: ing.visualization.recommendedEndPercent,
+      }));
 
-          // 응답 데이터 매핑
-          const mapped = response.data.ingredients.map((ing: any) => ({
-            name: ing.name,
-            intake: Math.min(ing.visualization.normalizedAmountPercent, 100), // 100% 제한
-            recommended: ing.visualization.recommendedStartPercent,
-            upperLimit: ing.visualization.recommendedEndPercent,
-          }));
+      setNutrientData(mapped);
 
-          setNutrientData(mapped);
-        } catch (error) {
-          console.error("❌ INGREDIENT TAB API 호출 오류:", error);
-        }
-      };
-
-      fetchSupplementDetails();
+      // 부모로 firstNutrientName 전달
+      if (mapped[0]?.name && onFirstNutrientChange) {
+        onFirstNutrientChange(mapped[0].name);
+      }
+    } catch (error) {
+      console.error("❌ INGREDIENT TAB API 호출 오류:", error);
     }
-  }, [id]);
+  };
+
+  fetchSupplementDetails();
+}, [supplementId, onFirstNutrientChange]);
+
 
   return (
     <>
       {/* 모바일 전용 */}
       <div className="sm:hidden">
         <div className="flex flex-col items-center w-full mt-[28px] mb-[50px]">
-          <div className="flex items-center justify-center w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
+          <div className="flex items-center justify-center w-full max-w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span
               onClick={goToIngredientPage}
               className="font-Regular text-[14px] tracking-[-0.32px] cursor-pointer"
@@ -69,7 +74,7 @@ const goToIngredientPage = () => {
             <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />
           </div>
 
-          <div className="mt-[24px] ml-[148px] w-[203px] flex justify-center gap-[41px]">
+          <div className="mt-[24px] ml-[148px] w-full max-w-[203px] flex justify-center gap-[41px]">
             <span className="text-[13px] font-medium">권장</span>
             <span className="text-[13px] font-medium">상한</span>
           </div>
@@ -77,20 +82,18 @@ const goToIngredientPage = () => {
           {/* 성분 함량 그래프 */}
           <div className="flex flex-col gap-[28px] mt-[15px] w-[351px]">
             {nutrientData.map((nutrient) => (
-              <div 
-                key={nutrient.name}
-                className="flex items-center justify-between"
-              >
+              <div key={nutrient.name} className="flex items-center justify-between">
                 <div
                   onClick={goToIngredientPage}
                   className="flex justify-center items-center gap-[15px] cursor-pointer"
                 >
-                  <span className="h-[26px] tracking-[-0.432px] font-medium">{nutrient.name}</span>
+                  <span className="h-[26px] tracking-[-0.432px] font-medium">
+                    {nutrient.name}
+                  </span>
                   <MdOutlineArrowForwardIos className="text-[16px]" />
                 </div>
-                
 
-                <div className="relative w-[203px] h-[24.16px] rounded-full bg-gray-200 overflow-hidden">
+                <div className="relative w-full max-w-[203px] h-[24.16px] rounded-full bg-gray-200 overflow-hidden">
                   <div
                     className="h-full bg-[#FFE178] rounded-full"
                     style={{ width: `${nutrient.intake}%` }}
@@ -115,8 +118,8 @@ const goToIngredientPage = () => {
         <div className="flex flex-col items-center w-[567px] mt-[36px]">
           <div className="flex items-center justify-between w-full h-[67px] bg-[#F2F2F2] rounded-[16px] px-[25px]">
             <div className="flex-1 text-center">
-              <span 
-                onClick={goToIngredientPage} 
+              <span
+                onClick={goToIngredientPage}
                 className="font-Regular text-[22px] tracking-[-1px] cursor-pointer"
               >
                 {firstNutrientName}에 대해 더 자세히 알고 싶다면 ?
@@ -132,15 +135,14 @@ const goToIngredientPage = () => {
 
           <div className="flex flex-col gap-[32px] mt-[16px] w-full">
             {nutrientData.map((nutrient) => (
-              <div
-                key={nutrient.name}
-                className="flex items-center justify-between"
-              >
+              <div key={nutrient.name} className="flex items-center justify-between">
                 <div
                   onClick={goToIngredientPage}
                   className="flex justify-center items-center gap-[15px] cursor-pointer"
                 >
-                  <span className="text-[22px] tracking-[-0.4px] font-medium">{nutrient.name}</span>
+                  <span className="text-[22px] tracking-[-0.4px] font-medium">
+                    {nutrient.name}
+                  </span>
                   <MdOutlineArrowForwardIos className="text-[16px]" />
                 </div>
 

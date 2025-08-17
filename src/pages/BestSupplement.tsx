@@ -175,12 +175,12 @@ export default function BestSupplement() {
             {index + 1}
           </div>
           <div
-            className={`${isMobile ? "w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"} bg-white shadow-lg overflow-hidden`}
+            className={`${isMobile ? "w-full max-w-[166px] h-[150px] rounded-xl" : "w-full h-[160px] rounded-[16px]"} bg-white shadow-lg overflow-hidden`}
           >
             <img
               src={product.imageUrl}
               alt={product.title}
-              className={`${isMobile ? "w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"} mx-auto object-cover`}
+              className={`${isMobile ? "w-full max-w-[122px] h-[122px] mt-[22px]" : "w-[135px] h-[135px] mt-[14px]"} mx-auto object-cover`}
             />
           </div>
           <p

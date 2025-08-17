@@ -37,7 +37,6 @@ const RecommendedProductSection = ({
 
   const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(0);
-  const itemsPerPage = isMobile ? 4 : 4; // 모바일/PC 모두 4개씩
   const maxItems = 16;
 
   useEffect(() => {
@@ -54,7 +53,8 @@ const RecommendedProductSection = ({
     }
   }, [supplements]);
 
-
+  const itemsPerPage = isMobile ? products.length : 4;
+  
   const totalPages = Math.ceil(products.length / itemsPerPage);
   const paginatedProducts = products.slice(
     currentPage * itemsPerPage,

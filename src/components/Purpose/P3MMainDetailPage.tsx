@@ -1,3 +1,4 @@
+// src/components/Purpose/P3DMainDetailPageMobile.tsx
 import React, { useState } from "react";
 import ShareLinkPopup from "./P3MShareLinkPopup";
 import { useNavigate } from "react-router-dom";
@@ -8,7 +9,7 @@ import TimingTab from "./P3TimingTab";
 import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
 
 interface MobileProps {
-  product: any; // 실제 product 타입으로 변경하는 것이 좋습니다.
+  product: any;
   liked: boolean;
   toggleLike: () => void;
   activeTab: "ingredient" | "timing";
@@ -30,22 +31,17 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  // 공유 팝업의 열림/닫힘 상태를 관리하는 state
+  // 공유 팝업 상태
   const [isSharePopupOpen, setIsSharePopupOpen] = useState(false);
-
-  // 공유 팝업을 열기 위한 함수
-  const handleSharePopupOpen = () => {
-    setIsSharePopupOpen(true);
-  };
-
-  // 공유 팝업을 닫기 위한 함수
-  const handleSharePopupClose = () => {
-    setIsSharePopupOpen(false);
-  };
-
-  // 현재 페이지의 URL을 공유 링크로 사용
+  const handleSharePopupOpen = () => setIsSharePopupOpen(true);
+  const handleSharePopupClose = () => setIsSharePopupOpen(false);
   const currentUrl = window.location.href;
+
+  // 알람 모달 상태
   const [openAlarmModal, setOpenAlarmModal] = useState(false);
+
+  // API에서 받아온 첫 번째 성분 이름
+  const [firstNutrientName, setFirstNutrientName] = useState("");
 
   return (
     <div className="sm:hidden flex flex-col">
@@ -87,20 +83,19 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
           </div>
         </div>
 
+        {/* 섭취알림 버튼 */}
         <div
           className={`fixed bottom-0 left-1/2 -translate-x-1/2 w-full max-w-[430px] h-[103px] bg-white z-10
             transition-all duration-300 ease-in-out
-            ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-          `}
+            ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
         />
         <button
           onClick={() => setOpenAlarmModal(true)}
           className={`fixed bottom-[31px] left-1/2 -translate-x-1/2 w-full max-w-[366px] h-[58px] rounded-[71px] z-50
-    transition-all duration-300 ease-in-out flex justify-center items-center
-    bg-[#FFEB9D] text-black text-[20px] font-medium
-    ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}
-  `}
-        >
+                      transition-all duration-300 ease-in-out flex justify-center items-center
+                      bg-[#FFEB9D] text-black text-[20px] font-medium
+                      ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
+                          >
           섭취알림 등록하기
         </button>
         <AlarmAddToSearchModal
@@ -122,12 +117,12 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
         </div>
       </div>
 
-      {/* 회색 선 (수정된 부분) */}
+      {/* 회색 선 */}
       <div className="mt-[24px] bg-[#F3F3F3] w-full h-[4px]" />
 
       {/* 브랜드 제품 리스트 */}
       <div className="w-full mx-auto mt-[28px]">
-        <div className="flex flex-col items-center ml-[46px]">
+        <div className="flex flex-col items-center">
           <MainDetailPageBrandSection
             brandName={product.brandName}
             brandImageUrl={product.brandImageUrl}
@@ -163,17 +158,21 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
       {/* 탭 내용 */}
       <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed mb-[120px]">
         {activeTab === "ingredient" ? (
-          <IngredientTab />
+          <IngredientTab
+            supplementId={product.id}
+            onFirstNutrientChange={setFirstNutrientName}
+          />
         ) : (
-          <TimingTab intakeTime={product.intakeTime} />
+          <TimingTab
+            intakeTime={product.intakeTime}
+            ingredientName={firstNutrientName}
+          />
         )}
       </div>
 
+      {/* 공유 팝업 */}
       {isSharePopupOpen && (
-        <ShareLinkPopup
-          onClose={handleSharePopupClose}
-          supplementUrl={currentUrl}
-        />
+        <ShareLinkPopup onClose={handleSharePopupClose} supplementUrl={currentUrl} />
       )}
     </div>
   );

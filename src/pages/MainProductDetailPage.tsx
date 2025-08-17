@@ -6,9 +6,10 @@ import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
 import ShareModal from "@/components/Purpose/P3DShareModal";
 import LoginPromptModal from "@/components/Purpose/LoginPromptModal";
 
-// API 응답과 컴포넌트 내부에서 사용할 타입 정의
+
 interface ApiProduct {
   supplementId: number;
+  brandId: number;
   brandName: string;
   brandImageUrl: string | null;
   supplementName: string;
@@ -16,12 +17,18 @@ interface ApiProduct {
   liked: boolean;
   coupangLink: string | null;
   intakeTime: string;
-  ingredients: string[];
-  brandId: number;
+  ingredients: Ingredient[];
 }
+
+interface Ingredient {
+  name: string;
+  amount: string;
+}
+
 
 interface Product {
   id: number;
+  brandId: number;
   brandName: string;
   brandImageUrl: string | null;
   supplementName: string;
@@ -29,9 +36,9 @@ interface Product {
   liked: boolean;
   coupangLink: string | null;
   intakeTime: string;
-  ingredients: string[];
-  brandId: number;
+  ingredients: Ingredient[];
 }
+
 
 interface BrandProduct {
   id: number;
@@ -96,11 +103,27 @@ const ProductDetailPage = () => {
 
         const brandIdToFetch =
           fetchedProduct.brandId || fetchedProduct.supplementId;
-        const brandResponse = await axios.get<{ supplements: BrandProduct[] }>(
+        
+          
+        // 브랜드 제품 리스트 호출
+        const brandResponse = await axios.get<{ [key: string]: ApiProduct[] }>(
           `/api/v1/supplements/brand`,
           { params: { id: brandIdToFetch } }
         );
-        setBrandProducts(brandResponse.data.supplements);
+
+        // API에서 additionalProp1, 2, 3 형태로 들어오는 경우 통합
+        const brandProductsArray: BrandProduct[] = Object.values(
+          brandResponse.data
+        )
+          .flat()
+          .map((item) => ({
+            id: item.supplementId,
+            name: item.supplementName,
+            imageUrl: item.supplementImageUrl,
+          }));
+
+        setBrandProducts(brandProductsArray);
+
       } catch (error: any) {
         console.error("❌ 제품 정보를 불러오는데 실패했습니다:", error);
 
