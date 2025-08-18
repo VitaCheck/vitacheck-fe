@@ -6,7 +6,7 @@ type PickerValue = { hour: string; minute: string };
 interface TimePickerModalProps {
   onClose: () => void;
   onConfirm: (value: PickerValue) => void;
-  defaultValue?: PickerValue; // 기본값 없으면 09:00
+  defaultValue?: PickerValue; // 기본값. 없으면 09:00
 }
 
 const TimePickerModal = ({

@@ -182,7 +182,7 @@ const DesktopAlarmEditPage = () => {
 
       await axios.post("/api/v1/notifications/routines/custom", upsertPayload);
 
-      alert("알림이 저장되었습니다!");
+      alert("알림이 수정되었습니다!");
       navigate("/alarm/settings");
     } catch (err: any) {
       console.error("알림 저장 실패:", err?.response ?? err);

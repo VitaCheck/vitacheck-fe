@@ -5,24 +5,12 @@ import AlarmEditModal from "./AlarmEditModal";
 import AddOptionsModal from "./AddOptionsModal";
 import axios from "@/lib/axios";
 
-// ==== 타입 ====
-type DayOfWeek = "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT" | "SUN";
+// ✅ 공용 타입/유틸
+import type { DayOfWeek, Schedule, Supplement } from "@/types/alarm";
+import { normalizeSupplement, EN_TO_KO, formatTimes } from "@/utils/alarm";
 
-interface Schedule {
-  dayOfWeek: DayOfWeek;
-  time: string; // "HH:mm"
-}
-
-interface Alarm {
-  notificationRoutineId: number;
-  supplementId: number;
-  supplementName: string;
-  supplementImageUrl?: string;
-  daysOfWeek: string[];
-  times: string[];
-  schedules?: Schedule[];
-  isEnabled?: boolean; // ✅ 토글 상태
-}
+// ==== 확장 타입 (isEnabled만 추가)
+type Alarm = Supplement & { isEnabled?: boolean };
 
 // ==== props ====
 interface Props {
@@ -30,119 +18,31 @@ interface Props {
   setShowModal: (value: boolean) => void;
 }
 
-// ==== 헬퍼 ====
-const pad2 = (n?: number) =>
-  typeof n === "number" ? String(n).padStart(2, "0") : undefined;
-
-const formatTimeObject = (t?: { hour?: number; minute?: number }) => {
-  const hh = pad2(t?.hour);
-  const mm = pad2(t?.minute);
-  return hh && mm ? `${hh}:${mm}` : undefined;
-};
-
-const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
-
-const DAY_LABEL: Record<DayOfWeek, string> = {
-  MON: "월",
-  TUE: "화",
-  WED: "수",
-  THU: "목",
-  FRI: "금",
-  SAT: "토",
-  SUN: "일",
-};
-
-// API 응답 정규화
 const normalizeAlarm = (raw: any): Alarm => {
-  const fromSchedules =
-    Array.isArray(raw?.schedules) && raw.schedules.length > 0;
-
-  const timesFromSchedules: string[] = fromSchedules
-    ? raw.schedules
-        .map((s: any) =>
-          typeof s?.time === "string"
-            ? fixTime(s.time)
-            : formatTimeObject(s?.time)
-        )
-        .filter(Boolean)
-    : [];
-
-  const times: string[] = Array.isArray(raw?.times)
-    ? raw.times.filter(Boolean).map(fixTime)
-    : timesFromSchedules;
-
-  const daysOfWeek: string[] = Array.isArray(raw?.daysOfWeek)
-    ? raw.daysOfWeek
-    : fromSchedules
-      ? raw.schedules.map((s: Schedule) => s.dayOfWeek)
-      : [];
-
-  // enabled 매핑
+  const base = normalizeSupplement(raw);
   const isEnabled =
     typeof raw?.enabled === "boolean"
       ? raw.enabled
       : typeof raw?.isEnabled === "boolean"
         ? raw.isEnabled
         : typeof raw?.status === "string"
-          ? raw.status === "ACTIVE"
-          : undefined;
+          ? raw.status.toUpperCase() === "ACTIVE"
+          : // ✅ 값이 없으면 'false'로 강제하지 않고 undefined 유지
+            undefined;
 
-  return {
-    notificationRoutineId: Number(raw.notificationRoutineId),
-    supplementId: Number(raw.supplementId ?? 0),
-    supplementName: String(raw.supplementName ?? raw?.name ?? ""),
-    supplementImageUrl: raw?.supplementImageUrl ?? raw?.imageUrl,
-    daysOfWeek,
-    times: Array.from(new Set(times)).sort(),
-    schedules: fromSchedules
-      ? raw.schedules.map((s: any) => ({
-          dayOfWeek: s.dayOfWeek as DayOfWeek,
-          time:
-            typeof s?.time === "string"
-              ? fixTime(s.time)
-              : (formatTimeObject(s?.time) ?? ""),
-        }))
-      : undefined,
-    isEnabled,
-  };
+  return { ...base, isEnabled };
 };
 
-// 알람의 전체 요일 집합(표시용)
-const getDaysForAlarm = (alarm: Alarm): DayOfWeek[] => {
-  const days: DayOfWeek[] = alarm.schedules?.length
-    ? (alarm.schedules.map((s) => s.dayOfWeek).filter(Boolean) as DayOfWeek[])
-    : (alarm.daysOfWeek as DayOfWeek[]);
-
-  const order: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
-  const uniq = Array.from(new Set(days));
-  return order.filter((d) => uniq.includes(d));
-};
-
-// 고유 시간 목록(중복 제거 + 정렬)
-const getUniqueTimes = (alarm: Alarm): string[] => {
-  const times = alarm.schedules?.length
-    ? alarm.schedules.map((s) => s.time).filter(Boolean)
-    : alarm.times;
-
-  return Array.from(new Set(times)).sort(); // "HH:mm" 포맷이면 문자열 정렬로 시간 순서 유지
-};
-
-// UI 출력용 포맷터
+// ==== UI 포맷터
 const formatDaysLine = (days: DayOfWeek[]) =>
-  days.length ? days.map((d) => DAY_LABEL[d]).join(" ") : "-";
-
-const formatTimesLine = (times: string[]) => {
-  if (times.length === 0) return "-";
-  if (times.length <= 3) return times.join(" | ");
-  return times.slice(0, 3).join(" | ") + " ...";
-};
+  days.length ? days.map((d) => EN_TO_KO[d]).join(" ") : "-";
 
 const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
   const navigate = useNavigate();
   const [alarms, setAlarms] = useState<Alarm[]>([]);
   const [editId, setEditId] = useState<number | null>(null);
   const [showManualModal, setShowManualModal] = useState(false);
-  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set()); // ✅ 토글 중인 항목 잠금
+  const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
   // 재조회
   const fetchAlarms = useCallback(async () => {
@@ -163,7 +63,6 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
     fetchAlarms();
   }, [fetchAlarms]);
 
-  // ✅ 토글 API 연동 (낙관적 업데이트)
   const toggleAlarm = async (id: number) => {
     if (togglingIds.has(id)) return;
 
@@ -171,7 +70,6 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
       alarms.find((a) => a.notificationRoutineId === id)?.isEnabled ?? false;
     const optimistic = !before;
 
-    // 낙관적 업데이트
     setAlarms((prev) =>
       prev.map((a) =>
         a.notificationRoutineId === id ? { ...a, isEnabled: optimistic } : a
@@ -180,20 +78,26 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
     setTogglingIds((prev) => new Set(prev).add(id));
 
     try {
+      // PATCH 바디가 필요한 서버도 있으니 {}를 명시 (빈 바디로 인한 415 회피)
       const res = await axios.patch(
-        `/api/v1/notifications/routines/${id}/toggle`
+        `/api/v1/notifications/routines/${id}/toggle`,
+        {}
       );
-      const enabled = res?.data?.result?.enabled;
+      console.log("[toggle] status:", res.status, res.data);
+
+      const enabled = pickEnabled(res?.data);
+      console.log("[toggle] parsed enabled:", enabled);
+
       if (typeof enabled === "boolean") {
-        // 서버값 확정
+        // ✅ 서버가 명확히 알려주면 그 값으로 고정
         setAlarms((prev) =>
           prev.map((a) =>
             a.notificationRoutineId === id ? { ...a, isEnabled: enabled } : a
           )
         );
       } else {
-        // 드문 케이스: 응답에 enabled 없으면 재조회
-        await fetchAlarms();
+        // ✅ 서버가 즉시 값을 안 주는 케이스: 즉시 재조회로 롤백 느낌 주지 않도록 아주 짧게 지연 후 재조회
+        setTimeout(fetchAlarms, 250);
       }
     } catch (e) {
       console.error("알림 토글 실패:", e);
@@ -211,6 +115,23 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
         return n;
       });
     }
+  };
+
+  // 응답에서 enabled 값을 최대치로 끌어오는 유틸
+  const pickEnabled = (data: any): boolean | undefined => {
+    const r = data?.result ?? data;
+    const v =
+      r?.enabled ??
+      r?.isEnabled ??
+      (typeof r?.status === "string"
+        ? r.status.toUpperCase?.() === "ACTIVE"
+        : undefined) ??
+      data?.enabled ??
+      (typeof data?.status === "string"
+        ? data.status.toUpperCase?.() === "ACTIVE"
+        : undefined);
+
+    return typeof v === "boolean" ? v : undefined;
   };
 
   return (
@@ -232,8 +153,10 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
           const on = alarm.isEnabled === true;
           const busy = togglingIds.has(alarm.notificationRoutineId);
 
-          const daysLine = formatDaysLine(getDaysForAlarm(alarm));
-          const timesLine = formatTimesLine(getUniqueTimes(alarm));
+          // ✅ days: normalize에서 이미 고정/정렬/유니크 보장
+          const daysLine = formatDaysLine(alarm.daysOfWeek);
+          // ✅ times: normalize에서 유니크/정렬, 표시만 formatTimes 사용
+          const timesLine = formatTimes(alarm.times);
 
           return (
             <div
