@@ -112,6 +112,15 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
     })();
   }, [id, onClose]);
 
+  useEffect(() => {
+    // 모달 열릴 때 body 스크롤 막기
+    document.body.style.overflow = "hidden";
+    return () => {
+      // 모달 닫힐 때 원래대로 복원
+      document.body.style.overflow = "";
+    };
+  }, []);
+
   const toggleDay = (ko: string) => {
     const en = KO_TO_EN[ko];
     setDays((prev) =>
@@ -205,20 +214,20 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
 
       await axios.post("/api/v1/notifications/routines/custom", payload);
       onSaved?.();
-      alert("알림이 저장되었습니다!");
+      alert("알림이 수정되었습니다");
       onClose();
     } catch (err: any) {
       console.error("알림 저장 실패:", err?.response ?? err);
       alert(
         err?.response?.data?.message ??
-          "알림 저장에 실패했습니다. 잠시 후 다시 시도해 주세요."
+          "알림 수정에 실패했습니다. 잠시 후 다시 시도해 주세요."
       );
     } finally {
       setSaving(false);
     }
   };
 
-  // ✅ 삭제
+  // 삭제
   const handleDelete = async () => {
     if (deleting) return;
     const ok = window.confirm("정말 이 알림을 삭제할까요?");
@@ -262,7 +271,7 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
             onClick={handleSubmit}
             disabled={saving}
           >
-            {saving ? "저장 중…" : "저장"}
+            {"저장"}
           </button>
         </div>
 

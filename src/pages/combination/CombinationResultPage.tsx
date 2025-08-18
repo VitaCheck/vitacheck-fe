@@ -69,86 +69,89 @@ export default function CombinationResultPage() {
     const hasRealUpper = upper != null;
     const isFallbackGuide = !hasRealRec && !hasRealUpper;
 
-         // 3) 색상 구간(노랑/주황/빨강) 폭
-     const yellowWidth = hasRealRec ? Math.min(widthPct, recPct) : widthPct;
-     const orangeLeft = hasRealRec ? recPct : null;
-     const orangeRight = hasRealUpper ? Math.min(widthPct, upperPct) : widthPct;
-     const orangeWidth =
-       orangeLeft != null ? Math.max(0, orangeRight - orangeLeft) : 0;
-     const redLeft = hasRealUpper ? upperPct : null;
-     const redWidth =
-       redLeft != null && widthPct > redLeft ? widthPct - redLeft : 0;
-     
-     // 상한 초과 여부를 명확하게 계산
-     // 상한선(66.67% 또는 실제 upper 값) 이상인 경우를 초과로 판단
-     const isOverUpperLimit = hasRealUpper && widthPct > upperPct;
+    // 3) 색상 구간(노랑/주황/빨강) 폭
+    const yellowWidth = hasRealRec ? Math.min(widthPct, recPct) : widthPct;
+    const orangeLeft = hasRealRec ? recPct : null;
+    const orangeRight = hasRealUpper ? Math.min(widthPct, upperPct) : widthPct;
+    const orangeWidth =
+      orangeLeft != null ? Math.max(0, orangeRight - orangeLeft) : 0;
+    const redLeft = hasRealUpper ? upperPct : null;
+    const redWidth =
+      redLeft != null && widthPct > redLeft ? widthPct - redLeft : 0;
 
-         return {
-       unit,
-       total,
-       widthPct,
-       recPct,
-       upperPct,
-       hasRealRec,
-       hasRealUpper,
-       isFallbackGuide,
-       yellowWidth,
-       orangeLeft,
-       orangeWidth,
-       redLeft,
-       redWidth,
-       isOverUpperLimit,
-     };
+    // 상한 초과 여부를 명확하게 계산
+    // 상한선(66.67% 또는 실제 upper 값) 이상인 경우를 초과로 판단
+    const isOverUpperLimit = hasRealUpper && widthPct > upperPct;
+
+    return {
+      unit,
+      total,
+      widthPct,
+      recPct,
+      upperPct,
+      hasRealRec,
+      hasRealUpper,
+      isFallbackGuide,
+      yellowWidth,
+      orangeLeft,
+      orangeWidth,
+      redLeft,
+      redWidth,
+      isOverUpperLimit,
+    };
   }
-// 모든 게이지에서 공통 점선 위치(디자인 기준)
-const REC_LINE_POS = 45;   // 권장선 45%
-const UPPER_LINE_POS = 80; // 상한선 80%
+  // 모든 게이지에서 공통 점선 위치(디자인 기준)
+  const REC_LINE_POS = 45; // 권장선 45%
+  const UPPER_LINE_POS = 80; // 상한선 80%
 
-// per-item으로 채워질 길이(%) 계산: 권장/상한에 맞춰 자연스러운 길이
-function computeFillPercent(ing: IngredientResult) {
-  const total = ing.totalAmount ?? 0;
-  const rec   = ing.recommendedAmount ?? null;
-  const upper = ing.upperAmount ?? null;
+  // per-item으로 채워질 길이(%) 계산: 권장/상한에 맞춰 자연스러운 길이
+  function computeFillPercent(ing: IngredientResult) {
+    const total = ing.totalAmount ?? 0;
+    const rec = ing.recommendedAmount ?? null;
+    const upper = ing.upperAmount ?? null;
 
-  if (upper && upper > 0) {
-    if (rec && rec > 0) {
-      if (total <= rec) {
-        const r = total / rec;
-        return Math.max(0, Math.min(100, r * REC_LINE_POS));
+    if (upper && upper > 0) {
+      if (rec && rec > 0) {
+        if (total <= rec) {
+          const r = total / rec;
+          return Math.max(0, Math.min(100, r * REC_LINE_POS));
+        }
+        if (total <= upper) {
+          const r = (total - rec) / Math.max(upper - rec, 1e-6);
+          return Math.max(
+            0,
+            Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS))
+          );
+        }
+        return 100; // 상한 초과는 100%로 캡
       }
-      if (total <= upper) {
-        const r = (total - rec) / Math.max(upper - rec, 1e-6);
-        return Math.max(0, Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS)));
-      }
-      return 100; // 상한 초과는 100%로 캡
+      // 권장 없음: 0~upper → 0~UPPER_LINE_POS
+      const r = total / upper;
+      return Math.max(0, Math.min(100, r <= 1 ? r * UPPER_LINE_POS : 100));
     }
-    // 권장 없음: 0~upper → 0~UPPER_LINE_POS
-    const r = total / upper;
-    return Math.max(0, Math.min(100, r <= 1 ? r * UPPER_LINE_POS : 100));
+
+    if (rec && rec > 0) {
+      const r = total / rec;
+      return Math.max(0, Math.min(100, r <= 1 ? r * REC_LINE_POS : 100));
+    }
+
+    // 권장/상한 둘 다 없으면 살짝만 표시
+    return Math.min(REC_LINE_POS, total > 0 ? REC_LINE_POS * 0.7 : 0);
   }
 
-  if (rec && rec > 0) {
-    const r = total / rec;
-    return Math.max(0, Math.min(100, r <= 1 ? r * REC_LINE_POS : 100));
+  function isOverUpper(ing: IngredientResult) {
+    const total = ing.totalAmount ?? 0;
+    const upper = ing.upperAmount ?? null;
+    return !!(upper && upper > 0 && total > upper);
   }
-
-  // 권장/상한 둘 다 없으면 살짝만 표시
-  return Math.min(REC_LINE_POS, total > 0 ? REC_LINE_POS * 0.7 : 0);
-}
-
-function isOverUpper(ing: IngredientResult) {
-  const total = ing.totalAmount ?? 0;
-  const upper = ing.upperAmount ?? null;
-  return !!(upper && upper > 0 && total > upper);
-}
 
   const location = useLocation();
   const navigate = useNavigate();
   const scrollRef = useRef<HTMLDivElement>(null);
 
-     const selectedItems = location.state?.selectedItems || [];
-   console.log("selectedItems:", selectedItems);
-   console.log("location.state:", location.state);
+  const selectedItems = location.state?.selectedItems || [];
+  console.log("selectedItems:", selectedItems);
+  console.log("location.state:", location.state);
   const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
 
   const [activeTab, setActiveTab] = useState<"전체" | "초과">("전체");
@@ -173,9 +176,9 @@ function isOverUpper(ing: IngredientResult) {
             overRecommended: i.overRecommended,
             upperAmount: i.upperAmount,
             totalAmount: i.totalAmount,
-            recommendedAmount: i.recommendedAmount
+            recommendedAmount: i.recommendedAmount,
           });
-          
+
           // 초과 탭에서는 다음 조건을 만족하는 성분을 표시:
           // 1. 권장량 초과 (dosageRatio > 1)
           // 2. 상한량 초과 (overRecommended)
@@ -183,41 +186,58 @@ function isOverUpper(ing: IngredientResult) {
           // 4. API에서 권장량/상한량이 null이지만 실제로는 과다 섭취일 수 있는 경우
           const isOverRecommended = i.dosageRatio > 1;
           const isOverUpper = i.overRecommended;
-          const isOverUpperLimit = i.upperAmount && i.totalAmount > i.upperAmount;
-          
+          const isOverUpperLimit =
+            i.upperAmount && i.totalAmount > i.upperAmount;
+
           // 게이지 계산에서 상한 초과 여부도 확인 (중요!)
           const gauge = calcGauge(i);
           const isOverUpperInGauge = gauge.isOverUpperLimit;
-          
+
           // 상한선(66.67% 또는 실제 upper 값) 이상인 경우를 명확하게 확인
           const isOverUpperLine = gauge.widthPct > gauge.upperPct;
-          
+
           // API에서 권장량/상한량이 null인 경우, 일반적인 기준값으로 판단
           let isOverGeneralLimit = false;
           if (i.recommendedAmount === null && i.upperAmount === null) {
             // 일반적인 영양소별 권장량 기준 (IU, mg 단위별)
             if (i.unit === "IU") {
               // 비타민 D: 일반적으로 4000 IU 이상을 과다로 간주
-              if (i.ingredientName.includes("비타민 D") && i.totalAmount > 4000) {
+              if (
+                i.ingredientName.includes("비타민 D") &&
+                i.totalAmount > 4000
+              ) {
                 isOverGeneralLimit = true;
               }
               // 비타민 A: 일반적으로 10000 IU 이상을 과다로 간주
-              else if (i.ingredientName.includes("비타민 A") && i.totalAmount > 10000) {
+              else if (
+                i.ingredientName.includes("비타민 A") &&
+                i.totalAmount > 10000
+              ) {
                 isOverGeneralLimit = true;
               }
             } else if (i.unit === "mg") {
               // 비타민 C: 일반적으로 2000 mg 이상을 과다로 간주
-              if (i.ingredientName.includes("비타민 C") && i.totalAmount > 2000) {
+              if (
+                i.ingredientName.includes("비타민 C") &&
+                i.totalAmount > 2000
+              ) {
                 isOverGeneralLimit = true;
               }
               // 기타 미네랄: 일반적으로 권장량의 3배 이상을 과다로 간주
-              else if (i.totalAmount > 1000) { // 1000mg 이상은 일반적으로 과다
+              else if (i.totalAmount > 1000) {
+                // 1000mg 이상은 일반적으로 과다
                 isOverGeneralLimit = true;
               }
             }
           }
-          
-          const shouldShow = isOverRecommended || isOverUpper || isOverUpperLimit || isOverUpperInGauge || isOverUpperLine || isOverGeneralLimit;
+
+          const shouldShow =
+            isOverRecommended ||
+            isOverUpper ||
+            isOverUpperLimit ||
+            isOverUpperInGauge ||
+            isOverUpperLine ||
+            isOverGeneralLimit;
           console.log(`성분 ${i.ingredientName} 표시 여부:`, shouldShow, {
             isOverRecommended,
             isOverUpper,
@@ -226,9 +246,9 @@ function isOverUpper(ing: IngredientResult) {
             isOverUpperLine,
             isOverGeneralLimit,
             widthPct: gauge.widthPct,
-            upperPct: gauge.upperPct
+            upperPct: gauge.upperPct,
           });
-          
+
           return shouldShow;
         });
 
@@ -237,33 +257,39 @@ function isOverUpper(ing: IngredientResult) {
   console.log("activeTab", activeTab); // 현재 선택된 탭
   console.log("필터링 결과 상세:", {
     전체: ingredientResults.length,
-    초과: filteredIngredients.length
+    초과: filteredIngredients.length,
   });
 
-     const fetchCombinationResult = async () => {
+  const fetchCombinationResult = async () => {
     try {
       const supplementIds = selectedItems.map(
         (item: { supplementId: number }) => item.supplementId
       );
       console.log("API 호출 시작 - supplementIds:", supplementIds);
       console.log("selectedItems 전체:", selectedItems);
-      
+
       const res = await axios.post("/api/v1/combinations/analyze", {
         supplementIds,
       });
       console.log("API 응답 전체:", res.data);
       console.log("API 응답 result:", res.data.result);
-      console.log("API 응답 ingredientResults:", res.data.result?.ingredientResults);
-      
+      console.log(
+        "API 응답 ingredientResults:",
+        res.data.result?.ingredientResults
+      );
+
       if (res.data.result?.ingredientResults) {
-        console.log("성분 결과 상세:", res.data.result.ingredientResults.map((i: any) => ({
-          name: i.ingredientName,
-          total: i.totalAmount,
-          recommended: i.recommendedAmount,
-          upper: i.upperAmount,
-          ratio: i.dosageRatio,
-          overRecommended: i.overRecommended
-        })));
+        console.log(
+          "성분 결과 상세:",
+          res.data.result.ingredientResults.map((i: any) => ({
+            name: i.ingredientName,
+            total: i.totalAmount,
+            recommended: i.recommendedAmount,
+            upper: i.upperAmount,
+            ratio: i.dosageRatio,
+            overRecommended: i.overRecommended,
+          }))
+        );
         setIngredientResults(res.data.result.ingredientResults);
       } else {
         console.warn("ingredientResults가 없습니다:", res.data);
@@ -285,12 +311,12 @@ function isOverUpper(ing: IngredientResult) {
     }
   };
 
-     useEffect(() => {
-     if (selectedItems.length > 0) {
-       fetchCombinationResult();
-       fetchCombinationRecommendations();
-     }
-   }, [selectedItems]);
+  useEffect(() => {
+    if (selectedItems.length > 0) {
+      fetchCombinationResult();
+      fetchCombinationRecommendations();
+    }
+  }, [selectedItems]);
 
   const CARD_W = 250;
   const GAP_W = 8;
@@ -300,14 +326,14 @@ function isOverUpper(ing: IngredientResult) {
   const handleScroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
-  
+
     const current = el.scrollLeft;
     const pageIndex = Math.round(current / PAGE_W);
     const nextIndex = direction === "right" ? pageIndex + 1 : pageIndex - 1;
     const maxIndex = Math.ceil((el.scrollWidth - el.clientWidth) / PAGE_W);
     const clamped = Math.max(0, Math.min(nextIndex, maxIndex));
     const target = clamped * PAGE_W;
-    
+
     el.scrollTo({ left: target, behavior: "smooth" });
   };
 
@@ -435,7 +461,7 @@ function isOverUpper(ing: IngredientResult) {
           조합 분석
         </h1>
 
-                 <div className="flex gap-4 ml-[250px]">
+        <div className="flex gap-4 ml-[250px]">
           <button
             onClick={handleRecombination}
             className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
@@ -455,45 +481,45 @@ function isOverUpper(ing: IngredientResult) {
       {/* PC 슬라이더 */}
       <div className="hidden md:block px-4">
         <div className="relative w-full max-w-[1050px] h-[300px] bg-white border border-[#B2B2B2] rounded-[45.51px] mx-auto px-[60px] py-[30px] overflow-hidden">
-        <div className="mx-auto" style={{ width: `${PAGE_W}px` }}> 
-          <div
-            ref={scrollRef}
-            className="flex gap-[8px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
-          >
-            {selectedItems.map((item: SupplementItem) => (
-              <div
-                key={item.supplementId}
-                className={`w-[239px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0 snap-start
+          <div className="mx-auto" style={{ width: `${PAGE_W}px` }}>
+            <div
+              ref={scrollRef}
+              className="flex gap-[8px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
+            >
+              {selectedItems.map((item: SupplementItem) => (
+                <div
+                  key={item.supplementId}
+                  className={`w-[239px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0 snap-start
           ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
-              >
-                <img
-                  src={
-                    checkedIndices.includes(item.supplementId)
-                      ? checkedBoxIcon
-                      : boxIcon
-                  }
-                  alt="checkbox"
-                  onClick={() => handleToggleCheckbox(item.supplementId)}
-                  className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
-                />
-                <img
-                  src={item.imageUrl}
-                  className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
-                />
-                <p
-                  className="text-center font-pretendard font-medium mt-1"
-                  style={{
-                    fontSize: "18px",
-                    lineHeight: "100%",
-                    letterSpacing: "-0.02em",
-                    color: "#000000",
-                  }}
                 >
-                  {item.supplementName}
-                </p>
-              </div>
-            ))}
-          </div>
+                  <img
+                    src={
+                      checkedIndices.includes(item.supplementId)
+                        ? checkedBoxIcon
+                        : boxIcon
+                    }
+                    alt="checkbox"
+                    onClick={() => handleToggleCheckbox(item.supplementId)}
+                    className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
+                  />
+                  <img
+                    src={item.imageUrl}
+                    className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
+                  />
+                  <p
+                    className="text-center font-pretendard font-medium mt-1"
+                    style={{
+                      fontSize: "18px",
+                      lineHeight: "100%",
+                      letterSpacing: "-0.02em",
+                      color: "#000000",
+                    }}
+                  >
+                    {item.supplementName}
+                  </p>
+                </div>
+              ))}
+            </div>
           </div>
 
           {/* 좌우 스크롤 버튼 (4개 초과일 때만 표시) */}
@@ -580,13 +606,15 @@ function isOverUpper(ing: IngredientResult) {
               className="flex flex-col items-center cursor-pointer"
               onClick={() => setActiveTab(tab as "전체" | "초과")}
             >
-                             <span
-                 className={`w-[100px] h-[58px] font-pretendard font-semibold text-[35px] leading-[120%] tracking-[-0.02em] text-center ${
-                   activeTab === tab 
-                     ? (tab === "초과" ? "text-[#E70000]" : "text-black") 
-                     : "text-[#9C9A9A]"
-                 }`}
-               >
+              <span
+                className={`w-[100px] h-[58px] font-pretendard font-semibold text-[35px] leading-[120%] tracking-[-0.02em] text-center ${
+                  activeTab === tab
+                    ? tab === "초과"
+                      ? "text-[#E70000]"
+                      : "text-black"
+                    : "text-[#9C9A9A]"
+                }`}
+              >
                 {tab}
               </span>
             </div>
@@ -615,13 +643,15 @@ function isOverUpper(ing: IngredientResult) {
               className="flex flex-col items-center cursor-pointer"
               onClick={() => setActiveTab(tab as "전체" | "초과")}
             >
-                             <span
-                 className={`w-[50px] h-[24px] font-pretendard font-medium text-[20px] leading-[100%] tracking-[-0.02em] text-center ${
-                   activeTab === tab 
-                     ? (tab === "초과" ? "text-[#E70000]" : "text-black") 
-                     : "text-[#9C9A9A]"
-                 }`}
-               >
+              <span
+                className={`w-[50px] h-[24px] font-pretendard font-medium text-[20px] leading-[100%] tracking-[-0.02em] text-center ${
+                  activeTab === tab
+                    ? tab === "초과"
+                      ? "text-[#E70000]"
+                      : "text-black"
+                    : "text-[#9C9A9A]"
+                }`}
+              >
                 {tab}
               </span>
             </div>
@@ -643,19 +673,19 @@ function isOverUpper(ing: IngredientResult) {
       </div>
       {activeTab === "초과" && (
         <>
-                       {/* PC 버전 */}
-             <div className="hidden md:flex justify-center mt-5">
-            <div 
+          {/* PC 버전 */}
+          <div className="hidden md:flex justify-center mt-5">
+            <div
               className="flex items-center justify-center"
               style={{
                 width: "1100px",
                 height: "102px",
                 background: "#F2F2F2",
                 borderRadius: "22px",
-                opacity: 1
+                opacity: 1,
               }}
             >
-              <p 
+              <p
                 className="font-pretendard font-normal text-center"
                 style={{
                   width: "500px",
@@ -663,7 +693,7 @@ function isOverUpper(ing: IngredientResult) {
                   fontSize: "32px",
                   lineHeight: "100%",
                   letterSpacing: "-2%",
-                  opacity: 1
+                  opacity: 1,
                 }}
               >
                 적정 섭취량을 준수하세요!
@@ -671,19 +701,19 @@ function isOverUpper(ing: IngredientResult) {
             </div>
           </div>
 
-                       {/* 모바일 버전 */}
-             <div className="md:hidden flex justify-center mt-2">
-            <div 
+          {/* 모바일 버전 */}
+          <div className="md:hidden flex justify-center mt-2">
+            <div
               className="flex items-center justify-center"
               style={{
                 width: "350px",
                 height: "68px",
                 background: "#F4F4F4",
                 borderRadius: "15px",
-                opacity: 1
+                opacity: 1,
               }}
             >
-              <p 
+              <p
                 className="font-inter font-medium text-center text-black"
                 style={{
                   width: "300px",
@@ -691,7 +721,7 @@ function isOverUpper(ing: IngredientResult) {
                   fontSize: "20px",
                   lineHeight: "22px",
                   letterSpacing: "0px",
-                  opacity: 1
+                  opacity: 1,
                 }}
               >
                 적정 섭취량을 준수하세요!
@@ -700,82 +730,95 @@ function isOverUpper(ing: IngredientResult) {
           </div>
         </>
       )}
-             {/* 모바일 섭취량 그래프 */}
-       {filteredIngredients && filteredIngredients.length > 0 ? (
-         <div className="md:hidden space-y-4 px-2 ml-5 ">
+      {/* 모바일 섭취량 그래프 */}
+      {filteredIngredients && filteredIngredients.length > 0 ? (
+        <div className="md:hidden space-y-4 px-2 ml-5 ">
           {/* 권장/상한 라벨 - 공통 위치 */}
-<div className="relative w-[370px] h-[24px] mt-3 mb-1 ml-8">
-  <span
-    className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
-    style={{ left: `${REC_LINE_POS}%` }}
-  >권장</span>
-  <span
-    className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
-    style={{ left: `${UPPER_LINE_POS}%` }}
-  >상한</span>
-</div>
-
-          
-{filteredIngredients
-  .slice(0, showAllIngredients ? filteredIngredients.length : 5)
-  .map((ingredient) => {
-    const { ingredientName } = ingredient;
-
-    // ✅ 항목별 채움 비율/초과여부 계산
-    const fillPct = computeFillPercent(ingredient);
-    const over    = isOverUpper(ingredient);
-
-    return (
-      <div key={ingredientName} className="flex justify-start items-center w-[370px]">
-        {/* 이름 + 꺾쇠 */}
-        <div
-          className="flex items-center cursor-pointer w-[120px]"
-          onClick={() =>
-            navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
-          }
-        >
-          <span
-            className="inline-block text-[18px] font-medium font-pretendard"
-            style={{ lineHeight: "100%", letterSpacing: "-2%" }}
-          >
-            {ingredientName}
-          </span>
-          <img
-            src={vitaminArrow}
-            alt="화살표"
-            className="ml-3 mt-1"
-            style={{ width: 20, height: 15 }}
-          />
-        </div>
-
-        {/* 게이지 (공통 점선 + 단색 채움) */}
-        <div className="flex-1">
-          <div className="relative w-[240px] h-[40px] bg-[#EFEFEF] rounded-full overflow-hidden">
-            {/* 채워진 막대: 상한 이하 노랑 / 초과 시 전체 빨강 */}
-            <div
-              className="absolute top-0 left-0 h-full rounded-full"
-              style={{
-                width: `${fillPct}%`,
-                background: over ? "#FF7E7E" : "#FFE17E",
-              }}
-            />
-
-            {/* 권장/상한 점선: 전 항목 공통 위치 */}
-            <div
-              className="absolute top-0 h-full border-l-2 border-dashed z-10"
-              style={{ left: `${REC_LINE_POS}%`, borderColor: "#000000" }}
-            />
-            <div
-              className="absolute top-0 h-full border-l-2 border-dashed z-10"
-              style={{ left: `${UPPER_LINE_POS}%`, borderColor: "#000000" }}
-            />
+          <div className="relative w-[370px] h-[24px] mt-3 mb-1 ml-8">
+            <span
+              className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+              style={{ left: `${REC_LINE_POS}%` }}
+            >
+              권장
+            </span>
+            <span
+              className="absolute -top-1 text-[14px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+              style={{ left: `${UPPER_LINE_POS}%` }}
+            >
+              상한
+            </span>
           </div>
-        </div>
-      </div>
-    );
-  })}
 
-          
+          {filteredIngredients
+            .slice(0, showAllIngredients ? filteredIngredients.length : 5)
+            .map((ingredient) => {
+              const { ingredientName } = ingredient;
+
+              // ✅ 항목별 채움 비율/초과여부 계산
+              const fillPct = computeFillPercent(ingredient);
+              const over = isOverUpper(ingredient);
+
+              return (
+                <div
+                  key={ingredientName}
+                  className="flex justify-start items-center w-[370px]"
+                >
+                  {/* 이름 + 꺾쇠 */}
+                  <div
+                    className="flex items-center cursor-pointer w-[120px]"
+                    onClick={() =>
+                      navigate(
+                        `/ingredient?name=${encodeURIComponent(ingredientName)}`
+                      )
+                    }
+                  >
+                    <span
+                      className="inline-block text-[18px] font-medium font-pretendard"
+                      style={{ lineHeight: "100%", letterSpacing: "-2%" }}
+                    >
+                      {ingredientName}
+                    </span>
+                    <img
+                      src={vitaminArrow}
+                      alt="화살표"
+                      className="ml-3 mt-1"
+                      style={{ width: 20, height: 15 }}
+                    />
+                  </div>
+
+                  {/* 게이지 (공통 점선 + 단색 채움) */}
+                  <div className="flex-1">
+                    <div className="relative w-[240px] h-[40px] bg-[#EFEFEF] rounded-full overflow-hidden">
+                      {/* 채워진 막대: 상한 이하 노랑 / 초과 시 전체 빨강 */}
+                      <div
+                        className="absolute top-0 left-0 h-full rounded-full"
+                        style={{
+                          width: `${fillPct}%`,
+                          background: over ? "#FF7E7E" : "#FFE17E",
+                        }}
+                      />
+
+                      {/* 권장/상한 점선: 전 항목 공통 위치 */}
+                      <div
+                        className="absolute top-0 h-full border-l-2 border-dashed z-10"
+                        style={{
+                          left: `${REC_LINE_POS}%`,
+                          borderColor: "#000000",
+                        }}
+                      />
+                      <div
+                        className="absolute top-0 h-full border-l-2 border-dashed z-10"
+                        style={{
+                          left: `${UPPER_LINE_POS}%`,
+                          borderColor: "#000000",
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+
           {/* 모바일 더보기 버튼 */}
           {filteredIngredients.length > 5 && !showAllIngredients && (
             <div className="flex flex-col items-center justify-center mt-7 w-[370px]">
@@ -790,7 +833,7 @@ function isOverUpper(ing: IngredientResult) {
               </p>
             </div>
           )}
-          
+
           {/* 모바일 접기 버튼 */}
           {filteredIngredients.length > 5 && showAllIngredients && (
             <div className="flex flex-col items-center justify-center mt-10 w-[370px]">
@@ -805,127 +848,142 @@ function isOverUpper(ing: IngredientResult) {
               </p>
             </div>
           )}
-         </div>
-       ) : (
-         <div className="md:hidden px-4 text-center text-gray-500 mt-6">
-           {ingredientResults.length === 0 
-             ? "영양제를 선택해주세요." 
-             : activeTab === "초과" 
-               ? "초과된 성분이 없습니다." 
-               : "데이터를 불러오는 중입니다..."}
-         </div>
-       )}
-
-            {/* PC 섭취량 그래프 */}
-{filteredIngredients && filteredIngredients.length > 0 ? (
-  <div className="hidden md:block w-full">
-    {/* 상단 라벨: 이름 칼럼 폭과 정렬을 맞추기 위해 동일한 그리드 사용 */}
-    <div className="grid grid-cols-[200px_1fr] items-center gap-6 w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-5">
-  <div />
-  <div className="relative h-6">
-    <span
-      className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
-      style={{ left: `${REC_LINE_POS}%` }}
-    >
-      권장
-    </span>
-    <span
-      className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
-      style={{ left: `${UPPER_LINE_POS}%` }}
-    >
-      상한
-    </span>
-  </div>
-</div>
-
-
-    {/* 게이지 리스트 */}
-    <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-2 space-y-5">
-    {filteredIngredients
-  .slice(0, showAllIngredients ? filteredIngredients.length : 5)
-  .map((ingredient) => {
-    const { ingredientName } = ingredient;
-
-    // ✅ 항목별 채움 비율/초과여부
-    const fillPct = computeFillPercent(ingredient);
-    const over    = isOverUpper(ingredient);
-
-    return (
-      <div key={ingredientName} className="grid grid-cols-[200px_1fr] items-center gap-6 w-full">
-        {/* 이름 + 꺾쇠 */}
-        <div
-          className="flex items-center h-[48px] cursor-pointer"
-          onClick={() =>
-            navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
-          }
-        >
-          <span className="text-[20px] lg:text-[24px] font-medium">{ingredientName}</span>
-          <img src={vitaminArrow} alt="화살표" className="ml-3 mt-1" style={{ width: 25, height: 20 }} />
         </div>
+      ) : (
+        <div className="md:hidden px-4 text-center text-gray-500 mt-6">
+          {ingredientResults.length === 0
+            ? "영양제를 선택해주세요."
+            : activeTab === "초과"
+              ? "초과된 성분이 없습니다."
+              : "데이터를 불러오는 중입니다..."}
+        </div>
+      )}
 
-        {/* 게이지(공통 점선 + 단색 채움) */}
-        <div className="relative w-full">
-          <div className="relative w-full h-[48px] lg:h-[56px] bg-[#EFEFEF] rounded-full overflow-hidden">
-            <div
-              className="absolute top-0 left-0 h-full rounded-full"
-              style={{
-                width: `${fillPct}%`,
-                background: over ? "#FF7E7E" : "#FFE17E",
-              }}
-            />
-            <div
-              className="absolute top-0 h-full border-l-2 border-dashed z-10"
-              style={{ left: `${REC_LINE_POS}%`, borderColor: "#000000" }}
-            />
-            <div
-              className="absolute top-0 h-full border-l-2 border-dashed z-10"
-              style={{ left: `${UPPER_LINE_POS}%`, borderColor: "#000000" }}
-            />
+      {/* PC 섭취량 그래프 */}
+      {filteredIngredients && filteredIngredients.length > 0 ? (
+        <div className="hidden md:block w-full">
+          {/* 상단 라벨: 이름 칼럼 폭과 정렬을 맞추기 위해 동일한 그리드 사용 */}
+          <div className="grid grid-cols-[200px_1fr] items-center gap-6 w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-5">
+            <div />
+            <div className="relative h-6">
+              <span
+                className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+                style={{ left: `${REC_LINE_POS}%` }}
+              >
+                권장
+              </span>
+              <span
+                className="absolute -top-1 text-[16px] lg:text-[18px] font-medium text-black whitespace-nowrap translate-x-[-50%] z-20"
+                style={{ left: `${UPPER_LINE_POS}%` }}
+              >
+                상한
+              </span>
+            </div>
+          </div>
+
+          {/* 게이지 리스트 */}
+          <div className="w-full max-w-[1200px] mx-auto px-6 md:px-8 mt-2 space-y-5">
+            {filteredIngredients
+              .slice(0, showAllIngredients ? filteredIngredients.length : 5)
+              .map((ingredient) => {
+                const { ingredientName } = ingredient;
+
+                // ✅ 항목별 채움 비율/초과여부
+                const fillPct = computeFillPercent(ingredient);
+                const over = isOverUpper(ingredient);
+
+                return (
+                  <div
+                    key={ingredientName}
+                    className="grid grid-cols-[200px_1fr] items-center gap-6 w-full"
+                  >
+                    {/* 이름 + 꺾쇠 */}
+                    <div
+                      className="flex items-center h-[48px] cursor-pointer"
+                      onClick={() =>
+                        navigate(
+                          `/ingredient?name=${encodeURIComponent(ingredientName)}`
+                        )
+                      }
+                    >
+                      <span className="text-[20px] lg:text-[24px] font-medium">
+                        {ingredientName}
+                      </span>
+                      <img
+                        src={vitaminArrow}
+                        alt="화살표"
+                        className="ml-3 mt-1"
+                        style={{ width: 25, height: 20 }}
+                      />
+                    </div>
+
+                    {/* 게이지(공통 점선 + 단색 채움) */}
+                    <div className="relative w-full">
+                      <div className="relative w-full h-[48px] lg:h-[56px] bg-[#EFEFEF] rounded-full overflow-hidden">
+                        <div
+                          className="absolute top-0 left-0 h-full rounded-full"
+                          style={{
+                            width: `${fillPct}%`,
+                            background: over ? "#FF7E7E" : "#FFE17E",
+                          }}
+                        />
+                        <div
+                          className="absolute top-0 h-full border-l-2 border-dashed z-10"
+                          style={{
+                            left: `${REC_LINE_POS}%`,
+                            borderColor: "#000000",
+                          }}
+                        />
+                        <div
+                          className="absolute top-0 h-full border-l-2 border-dashed z-10"
+                          style={{
+                            left: `${UPPER_LINE_POS}%`,
+                            borderColor: "#000000",
+                          }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+
+            {/* PC 더보기 버튼 */}
+            {filteredIngredients.length > 5 && !showAllIngredients && (
+              <div className="flex flex-col items-center justify-center mt-6 w-full">
+                <img
+                  src="/images/PNG/조합 3-1/펼쳐보기 arrow.png"
+                  alt="더보기"
+                  className="w-[55px] h-[20px] cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setShowAllIngredients(true)}
+                />
+                <p className="text-[16px] lg:text-[18px] text-[#666] mt-3 font-pretendard">
+                  클릭하여 모든 성분 보기
+                </p>
+              </div>
+            )}
+
+            {/* PC 접기 버튼 */}
+            {filteredIngredients.length > 5 && showAllIngredients && (
+              <div className="flex flex-col items-center justify-center w-full mt-3">
+                <img
+                  src="/images/PNG/조합 3-1/Frame 499.png"
+                  alt="접기"
+                  className="w-full max-w-[1100px] h-[92px] cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={() => setShowAllIngredients(false)}
+                />
+              </div>
+            )}
           </div>
         </div>
-      </div>
-    );
-  })}
-
-
-      {/* PC 더보기 버튼 */}
-      {filteredIngredients.length > 5 && !showAllIngredients && (
-        <div className="flex flex-col items-center justify-center mt-6 w-full">
-          <img
-            src="/images/PNG/조합 3-1/펼쳐보기 arrow.png"
-            alt="더보기"
-            className="w-[55px] h-[20px] cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => setShowAllIngredients(true)}
-          />
-          <p className="text-[16px] lg:text-[18px] text-[#666] mt-3 font-pretendard">
-            클릭하여 모든 성분 보기
-          </p>
+      ) : (
+        <div className="hidden md:flex flex-col items-center px-[60px] mt-20 text-center text-gray-500">
+          {ingredientResults.length === 0
+            ? "영양제를 선택해주세요."
+            : activeTab === "초과"
+              ? "초과된 성분이 없습니다."
+              : "데이터를 불러오는 중입니다..."}
         </div>
       )}
-
-      {/* PC 접기 버튼 */}
-      {filteredIngredients.length > 5 && showAllIngredients && (
-        <div className="flex flex-col items-center justify-center w-full mt-3">
-          <img
-            src="/images/PNG/조합 3-1/Frame 499.png"
-            alt="접기"
-            className="w-full max-w-[1100px] h-[92px] cursor-pointer hover:opacity-80 transition-opacity"
-            onClick={() => setShowAllIngredients(false)}
-          />
-        </div>
-      )}
-    </div>
-  </div>
-) : (
-  <div className="hidden md:flex flex-col items-center px-[60px] mt-20 text-center text-gray-500">
-    {ingredientResults.length === 0
-      ? "영양제를 선택해주세요."
-      : activeTab === "초과"
-      ? "초과된 성분이 없습니다."
-      : "데이터를 불러오는 중입니다..."}
-  </div>
-)}
-
 
       {/* ⚠️ 주의가 필요한 조합 */}
       {cautionCombinations?.length > 0 && (
@@ -939,30 +997,38 @@ function isOverUpper(ing: IngredientResult) {
               카드를 눌러서 확인해 보세요 !
             </p>
           </div>
-                     <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-             <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-               {cautionCombinations.map((combo: Combination) => (
-                 <FlipCard key={combo.id} name={combo.name} description={combo.description} />
-               ))}
-             </div>
-           </div>
+          <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+            <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
+              {cautionCombinations.map((combo: Combination) => (
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
+              ))}
+            </div>
+          </div>
 
-                     {/* 💻 PC - 주의 조합 */}
-           <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] mt-10">
-             <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
-               주의가 필요한 조합 TOP 5
-             </h2>
-             <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
-               카드를 눌러서 확인해 보세요 !
-             </span>
-             <div className="flex justify-center mt-8 mb-15">
-               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
-                 {cautionCombinations.map((combo: Combination) => (
-                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
-                 ))}
-               </div>
-             </div>
-           </div>
+          {/* 💻 PC - 주의 조합 */}
+          <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] mt-10">
+            <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
+              주의가 필요한 조합 TOP 5
+            </h2>
+            <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
+              카드를 눌러서 확인해 보세요 !
+            </span>
+            <div className="flex justify-center mt-8 mb-15">
+              <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
+                {cautionCombinations.map((combo: Combination) => (
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </>
       )}
       {/* ===== 궁합이 좋은 조합 ===== */}
@@ -977,30 +1043,38 @@ function isOverUpper(ing: IngredientResult) {
               카드를 눌러서 확인해 보세요 !
             </p>
           </div>
-                     <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-             <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
-               {goodCombinations.map((combo: Combination) => (
-                 <FlipCard key={combo.id} name={combo.name} description={combo.description} />
-               ))}
-             </div>
-           </div>
+          <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
+            <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
+              {goodCombinations.map((combo: Combination) => (
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
+              ))}
+            </div>
+          </div>
 
-                     {/* 💻 PC - 좋은 조합 */}
-           <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
-             <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
-               궁합이 좋은 조합 TOP 5
-             </h2>
-             <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
-               카드를 눌러서 확인해 보세요 !
-             </span>
-             <div className="flex justify-center mt-8 mb-20">
-               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
-                 {goodCombinations.map((combo: Combination) => (
-                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
-                 ))}
-               </div>
-             </div>
-           </div>
+          {/* 💻 PC - 좋은 조합 */}
+          <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
+            <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
+              궁합이 좋은 조합 TOP 5
+            </h2>
+            <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
+              카드를 눌러서 확인해 보세요 !
+            </span>
+            <div className="flex justify-center mt-8 mb-20">
+              <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-[1200px]">
+                {goodCombinations.map((combo: Combination) => (
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
+                ))}
+              </div>
+            </div>
+          </div>
         </>
       )}
     </div>

@@ -1,3 +1,4 @@
+// 상세 페이지에서 "섭취 알림 등록하기 버튼" 클릭 시
 import { useState } from "react";
 import TimePickerModal from "./TimePickerModal";
 import axios from "@/lib/axios";
@@ -50,6 +51,13 @@ const AlarmAddToSearchModal = ({
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  // 시간 편집 상태
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [timePickerDefault, setTimePickerDefault] = useState<{
+    hour: string;
+    minute: string;
+  }>();
 
   const toggleDay = (day: string) => {
     setDays((prev) =>
@@ -136,6 +144,24 @@ const AlarmAddToSearchModal = ({
     }
   };
 
+  const openEditTime = (index: number) => {
+    const t = times[index] ?? "09:00";
+    const [h, m] = t.split(":");
+    setEditingIndex(index);
+    setTimePickerDefault({ hour: h, minute: m });
+    setShowTimePicker(true);
+  };
+
+  const openAddTime = () => {
+    setEditingIndex(null);
+    setTimePickerDefault({ hour: "09", minute: "00" });
+    setShowTimePicker(true);
+  };
+
+  const removeTime = (index: number) => {
+    setTimes((prev) => prev.filter((_, i) => i !== index));
+  };
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
@@ -218,17 +244,36 @@ const AlarmAddToSearchModal = ({
         {times.length > 0 && (
           <div className="flex flex-col gap-2 mt-2">
             {times.map((t, idx) => (
-              <div
+              <button
                 key={`${t}-${idx}`}
-                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white"
+                type="button"
+                onClick={() => openEditTime(idx)} // ← 클릭 시 편집 모달
+                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white text-left"
+                title="탭하여 시간 편집"
               >
                 <span className="text-[16px] text-[#AAAAAA]">
                   복용 시간 {idx + 1}
                 </span>
-                <span className="text-[16px] font-semibold text-[#4D4D4D]">
-                  {formatTime(t)}
-                </span>
-              </div>
+
+                <div className="flex items-center gap-3">
+                  <span className="text-[16px] font-semibold text-[#4D4D4D]">
+                    {formatTime(t)}
+                  </span>
+
+                  {/* 삭제 버튼 (버블링 방지) */}
+                  <span
+                    role="button"
+                    aria-label="시간 삭제"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTime(idx);
+                    }}
+                    className="text-[#666666] text-[18px] leading-none px-2"
+                  >
+                    &times;
+                  </span>
+                </div>
+              </button>
             ))}
           </div>
         )}
@@ -236,8 +281,9 @@ const AlarmAddToSearchModal = ({
         {/* 시간 추가 버튼 */}
         <div className="flex justify-center mt-4">
           <button
+            type="button"
             className="w-full h-[60px] border border-[#AAAAAA] text-[#AAAAAA] rounded-[10px] px-3 py-2 bg-white mx-auto"
-            onClick={() => setShowTimePicker(true)}
+            onClick={openAddTime} // ← 추가 모달
           >
             복용 시간 추가
           </button>
