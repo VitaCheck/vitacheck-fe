@@ -25,13 +25,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # Node만 설치 (❌ cache: pnpm 제거)
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: "20"
 
-      # ✅ pnpm 활성화 (corepack)
       - name: Enable pnpm via corepack
         run: |
           node -v
@@ -39,7 +37,6 @@ jobs:
           corepack prepare pnpm@9 --activate
           which pnpm
           pnpm -v
-      # ✅ pnpm 스토어 캐시 (선택이지만 강력 추천)
       - name: Resolve pnpm store path
         id: pnpm-cache
         run: echo "STORE_PATH=$(pnpm store path | tr -d '\n')" >> $GITHUB_OUTPUT
@@ -58,6 +55,8 @@ jobs:
         run: pnpm run build
         env:
           VITE_SERVER_API_URL: ${{ secrets.VITE_SERVER_API_URL }}
+          VITE_CLOUDINARY_CLOUD_NAME: ${{ secrets.VITE_CLOUDINARY_CLOUD_NAME }}
+          VITE_CLOUDINARY_UPLOAD_PRESET: ${{ secrets.VITE_CLOUDINARY_UPLOAD_PRESET }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
