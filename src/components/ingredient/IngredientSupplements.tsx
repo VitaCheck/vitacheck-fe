@@ -1,7 +1,7 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import ProductCard from "../../components/ProductCard";
 import searchIcon from "../../assets/search.png";
-import { fetchIngredientSupplements } from "@/apis/ingredient";
+import { fetchIngredientSupplementsPaging } from "@/apis/ingredient";
 import type { AxiosError } from "axios";
 import type {
   IngredientDetail,
@@ -16,7 +16,7 @@ interface Props {
 type CardSupplement = {
   id: number;
   name: string;
-  imageUrl: string; // 문자열 보장
+  imageUrl: string;
 };
 
 const FALLBACK_IMG = "/images/PNG/성분 2-2/cat_character.png";
@@ -30,7 +30,7 @@ const normalizeImageUrl = (url?: string, coupangUrl?: string) => {
     type: typeof url,
   });
 
-  // 1) imageUrl이 있으면 그대로 사용 (coupangUrl 처리는 건너뜀)
+  // 1) imageUrl이 있으면 그대로 사용
   if (url) {
     if (
       url.startsWith("http://") ||
@@ -51,7 +51,7 @@ const normalizeImageUrl = (url?: string, coupangUrl?: string) => {
     return fullUrl;
   }
 
-  // 2) imageUrl이 없을 때만 coupangUrl 처리 (백엔드에서 imageUrl을 제공하므로 이 부분은 거의 실행되지 않음)
+  // 2) imageUrl이 없을 때만 coupangUrl 처리
   if (coupangUrl && !url) {
     console.log(
       "🏠 [Image] imageUrl이 없어서 coupangUrl을 활용한 이미지 생성 시도:",
@@ -103,17 +103,26 @@ const IngredientSupplements = ({ data }: Props) => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [products, setProducts] = useState<CardSupplement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [hasMore, setHasMore] = useState(true);
+  const [nextCursor, setNextCursor] = useState<string | null>(null);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const lastElementRef = useRef<HTMLDivElement | null>(null);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchKeyword(e.target.value);
   };
 
+  // 초기 데이터 로드
   useEffect(() => {
-    const fetchData = async () => {
+    const fetchInitialData = async () => {
       try {
         setIsLoading(true);
+        setProducts([]);
+        setNextCursor(null);
+        setHasMore(true);
 
-        // 1) 상세 응답에 supplements가 이미 포함된 경우 (Swagger: getIngredientDetails)
+        // 1) 상세 응답에 supplements가 이미 포함된 경우
         if (data.supplements && data.supplements.length > 0) {
           console.log(
             "🏠 [Supplements] 상세 응답에서 supplements 데이터:",
@@ -139,25 +148,31 @@ const IngredientSupplements = ({ data }: Props) => {
           return;
         }
 
-        // 2) 없으면 보조 API로 조회
-        const supplements = await fetchIngredientSupplements(data.name);
+        // 2) 없으면 새로운 페이징 API로 조회
+        const result = await fetchIngredientSupplementsPaging(data.name);
         console.log(
-          "🏠 [Supplements] API에서 supplements 데이터:",
-          supplements
+          "🏠 [Supplements] 페이징 API에서 supplements 데이터:",
+          result
         );
-        if (!supplements || supplements.length === 0) {
+
+        if (!result.supplements || result.supplements.length === 0) {
           setProducts([]);
+          setHasMore(false);
         } else {
           console.log(
             "🏠 [Supplements] 첫 번째 API 아이템 구조:",
-            supplements[0]
+            result.supplements[0]
           );
-          const formatted: CardSupplement[] = supplements.map((item: any) => ({
-            id: item.id ?? item.supplementId,
-            name: item.name ?? item.supplementName,
-            imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
-          }));
+          const formatted: CardSupplement[] = result.supplements.map(
+            (item: any) => ({
+              id: item.id ?? item.supplementId,
+              name: item.name ?? item.supplementName,
+              imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
+            })
+          );
           setProducts(formatted);
+          setNextCursor(result.nextCursor);
+          setHasMore(!!result.nextCursor);
         }
       } catch (err: unknown) {
         const axiosErr = err as AxiosError;
@@ -166,15 +181,76 @@ const IngredientSupplements = ({ data }: Props) => {
           axiosErr.response?.data || axiosErr.message
         );
         setProducts([]);
+        setHasMore(false);
       } finally {
         setIsLoading(false);
       }
     };
 
     if (data.name) {
-      fetchData();
+      fetchInitialData();
     }
-  }, [data.name, data.supplements]);
+  }, [data.name]);
+
+  // 추가 데이터 로드
+  const loadMore = useCallback(async () => {
+    if (!hasMore || isLoadingMore || !nextCursor) return;
+
+    try {
+      setIsLoadingMore(true);
+      const result = await fetchIngredientSupplementsPaging(
+        data.name,
+        nextCursor
+      );
+
+      if (result.supplements && result.supplements.length > 0) {
+        const formatted: CardSupplement[] = result.supplements.map(
+          (item: any) => ({
+            id: item.id ?? item.supplementId,
+            name: item.name ?? item.supplementName,
+            imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
+          })
+        );
+
+        setProducts((prev) => [...prev, ...formatted]);
+        setNextCursor(result.nextCursor);
+        setHasMore(!!result.nextCursor);
+      } else {
+        setHasMore(false);
+      }
+    } catch (err: unknown) {
+      console.error("추가 영양제 정보 불러오기 실패:", err);
+      setHasMore(false);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [hasMore, isLoadingMore, nextCursor, data.name]);
+
+  // 무한 스크롤 설정
+  useEffect(() => {
+    if (observerRef.current) {
+      observerRef.current.disconnect();
+    }
+
+    observerRef.current = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { threshold: 0.1 }
+    );
+
+    if (lastElementRef.current) {
+      observerRef.current.observe(lastElementRef.current);
+    }
+
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+    };
+  }, [loadMore, hasMore, isLoadingMore]);
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchKeyword.toLowerCase())
@@ -208,6 +284,7 @@ const IngredientSupplements = ({ data }: Props) => {
 
   return (
     <div className="px-4 md:px-30 max-w-screen-xl mx-auto">
+      {/* 기존 검색바 UI 유지 */}
       <section className="flex justify-center mb-6">
         <div
           className={`flex items-center w-full ${
@@ -235,17 +312,36 @@ const IngredientSupplements = ({ data }: Props) => {
         </div>
       </section>
 
+      {/* 기존 ProductCard 그리드 UI 유지 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-6 md:gap-x-2">
-        {filteredProducts.map((product) => (
-          <div key={product.id} className="flex justify-center">
+        {filteredProducts.map((product, index) => (
+          <div
+            key={`${product.id}-${index}`}
+            className="flex justify-center"
+            ref={index === filteredProducts.length - 1 ? lastElementRef : null}
+          >
             <ProductCard
-              id={product.id} 
+              id={product.id}
               name={product.name}
               imageSrc={product.imageUrl}
             />
           </div>
         ))}
       </div>
+
+      {/* 로딩 상태 표시 */}
+      {isLoadingMore && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-500">더 많은 영양제를 불러오는 중...</div>
+        </div>
+      )}
+
+      {/* 더 이상 데이터가 없음을 표시 */}
+      {!hasMore && products.length > 0 && (
+        <div className="flex justify-center items-center py-8">
+          <div className="text-gray-500">모든 영양제를 불러왔습니다</div>
+        </div>
+      )}
     </div>
   );
 };

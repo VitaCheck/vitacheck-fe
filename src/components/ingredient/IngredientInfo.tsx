@@ -42,10 +42,12 @@ const IngredientInfo = ({ id, data }: Props) => {
   if (!id) return <div className="px-5 py-10">잘못된 접근입니다.</div>;
 
   return (
-    <div className="space-y-8 max-w-screen-md mx-auto px-5 py-5 sm:px-8">
+    <div className="space-y-8 w-full px-4 sm:px-6 lg:px-8">
       {/* 이름 + 설명 */}
       <section>
-        <h2 className="font-semibold text-2xl">{data.name || "이름 없음"}</h2>
+        <h2 className="font-semibold text-2xl mb-4">
+          {data.name || "이름 없음"}
+        </h2>
         <p className="text-sm pb-6">{data.description || "설명 없음"}</p>
       </section>
 
@@ -62,7 +64,6 @@ const IngredientInfo = ({ id, data }: Props) => {
       {/* 부작용 및 주의사항 */}
       <section>
         <h2 className="font-semibold text-2xl mb-2">부작용 및 주의사항</h2>
-
         <div className="flex items-start gap-4">
           {/* 왼쪽 이미지 */}
           <div className="flex w-20 h-20">
@@ -72,12 +73,28 @@ const IngredientInfo = ({ id, data }: Props) => {
               className="w-full h-full rounded-md"
             />
           </div>
-
           {/* 오른쪽 텍스트 영역 */}
           <div className="flex-1">
-            <p className="text-sm">
-              {data.caution || "부작용 정보가 없습니다."}
-            </p>
+            {(() => {
+              const cautionValue = data.caution;
+              console.log("부작용 데이터:", cautionValue, typeof cautionValue);
+
+              // API에서 "NULL" 문자열이 들어올 때 완전히 제거
+              if (
+                !cautionValue ||
+                cautionValue === "NULL" ||
+                cautionValue === "null" ||
+                cautionValue === "" ||
+                cautionValue === "undefined" ||
+                cautionValue === "Null" ||
+                cautionValue === "Null" ||
+                String(cautionValue).toLowerCase() === "null"
+              ) {
+                return <div style={{ display: "none" }}></div>; // 완전히 숨김
+              }
+
+              return <p className="text-sm">{cautionValue}</p>;
+            })()}
           </div>
         </div>
       </section>
@@ -90,110 +107,83 @@ const IngredientInfo = ({ id, data }: Props) => {
             : "권장 섭취량"}
         </h2>
 
-        {data.recommendedDosage && data.upperLimit ? (
-          <div className="mt-6">
-            {(() => {
-              const recommended = Number(data.recommendedDosage);
-              const upper = Number(data.upperLimit);
-              const unit = data.unit || "mg";
-              // 권장과 상한 지점을 그래프 길이의 1/3과 2/3으로 고정
-              const recPos = 33.33; // 1/3 지점
-              const upperPos = 66.67; // 2/3 지점
-              const fmt = (v: number) =>
-                Number(v).toLocaleString(undefined, {
-                  maximumFractionDigits: 2,
-                });
+        {/* 테스트용 그래프 - 항상 표시 */}
+        <div className="mt-6">
+          <div className="relative w-full max-w-[400px]">
+            {/* 막대 (회색 배경 + 노란색 채움) */}
+            <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
+              <div
+                className="absolute left-0 top-0 bottom-0 bg-[#FFE17E] rounded-full"
+                style={{ width: "66.67%" }}
+                aria-hidden
+              />
 
-              return (
-                <div className="relative w-full">
-                  {/* 막대 (회색 배경 + 노란색 채움) */}
-                  <div
-                    className={`relative h-8 bg-gray-200 rounded-full overflow-hidden ${!isLoggedIn ? "blur-md" : ""} w-full sm:w-4/5 lg:w-3/4`}
-                  >
-                    <div
-                      className="absolute left-0 top-0 bottom-0 bg-[#FFE17E] rounded-full"
-                      style={{ width: `${upperPos}%` }}
-                      aria-hidden
-                    />
+              {/* 점선 마커: 권장 / 상한 */}
+              <div
+                className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
+                style={{ left: "33.33%" }}
+                aria-hidden
+              />
+              <div
+                className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
+                style={{ left: "66.67%" }}
+                aria-hidden
+              />
+            </div>
 
-                    {/* 권장 라벨 - 로그인 후에만 표시 */}
-                    {isLoggedIn && (
-                      <div
-                        className="absolute -top-6 text-sm font-medium text-black z-10"
-                        style={{
-                          left: `${recPos}%`,
-                          transform: "translateX(-50%)",
-                        }}
-                      >
-                        권장
-                      </div>
-                    )}
+            {/* 권장 라벨 - 막대 아래에 별도 배치 */}
+            <div
+              className="absolute text-sm font-medium text-black"
+              style={{
+                left: "33.33%",
+                transform: "translateX(-50%)",
+                top: "-24px",
+              }}
+            >
+              권장
+            </div>
 
-                    {/* 상한 라벨 - 로그인 후에만 표시 */}
-                    {isLoggedIn && (
-                      <div
-                        className="absolute -top-6 text-sm font-medium text-black z-10"
-                        style={{
-                          left: `${upperPos}%`,
-                          transform: "translateX(-50%)",
-                        }}
-                      >
-                        상한
-                      </div>
-                    )}
+            {/* 상한 라벨 - 막대 아래에 별도 배치 */}
+            <div
+              className="absolute text-sm font-medium text-black"
+              style={{
+                left: "66.67%",
+                transform: "translateX(-50%)",
+                top: "-24px",
+              }}
+            >
+              상한
+            </div>
 
-                    {/* 점선 마커: 권장 / 상한 */}
-                    <div
-                      className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
-                      style={{ left: `${recPos}%` }}
-                      aria-hidden
-                    />
-                    <div
-                      className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
-                      style={{ left: `${upperPos}%` }}
-                      aria-hidden
-                    />
-                  </div>
-
-                  {/* 하단 수치 */}
-                  <div
-                    className={`absolute -bottom-6 text-sm ${!isLoggedIn ? "blur-md" : ""}`}
-                    style={{
-                      left: `${recPos}%`,
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    {fmt(recommended)}
-                    {unit}
-                  </div>
-                  <div
-                    className={`absolute -bottom-6 text-sm ${!isLoggedIn ? "blur-md" : ""}`}
-                    style={{
-                      left: `${upperPos}%`,
-                      transform: "translateX(-50%)",
-                    }}
-                  >
-                    {fmt(upper)}
-                    {unit}
-                  </div>
-
-                  {/* 로그인 전 메시지 오버레이 - 그래프 위에 직접 표시 */}
-                  {!isLoggedIn && (
-                    <div className="absolute top-0 left-0 right-0 bottom-0 flex items-center justify-center pointer-events-none">
-                      <p className="text-black font-medium text-sm">
-                        로그인 후 확인해보세요!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
+            {/* 하단 수치 */}
+            <div
+              className="absolute text-sm text-black"
+              style={{
+                left: "33.33%",
+                transform: "translateX(-50%)",
+                top: "40px",
+              }}
+            >
+              {data.recommendedDosage
+                ? `${data.recommendedDosage}${data.unit || "mg"}`
+                : "0.6mg"}
+            </div>
+            <div
+              className="absolute text-sm text-black"
+              style={{
+                left: "66.67%",
+                transform: "translateX(-50%)",
+                top: "40px",
+              }}
+            >
+              {data.upperLimit
+                ? `${data.upperLimit}${data.unit || "mg"}`
+                : "50mg"}
+            </div>
           </div>
-        ) : (
-          <p className="text-sm text-gray-500 mt-2">
-            권장 섭취량 정보가 등록되지 않았습니다.
-          </p>
-        )}
+        </div>
+
+        {/* 기존 조건부 렌더링 제거 */}
       </section>
     </div>
   );
