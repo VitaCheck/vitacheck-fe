@@ -30,12 +30,12 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
 
   return isMobile ? (
     /* 모바일 */
-    <div className="w-full text-center border-b border-gray-200 flex justify-around">
+    <div className="w-full border-b border-gray-200 flex">
       {tabList.map((tab) => (
         <button
           key={tab.key}
           onClick={() => setActiveTab(tab.key)}
-          className="relative pb-2 font-semibold text-base transition-all duration-200"
+          className="relative pb-2 font-semibold text-base transition-all duration-200 flex-1"
         >
           <span
             className={activeTab === tab.key ? "text-black" : "text-gray-400"}
@@ -52,9 +52,9 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
     /* PC */
     <div className="mb-8">
       {/* ▼ 보더를 내부 컨테이너로 이동, 좌우 패딩 제거 → 보더 길이 = 버튼 그룹 폭 */}
-      <div className="mx-auto w-[clamp(400px,90vw,910px)]">
-        <div className="flex h-13 gap-8 pb-2 border-b border-gray-300">
-          {tabList.map((tab) => (
+      <div className="w-full">
+        <div className="flex h-13 gap-8 pb-0 border-b border-gray-300">
+          {tabList.map((tab, index) => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}

@@ -2,6 +2,7 @@ import axios from "@/lib/axios";
 import type {
   IngredientSearchResponse,
   IngredientDetailResponse,
+  IngredientSupplement,
 } from "@/types/ingredient";
 
 // 성분 검색 API
@@ -270,11 +271,26 @@ export const fetchIngredientAlternatives = async (name: string | number) => {
   }
 };
 
-// 관련 영양제 API
-export const fetchIngredientSupplements = async (name: string | number) => {
+// 영양제 페이징 API 응답 타입
+interface SupplementPagingResponse {
+  isSuccess: boolean;
+  code: string;
+  message: string;
+  result: {
+    supplements: IngredientSupplement[];
+    nextCursor: string | null;
+  };
+}
+
+// 영양제 페이징 API (새로 분리된 API)
+export const fetchIngredientSupplementsPaging = async (
+  name: string | number,
+  cursor?: string
+) => {
   const ingredientName = String(name);
-  console.log("💊 [API] fetchIngredientSupplements 호출됨");
+  console.log("💊 [API] fetchIngredientSupplementsPaging 호출됨");
   console.log("💊 [API] 요청 성분명:", ingredientName);
+  console.log("💊 [API] 커서:", cursor);
 
   try {
     // 1단계: 성분명으로 검색하여 id 얻기
@@ -287,50 +303,56 @@ export const fetchIngredientSupplements = async (name: string | number) => {
     );
 
     if (!searchResponse.data || !searchResponse.data.result) {
-      return [];
+      return { supplements: [], nextCursor: null };
     }
 
     const searchResults = searchResponse.data.result;
     if (!Array.isArray(searchResults) || searchResults.length === 0) {
-      return [];
+      return { supplements: [], nextCursor: null };
     }
 
     const firstResult = searchResults[0];
-    const ingredientId = firstResult.id; // "id" 필드 사용
+    const ingredientId = firstResult.id;
 
     if (!ingredientId) {
-      return [];
+      return { supplements: [], nextCursor: null };
     }
 
     console.log("💊 [API] 찾은 성분 ID:", ingredientId);
 
-    // 2단계: id로 상세 정보 조회
-    const detailResponse = await axios.get<IngredientDetailResponse>(
-      `/api/v1/ingredients/${ingredientId}`
-    );
-    console.log("💊 [API] 상세 정보 응답:", detailResponse.data);
-
-    if (!detailResponse.data || !detailResponse.data.result) {
-      console.warn(
-        "💊 [API] 응답 데이터 구조가 예상과 다름:",
-        detailResponse.data
-      );
-      return [];
+    // 2단계: 분리된 영양제 API 호출
+    const params: any = {};
+    if (cursor) {
+      params.cursor = cursor;
     }
 
-    const result = detailResponse.data.result;
+    const supplementsResponse = await axios.get<SupplementPagingResponse>(
+      `/api/v1/ingredients/${ingredientId}/supplements`,
+      { params }
+    );
+
+    console.log("💊 [API] 영양제 페이징 응답:", supplementsResponse.data);
+
+    if (!supplementsResponse.data || !supplementsResponse.data.result) {
+      console.warn(
+        "💊 [API] 응답 데이터 구조가 예상과 다름:",
+        supplementsResponse.data
+      );
+      return { supplements: [], nextCursor: null };
+    }
+
+    const result = supplementsResponse.data.result;
     console.log("💊 [API] 파싱된 결과:", {
-      name: result.name,
-      supplements: result.supplements,
-      supplementsType: typeof result.supplements,
-      supplementsLength: Array.isArray(result.supplements)
-        ? result.supplements.length
-        : "not array",
+      supplementsCount: result.supplements?.length || 0,
+      nextCursor: result.nextCursor,
     });
 
-    return result.supplements || [];
+    return {
+      supplements: result.supplements || [],
+      nextCursor: result.nextCursor,
+    };
   } catch (error: any) {
-    console.error("💊 [API] 영양제 API 호출 실패:", error);
+    console.error("💊 [API] 영양제 페이징 API 호출 실패:", error);
 
     if (error.response) {
       console.error("💊 [API] 에러 응답 상태:", error.response.status);
@@ -344,8 +366,14 @@ export const fetchIngredientSupplements = async (name: string | number) => {
       console.error("💊 [API] 요청 설정 중 에러:", error.message);
     }
 
-    return [];
+    return { supplements: [], nextCursor: null };
   }
+};
+
+// 기존 영양제 API (하위 호환성을 위해 유지)
+export const fetchIngredientSupplements = async (name: string | number) => {
+  const result = await fetchIngredientSupplementsPaging(name);
+  return result.supplements;
 };
 
 // 비타민 계열인지 확인하는 함수
