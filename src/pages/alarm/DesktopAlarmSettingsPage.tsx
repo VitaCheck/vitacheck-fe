@@ -154,6 +154,38 @@ const DesktopAlarmSettingsPage = () => {
   const lastPatchedRef = useRef<Map<number, number>>(new Map());
   const RECENT_MS = 2000; // 2초 보호
 
+  // 중복 alert 방지용
+  const alertedRef = useRef(false);
+  const safeAlert = (msg: string) => {
+    if (alertedRef.current) return;
+    alertedRef.current = true;
+    alert(msg);
+  };
+
+  // 토큰 읽기 유틸
+  const getToken = () => {
+    const raw =
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("ACCESS_TOKEN") ||
+      localStorage.getItem("token") ||
+      "";
+    const val = raw.trim();
+    if (!val || val === "null" || val === "undefined") return "";
+    return val;
+  };
+
+  // 로그인 가드: 통과 여부 상태
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      safeAlert("로그인이 필요합니다.");
+      navigate("/social-login", { replace: true });
+      return;
+    }
+    setAuthChecked(true);
+  }, [navigate]);
+
   // 목록 재조회
   const fetchAlarms = useCallback(async () => {
     try {
@@ -165,7 +197,6 @@ const DesktopAlarmSettingsPage = () => {
           : [];
       const list = listRaw.map(normalizeAlarm);
 
-      // 최근 토글 보호 + 서버 enabled 미제공 시 이전값 보존
       setAlarms((prev) => {
         const now = Date.now();
         const prevMap = new Map<number, Alarm>(
@@ -180,19 +211,31 @@ const DesktopAlarmSettingsPage = () => {
             typeof lastAt === "number" && now - lastAt < RECENT_MS;
 
           const resolvedEnabled = isProtected
-            ? prevItem?.isEnabled // 보호 중이면 이전값 유지
+            ? prevItem?.isEnabled
             : typeof nextItem.isEnabled === "boolean"
-              ? nextItem.isEnabled // 서버가 명시하면 서버값
-              : prevItem?.isEnabled; // 서버가 안 주면 이전값
+              ? nextItem.isEnabled
+              : prevItem?.isEnabled;
 
           return { ...nextItem, isEnabled: resolvedEnabled };
         });
       });
-    } catch (error) {
+    } catch (error: any) {
+      // 401에서도 한 번만 alert
+      const status = error?.response?.status;
+      if (status === 401) {
+        safeAlert("세션이 만료되었습니다. 다시 로그인해주세요.");
+        navigate("/login", { replace: true });
+        return;
+      }
       console.error("알람 리스트 불러오기 실패:", error);
       setAlarms([]);
     }
-  }, []);
+  }, [navigate]);
+
+  //  로그인 확인 후에만 데이터 로드 (StrictMode 2회 호출도 안전)
+  useEffect(() => {
+    if (authChecked) fetchAlarms();
+  }, [authChecked, fetchAlarms]);
 
   // mount 시 1회 로드
   useEffect(() => {
