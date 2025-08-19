@@ -4,7 +4,7 @@ import MobileAlarmPage from "./MobileAlarmPage";
 import DesktopAlarmPage from "./DesktopAlarmPage";
 
 const AlarmPage = () => {
-  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isMobile = useMediaQuery({ maxWidth: 639 });
   const today = new Date();
 
   const [year, setYear] = useState(today.getFullYear());

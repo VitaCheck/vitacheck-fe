@@ -10,7 +10,7 @@ import { FiChevronLeft, FiChevronRight } from "react-icons/fi";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import type { Supplement } from "@/types/alarm";
-import { dbg, formatTimes, fmtYmd, normalizeSupplement } from "@/utils/alarm";
+import { dbg, formatTimes, fmtYmd } from "@/utils/alarm";
 
 // ==== 컴포넌트 ====
 interface Props {
@@ -272,10 +272,17 @@ const DesktopAlarmPage = ({
   }
 
   return (
-    <div className="hidden md:flex justify-center items-start gap-[120px] bg-[#FAFAFA] px-[100px] py-[60px] min-h-screen">
+    <div className="hidden md:flex md:flex-wrap lg:flex-nowrap justify-center items-start bg-[#FAFAFA] md:gap-6 lg:gap-[120px] md:px-6 lg:px-[100px] md:py-8 lg:py-[60px] min-h-screen overflow-x-hidden">
       <div>
-        <div className="text-[52px] font-extrabold mb-10">섭취알림</div>
-        <div className="bg-white rounded-[20px] p-6 w-[576.82px] border border-[#9C9A9A]">
+        <div className="text-[44px] font-semibold mb-10">섭취알림</div>
+        <div
+          className="
+  bg-white rounded-[20px] p-6
+  w-full max-w-[576px]
+  border border-[#9C9A9A]
+  flex-[1_1_520px]
+"
+        >
           <div className="flex items-center justify-between mb-4">
             <button onClick={onPrevMonth} className="text-2xl font-bold px-2">
               <FiChevronLeft className="text-[35px]" />
@@ -287,26 +294,37 @@ const DesktopAlarmPage = ({
               <FiChevronRight className="text-[35px]" />
             </button>
           </div>
-          <div className="grid grid-cols-7 text-[25px] text-[#9E9E9E] mb-2">
-            {weekDays.map((d) => (
-              <div key={d} className="text-center text-[30px] font-semibold">
-                {d}
+
+          {/* ▼▼ 여기부터 달력 본문을 정사각형 블록으로 감싸기 ▼▼ */}
+          <div className="w-full md:aspect-auto lg:aspect-square">
+            <div className="grid grid-rows-[auto_1fr] h-full">
+              {/* 요일 헤더 */}
+              <div className="grid grid-cols-7 text-[25px] text-[#9E9E9E] mb-2">
+                {weekDays.map((d) => (
+                  <div
+                    key={d}
+                    className="text-center text-[30px] font-semibold"
+                  >
+                    {d}
+                  </div>
+                ))}
               </div>
-            ))}
+
+              {/* 날짜 그리드: 남은 영역을 꽉 채움 */}
+              <div className="grid grid-cols-7 grid-rows-6 gap-y-6 text-[25px] text-center select-none h-full overflow-hidden">
+                {calendarCells}
+              </div>
+            </div>
           </div>
-          <div className="grid grid-cols-7 gap-y-6 text-[25px] text-center select-none">
-            {calendarCells}
-          </div>
+          {/* ▲▲ 여기까지 교체 ▲▲ */}
         </div>
       </div>
-
       <div className="w-[2px] h-[600px] bg-[#C8C8C8] mt-[70px]" />
-
-      <div className="flex-1 max-w-[500px]">
+      <div className="w-full lg:flex-1 lg:max-w-[500px]">
         <div className="flex justify-end mb-6">
           <button
             onClick={() => navigate("/alarm/settings")}
-            className="w-[287px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2"
+            className="w-full max-w-[320px] h-[80px] bg-[#FFEB9D] hover:bg-[#FFE88F] transition text-black text-[25px] font-semibold rounded-full px-6 py-2 flex items-center justify-center gap-2"
           >
             <img
               src="/images/medical_services.png"
@@ -317,7 +335,7 @@ const DesktopAlarmPage = ({
           </button>
         </div>
 
-        <div className="flex items-center justify-center">
+        {/* <div className="flex items-center justify-center">
           {supplements.length === 0 ? (
             <div className="w-full max-w-md h-[104px] flex items-center justify-center rounded-xl bg-[#F4F4F4]">
               <span className="text-[24px] font-medium">
@@ -339,6 +357,45 @@ const DesktopAlarmPage = ({
               <div className="text-[20px] font-bold text-black">섭취 완료</div>
             </>
           )}
+        </div> */}
+        {/* ✅ 요약 블록: 이미지 + (퍼센트/라벨 세로 스택) */}
+        <div className="flex items-center justify-center">
+          {supplements.length === 0 ? (
+            <div className="w-full max-w-md h-[104px] flex items-center justify-center rounded-xl bg-[#F4F4F4]">
+              <span className="text-[24px] font-medium">
+                오늘은 섭취할 영양제가 없어요!
+              </span>
+            </div>
+          ) : (
+            <div className="flex items-center justify-center gap-3">
+              <img
+                src={catImage}
+                alt="섭취율 고양이"
+                className="w-[153px] h-[153px] select-none"
+              />
+              {/* ✅ 퍼센트 + 라벨: 같은 줄, 겹침 방지 */}
+              <div className="flex items-baseline gap-2 min-w-0">
+                <span
+                  className="
+            font-bold leading-none tracking-tight
+            whitespace-nowrap flex-shrink-0
+            text-[clamp(28px,5vw,44px)]
+          "
+                >
+                  {percentComplete}%
+                </span>
+                <span
+                  className="
+            font-bold text-black
+            whitespace-nowrap flex-shrink-0
+            text-[clamp(14px,2.2vw,20px)]
+          "
+                >
+                  섭취 완료
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="space-y-4">
@@ -349,7 +406,7 @@ const DesktopAlarmPage = ({
                 <div
                   key={notificationRoutineId}
                   onClick={() => toggleSupplementTaken(notificationRoutineId)}
-                  className={`w-[454px] h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
+                  className={`w-full h-[104px] flex items-center justify-between px-6 py-4 rounded-[12px] border cursor-pointer transition ${
                     isTaken
                       ? "bg-[#FFF8DC] border-none border-transparent"
                       : "bg-white border-[#9C9A9A]"
