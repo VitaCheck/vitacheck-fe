@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import AlarmAddModal from "./AlarmAddModal";
 import AlarmEditModal from "./AlarmEditModal";
@@ -44,6 +44,34 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
   const [showManualModal, setShowManualModal] = useState(false);
   const [togglingIds, setTogglingIds] = useState<Set<number>>(new Set());
 
+  // ✅ 로그인 체크용 (중복 alert 방지)
+  const alertedRef = useRef(false);
+  const safeAlert = (msg: string) => {
+    if (alertedRef.current) return;
+    alertedRef.current = true;
+    alert(msg);
+  };
+
+  const getToken = () => {
+    const raw =
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("ACCESS_TOKEN") ||
+      localStorage.getItem("token") ||
+      "";
+    const val = raw.trim();
+    if (!val || val === "null" || val === "undefined") return "";
+    return val;
+  };
+
+  // ✅ 로그인 가드
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      safeAlert("로그인이 필요합니다.");
+      navigate("/login", { replace: true });
+    }
+  }, [navigate]);
+
   // 재조회
   const fetchAlarms = useCallback(async () => {
     try {
@@ -53,11 +81,22 @@ const MobileAlarmSettingsPage = ({ showModal, setShowModal }: Props) => {
         ? rawList.map(normalizeAlarm)
         : [];
       setAlarms(normalized);
-    } catch (error) {
+    } catch (error: any) {
+      if (error?.response?.status === 401) {
+        safeAlert("세션이 만료되었습니다. 다시 로그인해주세요.");
+        navigate("/login", { replace: true });
+        return;
+      }
       console.error("알람 목록 불러오기 실패:", error);
       setAlarms([]);
     }
-  }, []);
+  }, [navigate]);
+
+  useEffect(() => {
+    if (getToken()) {
+      fetchAlarms();
+    }
+  }, [fetchAlarms]);
 
   useEffect(() => {
     fetchAlarms();
