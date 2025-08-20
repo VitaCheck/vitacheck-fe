@@ -84,9 +84,22 @@ const IngredientInfo = ({ id, data }: Props) => {
     return false;
   };
 
+  // 부분적으로 데이터가 있는지 확인 (INGREDIENT_DOSAGE_HAVE_NULL)
+  const hasPartialDosageData = () => {
+    return (
+      data.dosageErrorCode === "INGREDIENT_DOSAGE_HAVE_NULL" &&
+      (data.recommendedDosage || data.upperLimit)
+    );
+  };
+
   // 로그인 후 권장 섭취량을 표시할 수 있는지 확인
   const canShowDetailedDosage = () => {
     return isLoggedIn && hasValidDosageData();
+  };
+
+  // 부분 데이터를 표시할 수 있는지 확인
+  const canShowPartialDosage = () => {
+    return isLoggedIn && hasPartialDosageData();
   };
 
   const fetchUserInfo = async () => {
@@ -127,16 +140,26 @@ const IngredientInfo = ({ id, data }: Props) => {
       {/* 이름 + 설명 */}
       <section>
         <h2 className="font-semibold text-2xl mb-4">
-          {data.name || "이름 없음"}
+          {data.name && data.name !== "NULL" && data.name !== "null"
+            ? data.name
+            : "이름 없음"}
         </h2>
-        <p className="text-sm pb-6">{data.description || "설명 없음"}</p>
+        <p className="text-sm pb-6">
+          {data.description &&
+          data.description !== "NULL" &&
+          data.description !== "null"
+            ? data.description
+            : "등록된 설명 정보가 없습니다."}
+        </p>
       </section>
 
       {/* 효능 */}
       <section>
         <h2 className="font-semibold text-2xl pb-2">효능</h2>
         <p className="text-sm">
-          {data.effect || "등록된 효능 정보가 없습니다."}
+          {data.effect && data.effect !== "NULL" && data.effect !== "null"
+            ? data.effect
+            : "등록된 효능 정보가 없습니다."}
         </p>
         {/* 회색 밑줄 */}
         <div className="mt-4 border-b border-gray-300"></div>
@@ -158,23 +181,34 @@ const IngredientInfo = ({ id, data }: Props) => {
           <div className="flex-1">
             {(() => {
               const cautionValue = data.caution;
-              console.log("부작용 데이터:", cautionValue, typeof cautionValue);
 
-              // API에서 "NULL" 문자열이 들어올 때 완전히 제거
+              // null, "NULL", 빈 문자열 등의 경우 아무것도 표시하지 않음
               if (
                 !cautionValue ||
-                cautionValue === "NULL" ||
-                cautionValue === "null" ||
-                cautionValue === "" ||
-                cautionValue === "undefined" ||
-                cautionValue === "Null" ||
-                cautionValue === "Null" ||
-                String(cautionValue).toLowerCase() === "null"
+                cautionValue.trim().toLowerCase() === "null" ||
+                cautionValue.trim() === "" ||
+                cautionValue.trim().toLowerCase() === "undefined"
               ) {
-                return <div style={{ display: "none" }}></div>; // 완전히 숨김
+                console.log(
+                  "🔥 [부작용] null 조건 만족 - 아무것도 표시하지 않음"
+                );
+                return null; // 아무것도 렌더링하지 않음
               }
 
-              return <p className="text-sm">{cautionValue}</p>;
+              console.log("🔥 [부작용] 실제 데이터 표시:", cautionValue);
+              return (
+                <div className="space-y-1">
+                  {cautionValue
+                    .split(
+                      /(?=\(가\)|\(나\)|\(다\)|\(라\)|\(마\)|\(바\)|\(사\)|\(아\)|\(자\)|\(차\))/g
+                    )
+                    .map((item, index) => (
+                      <p key={index} className="text-sm leading-relaxed">
+                        {item.trim()}
+                      </p>
+                    ))}
+                </div>
+              );
             })()}
           </div>
         </div>
@@ -275,8 +309,89 @@ const IngredientInfo = ({ id, data }: Props) => {
                 </div>
               </div>
             </div>
-          ) : (
-            // 로그인 전 또는 데이터 없음: 블러 효과와 로그인 안내 메시지
+          ) : canShowPartialDosage() ? (
+            // 부분 데이터만 있는 경우: 사용 가능한 수치만 표시
+            <div className="mt-6">
+              <div className="relative w-full max-w-[400px]">
+                {/* 막대 (회색 배경 + 노란색 채움) - 고정 형태 */}
+                <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
+                  <div
+                    className="absolute left-0 top-0 bottom-0 bg-[#FFE17E] rounded-full"
+                    style={{ width: "66.67%" }}
+                    aria-hidden
+                  />
+
+                  {/* 점선 마커: 권장 / 상한 - 고정 위치 */}
+                  <div
+                    className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
+                    style={{ left: "33.33%" }}
+                    aria-hidden
+                  />
+                  <div
+                    className="absolute top-0 bottom-0 border-l border-black border-dotted opacity-70"
+                    style={{ left: "66.67%" }}
+                    aria-hidden
+                  />
+                </div>
+
+                {/* 권장 라벨 - 막대 아래에 별도 배치 */}
+                <div
+                  className="absolute text-sm font-medium text-black"
+                  style={{
+                    left: "33.33%",
+                    transform: "translateX(-50%)",
+                    top: "-24px",
+                  }}
+                >
+                  권장
+                </div>
+
+                {/* 상한 라벨 - 막대 아래에 별도 배치 */}
+                <div
+                  className="absolute text-sm font-medium text-black"
+                  style={{
+                    left: "66.67%",
+                    transform: "translateX(-50%)",
+                    top: "-24px",
+                  }}
+                >
+                  상한
+                </div>
+
+                {/* 하단 수치 - 사용 가능한 데이터만 표시 */}
+                <div
+                  className="absolute text-sm text-black"
+                  style={{
+                    left: "33.33%",
+                    transform: "translateX(-50%)",
+                    top: "40px",
+                  }}
+                >
+                  {data.recommendedDosage
+                    ? `${data.recommendedDosage}${data.unit || "mg"}`
+                    : "데이터 없음"}
+                </div>
+                <div
+                  className="absolute text-sm text-black"
+                  style={{
+                    left: "66.67%",
+                    transform: "translateX(-50%)",
+                    top: "40px",
+                  }}
+                >
+                  {data.upperLimit
+                    ? `${data.upperLimit}${data.unit || "mg"}`
+                    : "데이터 없음"}
+                </div>
+              </div>
+              <p className="text-sm text-gray-500 mt-2 text-center">
+                * 일부 데이터가 누락되어 있습니다
+              </p>
+            </div>
+          ) : data.dosageErrorCode ===
+            "INGREDIENT_DOSAGE_NOT_FOUND" ? // 데이터가 아예 없는 경우: 에러 메시지만 표시 (상단 에러 메시지와 중복되므로 아무것도 표시하지 않음)
+          null : (
+            // 로그인 전 또는 기타 에러: 블러 효과와 로그인 안내 메시지
             <div className="mt-6">
               <div className="relative w-full max-w-[400px]">
                 {/* 막대 (회색 배경 + 노란색 채움) - 형태만 표시 */}
