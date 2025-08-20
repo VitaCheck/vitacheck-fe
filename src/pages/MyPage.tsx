@@ -344,7 +344,7 @@ function MyPage() {
               {/* 서비스 이용약관 */}
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => setOpenKey("service")} // ✅ 모달 오픈
+                onClick={() => navigate("/terms/service")}
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl ml-1">
