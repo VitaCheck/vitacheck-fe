@@ -223,8 +223,8 @@ const IngredientInfo = ({ id, data }: Props) => {
               : "권장 섭취량"}
           </h2>
 
-          {/* 에러 메시지 표시 */}
-          {data.dosageErrorCode && (
+          {/* 에러 메시지 표시 - 로그인 후에만 표시 */}
+          {data.dosageErrorCode && isLoggedIn && (
             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 text-sm">
                 {getDosageErrorMessage(data.dosageErrorCode)}
