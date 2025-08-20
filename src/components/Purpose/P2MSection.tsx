@@ -73,24 +73,33 @@ const RecommendedProductSectionMobile = ({
   return (
     <>
       {/* 성분/태그 */}
-      <div className="flex items-center gap-[18px] ml-[38px]">
+      <div className="flex items-start gap-[18px] ml-[38px] pr-[38px]">
         {isLoading ? (
           <div className="w-[120px] h-[34px] bg-gray-200 rounded-[10px] animate-pulse"></div>
         ) : (
           <button
             onClick={goToIngredientPage}
-            className="px-[13px] py-[5px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-medium flex justify-center items-center cursor-pointer"
+            className="px-[13px] py-[5px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-medium flex-shrink-0 flex justify-center items-center cursor-pointer"
           >
-            {/* 함수 사용법은 동일합니다 */}
             {formatIngredientName(ingredientName) || "성분 없음"}
             <MdOutlineArrowForwardIos className="h-[12px] ml-[12px]" />
           </button>
         )}
-        {isLoading ? (
-          <div className="w-[100px] h-[18px] bg-gray-200 rounded-full animate-pulse"></div>
-        ) : (
-          <span className="text-[15px] flex items-center font-medium h-[18px]">#{purposes.join(", #")}</span>
-        )}
+
+        {/* 태그들을 감싸는 컨테이너 */}
+        <div className="flex flex-wrap items-center gap-x-1 leading-tight">
+          {isLoading ? (
+            <div className="w-[100px] h-[18px] bg-gray-200 rounded-full animate-pulse"></div>
+          ) : (
+            // .map()을 사용해 각 태그를 개별 <span>으로 렌더링
+            purposes.map((purpose, index) => (
+              <span key={purpose} className="text-[15px] font-medium">
+                #{purpose}
+                {index < purposes.length - 1 && ","}
+              </span>
+            ))
+          )}
+        </div>
       </div>
 
       {/* 카드 리스트 */}

@@ -2,7 +2,7 @@
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "@/lib/axios"; // ⭐️ 1. 프로젝트 공통 axios 인스턴스로 변경
+import axios from "@/lib/axios";
 
 interface Nutrient {
   name: string;
@@ -21,7 +21,8 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
   const [nutrientData, setNutrientData] = useState<Nutrient[]>([]);
   const firstNutrientName = nutrientData[0]?.name ?? "";
 
-  const goToIngredientPage = () => {
+  // ⭐️ 1. 함수 이름을 더 명확하게 변경합니다.
+  const goToFirstIngredientPage = () => {
     if (!firstNutrientName) return;
     navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
   };
@@ -31,21 +32,18 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
 
     const fetchSupplementDetails = async () => {
       try {
-        // ⭐️ 2. 전체 URL 대신 상대 경로로 수정
         const response = await axios.get(`/api/v1/supplements/detail`, {
           params: { id: supplementId },
         });
 
-        console.log("✅ 상세 성분 API 응답 전체 데이터:", response.data);
-
-
-        // API 응답 데이터가 있고, ingredients 배열이 있는지 확인
         if (response.data && response.data.ingredients) {
-            const mapped = response.data.ingredients.map((ing: any) => ({
+            const mapped = response.data.ingredients
+              .filter((ing: any) => ing.visualization)
+              .map((ing: any) => ({
                 name: ing.name,
-                intake: Math.min(ing.visualization.normalizedAmountPercent, 100),
-                recommended: ing.visualization.recommendedStartPercent,
-                upperLimit: ing.visualization.recommendedEndPercent,
+                intake: Math.min(ing.visualization.normalizedAmountPercent || 0, 100),
+                recommended: ing.visualization.recommendedStartPercent || 0,
+                upperLimit: ing.visualization.recommendedEndPercent || 0,
             }));
 
             setNutrientData(mapped);
@@ -54,12 +52,11 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                 onFirstNutrientChange(mapped[0].name);
             }
         } else {
-            // ingredients 데이터가 없는 경우
             setNutrientData([]);
         }
       } catch (error) {
         console.error("❌ INGREDIENT TAB API 호출 오류:", error);
-        setNutrientData([]); // 에러 발생 시 데이터 비우기
+        setNutrientData([]);
       }
     };
 
@@ -74,7 +71,7 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
         <div className="flex flex-col items-center w-full mt-[28px] mb-[50px]">
           <div className="flex items-center justify-center w-full max-w-[356px] h-[56px] bg-[#F2F2F2] rounded-[12px]">
             <span
-              onClick={goToIngredientPage}
+              onClick={goToFirstIngredientPage}
               className="font-Regular text-[14px] tracking-[-0.32px] cursor-pointer"
             >
               {firstNutrientName ? `${firstNutrientName}에 대해 더 자세히 알고 싶다면 ?` : "성분 정보가 없습니다."}
@@ -82,7 +79,6 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
             {firstNutrientName && <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />}
           </div>
           
-          {/* nutrientData가 있을 때만 그래프와 라벨을 렌더링 */}
           {nutrientData.length > 0 && (
             <>
               <div className="mt-[24px] ml-[148px] w-full max-w-[203px] flex justify-center gap-[41px]">
@@ -93,10 +89,10 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                 {nutrientData.map((nutrient) => (
                   <div key={nutrient.name} className="flex items-center justify-between">
                     <div
-                      onClick={goToIngredientPage}
+                      onClick={() => navigate(`/ingredients/${encodeURIComponent(nutrient.name)}`)}
                       className="flex justify-center items-center gap-[15px] cursor-pointer"
                     >
-                      <span className="h-[26px] tracking-[-0.432px] font-medium">
+                      <span className="h-[26px] tracking-[-0.432px] font-medium max-w-[100px] truncate">
                         {nutrient.name}
                       </span>
                       <MdOutlineArrowForwardIos className="text-[16px]" />
@@ -129,7 +125,7 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
           <div className="flex items-center justify-between w-full h-[67px] bg-[#F2F2F2] rounded-[16px] px-[25px]">
             <div className="flex-1 text-center">
               <span
-                onClick={goToIngredientPage}
+                onClick={goToFirstIngredientPage}
                 className="font-Regular text-[22px] tracking-[-1px] cursor-pointer"
               >
                 {firstNutrientName ? `${firstNutrientName}에 대해 더 자세히 알고 싶다면 ?` : "성분 정보가 없습니다."}
@@ -149,10 +145,10 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                 {nutrientData.map((nutrient) => (
                   <div key={nutrient.name} className="flex items-center justify-between">
                     <div
-                      onClick={goToIngredientPage}
+                      onClick={() => navigate(`/ingredients/${encodeURIComponent(nutrient.name)}`)}
                       className="flex justify-center items-center gap-[15px] cursor-pointer"
                     >
-                      <span className="text-[22px] tracking-[-0.4px] font-medium">
+                      <span className="text-[22px] tracking-[-0.4px] font-medium max-w-[180px] truncate">
                         {nutrient.name}
                       </span>
                       <MdOutlineArrowForwardIos className="text-[16px]" />

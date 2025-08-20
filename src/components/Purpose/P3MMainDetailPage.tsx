@@ -96,7 +96,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
                       bg-[#FFEB9D] text-black text-[20px] font-medium
                       ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
                           >
-          섭취알림 등록하기
+          섭취 알림 등록하기
         </button>
         <AlarmAddToSearchModal
           open={openAlarmModal}
@@ -111,9 +111,19 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
           <div className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
             상세정보
           </div>
-          <div className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
-            쿠팡 바로가기
-          </div>
+          {product.coupangLink && (
+            // ⭐️ 2. a 태그로 감싸서 링크를 연결합니다.
+            <a
+              href={product.coupangLink}
+              target="_blank" // 새 탭에서 열기
+              rel="noopener noreferrer" // 보안 설정
+              className="w-full max-w-[154px]"
+            >
+              <div className="h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px] cursor-pointer">
+                쿠팡 바로가기
+              </div>
+            </a>
+          )}
         </div>
       </div>
 

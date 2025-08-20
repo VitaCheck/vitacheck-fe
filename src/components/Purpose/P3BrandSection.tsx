@@ -61,7 +61,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                 />
               )}
             </div>
-            <span className="text-[20px] tracking-[-0.4px] font-medium">{brandName}</span>
+            <span className="text-[20px] tracking-[-0.4px] font-medium max-w-[180px] truncate">{brandName}</span>
           </div>
           <button
             onClick={navigateToBrandProducts}
