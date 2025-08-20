@@ -280,7 +280,7 @@ const CombinationPage = () => {
                   setSearchTerm(item);
                   navigate(`/add-combination?query=${encodeURIComponent(item)}`);
                 }}
-                className="text-[20px] font-Pretendard font-medium leading-[120%] tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
+                className="text-[18px] font-Pretendard font-medium leading-[120%] tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
                 {item}
               </button>
@@ -389,10 +389,10 @@ const CombinationPage = () => {
   <div className="-mx-4 lg:-mx-[80px] xl:-mx-[120px] 2xl:-mx-[250px]">
     {/* 안쪽은 다시 동일한 패딩으로 정렬 복구 */}
     <div className="px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] max-w-screen-xl mx-auto">
-      <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
+      <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap">
         주의가 필요한 조합 TOP 5
       </h2>
-      <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
+      <span className="text-[16px] lg:text-[16px] xl:text-[18px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
         카드를 눌러서 확인해 보세요 !
       </span>
 
@@ -464,10 +464,10 @@ const CombinationPage = () => {
          <div className="-mx-4 lg:-mx-[80px] xl:-mx-[120px] 2xl:-mx-[250px]">
            {/* 안쪽은 다시 동일한 패딩으로 정렬 복구 */}
            <div className="px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] max-w-screen-xl mx-auto">
-             <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap pl-2">
+             <h2 className="text-lg md:text-2xl font-semibold whitespace-nowrap">
                궁합이 좋은 조합 TOP 5
              </h2>
-             <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
+             <span className="text-[16px] lg:text-[16px] xl:text-[18px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B]">
                카드를 눌러서 확인해 보세요 !
              </span>
 

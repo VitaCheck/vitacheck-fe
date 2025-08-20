@@ -77,7 +77,7 @@ export default function CombinationProductCard({
         className={clsx(
           "hidden md:block relative box-border cursor-default",
           isSelected ? "bg-[#EEEEEE]" : "bg-white",
-          "w-[230px] h-[220px] rounded-[25px] p-6 shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg"
+          "w-full h-[220px] rounded-[25px] p-6 shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg"
         )}
         title={item.supplementName} // 툴팁으로 전체명 제공
       >
@@ -87,8 +87,8 @@ export default function CombinationProductCard({
             onToggle();
           }}
           className={clsx(
-            "absolute top-[10px] left-[190px] text-[#1C1B1F]",
-            isSelected ? "text-[22px] mt-2 font-bold" : "text-[35px]"
+            "absolute top-[10px] right-[15px] text-[#1C1B1F]",
+            isSelected ? "text-[20px] mt-2 font-bold" : "text-[30px]"
           )}
         >
           {isSelected ? "—" : "+"}
@@ -97,7 +97,7 @@ export default function CombinationProductCard({
         <img
           src={item.imageUrl}
           alt={item.supplementName}
-          className="mx-auto w-[130px] h-[110px] object-contain"
+          className="mx-auto w-[130px] h-[100px] object-contain mt-3"
         />
 
         {/* 텍스트: 고정 높이(두 줄) + 말줄임 + 단어 제어 */}
