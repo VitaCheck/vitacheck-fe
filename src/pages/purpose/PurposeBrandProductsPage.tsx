@@ -1,12 +1,11 @@
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
 import { useState, useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "@/lib/axios";
 
 interface Product {
   id: number;
-  title: string;
+  name: string;
   imageUrl: string;
 }
 
@@ -22,8 +21,11 @@ const PurposeBrandProducts = () => {
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  const loadMoreRef = useRef<HTMLDivElement>(null);
-  const batchSize = window.innerWidth >= 768 ? 4 : 2; // PC:4개, 모바일:2개
+  // ⭐️ 1. ref를 모바일과 PC용으로 분리합니다.
+  const mobileLoadMoreRef = useRef<HTMLDivElement>(null);
+  const pcLoadMoreRef = useRef<HTMLDivElement>(null);
+
+  const batchSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 4 : 2;
 
   // 1️⃣ 초기 데이터 로드
   useEffect(() => {
@@ -37,30 +39,30 @@ const PurposeBrandProducts = () => {
       setIsLoading(true);
       try {
         const response = await axios.get(
-          `http://vita-check.com/api/v1/supplements/brand`,
+          `/api/v1/supplements/brand`, 
           {
             params: { id: brandId },
-            headers: { accept: "*/*" },
           }
         );
 
-        await new Promise((resolve) => setTimeout(resolve, 500)); // 로딩 표시용
+        await new Promise((resolve) => setTimeout(resolve, 500));
 
         if (response.status === 200) {
-          const mappedProducts: Product[] = response.data.supplements.map(
-            (item: any) => ({
-              id: item.id,
-              title: item.name,
-              imageUrl: item.imageUrl.startsWith("http")
-                ? item.imageUrl
-                : `/images/${item.imageUrl}`,
-            })
-          );
+          const allProducts = Object.values(response.data).flat();
+          const mappedProducts: Product[] = allProducts.map((item: any) => ({
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl?.startsWith("http")
+              ? item.imageUrl
+              : `/images/${item.imageUrl}`,
+          }));
+
           setProducts(mappedProducts);
           setDisplayProducts(mappedProducts.slice(0, batchSize));
         } else {
           setProducts([]);
         }
+
       } catch (error) {
         console.error("브랜드 제품 목록을 불러오는데 실패했습니다:", error);
         setProducts([]);
@@ -71,11 +73,11 @@ const PurposeBrandProducts = () => {
 
     fetchBrandProducts();
     window.scrollTo(0, 0);
-  }, [brandId]);
+  }, [brandId, batchSize]);
 
-  // 2️⃣ 무한 스크롤
+  
+  // ⭐️ 3. 무한 스크롤 useEffect 로직을 두 ref 모두 감시하도록 수정합니다.
   useEffect(() => {
-    if (!loadMoreRef.current) return;
     const observer = new IntersectionObserver(
       (entries) => {
         if (
@@ -92,11 +94,21 @@ const PurposeBrandProducts = () => {
       },
       { threshold: 1 }
     );
-    observer.observe(loadMoreRef.current);
-    return () => observer.disconnect();
-  }, [isLoading, displayProducts, products]);
+    
+    const mobileRef = mobileLoadMoreRef.current;
+    if (mobileRef) observer.observe(mobileRef);
+    
+    const pcRef = pcLoadMoreRef.current;
+    if (pcRef) observer.observe(pcRef);
 
-  // 3️⃣ 스켈레톤 카드
+    // cleanup 함수
+    return () => {
+        if (mobileRef) observer.unobserve(mobileRef);
+        if (pcRef) observer.unobserve(pcRef);
+    };
+  }, [isLoading, displayProducts, products, batchSize]);
+
+  // 스켈레톤 및 카드 렌더링 함수들... (이하 동일)
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
       <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
@@ -107,7 +119,7 @@ const PurposeBrandProducts = () => {
   );
 
   const filteredProducts = displayProducts.filter((product) =>
-    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderCards = (isMobile: boolean) => {
@@ -122,7 +134,7 @@ const PurposeBrandProducts = () => {
 
     if (filteredProducts.length === 0 && searchQuery !== "") {
       return (
-        <p className="w-full text-center text-gray-500 mt-5">
+        <p className="w-full text-center text-gray-500 mt-5 col-span-full">
           검색 결과가 없습니다.
         </p>
       );
@@ -143,7 +155,7 @@ const PurposeBrandProducts = () => {
         >
           <img
             src={product.imageUrl}
-            alt={product.title}
+            alt={product.name}
             loading="lazy"
             className={`${
               isMobile
@@ -155,11 +167,11 @@ const PurposeBrandProducts = () => {
         <p
           className={`${
             isMobile
-              ? "mt-[18px] h-[22px] text-[18px]"
+              ? "mt-[18px] text-[18px]"
               : "mt-[16px] text-[22px]"
-          } font-medium text-center`}
+          } font-medium text-center h-[54px] line-clamp-2`}
         >
-          {product.title}
+          {product.name}
         </p>
       </div>
     ));
@@ -189,11 +201,12 @@ const PurposeBrandProducts = () => {
           </div>
           <div
             className="mt-[33px] max-w-[430px] w-full justify-items-center
-                          grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]"
+                       grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]"
           >
             {renderCards(true)}
           </div>
-          <div ref={loadMoreRef}></div>
+          {/* ⭐️ 2. 모바일용 ref를 연결합니다. */}
+          <div ref={mobileLoadMoreRef} className="h-1"></div>
         </div>
       </div>
 
@@ -216,7 +229,8 @@ const PurposeBrandProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
-          <div ref={loadMoreRef}></div>
+          {/* ⭐️ 2. PC용 ref를 연결합니다. */}
+          <div ref={pcLoadMoreRef} className="h-1"></div>
         </div>
       </div>
     </>

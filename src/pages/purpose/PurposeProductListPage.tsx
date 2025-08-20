@@ -46,6 +46,14 @@ const PurposeProductList = () => {
     BLOOD_SUGAR: "혈당", THYROID_HEALTH: "갑상선 건강", WOMAN_HEALTH: "여성 건강", MAN_HEALTH: "남성 건강",
   };
 
+  
+  const purposeOrder = Object.keys(purposeCodeMap);
+  
+  const codePurposeMap = Object.entries(purposeCodeMap).reduce((acc, [key, value]) => {
+    acc[value] = key;
+    return acc;
+  }, {} as Record<string, string>);
+
   const selectedPurposes = selectedCodes
     .map((code) => purposeCodeMap[code])
     .filter(Boolean);
@@ -102,24 +110,18 @@ const PurposeProductList = () => {
 
         response.data.result.forEach((purposeItem: any) => {
           const purposeName = purposeItem.name;
-          // ⭐️ 목적 이름을 미리 변환해둡니다.
           const translatedPurpose = purposeCodeMap[purposeName] || purposeName;
 
           purposeItem.ingredients.forEach((ing: any) => {
             const ingredientName = ing.ingredientName;
-
-            // ⭐️ 이미 처리된 성분인지 확인합니다.
             if (mappedData[ingredientName]) {
               // 이미 있다면, 기존 purposes 배열에 새로운 목적을 추가합니다.
               mappedData[ingredientName].purposes.push(translatedPurpose);
-              
-              // (선택사항) 중복된 목적이 들어가는 것을 방지합니다.
               mappedData[ingredientName].purposes = [...new Set(mappedData[ingredientName].purposes)];
 
             } else {
-              // 처음 보는 성분이라면, 새롭게 추가합니다.
               mappedData[ingredientName] = {
-                purposes: [translatedPurpose], // 배열 형태로 저장합니다.
+                purposes: [translatedPurpose],
                 supplements: ing.supplements || [],
               };
             }
@@ -210,6 +212,12 @@ const PurposeProductList = () => {
       const uniquePurposes = Array.from(new Set(info.purposes)).filter((p) =>
         translatedSelected.includes(p)
       );
+
+      uniquePurposes.sort((a, b) => {
+        const keyA = codePurposeMap[a]; // '눈건강' -> 'EYE'
+        const keyB = codePurposeMap[b]; // '뼈건강' -> 'BONE'
+        return purposeOrder.indexOf(keyA) - purposeOrder.indexOf(keyB);
+      });
 
       return (
         <div key={ingredientName} className="flex flex-col">
