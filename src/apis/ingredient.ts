@@ -441,29 +441,30 @@ export const toggleIngredientLike = async (ingredientId: number) => {
 };
 
 // 인기성분 TOP 5 조회 API
-export const fetchPopularIngredients = async (ageGroup?: string) => {
+export const fetchPopularIngredients = async (ageGroup: string) => {
   console.log("🔥 [API] fetchPopularIngredients 호출됨");
-  console.log("🔥 [API] 요청 연령대:", ageGroup || "전체");
+  console.log("🔥 [API] 요청 연령대:", `"${ageGroup}"`);
+  console.log("🔥 [API] 요청 연령대 길이:", ageGroup.length);
 
   try {
     // 스웨거 문서 기반 올바른 엔드포인트
     let url = "/popular-ingredients";
+    let params: any = { limit: 5 };
 
-    // ageGroup은 필수 파라미터이므로 반드시 포함
-    if (ageGroup && ageGroup !== "전체 연령") {
-      url += `?ageGroup=${encodeURIComponent(ageGroup)}`;
-
-      // limit 파라미터 추가 (TOP 5를 위해 5로 설정)
-      url += `&limit=5`;
-    } else {
-      // 전체 연령인 경우 기본값으로 limit만 설정
-      url += `?limit=5`;
+    // ageGroup 파라미터 처리 - 빈 문자열이 아닌 경우에만 전송
+    if (ageGroup && ageGroup.trim() !== "") {
+      params.ageGroup = ageGroup.trim();
     }
 
     console.log("🔥 [API] 요청 URL:", url);
+    console.log("🔥 [API] 요청 파라미터:", params);
     console.log("🔥 [API] 백엔드로 전송할 ageGroup:", ageGroup);
+    console.log(
+      "🔥 [API] 최종 요청 URL:",
+      `${url}?${new URLSearchParams(params).toString()}`
+    );
 
-    const { data } = await axios.get(url);
+    const { data } = await axios.get(url, { params });
     console.log("🔥 [API] 인기성분 API 응답:", data);
 
     return data;
@@ -478,6 +479,11 @@ export const fetchPopularIngredients = async (ageGroup?: string) => {
       if (error.response.status === 500) {
         console.error("🔥 [API] 요청했던 URL:", error.config?.url);
         console.error("🔥 [API] 요청했던 파라미터:", error.config?.params);
+        console.error("🔥 [API] 요청했던 ageGroup:", ageGroup);
+        console.error(
+          "🔥 [API] 백엔드 에러 메시지:",
+          error.response.data?.message
+        );
       }
     } else if (error.request) {
       console.error(

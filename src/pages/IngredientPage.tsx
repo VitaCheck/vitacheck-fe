@@ -48,7 +48,33 @@ const IngredientPage = () => {
   const loadPopularIngredients = async (ageGroup: string) => {
     setIsLoadingPopular(true);
     try {
-      const response = await fetchPopularIngredients(ageGroup);
+      console.log("🔥 [UI] loadPopularIngredients 호출:", ageGroup);
+
+      // 연령대별 파라미터 매핑 개선
+      let apiAgeGroup: string = ageGroup;
+
+      // API에서 기대하는 형식으로 변환 (백엔드 API 문서 기준)
+      if (ageGroup === "10대") apiAgeGroup = "10대";
+      else if (ageGroup === "20대") apiAgeGroup = "20대";
+      else if (ageGroup === "30대") apiAgeGroup = "30대";
+      else if (ageGroup === "40대") apiAgeGroup = "40대";
+      else if (ageGroup === "50대") apiAgeGroup = "50대";
+      else if (ageGroup === "60대 이상") apiAgeGroup = "60대 이상";
+      else if (ageGroup === "전체 연령") {
+        // 전체 연령은 여러 가지 가능한 값으로 시도
+        // 백엔드에서 기대하는 정확한 형식을 찾기 위해
+        apiAgeGroup = "전체"; // 한글 "전체"로 시도
+        // 만약 이것도 안 되면: apiAgeGroup = "ALL"; // 영문 "ALL"로 시도
+        // 또는: apiAgeGroup = ""; // 빈 문자열로 시도
+      }
+
+      // 공백 제거하여 정확한 파라미터 전송
+      apiAgeGroup = apiAgeGroup.trim();
+
+      console.log("🔥 [UI] API로 전송할 연령대:", `"${apiAgeGroup}"`);
+      console.log("🔥 [UI] API로 전송할 연령대 길이:", apiAgeGroup.length);
+
+      const response = await fetchPopularIngredients(apiAgeGroup);
       console.log("🔥 [UI] loadPopularIngredients 응답:", response);
 
       if (response && response.result) {
@@ -469,11 +495,23 @@ const IngredientPage = () => {
           ) : popularIngredients.length === 0 ? (
             <div className="text-center py-8">
               <p className="text-gray-500 mb-2">
-                해당 연령대의 인기성분이 없습니다.
+                {selected === "전체 연령"
+                  ? "전체 연령 인기성분을 불러올 수 없습니다."
+                  : `${selected} 인기성분을 불러올 수 없습니다.`}
               </p>
-              <p className="text-sm text-gray-400">
-                다른 연령대를 선택해보세요!
+              <p className="text-sm text-gray-400 mb-4">
+                {selected === "전체 연령"
+                  ? "잠시 후 다시 시도해주세요."
+                  : "다른 연령대를 선택해보세요!"}
               </p>
+              {selected === "전체 연령" && (
+                <button
+                  onClick={() => loadPopularIngredients(selected)}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                >
+                  다시 시도
+                </button>
+              )}
             </div>
           ) : isMobile ? (
             <div className="grid grid-cols-1 gap-3 pb-10">

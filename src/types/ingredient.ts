@@ -26,12 +26,17 @@ export interface IngredientDetail {
   description?: string;
   effect?: string;
   caution?: string;
+  gender?: "MALE" | "FEMALE";
+  age?: number;
   upperLimit?: number;
   recommendedDosage?: number;
   unit?: string;
   subIngredients?: (string | { name: string; imageOrEmoji: string })[];
   alternatives?: IngredientAlternative[];
   supplements?: IngredientSupplement[];
+  // 에러 코드 필드
+  dosageErrorCode?: string;
+  foodErrorCode?: string;
 }
 
 export interface IngredientAlternative {
