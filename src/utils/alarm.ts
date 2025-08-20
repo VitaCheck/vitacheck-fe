@@ -1,6 +1,5 @@
 import type { Supplement, Schedule, DayOfWeek } from "@/types/alarm";
 
-// ===== 최소 디버그 유틸 =====
 const DEBUG_ALARM = true;
 export const dbg = (...args: any[]) => {
   if (DEBUG_ALARM) {

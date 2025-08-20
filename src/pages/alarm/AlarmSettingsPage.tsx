@@ -4,7 +4,7 @@ import MobileAlarmSettingsPage from "./MobileAlarmSettingsPage";
 import DesktopAlarmSettingsPage from "./DesktopAlarmSettingsPage";
 
 const AlarmSettingsPage = () => {
-  const isMobile = useMediaQuery({ maxWidth: 768 });
+  const isMobile = useMediaQuery({ maxWidth: 639 });
   const [showModal, setShowModal] = useState(false); // 모바일용 모달
 
   return isMobile ? (
