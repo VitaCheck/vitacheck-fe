@@ -164,8 +164,10 @@ const AddCombinationPage = () => {
     localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
+  const hasAside = results.length > 0;
+
   return (
-    <div className="px-4 lg:px-12 xl:px-16 2xl:px-20 pt-2 sm:pt-10 max-w-screen-2xl mx-auto overflow-x-hidden">
+    <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
       <div className="md:hidden">
         <Navbar />
@@ -201,29 +203,27 @@ const AddCombinationPage = () => {
         </div>
       </div>
 
-      {/* 검색창 - PC */}
-      <div className="hidden md:flex justify-center mb-3 px-4">
-      <div className="w-full max-w-3xl h-[70px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-8 gap-4">
+            {/* 검색창 - PC */}
+      <section className="hidden md:flex justify-center mb-6">
+        <div className="flex items-center w-full max-w-3xl rounded-full border border-gray-300 px-6 py-4 bg-white shadow-sm">
           <input
             type="text"
-            className="flex-1 h-full bg-transparent outline-none
-        placeholder:font-Pretendard placeholder:font-medium
-        placeholder:text-black placeholder:opacity-40
-        placeholder:leading-[30px] placeholder:tracking-[-0.02em]
-        placeholder:text-[23px] 
-        text-[23px] leading-[30px]"
-            placeholder={placeholder}
+            placeholder="제품을 입력해주세요."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSearch();
             }}
+            className="w-full outline-none text-base text-gray-800 placeholder-gray-400"
           />
-          <button onClick={handleSearch} className="text-gray-400 text-2xl">
-            <img src={searchIcon} alt="검색" className="w-6 h-6" />
-          </button>
+          {searchTerm && (
+            <button onClick={() => setSearchTerm("")} className="ml-2 cursor-pointer">
+              <img src="/images/성분 검색결과/x.png" alt="지우기" className="w-6 h-6" />
+            </button>
+          )}
+          <img src="/src/assets/search.png" alt="검색" onClick={handleSearch} className="ml-2 w-6 h-6" />
         </div>
-      </div>
+      </section>
 
       {/* 검색 기록 - 모바일 */}
       {searchHistory.length > 0 && (
@@ -307,8 +307,9 @@ onClick={() => {
       )}
 
       {/* 본문 */}
-      <div className="relative lg:grid lg:grid-cols-[1fr_340px] lg:gap-12">
-        <div className="flex-1">
+      <div className={`relative ${hasAside ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12" : "lg:max-w-5xl lg:mx-auto"}`}>
+  <div className={hasAside ? "flex-1" : "w-full"}>
+
           {query && (
             <>
               {/* 검색어 제목 - 모바일 */}
@@ -337,8 +338,10 @@ onClick={() => {
 
               {/* PC 카드 */}
               <div className="hidden md:block mt-12">
-              <div className="grid w-full gap-x-10 gap-y-10 place-items-center
-  grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+  <div className="mx-auto max-w-5xl">
+    <div className="grid w-full gap-x-10 gap-y-10 place-items-center
+      grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+
                   {results.map((item: Product) => (
                     <CombinationProductCard
                       key={item.supplementId}
@@ -350,6 +353,7 @@ onClick={() => {
                     />
                   ))}
                 </div>
+              </div>
               </div>
             </>
           ) : (
@@ -366,7 +370,7 @@ onClick={() => {
                     </div>
 
                     {/* PC 전용: 로딩 중 */}
-                    <div className="hidden md:flex flex-col items-center justify-center mt-20">
+                    <div className="hidden md:flex flex-col items-center justify-center mt-20 mb-50">
                       <div className="animate-spin rounded-full h-20 w-20 border-b-10 border-[#FFEB9D]"></div>
                       <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080] mt-4">
                         검색 중...
@@ -392,9 +396,9 @@ onClick={() => {
                       <img
                         src={SadCat}
                         alt="검색 결과 없음"
-                        className="w-[200px] mt-5 mb-2"
+                        className="w-[150px] mt-5 mb-2"
                       />
-                      <p className="font-pretendard font-medium text-[36px] leading-[120%] tracking-[-0.02em] text-[#808080]">
+                      <p className="font-pretendard font-medium text-[30px] leading-[120%] tracking-[-0.02em] text-[#808080] mb-[120px]">
                         일치하는 검색 결과가 없습니다.
                       </p>
                     </div>
@@ -409,57 +413,47 @@ onClick={() => {
         {results.length > 0 && (
           <>
             {/* PC 분석 목록 */}
-            <div
-              className="hidden lg:block sticky top-[30px]"
-              style={{
-                width: "314px",
-                height: "fit-content",
-                right: "250px",
-                gap: "22px",
-                opacity: 1,
-                marginTop: "50px",
-              }}
+<aside className="hidden lg:block sticky top-8 w-full max-w-[340px]">
+  <div className="w-full">
+    <button
+      onClick={handleAnalyze}
+      className="w-full h-[64px] bg-[#FFEB9D] rounded-[59px] text-[28px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center"
+    >
+      분석 시작
+    </button>
+
+    {selectedItems.length > 0 && (
+      <div className="mt-6 bg-[#F2F2F2] border border-[#9C9A9A] rounded-[24px] px-6 py-6 flex flex-col gap-6">
+        {selectedItems.map((item, idx) => (
+          <div
+            key={idx}
+            className="relative w-full h-[250px] bg-white border border-gray-200 rounded-[24px] flex flex-col items-center justify-center px-4 py-6 shadow"
+          >
+            <button
+              onClick={() => handleRemove(item.supplementName)}
+              className="absolute top-3 right-4"
             >
-              {/* 분석 시작 버튼 */}
-              <div className="w-[300px] flex-shrink-0 ml-[80px]">
-                <button
-                  onClick={handleAnalyze}
-                  className="w-[250px] h-[70px] bg-[#FFEB9D] rounded-[59px] text-[30px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center mt-[10px] mb-[30px] ml-[45px]"
-                >
-                  분석 시작
-                </button>
+              <img
+                src="public/images/PNG/조합 2-1/delete.png"
+                alt="삭제"
+                className="w-[40px] h-[40px]"
+              />
+            </button>
 
-                {selectedItems.length > 0 && (
-                  <div className="bg-[#F2F2F2] border border-[#9C9A9A] rounded-[36px] px-[34px] py-[33px] flex flex-col gap-10 flex:1 ml-[50px]">
-                    {selectedItems.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="relative w-full h-[250px] bg-white border border-gray-200 rounded-[30px] flex flex-col items-center justify-center px-4 py-6 shadow"
-                      >
-                        <button
-                          onClick={() => handleRemove(item.supplementName)}
-                          className="absolute top-3 right-4"
-                        >
-                          <img
-                            src="public/images/PNG/조합 2-1/delete.png"
-                            alt="삭제"
-                            className="w-[40px] h-[40px]"
-                          />
-                        </button>
+            <img
+              src={item.imageUrl}
+              className="w-[120px] h-[120px] object-contain mt-4"
+            />
+            <p className="text-[20px] text-center font-medium leading-tight mt-3">
+              {item.supplementName}
+            </p>
+          </div>
+        ))}
+      </div>
+    )}
+  </div>
+</aside>
 
-                        <img
-                          src={item.imageUrl}
-                          className="w-[120px] h-[120px] object-contain mt-4"
-                        />
-                        <p className="text-[20px] text-center font-medium leading-tight mt-3">
-                          {item.supplementName}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
 
             {/* 모바일 분석 목록 */}
             <div
