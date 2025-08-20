@@ -76,6 +76,28 @@ function MyPage() {
 
   const openLogoutModal = () => setShowLogoutModal(true);
   const closeLogoutModal = () => setShowLogoutModal(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const openDeleteModal = () => setShowDeleteModal(true);
+  const closeDeleteModal = () => setShowDeleteModal(false);
+
+  const confirmDelete = async () => {
+    // 1) 모달 닫기
+    closeDeleteModal();
+
+    // 2) 로컬 데이터 정리(프로젝트에서 쓰는 키들 전부)
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("access_token"); // 혹시 다른 키도 쓰면 함께 제거
+      localStorage.removeItem("refreshToken");
+      // 필요시 추가: localStorage.clear(); (다 지우고 싶다면)
+    } catch {
+      console.log("");
+    }
+
+    navigate("/login", { replace: true });
+  };
+
   const confirmLogout = async () => {
     closeLogoutModal();
     await logout("/login");
@@ -409,11 +431,20 @@ function MyPage() {
 
         {/* 로그아웃 */}
         {!userLoadFailed && (
-          <div
-            className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-            onClick={openLogoutModal} // ← 모달 열기
-          >
-            로그아웃
+          <div className="mt-auto mb-3 flex items-center justify-center gap-4 sm:hidden">
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openLogoutModal}
+            >
+              로그아웃
+            </button>
+            <span className="text-[#D1D1D1]">|</span>
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openDeleteModal}
+            >
+              회원 탈퇴
+            </button>
           </div>
         )}
       </div>
@@ -434,6 +465,17 @@ function MyPage() {
         confirmText="로그아웃"
         onCancel={closeLogoutModal}
         onConfirm={confirmLogout}
+      />
+
+      {/* ✅ 탈퇴 모달 */}
+      <Modal
+        open={showDeleteModal}
+        title="탈퇴하기"
+        description="정말 비타체크 서비스를 탈퇴하시겠습니까?"
+        cancelText="닫기"
+        confirmText="탈퇴하기"
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
       />
     </div>
   );
