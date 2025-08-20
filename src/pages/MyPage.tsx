@@ -15,6 +15,7 @@ import { useLogout } from "@/hooks/useLogout";
 
 // ✅ 약관 API 훅 (이미 작성해둔 파일)
 import { useTerms, type Term } from "@/apis/terms";
+import Modal from "@/components/Modal";
 
 /** ─────────────────────────────────────────────────────────
  * 간단 모달 컴포넌트 (TermsModal 대체/내장)
@@ -71,9 +72,12 @@ function MyPage() {
   const navigate = useNavigate();
   const logout = useLogout();
   const [userLoadFailed, setUserLoadFailed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
-    alert("로그아웃 되었습니다.");
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const confirmLogout = async () => {
+    closeLogoutModal();
     await logout("/login");
   };
 
@@ -397,7 +401,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => logout("/login")}
+                onClick={openLogoutModal}
               />
             </div>
           )}
@@ -407,7 +411,7 @@ function MyPage() {
         {!userLoadFailed && (
           <div
             className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-            onClick={handleLogout}
+            onClick={openLogoutModal} // ← 모달 열기
           >
             로그아웃
           </div>
@@ -420,6 +424,16 @@ function MyPage() {
         title={modalTitle}
         html={modalHtml}
         onClose={() => setOpenKey(null)}
+      />
+
+      <Modal
+        open={showLogoutModal}
+        title="로그아웃"
+        description="로그아웃 하시겠습니까?"
+        cancelText="닫기"
+        confirmText="로그아웃"
+        onCancel={closeLogoutModal}
+        onConfirm={confirmLogout}
       />
     </div>
   );
