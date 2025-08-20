@@ -101,83 +101,6 @@ export default function SocialSignupForm() {
     [params]
   );
 
-  // preset(state 우선 → query 보조)
-  // const preset = useMemo(() => {
-  //   const base = {
-  //     email: fromQuery.email,
-  //     fullNameFromState: fromQuery.fullName,
-  //     provider: fromQuery.provider,
-  //     providerId: fromQuery.providerId,
-  //     next: fromQuery.next,
-  //     gender: mapGender(fromQuery.gender),
-  //     birthDate: toBirthDate(
-  //       fromQuery.birthDate,
-  //       fromQuery.birthyear,
-  //       fromQuery.birthday
-  //     ),
-  //     phoneNumber: fromQuery.phoneNumber || fromQuery.mobile,
-  //     nickname: fromQuery.nickname,
-  //   };
-
-  //   if (state && "socialTempToken" in state) {
-  //     return {
-  //       mode: "token" as const,
-  //       socialTempToken: state.socialTempToken,
-  //       next: state.next ?? base.next,
-  //       email: base.email,
-  //       fullNameFromState: base.fullNameFromState,
-  //       provider: base.provider,
-  //       providerId: base.providerId,
-  //       gender: mapGender(state.gender) || base.gender,
-  //       birthDate:
-  //         toBirthDate(state.birthDate, state.birthyear, state.birthday) ||
-  //         base.birthDate,
-  //       phoneNumber: (state.phoneNumber || state.mobile) ?? base.phoneNumber,
-  //       nickname: state.nickname ?? base.nickname,
-  //     };
-  //   }
-
-  //   if (state && "provider" in state) {
-  //     return {
-  //       mode: "values" as const,
-  //       provider: state.provider ?? base.provider,
-  //       providerId: state.providerId ?? base.providerId,
-  //       email: state.email ?? base.email,
-  //       fullNameFromState: state.fullName ?? base.fullNameFromState,
-  //       next: state.next ?? base.next,
-  //       gender: mapGender(state.gender) || base.gender,
-  //       birthDate:
-  //         toBirthDate(
-  //           state.birthDate,
-  //           (state as any).birthyear,
-  //           (state as any).birthday
-  //         ) || base.birthDate,
-  //       phoneNumber:
-  //         (state.phoneNumber || (state as any).mobile) ?? base.phoneNumber,
-  //       nickname: state.nickname ?? base.nickname,
-  //     };
-  //   }
-
-  //   if (fromQuery.signupToken) {
-  //     return {
-  //       mode: "token" as const,
-  //       socialTempToken: fromQuery.signupToken,
-  //       next: base.next,
-  //       email: base.email,
-  //       fullNameFromState: base.fullNameFromState,
-  //       provider: base.provider,
-  //       providerId: base.providerId,
-  //       gender: base.gender,
-  //       birthDate: base.birthDate,
-  //       phoneNumber: base.phoneNumber,
-  //       nickname: base.nickname,
-  //     };
-  //   }
-
-  //   return { mode: "values" as const, ...base };
-  // }, [state, fromQuery]);
-
-  // ✅ preset 작성 (state 우선 → query 보조 → token payload 최후 보조)
   const preset = useMemo(() => {
     const base = {
       email: fromQuery.email,
@@ -355,14 +278,12 @@ export default function SocialSignupForm() {
         socialTempToken.slice(0, 12) + "..."
       );
 
-      const res = await postSocialSignup(body, socialTempToken);
+      const result = await postSocialSignup(body, socialTempToken);
 
-      const at =
-        res.data?.result?.accessToken ||
-        res.data?.accessToken ||
-        res.headers?.authorization?.replace?.(/^Bearer\s+/i, "");
-      const rt = res.data?.result?.refreshToken || res.data?.refreshToken || "";
-      if (at) saveTokens?.(at, rt);
+      // postSocialSignup은 SocialSignupResponse(data)만 반환
+      const at = result?.result?.accessToken ?? result?.accessToken ?? "";
+      const rt = result?.result?.refreshToken ?? result?.refreshToken ?? "";
+      if (at) saveTokens(at, rt);
 
       const next = (preset as any).next;
       navigate(typeof next === "string" && next.startsWith("/") ? next : "/", {
