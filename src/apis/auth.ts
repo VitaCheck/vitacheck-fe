@@ -1,4 +1,5 @@
 import axios from "axios";
+import { saveTokens } from "@/lib/auth";
 const BASE_URL = import.meta.env.VITE_SERVER_API_URL;
 
 /* =========================
@@ -37,7 +38,6 @@ export const postPreSignup = async (
 
   const token = res?.data?.result;
   if (!token) {
-    // 응답 스펙 변경/오류 시 빠르게 알기 위함
     throw new Error("pre-signup 응답에 result(토큰)가 없습니다.");
   }
   return { preSignupToken: token };
@@ -74,6 +74,59 @@ export const postFinalSignup = async (
       timeout: 15000,
     }
   );
+
+  // ✅ 응답에서 토큰 꺼내기 + 저장
+  const at = res.data?.accessToken ?? res.data?.result?.accessToken;
+  const rt = res.data?.refreshToken ?? res.data?.result?.refreshToken;
+  if (at && rt) saveTokens(at, rt);
+
+  return res.data;
+};
+
+/* =========================
+   소셜 전용 API
+   ========================= */
+export type SocialSignupPayload = {
+  email: string;
+  fullName: string;
+  provider: string;
+  providerId: string;
+  nickname: string;
+  gender: "MALE" | "FEMALE" | "OTHER";
+  birthDate: string;
+  phoneNumber: string;
+};
+export type SocialSignupResponse = {
+  isSuccess?: boolean;
+  result?: { accessToken?: string; refreshToken?: string };
+  accessToken?: string;
+  refreshToken?: string;
+};
+
+export const postSocialSignup = async (
+  data: SocialSignupPayload,
+  signupToken?: string
+) => {
+  const res = await axios.post<SocialSignupResponse>(
+    `${BASE_URL}/api/v1/auth/login`,
+    data,
+    {
+      withCredentials: true,
+      timeout: 15000,
+      headers: {
+        "Content-Type": "application/json",
+        ...(signupToken
+          ? { Authorization: `Bearer ${signupToken}` }
+          : undefined),
+      },
+    }
+  );
+
+  // ✅ 응답에서 토큰 꺼내기 + 저장
+  const at = res.data?.accessToken ?? res.data?.result?.accessToken;
+  const rt = res.data?.refreshToken ?? res.data?.result?.refreshToken;
+  if (at && rt) saveTokens(at, rt);
+
   return res.data;
 };
 
@@ -94,45 +147,6 @@ export const postAgreeTerms = async (
     timeout: 15000,
   });
   return res.data;
-};
-
-/* =========================
-   (유지) 소셜 전용 API
-   ========================= */
-export type SocialSignupPayload = {
-  email: string;
-  fullName: string;
-  provider: string;
-  providerId: string;
-  nickname: string;
-  gender: "MALE" | "FEMALE" | "OTHER";
-  birthDate: string;
-  phoneNumber: string;
-};
-export type SocialSignupResponse = {
-  isSuccess?: boolean;
-  result?: { accessToken?: string; refreshToken?: string };
-  accessToken?: string;
-  refreshToken?: string;
-};
-export const postSocialSignup = (
-  data: SocialSignupPayload,
-  signupToken?: string
-) => {
-  return axios.post<SocialSignupResponse>(
-    `${BASE_URL}/api/v1/auth/social-signup`,
-    data,
-    {
-      withCredentials: true,
-      timeout: 15000,
-      headers: {
-        "Content-Type": "application/json",
-        ...(signupToken
-          ? { Authorization: `Bearer ${signupToken}` }
-          : undefined),
-      },
-    }
-  );
 };
 
 /* =========================
