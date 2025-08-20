@@ -4,6 +4,20 @@ import Cat from "../../assets/CatWithPointer.png";
 import Chick from "../../assets/chick.png";
 import flipIcon from "../../assets/flip.png";
 import axios from "@/lib/axios";
+import Navbar from "@/components/NavBar";
+
+// 모바일 여부 판단용 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  return isMobile;
+};
 
 interface Combination {
   id: number;
@@ -26,6 +40,7 @@ const CombinationPage = () => {
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const placeholder = "제품을 입력해주세요.";
+  const isMobile = useIsMobile();
 
   useEffect(() => {
     const savedHistory = localStorage.getItem("searchHistory");
@@ -157,10 +172,29 @@ const CombinationPage = () => {
     );
   };
 
+  // 모바일에서는 전역 헤더 숨김(있으면)
+  useEffect(() => {
+    if (!isMobile) return;
+    const headerEl = document.querySelector("header");
+    if (headerEl instanceof HTMLElement) {
+      headerEl.style.display = "none";
+    }
+    return () => {
+      if (headerEl instanceof HTMLElement) {
+        headerEl.style.display = "";
+      }
+    };
+  }, [isMobile]);
+
   return (
     <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
+      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      <div className="md:hidden">
+        <Navbar />
+      </div>
+      
       {/* 조합추가 - 모바일 */}
-      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
+      <h1 className="block md:hidden font-Pretendard font-bold text-[24px] leading-[100%] tracking-[-0.02em] mb-5 pl-2 pt-6">
         조합 추가
       </h1>
 
@@ -168,21 +202,27 @@ const CombinationPage = () => {
       <h1 className="hidden md:block text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">조합 추가</h1>
 
       {/* 검색창 - 모바일 */}
-      <div className="flex justify-center mb-4 md:hidden">
-        <div className="w-[366px] h-[52px] bg-white border border-[#C7C7C7] rounded-[44px] flex items-center px-[18px] gap-[84px]">
-          <input
-            type="text"
-            className="flex-1 h-full bg-transparent outline-none placeholder:font-Pretendard placeholder:font-small placeholder:text-black placeholder:opacity-40 placeholder:leading-[120%] placeholder:tracking-[-0.02em] placeholder:text-[18px]"
-            placeholder={placeholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
-            }}
-          />
-          <img src="/src/assets/search.png" alt="검색" onClick={handleSearch} className="ml-2 w-6 h-6 cursor-pointer" />
-        </div>
-      </div>
+<div className="flex justify-center mb-4 md:hidden">
+  <div className="flex items-center w-full max-w-md px-4 py-3 bg-white border border-gray-300 rounded-full">
+    <input
+      type="text"
+      placeholder={placeholder}
+      value={searchTerm}
+      onChange={(e) => setSearchTerm(e.target.value)}
+      onKeyDown={(e) => {
+        if (e.key === "Enter") handleSearch();
+      }}
+      className="w-full bg-transparent text-lg bg-transparent text-gray-400 placeholder-gray-300"
+    />
+    <img
+      src="/src/assets/search.png"
+      alt="검색"
+      onClick={handleSearch}
+      className="ml-2 w-5 h-5 cursor-pointer"
+    />
+  </div>
+</div>
+
 
       {/* 검색창 - PC */}
       <section className="hidden md:flex justify-center mb-6">
@@ -295,9 +335,6 @@ const CombinationPage = () => {
     </div>
   </div>
 </div>
-
-
-
 
       {/* 구분선 (모바일) */}
       <div>
@@ -435,7 +472,7 @@ const CombinationPage = () => {
              </span>
 
              <div className="flex justify-center mt-8 mb-20">
-               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] w-full">
+               <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[25px] w-full">
                  {isLoading
                    ? Array.from({ length: 5 }).map((_, i) => (
                        <LoadingSkeletonCard key={i} isMobile={false} />
