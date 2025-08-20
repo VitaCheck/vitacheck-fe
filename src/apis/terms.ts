@@ -1,6 +1,8 @@
+// src/apis/terms.ts
 import axios from "@/lib/axios";
 import { useQuery } from "@tanstack/react-query";
 import type { UseQueryResult } from "@tanstack/react-query";
+import { useMemo } from "react";
 
 // ==== Types ====
 export interface Term {
@@ -50,3 +52,19 @@ export const useTerms = (): UseQueryResult<Term[], Error> =>
  *   </section>
  * ))
  */
+
+//  개인정보 처리방침만 골라주는 훅
+export const usePrivacyPolicy = () => {
+  const q = useTerms();
+  const term = useMemo(() => {
+    const list = q.data ?? [];
+    const byTitle = list.find((t) => t.title?.includes("개인정보"));
+    if (byTitle) return byTitle;
+
+    // fallback: required 중 두 번째 → 첫 번째 → 아무거나
+    const required = list.filter((t) => t.required);
+    return required[1] ?? required[0] ?? list[0];
+  }, [q.data]);
+
+  return { ...q, term };
+};

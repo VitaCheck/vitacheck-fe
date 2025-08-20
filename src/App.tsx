@@ -58,6 +58,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // OAuth 리다이렉트
 import OauthRedirect from "./pages/auth/OauthRedirect"; // 소셜 로그인 리다이렉트 처리
 
+import TermsViewPage from "./pages/terms/TermsViewPage";
+
 // React Query 클라이언트 생성
 const queryClient = new QueryClient();
 
@@ -127,6 +129,11 @@ const router = createBrowserRouter([
       {
         path: "/ingredients/:ingredientName",
         element: <IngredientDetailPage />,
+      },
+
+      {
+        path: "/terms/:slug", // privacy | service | marketing
+        element: <TermsViewPage />,
       },
     ],
   },
