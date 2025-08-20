@@ -410,9 +410,9 @@ const IngredientDetailInner = () => {
           </button>
           <button
             onClick={handleLikeClick}
-            disabled={likeMutation.isPending || !isLoggedIn()}
+            disabled={likeMutation.isPending}
             className={`flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 transition-all duration-200 ${
-              likeMutation.isPending || !isLoggedIn()
+              likeMutation.isPending
                 ? "cursor-not-allowed opacity-50"
                 : "hover:border-pink-300 hover:shadow-sm"
             }`}
