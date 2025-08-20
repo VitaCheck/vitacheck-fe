@@ -8,6 +8,13 @@ interface Product {
   imageUrl: string;
 }
 
+// ⭐️ 1. location.state에서 받아오는 데이터의 타입을 명확하게 정의합니다.
+interface SupplementFromState {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
 const PurposeIngredientProducts = () => {
   const location = useLocation();
   const searchParams = new URLSearchParams(location.search);
@@ -27,12 +34,21 @@ const PurposeIngredientProducts = () => {
   // 초기 데이터 로드
   useEffect(() => {
     setIsLoading(true);
-    const supplementsFromState = location.state?.supplements || [];
+    
+    // ⭐️ 2. `as` 키워드를 사용해 데이터의 타입을 TypeScript에게 알려줍니다.
+    const supplementsFromState = (location.state?.supplements as SupplementFromState[]) || [];
 
     const initialLoadTimer = setTimeout(() => {
       if (supplementsFromState.length > 0) {
-        const mappedProducts: Product[] = supplementsFromState.map(
-          (item: { id: number; name: string; imageUrl: string }, index: number) => ({
+        
+        // 이제 `item`의 타입이 명확해져서 에러가 발생하지 않습니다.
+        const uniqueSupplements = Array.from(
+          new Map(supplementsFromState.map(item => [item.id, item])).values()
+        );
+
+        // `uniqueSupplements`의 타입도 명확해져서 여기서도 에러가 발생하지 않습니다.
+        const mappedProducts: Product[] = uniqueSupplements.map(
+          (item) => ({ // item의 타입을 굳이 다시 적어주지 않아도 TypeScript가 추론합니다.
             id: item.id,
             title: item.name,
             imageUrl: item.imageUrl.startsWith("http")
@@ -143,16 +159,16 @@ const PurposeIngredientProducts = () => {
 
     return filteredProducts.map((product) => (
       <div
-        key={product.id}
+        key={`ingredient-${product.id}`}
         onClick={() => navigate(`/product/${product.id}`, { state: product })}
-        className="flex-shrink-0 flex flex-col items-center cursor-pointer"
+        className="flex flex-col items-center cursor-pointer w-full"
       >
         <div
           className={`${
             isMobile
-              ? "w-full max-w-[166px] h-[150px] rounded-xl"
+              ? "w-full aspect-square rounded-xl"
               : "w-full h-[160px] rounded-[16px]"
-          } bg-white shadow-lg overflow-hidden`}
+          } bg-white shadow-lg overflow-hidden flex items-center justify-center`}
         >
           <img
             src={product.imageUrl}
@@ -160,17 +176,17 @@ const PurposeIngredientProducts = () => {
             loading="lazy"
             className={`${
               isMobile
-                ? "w-full max-w-[122px] h-[122px] mt-[22px]"
+                ? "w-[70%] h-[70%]"
                 : "w-[135px] h-[135px] mt-[14px]"
-            } mx-auto object-cover`}
+            } object-contain`}
           />
         </div>
         <p
           className={`${
             isMobile
-              ? "mt-[18px] h-[54px] text-[18px]" // 높이를 2줄 분량(예: 54px)으로 수정
-              : "mt-[16px] h-[60px] text-[22px]" // PC도 일관성을 위해 높이 추가
-          } font-medium text-center line-clamp-2`} // line-clamp-2 추가
+              ? "mt-[12px] text-[16px]"
+              : "mt-[16px] text-[22px]"
+          } font-medium text-center line-clamp-2`}
         >
           {product.title}
         </p>

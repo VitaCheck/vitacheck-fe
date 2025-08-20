@@ -81,7 +81,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
             ) : (
               mobileProductsToDisplay.map((product) => (
                 <div
-                  key={product.id}
+                  key={`detail-${product.id}`}
                   onClick={() => navigate(`/product/${product.id}`, { state: product })}
                   className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
                 >
@@ -92,7 +92,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                       className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                     />
                   </div>
-                  <p className="mt-[17px] text-[17px] font-medium text-center">
+                  <p className="mt-[17px] text-[17px] font-medium text-center h-[50px] line-clamp-2">
                     {product.name}
                   </p>
                 </div>
@@ -140,7 +140,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
             ) : (
               paginatedProducts.map((product) => (
                 <div
-                  key={product.id}
+                  key={`detail-${product.id}`}
                   onClick={() => navigate(`/product/${product.id}`, { state: product })}
                   className="flex-shrink-0 flex flex-col items-center cursor-pointer"
                 >
@@ -151,7 +151,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                       className="w-full h-full object-contain p-4"
                     />
                   </div>
-                  <p className="mt-[16px] h-[28px] text-[22px] font-medium text-center">
+                  <p className="mt-[16px] text-[22px] font-medium text-center line-clamp-2">
                     {product.name}
                   </p>
                 </div>

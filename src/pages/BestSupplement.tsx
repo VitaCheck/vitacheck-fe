@@ -184,7 +184,7 @@ export default function BestSupplement() {
             />
           </div>
           <p
-            className={`${isMobile ? "mt-[18px] h-[22px] text-[18px]" : "mt-[16px] text-[22px]"} font-medium text-center`}
+            className={`${isMobile ? "mt-[18px] text-[18px]" : "mt-[16px] text-[22px]"} font-medium line-clamp-2 text-center`}
           >
             {product.title}
           </p>
