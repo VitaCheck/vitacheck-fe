@@ -182,7 +182,7 @@ const PurposeIngredientProducts = () => {
     <>
       {/* 모바일 */}
       <div className="sm:hidden">
-        <div className="w-full max-w-[430px] mx-auto mt-[100px] pb-[100px]">
+        <div className="w-full max-w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">
               {ingredient}
