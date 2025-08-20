@@ -1,3 +1,5 @@
+// publics/firebase-messaging-sw.js
+
 importScripts(
   "https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"
 );
@@ -28,10 +30,28 @@ messaging.onBackgroundMessage(async (payload) => {
   await self.registration.showNotification(title, { body, data: { link } });
 });
 
-self.addEventListener("notificationclick", (e) => {
-  e.notification.close();
-  const url =
-    (e.notification.data && e.notification.data.link) ||
-    "https://vitachecking.com/alarm";
-  e.waitUntil(clients.openWindow(url));
+// public/firebase-messaging-sw.js (click 핸들러만 교체/추가)
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const raw =
+    event.notification.data?.url || event.notification.data?.link || "/alarm";
+  const target = /^https?:\/\//i.test(raw) ? raw : self.location.origin + raw;
+
+  event.waitUntil(
+    clients
+      .matchAll({ type: "window", includeUncontrolled: true })
+      .then((list) => {
+        for (const c of list) {
+          try {
+            const u = new URL(c.url);
+            if (u.origin === self.location.origin) {
+              c.focus();
+              c.navigate(target);
+              return;
+            }
+          } catch {}
+        }
+        return clients.openWindow(target);
+      })
+  );
 });
