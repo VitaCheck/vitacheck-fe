@@ -57,18 +57,18 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
               <button
                 onClick={handleSharePopupOpen}
-                className="w-[32px] h-[32px] flex items-center justify-center"
+                className="w-[32px] h-[32px] flex items-center justify-center border-[#AAAAAA] border-1 bg-white rounded-full"
               >
-                <GoShareAndroid className="w-[26px] h-[26px] cursor-pointer text-black" />
+                <GoShareAndroid className="w-[20px] h-[20px] cursor-pointer text-black" />
               </button>
               <button
                 onClick={toggleLike}
-                className="w-[32px] h-[32px] flex items-center justify-center cursor-pointer"
+                className="w-[32px] h-[32px] flex items-center justify-center border-[#AAAAAA] border-1 bg-white rounded-full cursor-pointer"
               >
                 {liked ? (
-                  <GoHeartFill className="w-[26px] h-[26px] text-[#FD657E]" />
+                  <GoHeartFill className="w-[20px] h-[20px] text-[#FD657E]" />
                 ) : (
-                  <GoHeart className="w-[26px] h-[26px] text-[#FD657E]" />
+                  <GoHeart className="w-[20px] h-[20px] text-[#FD657E]" />
                 )}
               </button>
             </div>

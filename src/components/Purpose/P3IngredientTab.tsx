@@ -2,7 +2,7 @@
 import { MdOutlineArrowForwardIos } from "react-icons/md";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+import axios from "@/lib/axios"; // ⭐️ 1. 프로젝트 공통 axios 인스턴스로 변경
 
 interface Nutrient {
   name: string;
@@ -26,37 +26,45 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
     navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
   };
 
-useEffect(() => {
-  if (!supplementId) return;
+  useEffect(() => {
+    if (!supplementId) return;
 
-  const fetchSupplementDetails = async () => {
-    try {
-      const apiURL = `http://vita-check.com/api/v1/supplements/detail`;
-      const response = await axios.get(apiURL, {
-        params: { id: supplementId },
-        headers: { accept: "*/*" },
-      });
+    const fetchSupplementDetails = async () => {
+      try {
+        // ⭐️ 2. 전체 URL 대신 상대 경로로 수정
+        const response = await axios.get(`/api/v1/supplements/detail`, {
+          params: { id: supplementId },
+        });
 
-      const mapped = response.data.ingredients.map((ing: any) => ({
-        name: ing.name,
-        intake: Math.min(ing.visualization.normalizedAmountPercent, 100),
-        recommended: ing.visualization.recommendedStartPercent,
-        upperLimit: ing.visualization.recommendedEndPercent,
-      }));
+        console.log("✅ 상세 성분 API 응답 전체 데이터:", response.data);
 
-      setNutrientData(mapped);
 
-      // 부모로 firstNutrientName 전달
-      if (mapped[0]?.name && onFirstNutrientChange) {
-        onFirstNutrientChange(mapped[0].name);
+        // API 응답 데이터가 있고, ingredients 배열이 있는지 확인
+        if (response.data && response.data.ingredients) {
+            const mapped = response.data.ingredients.map((ing: any) => ({
+                name: ing.name,
+                intake: Math.min(ing.visualization.normalizedAmountPercent, 100),
+                recommended: ing.visualization.recommendedStartPercent,
+                upperLimit: ing.visualization.recommendedEndPercent,
+            }));
+
+            setNutrientData(mapped);
+
+            if (mapped[0]?.name && onFirstNutrientChange) {
+                onFirstNutrientChange(mapped[0].name);
+            }
+        } else {
+            // ingredients 데이터가 없는 경우
+            setNutrientData([]);
+        }
+      } catch (error) {
+        console.error("❌ INGREDIENT TAB API 호출 오류:", error);
+        setNutrientData([]); // 에러 발생 시 데이터 비우기
       }
-    } catch (error) {
-      console.error("❌ INGREDIENT TAB API 호출 오류:", error);
-    }
-  };
+    };
 
-  fetchSupplementDetails();
-}, [supplementId, onFirstNutrientChange]);
+    fetchSupplementDetails();
+  }, [supplementId, onFirstNutrientChange]);
 
 
   return (
@@ -69,47 +77,49 @@ useEffect(() => {
               onClick={goToIngredientPage}
               className="font-Regular text-[14px] tracking-[-0.32px] cursor-pointer"
             >
-              {firstNutrientName}에 대해 더 자세히 알고 싶다면 ?
+              {firstNutrientName ? `${firstNutrientName}에 대해 더 자세히 알고 싶다면 ?` : "성분 정보가 없습니다."}
             </span>
-            <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />
+            {firstNutrientName && <MdOutlineArrowForwardIos className="h-[22px] ml-[20px]" />}
           </div>
-
-          <div className="mt-[24px] ml-[148px] w-full max-w-[203px] flex justify-center gap-[41px]">
-            <span className="text-[13px] font-medium">권장</span>
-            <span className="text-[13px] font-medium">상한</span>
-          </div>
-
-          {/* 성분 함량 그래프 */}
-          <div className="flex flex-col gap-[28px] mt-[15px] w-[351px]">
-            {nutrientData.map((nutrient) => (
-              <div key={nutrient.name} className="flex items-center justify-between">
-                <div
-                  onClick={goToIngredientPage}
-                  className="flex justify-center items-center gap-[15px] cursor-pointer"
-                >
-                  <span className="h-[26px] tracking-[-0.432px] font-medium">
-                    {nutrient.name}
-                  </span>
-                  <MdOutlineArrowForwardIos className="text-[16px]" />
-                </div>
-
-                <div className="relative w-full max-w-[203px] h-[24.16px] rounded-full bg-gray-200 overflow-hidden">
-                  <div
-                    className="h-full bg-[#FFE178] rounded-full"
-                    style={{ width: `${nutrient.intake}%` }}
-                  />
-                  <div
-                    className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
-                    style={{ left: `${nutrient.recommended}%` }}
-                  />
-                  <div
-                    className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
-                    style={{ left: `${nutrient.upperLimit}%` }}
-                  />
-                </div>
+          
+          {/* nutrientData가 있을 때만 그래프와 라벨을 렌더링 */}
+          {nutrientData.length > 0 && (
+            <>
+              <div className="mt-[24px] ml-[148px] w-full max-w-[203px] flex justify-center gap-[41px]">
+                <span className="text-[13px] font-medium">권장</span>
+                <span className="text-[13px] font-medium">상한</span>
               </div>
-            ))}
-          </div>
+              <div className="flex flex-col gap-[28px] mt-[15px] w-[351px]">
+                {nutrientData.map((nutrient) => (
+                  <div key={nutrient.name} className="flex items-center justify-between">
+                    <div
+                      onClick={goToIngredientPage}
+                      className="flex justify-center items-center gap-[15px] cursor-pointer"
+                    >
+                      <span className="h-[26px] tracking-[-0.432px] font-medium">
+                        {nutrient.name}
+                      </span>
+                      <MdOutlineArrowForwardIos className="text-[16px]" />
+                    </div>
+                    <div className="relative w-full max-w-[203px] h-[24.16px] rounded-full bg-gray-200 overflow-hidden">
+                      <div
+                        className="h-full bg-[#FFE178] rounded-full"
+                        style={{ width: `${nutrient.intake}%` }}
+                      />
+                      <div
+                        className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
+                        style={{ left: `${nutrient.recommended}%` }}
+                      />
+                      <div
+                        className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
+                        style={{ left: `${nutrient.upperLimit}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -122,47 +132,50 @@ useEffect(() => {
                 onClick={goToIngredientPage}
                 className="font-Regular text-[22px] tracking-[-1px] cursor-pointer"
               >
-                {firstNutrientName}에 대해 더 자세히 알고 싶다면 ?
+                {firstNutrientName ? `${firstNutrientName}에 대해 더 자세히 알고 싶다면 ?` : "성분 정보가 없습니다."}
               </span>
             </div>
-            <MdOutlineArrowForwardIos className="text-[22px]" />
+            {firstNutrientName && <MdOutlineArrowForwardIos className="text-[22px]" />}
           </div>
-
-          <div className="mt-[40px] ml-[227px] w-[133px] flex justify-between">
-            <span className="text-[14px] font-medium">권장</span>
-            <span className="text-[14px] font-medium">상한</span>
-          </div>
-
-          <div className="flex flex-col gap-[32px] mt-[16px] w-full">
-            {nutrientData.map((nutrient) => (
-              <div key={nutrient.name} className="flex items-center justify-between">
-                <div
-                  onClick={goToIngredientPage}
-                  className="flex justify-center items-center gap-[15px] cursor-pointer"
-                >
-                  <span className="text-[22px] tracking-[-0.4px] font-medium">
-                    {nutrient.name}
-                  </span>
-                  <MdOutlineArrowForwardIos className="text-[16px]" />
-                </div>
-
-                <div className="relative w-[338px] h-[33px] rounded-full bg-[#E9E9E9] overflow-hidden">
-                  <div
-                    className="h-full bg-[#FFE178] rounded-full"
-                    style={{ width: `${nutrient.intake}%` }}
-                  />
-                  <div
-                    className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
-                    style={{ left: `${nutrient.recommended}%` }}
-                  />
-                  <div
-                    className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
-                    style={{ left: `${nutrient.upperLimit}%` }}
-                  />
-                </div>
+          
+          {/* nutrientData가 있을 때만 그래프와 라벨을 렌더링 */}
+          {nutrientData.length > 0 && (
+            <>
+              <div className="mt-[40px] ml-[227px] w-[133px] flex justify-between">
+                <span className="text-[14px] font-medium">권장</span>
+                <span className="text-[14px] font-medium">상한</span>
               </div>
-            ))}
-          </div>
+              <div className="flex flex-col gap-[32px] mt-[16px] w-full">
+                {nutrientData.map((nutrient) => (
+                  <div key={nutrient.name} className="flex items-center justify-between">
+                    <div
+                      onClick={goToIngredientPage}
+                      className="flex justify-center items-center gap-[15px] cursor-pointer"
+                    >
+                      <span className="text-[22px] tracking-[-0.4px] font-medium">
+                        {nutrient.name}
+                      </span>
+                      <MdOutlineArrowForwardIos className="text-[16px]" />
+                    </div>
+                    <div className="relative w-[338px] h-[33px] rounded-full bg-[#E9E9E9] overflow-hidden">
+                      <div
+                        className="h-full bg-[#FFE178] rounded-full"
+                        style={{ width: `${nutrient.intake}%` }}
+                      />
+                      <div
+                        className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
+                        style={{ left: `${nutrient.recommended}%` }}
+                      />
+                      <div
+                        className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
+                        style={{ left: `${nutrient.upperLimit}%` }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
     </>
