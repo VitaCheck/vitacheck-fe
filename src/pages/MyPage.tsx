@@ -2,7 +2,7 @@ import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.svg";
 import Profile from "../assets/Profile2.svg";
 import { useNavigate } from "react-router-dom";
-// import Service from "../assets/Service.svg";
+import Back from "../assets/back.svg";
 import Bell from "../assets/MyPageBell.svg";
 import Scrap from "../assets/MyPageScrap.svg";
 import Vita from "../assets/MyPageVita.svg";
@@ -172,20 +172,11 @@ function MyPage() {
             onClick={goToMain}
             className="mr-2 text-2xl text-black cursor-pointer"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <img
+              src={Back}
+              alt="icon"
+              className="w-[20px] h-[20px] object-contain"
+            />
           </button>
           <h1 className="text-[24px] font-semibold py-2">마이페이지</h1>
         </div>

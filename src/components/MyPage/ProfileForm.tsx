@@ -67,7 +67,7 @@ function ProfileForm({ onSaveExtra }: ProfileFormProps) {
   if (loading) return <p>불러오는 중...</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 px-2">
       <ProfileInput
         label="닉네임"
         value={nickname}
@@ -87,7 +87,7 @@ function ProfileForm({ onSaveExtra }: ProfileFormProps) {
       />
       <ProfileInput label="이메일 주소" value={email} disabled />
 
-      <div className="pt-6 mt-[22%] sm:mt-[5%]">
+      <div className="pt-6 mt-[15%] sm:mt-[5%]">
         <button
           onClick={handleSave}
           className="w-full bg-[#FFEB9D] hover:bg-[#FFDB67] text-black font-medium px-6 py-3 rounded-md transition-colors cursor-pointer"
