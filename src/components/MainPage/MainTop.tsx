@@ -1,5 +1,5 @@
 import Logo from "../../assets/logo.svg";
-import Character from "../../assets/VitaCheckcharacter.svg";
+import Character from "../../assets/main.png";
 
 const MainTop = () => {
   return (

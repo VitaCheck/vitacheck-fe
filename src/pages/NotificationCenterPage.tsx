@@ -89,6 +89,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Setting from "../assets/Setting.svg";
+import Back from "../assets/back.svg";
 import {
   getRoutinesByDate,
   type NotificationRoutine,
@@ -196,20 +197,11 @@ function NotificationCenterPage() {
               onClick={goBack}
               className="mr-2 text-2xl text-black sm:hidden"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <img
+                src={Back}
+                alt="icon"
+                className="w-[20px] h-[20px] object-contain cursor-pointer"
+              />
             </button>
             <h1 className="text-xl font-semibold py-2">알림센터</h1>
           </div>

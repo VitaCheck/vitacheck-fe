@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import Search from "../assets/search.svg";
 import X from "../assets/X.svg";
 import SearchOptionsModal from "./SearchOptionsModal";
@@ -14,6 +14,7 @@ const SearchBar = () => {
   const [query, setQuery] = useState("");
   const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
 
   const handleFocus = () => {
@@ -28,9 +29,24 @@ const SearchBar = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter" && query.trim()) {
-      navigate(`/searchresult?query=${encodeURIComponent(query.trim())}`);
+      const q = query.trim();
+      navigate(`/searchresult?query=${encodeURIComponent(q)}`);
+      if (window.matchMedia("(min-width: 640px)").matches) {
+        setQuery("");
+        setShowModal(false);
+        inputRef.current?.blur();
+      }
     }
   };
+
+  useEffect(() => {
+    const isDesktop = window.matchMedia("(min-width: 640px)").matches;
+    if (isDesktop) {
+      setQuery("");
+      setShowModal(false);
+      inputRef.current?.blur();
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => {
     const focusHandler = () => {

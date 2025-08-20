@@ -2,7 +2,7 @@ import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.svg";
 import Profile from "../assets/Profile2.svg";
 import { useNavigate } from "react-router-dom";
-// import Service from "../assets/Service.svg";
+import Back from "../assets/back.svg";
 import Bell from "../assets/MyPageBell.svg";
 import Scrap from "../assets/MyPageScrap.svg";
 import Vita from "../assets/MyPageVita.svg";
@@ -15,6 +15,7 @@ import { useLogout } from "@/hooks/useLogout";
 
 // ✅ 약관 API 훅 (이미 작성해둔 파일)
 import { useTerms, type Term } from "@/apis/terms";
+import Modal from "@/components/Modal";
 
 /** ─────────────────────────────────────────────────────────
  * 간단 모달 컴포넌트 (TermsModal 대체/내장)
@@ -71,9 +72,34 @@ function MyPage() {
   const navigate = useNavigate();
   const logout = useLogout();
   const [userLoadFailed, setUserLoadFailed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
-    alert("로그아웃 되었습니다.");
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const openDeleteModal = () => setShowDeleteModal(true);
+  const closeDeleteModal = () => setShowDeleteModal(false);
+
+  const confirmDelete = async () => {
+    // 1) 모달 닫기
+    closeDeleteModal();
+
+    // 2) 로컬 데이터 정리(프로젝트에서 쓰는 키들 전부)
+    try {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("access_token"); // 혹시 다른 키도 쓰면 함께 제거
+      localStorage.removeItem("refreshToken");
+      // 필요시 추가: localStorage.clear(); (다 지우고 싶다면)
+    } catch {
+      console.log("");
+    }
+
+    navigate("/login", { replace: true });
+  };
+
+  const confirmLogout = async () => {
+    closeLogoutModal();
     await logout("/login");
   };
 
@@ -172,20 +198,11 @@ function MyPage() {
             onClick={goToMain}
             className="mr-2 text-2xl text-black cursor-pointer"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <img
+              src={Back}
+              alt="icon"
+              className="w-[20px] h-[20px] object-contain"
+            />
           </button>
           <h1 className="text-[24px] font-semibold py-2">마이페이지</h1>
         </div>
@@ -406,7 +423,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => logout("/login")}
+                onClick={openLogoutModal}
               />
             </div>
           )}
@@ -414,11 +431,20 @@ function MyPage() {
 
         {/* 로그아웃 */}
         {!userLoadFailed && (
-          <div
-            className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-            onClick={handleLogout}
-          >
-            로그아웃
+          <div className="mt-auto mb-3 flex items-center justify-center gap-4 sm:hidden">
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openLogoutModal}
+            >
+              로그아웃
+            </button>
+            <span className="text-[#D1D1D1]">|</span>
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openDeleteModal}
+            >
+              회원 탈퇴
+            </button>
           </div>
         )}
       </div>
@@ -429,6 +455,27 @@ function MyPage() {
         title={modalTitle}
         html={modalHtml}
         onClose={() => setOpenKey(null)}
+      />
+
+      <Modal
+        open={showLogoutModal}
+        title="로그아웃"
+        description="로그아웃 하시겠습니까?"
+        cancelText="닫기"
+        confirmText="로그아웃"
+        onCancel={closeLogoutModal}
+        onConfirm={confirmLogout}
+      />
+
+      {/* ✅ 탈퇴 모달 */}
+      <Modal
+        open={showDeleteModal}
+        title="탈퇴하기"
+        description="정말 비타체크 서비스를 탈퇴하시겠습니까?"
+        cancelText="닫기"
+        confirmText="탈퇴하기"
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
       />
     </div>
   );

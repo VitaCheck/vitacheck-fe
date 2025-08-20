@@ -170,7 +170,7 @@ const ProductList = () => {
 
         <button
           onClick={() => navigate("/bestsupplement")}
-          className="text-sm text-[#797979] hover:underline"
+          className="text-sm text-[#000000] cursor-pointer hover:text-gray-500"
         >
           더보기 &gt;
         </button>
