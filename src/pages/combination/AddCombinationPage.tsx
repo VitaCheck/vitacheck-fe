@@ -5,6 +5,20 @@ import ExpandableProductGroup from "../../components/combination/ExpandableProdu
 import SadCat from "../../../public/images/rate1.png";
 import searchIcon from "../../assets/search.png";
 import axios from "@/lib/axios";
+import Navbar from "@/components/NavBar";
+
+// 모바일 여부 판단용 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  return isMobile;
+};
 
 interface Product {
   supplementId: number;
@@ -26,11 +40,12 @@ const AddCombinationPage = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
+  const isMobile = useIsMobile();
 
   const query = searchParams.get("query") || "";
   const preSelectedItems = location.state?.selectedItems || [];
 
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState(query);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [results, setResults] = useState<any[]>([]);
@@ -54,6 +69,10 @@ const AddCombinationPage = () => {
   };
 
   useEffect(() => {
+    setSearchTerm(query);
+  }, [query])
+
+  useEffect(() => {
     if (query) {
       fetchSupplements(query);
     }
@@ -64,10 +83,6 @@ const AddCombinationPage = () => {
     if (stored) {
       const parsed = JSON.parse(stored);
       setSearchHistory(parsed);
-
-      if (!searchTerm) {
-        setSearchTerm(parsed[0] || "");
-      }
     }
   }, []);
 
@@ -76,6 +91,20 @@ const AddCombinationPage = () => {
       setSelectedItems(preSelectedItems);
     }
   }, [preSelectedItems]);
+
+  // 모바일에서는 전역 헤더 숨김(있으면)
+  useEffect(() => {
+    if (!isMobile) return;
+    const headerEl = document.querySelector("header");
+    if (headerEl instanceof HTMLElement) {
+      headerEl.style.display = "none";
+    }
+    return () => {
+      if (headerEl instanceof HTMLElement) {
+        headerEl.style.display = "";
+      }
+    };
+  }, [isMobile]);
 
   const handleToggleCheckbox = (idx: number) => {
     setCheckedIndices((prev) =>
@@ -136,46 +165,45 @@ const AddCombinationPage = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col pb-[80px]">
-      {/* 조합추가 - 모바일 버전 */}
-      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
+    <div className="px-4 lg:px-12 xl:px-16 2xl:px-20 pt-2 sm:pt-10 max-w-screen-2xl mx-auto overflow-x-hidden">
+      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      <div className="md:hidden">
+        <Navbar />
+      </div>
+      
+      {/* 조합추가 - 모바일 */}
+      <h1 className="block md:hidden font-Pretendard font-bold text-[24px] leading-[100%] tracking-[-0.02em] mb-5 pl-2 pt-6">
         조합 추가
       </h1>
 
-      {/* 조합추가 - PC 버전 */}
-      <h1 className="hidden md:block font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
-        조합 추가
-      </h1>
+      {/* 조합추가 - PC */}
+      <h1 className="hidden md:block text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">조합 추가</h1>
 
       {/* 검색창 - 모바일 */}
       <div className="flex justify-center mb-4 md:hidden">
-        <div className="w-[366px] h-[52px] bg-white border border-[#C7C7C7] rounded-[44px] flex items-center px-[18px] gap-[84px]">
+        <div className="flex items-center w-full max-w-md px-4 py-3 bg-white border border-gray-300 rounded-full">
           <input
             type="text"
-            className="flex-1 h-full bg-transparent outline-none
-            placeholder:font-pretendard placeholder:text-[18px]
-            placeholder:text-black placeholder:opacity-40
-            placeholder:leading-[120%] placeholder:tracking-[-0.02em]
-            text-[18px]"
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === "Enter") handleSearch();
             }}
+            className="w-full bg-transparent text-lg bg-transparent text-gray-400 placeholder-gray-300"
           />
-          <button
+          <img
+            src="/src/assets/search.png"
+            alt="검색"
             onClick={handleSearch}
-            className="text-gray-400 text-xl ml-[-18px]"
-          >
-            <img src={searchIcon} alt="검색" className="w-5 h-5" />
-          </button>
+            className="ml-2 w-5 h-5 cursor-pointer"
+          />
         </div>
       </div>
 
       {/* 검색창 - PC */}
-      <div className="hidden md:flex justify-center mb-3">
-        <div className="w-[1000px] h-[70px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
+      <div className="hidden md:flex justify-center mb-3 px-4">
+      <div className="w-full max-w-3xl h-[70px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-8 gap-4">
           <input
             type="text"
             className="flex-1 h-full bg-transparent outline-none
@@ -207,12 +235,20 @@ const AddCombinationPage = () => {
             {searchHistory.map((item, idx) => (
               <div key={idx} className="flex items-center gap-[4px]">
                 <button
-                  onClick={() => {
-                    setSearchTerm(item);
-                    navigate(
-                      `/add-combination?query=${encodeURIComponent(item)}`
-                    );
-                  }}
+                  // 검색 기록 버튼 onClick 내부
+onClick={() => {
+  // 입력창 반영
+  setSearchTerm(item);
+
+  // 선택한 항목을 히스토리 맨 앞으로(옵션)
+  const updated = [item, ...searchHistory.filter(v => v !== item)].slice(0, 3);
+  setSearchHistory(updated);
+  localStorage.setItem("searchHistory", JSON.stringify(updated));
+
+  // 페이지 이동
+  navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+}}
+
                   className="text-[13px] font-medium text-gray-700"
                 >
                   {item}
@@ -271,17 +307,17 @@ const AddCombinationPage = () => {
       )}
 
       {/* 본문 */}
-      <div className="flex flex-col lg:flex-row gap-8 relative">
+      <div className="relative lg:grid lg:grid-cols-[1fr_340px] lg:gap-12">
         <div className="flex-1">
           {query && (
             <>
               {/* 검색어 제목 - 모바일 */}
-              <h2 className="block md:hidden font-pretendard font-bold text-[22px] leading-[120%] tracking-[-0.02em] px-[38px] mb-6">
+              <h2 className="block md:hidden font-pretendard font-bold text-[20px] leading-[120%] tracking-[-0.02em] pl-2 mb-6">
                 {query}
               </h2>
 
               {/* 검색어 제목 - PC */}
-              <h2 className="hidden md:block font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[10px]">
+              <h2 className="hidden md:block font-pretendard font-bold text-[25px] leading-[120%] tracking-[-0.02em] mb-8 pl-2 sm:ml-8">
                 {query}
               </h2>
             </>
@@ -300,11 +336,9 @@ const AddCombinationPage = () => {
               </div>
 
               {/* PC 카드 */}
-              <div className="hidden md:flex px-[230px] mt-[50px]">
-              <div
-  className="grid grid-cols-3 gap-x-[120px] gap-y-[40px] justify-items-center"
-  style={{ width: "calc(100vw - 230px - 250px - 250px - 60px)" }}
->
+              <div className="hidden md:block mt-12">
+              <div className="grid w-full gap-x-10 gap-y-10 place-items-center
+  grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
                   {results.map((item: Product) => (
                     <CombinationProductCard
                       key={item.supplementId}
@@ -479,18 +513,32 @@ const AddCombinationPage = () => {
                     >
                       <img
                         src={item.imageUrl}
-                        className="w-[80px] h-[80px] mt-2 object-contain mb-3"
+                        className="w-[75px] h-[70px] mt-3 object-contain mb-2"
                       />
-                      <p className="text-[13px] -mt-1 font-medium leading-[100%] tracking-[-0.02em] text-center font-pretendard text-black px-3">
-                        {item.supplementName}
-                      </p>
+                      {/* 제목 래퍼: 고정 높이 + 중앙 정렬 */}
+<div className="mt-[-4px] h-[34px] flex items-center justify-center px-4">
+  <p
+    title={item.supplementName} // 전체명 툴팁
+    className={[
+      "text-center font-pretendard font-medium tracking-[-0.02em] text-black",
+      "leading-[120%]",
+      // 긴 제목 대응: 2줄 말줄임 + 한글 어절 유지 + 영어 단어는 break 허용
+      "line-clamp-2 break-keep break-words overflow-hidden",
+      // 기본 13px, 너무 길면 줄바꿈되며 시각적으로 깔끔
+      "text-[13px]",
+    ].join(" ")}
+  >
+    {item.supplementName}
+  </p>
+</div>
+
                       <button
                         onClick={() => handleRemove(item.supplementName)}
                         className="absolute bottom-23 right-1"
                       >
                         <img
-                          src="/src/assets/delete.png"
-                          alt="삭제"
+                            src="public/images/PNG/조합 2-1/delete.png"
+                            alt="삭제"
                           className="w-[27px] h-[27px]"
                         />
                       </button>

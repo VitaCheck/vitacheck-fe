@@ -8,6 +8,20 @@ import flipIcon from "../../assets/flip.png";
 import axios from "@/lib/axios";
 import selectionLine1 from "../../assets/selection line 1.png";
 import selectionLine2 from "../../assets/selection line 2.png";
+import Navbar from "@/components/NavBar";
+
+// 모바일 여부 판단용 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
+  return isMobile;
+};
 
 interface SupplementItem {
   supplementId: number;
@@ -34,6 +48,8 @@ interface Combination {
 }
 
 export default function CombinationResultPage() {
+  const isMobile = useIsMobile();
+  
   // 선택: 더 촘촘한 올림 (1250 -> 1300)
   function niceRoundUp(n: number) {
     if (n <= 0) return 1;
@@ -318,6 +334,20 @@ export default function CombinationResultPage() {
     }
   }, [selectedItems]);
 
+  // 모바일에서는 전역 헤더 숨김(있으면)
+  useEffect(() => {
+    if (!isMobile) return;
+    const headerEl = document.querySelector("header");
+    if (headerEl instanceof HTMLElement) {
+      headerEl.style.display = "none";
+    }
+    return () => {
+      if (headerEl instanceof HTMLElement) {
+        headerEl.style.display = "";
+      }
+    };
+  }, [isMobile]);
+
   const CARD_W = 250;
   const GAP_W = 8;
   const PAGE_COUNT = 4;
@@ -450,33 +480,36 @@ export default function CombinationResultPage() {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
-      {/* 조합분석 - 모바일 버전 */}
-      <h1 className="block md:hidden font-pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-2 px-10 pt-10">
+    <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
+      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      <div className="md:hidden">
+        <Navbar />
+      </div>
+      
+      {/* 조합분석 - 모바일 */}
+      <h1 className="block md:hidden font-pretendard font-bold text-[24px] leading-[100%] tracking-[-0.02em] mb-5 pl-2 pt-6">
         조합 분석
       </h1>
-      {/* 조합분석 - PC 버전 제목 + 버튼 수평 정렬 */}
-      <div className="hidden md:flex justify-between items-start px-[230px] pt-[50px] mb-8">
-        <h1 className="font-pretendard font-bold text-[40px] leading-[120%] tracking-[-0.02em]">
-          조합 분석
-        </h1>
-
-        <div className="flex gap-4 ml-[250px]">
-          <button
-            onClick={handleRecombination}
-            className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
-          >
-            재조합
-          </button>
-          <button
-            onClick={() => navigate("/alarm/settings")}
-            className={`w-[280px] h-[55px] font-bold ${
-              checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
-            } rounded-[62.5px] flex items-center justify-center`}
-          >
-            섭취알림 등록하기
-          </button>
-        </div>
+      
+      {/* 조합분석 - PC */}
+      <h1 className="hidden md:block text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">조합 분석</h1>
+      
+      {/* PC 버전 버튼들 */}
+      <div className="hidden md:flex justify-end gap-4 mb-8">
+        <button
+          onClick={handleRecombination}
+          className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
+        >
+          재조합
+        </button>
+        <button
+          onClick={() => navigate("/alarm/settings")}
+          className={`w-[280px] h-[55px] font-bold ${
+            checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
+          } rounded-[62.5px] flex items-center justify-center`}
+        >
+          섭취알림 등록하기
+        </button>
       </div>
       {/* PC 슬라이더 */}
       <div className="hidden md:block px-4">
