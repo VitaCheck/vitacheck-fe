@@ -57,6 +57,12 @@ const PurposeProductList = () => {
   const selectedPurposes = selectedCodes
     .map((code) => purposeCodeMap[code])
     .filter(Boolean);
+  
+  const sortedSelectedPurposes = [...selectedPurposes].sort((a, b) => {
+    const keyA = codePurposeMap[a];
+    const keyB = codePurposeMap[b];
+    return purposeOrder.indexOf(keyA) - purposeOrder.indexOf(keyB);
+  });
 
   const [data, setData] = useState<ResultData>(
     location.state?.cachedData || {}
@@ -64,7 +70,7 @@ const PurposeProductList = () => {
   const [isLoading, setIsLoading] = useState(!location.state?.cachedData);
   const [isPopupOpen, setIsPopupOpen] = useState(false);
   const [activePurpose, setActivePurpose] = useState<string>(
-    location.state?.activePurpose || selectedPurposes[0] || ""
+    location.state?.activePurpose || sortedSelectedPurposes[0] || ""
   );
 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
@@ -106,6 +112,7 @@ const PurposeProductList = () => {
 
         const response = await axios.get("/api/v1/purposes/filter", { params });
 
+
         const mappedData: ResultData = {};
 
         response.data.result.forEach((purposeItem: any) => {
@@ -138,7 +145,7 @@ const PurposeProductList = () => {
     };
 
     fetchData();
-  }, [selectedCodes]); // data 의존성은 제거하는 것이 좋습니다.
+  }, [selectedCodes]);
 
   // ---------------- 데이터 정렬 ----------------
   const getSortedData = React.useCallback(() => {
@@ -253,26 +260,33 @@ const PurposeProductList = () => {
   let titleText: string | React.ReactNode = "";
   if (isMobile) {
     titleText =
-      selectedPurposes.length === 1
-        ? selectedPurposes[0]
-        : `${selectedPurposes[0]} 외 ${selectedPurposes.length - 1}`;
+      sortedSelectedPurposes.length === 1
+        ? sortedSelectedPurposes[0]
+        : `${sortedSelectedPurposes[0]} 외 ${sortedSelectedPurposes.length - 1}`;
   } else {
-    if (selectedPurposes.length === 1) titleText = selectedPurposes[0];
-    else if (selectedPurposes.length === 2)
+    if (sortedSelectedPurposes.length === 1) titleText = sortedSelectedPurposes[0];
+    else if (sortedSelectedPurposes.length === 2)
       titleText = (
         <>
-          {selectedPurposes[0]} <span className="font-light">&</span>{" "}
-          {selectedPurposes[1]}
+          {sortedSelectedPurposes[0]} <span className="font-light">&</span>{" "}
+          {sortedSelectedPurposes[1]}
         </>
       );
-    else if (selectedPurposes.length === 3)
+    else if (sortedSelectedPurposes.length === 3)
       titleText = (
         <>
-          {selectedPurposes[0]} <span className="font-light">&</span>{" "}
-          {selectedPurposes[1]} <span className="font-light">&</span>{" "}
-          {selectedPurposes[2]}
+          {sortedSelectedPurposes[0]} <span className="font-light">&</span>{" "}
+          {sortedSelectedPurposes[1]} <span className="font-light">&</span>{" "}
+          {sortedSelectedPurposes[2]}
         </>
       );
+  }
+
+  let titleSizeClass = "text-[30px]";
+  if (selectedPurposes.length === 2) {
+    titleSizeClass = "text-[24px]";
+  } else if (selectedPurposes.length >= 3) {
+    titleSizeClass = "text-[24px]";
   }
 
   return (
@@ -281,7 +295,7 @@ const PurposeProductList = () => {
       <div className="sm:hidden w-full mx-auto pb-[50px]">
         <div className="flex items-center gap-[22px] mt-[50px]">
           <div className="ml-[38px]">
-            <h1 className="text-[30px] tracking-[-0.6px] font-semibold">
+            <h1 className={`${titleSizeClass} tracking-[-1px] font-semibold`}>
               {titleText}
             </h1>
           </div>
@@ -365,7 +379,7 @@ const PurposeProductList = () => {
       {isPopupOpen && (
         <P2MDropdownPopup
           onClose={handleClosePopup}
-          selectedItems={selectedPurposes}
+          selectedItems={sortedSelectedPurposes}
           onSelect={handlePurposeSelect}
           activeItem={activePurpose}
         />

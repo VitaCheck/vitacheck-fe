@@ -49,8 +49,6 @@ interface BrandProduct {
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const location = useLocation();
-  // console.log("URL에서 받은 id:", id);
-  // console.log("location.state로 받은 product:", location.state);
   const state = location.state as { product?: Product } | undefined;
   const [product, setProduct] = useState<Product | null>(null);
   const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
@@ -85,7 +83,7 @@ const ProductDetailPage = () => {
           }
         );
 
-        console.log("💊 제품 API 응답 데이터:", productResponse.data);
+        console.log("제품 상세 페이지 API 응답 데이터:", productResponse.data);
 
         const fetchedProduct: ApiProduct = productResponse.data;
         const mappedProduct: Product = {

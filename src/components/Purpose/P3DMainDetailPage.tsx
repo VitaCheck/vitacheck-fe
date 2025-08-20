@@ -96,7 +96,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                 </div>
 
                 {/* 공유 & 찜 버튼 */}
-                <div className="flex gap-2 ml-auto">
+                <div className="flex gap-3 ml-auto">
                   <button
                     onClick={onCopyUrl}
                     className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white border-[#AAA] border-[0.3px]"
@@ -119,14 +119,21 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
 
             <div>
               <div className="flex flex-wrap gap-[14px] mb-[26px]">
-                <button className="border-[#9C9A9A] border-[0.6px] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium">
-                  쿠팡 바로가기
-                </button>
+                {product.coupangLink && (
+                  <a
+                    href={product.coupangLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border-[#9C9A9A] border-[0.6px] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium cursor-pointer flex items-center justify-center"
+                  >
+                    쿠팡 바로가기
+                  </a>
+                )}
                 <button
                   onClick={handleRegisterAlarm}
-                  className="bg-[#FFEB9D] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium"
+                  className="bg-[#FFEB9D] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium cursor-pointer"
                 >
-                  섭취알림 등록
+                  섭취 알림 등록
                 </button>
               </div>
             </div>

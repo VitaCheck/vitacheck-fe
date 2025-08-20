@@ -21,7 +21,6 @@ const PurposeBrandProducts = () => {
   const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  // ⭐️ 1. ref를 모바일과 PC용으로 분리합니다.
   const mobileLoadMoreRef = useRef<HTMLDivElement>(null);
   const pcLoadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -31,19 +30,14 @@ const PurposeBrandProducts = () => {
   useEffect(() => {
     if (!brandId) {
       setIsLoading(false);
-      console.error("브랜드 ID가 URL에 없습니다.");
       return;
     }
-
     const fetchBrandProducts = async () => {
       setIsLoading(true);
       try {
-        const response = await axios.get(
-          `/api/v1/supplements/brand`, 
-          {
-            params: { id: brandId },
-          }
-        );
+        const response = await axios.get(`/api/v1/supplements/brand`, {
+          params: { id: brandId },
+        });
 
         await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -62,7 +56,6 @@ const PurposeBrandProducts = () => {
         } else {
           setProducts([]);
         }
-
       } catch (error) {
         console.error("브랜드 제품 목록을 불러오는데 실패했습니다:", error);
         setProducts([]);
@@ -70,26 +63,29 @@ const PurposeBrandProducts = () => {
         setIsLoading(false);
       }
     };
-
     fetchBrandProducts();
     window.scrollTo(0, 0);
   }, [brandId, batchSize]);
 
   
-  // ⭐️ 3. 무한 스크롤 useEffect 로직을 두 ref 모두 감시하도록 수정합니다.
+  // ⭐️ 1. 다음 데이터를 불러오는 함수를 분리합니다.
+  const loadNextBatch = () => {
+    if (isLoading || displayProducts.length >= products.length) {
+      return;
+    }
+    const nextBatch = products.slice(
+      displayProducts.length,
+      displayProducts.length + batchSize
+    );
+    setDisplayProducts((prev) => [...prev, ...nextBatch]);
+  };
+
+  // ⭐️ 2. 무한 스크롤 useEffect에 PC 자동 로딩 로직을 추가합니다.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        if (
-          entries[0].isIntersecting &&
-          !isLoading &&
-          displayProducts.length < products.length
-        ) {
-          const nextBatch = products.slice(
-            displayProducts.length,
-            displayProducts.length + batchSize
-          );
-          setDisplayProducts((prev) => [...prev, ...nextBatch]);
+        if (entries[0].isIntersecting && !isLoading) {
+          loadNextBatch();
         }
       },
       { threshold: 1 }
@@ -100,6 +96,14 @@ const PurposeBrandProducts = () => {
     
     const pcRef = pcLoadMoreRef.current;
     if (pcRef) observer.observe(pcRef);
+
+    // PC에서 화면이 비어있으면 자동으로 더 불러오는 로직
+    if (pcRef && !isLoading) {
+      const isPcRefVisible = pcRef.getBoundingClientRect().top <= window.innerHeight;
+      if (isPcRefVisible && displayProducts.length < products.length) {
+        loadNextBatch();
+      }
+    }
 
     // cleanup 함수
     return () => {
@@ -131,7 +135,6 @@ const PurposeBrandProducts = () => {
         </div>
       ));
     }
-
     if (filteredProducts.length === 0 && searchQuery !== "") {
       return (
         <p className="w-full text-center text-gray-500 mt-5 col-span-full">
@@ -139,7 +142,6 @@ const PurposeBrandProducts = () => {
         </p>
       );
     }
-
     return filteredProducts.map((product) => (
       <div
         key={product.id}
@@ -205,7 +207,6 @@ const PurposeBrandProducts = () => {
           >
             {renderCards(true)}
           </div>
-          {/* ⭐️ 2. 모바일용 ref를 연결합니다. */}
           <div ref={mobileLoadMoreRef} className="h-1"></div>
         </div>
       </div>
@@ -229,7 +230,6 @@ const PurposeBrandProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
-          {/* ⭐️ 2. PC용 ref를 연결합니다. */}
           <div ref={pcLoadMoreRef} className="h-1"></div>
         </div>
       </div>
