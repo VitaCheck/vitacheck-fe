@@ -126,9 +126,37 @@ export const fetchIngredientDetail = async (name: string | number) => {
 
     // 2단계: id로 상세 정보 조회
     console.log("🏠 [API] 2단계: 상세 정보 조회 시작");
-    const detailResponse = await axios.get<IngredientDetailResponse>(
-      `/api/v1/ingredients/${ingredientId}`
-    );
+
+    let detailResponse;
+    try {
+      detailResponse = await axios.get<IngredientDetailResponse>(
+        `/api/v1/ingredients/${ingredientId}`
+      );
+    } catch (error: any) {
+      // 401 에러인 경우 (로그인되지 않은 사용자) - 기본 정보만 반환
+      if (error.response?.status === 401) {
+        console.log("🏠 [API] 로그인되지 않은 사용자 - 기본 정보만 반환");
+        return {
+          id: ingredientId,
+          name: ingredientName,
+          description: undefined,
+          effect: undefined,
+          caution: undefined,
+          gender: undefined,
+          age: undefined,
+          upperLimit: undefined,
+          recommendedDosage: undefined,
+          unit: undefined,
+          subIngredients: [],
+          alternatives: [],
+          supplements: [],
+          dosageErrorCode: "UNAUTHORIZED",
+          foodErrorCode: undefined,
+        };
+      }
+      // 다른 에러는 그대로 던짐
+      throw error;
+    }
 
     console.log("🏠 [API] 상세 정보 응답:", detailResponse.data);
 
@@ -443,18 +471,15 @@ export const toggleIngredientLike = async (ingredientId: number) => {
 // 인기성분 TOP 5 조회 API
 export const fetchPopularIngredients = async (ageGroup: string) => {
   console.log("🔥 [API] fetchPopularIngredients 호출됨");
-  console.log("🔥 [API] 요청 연령대:", `"${ageGroup}"`);
-  console.log("🔥 [API] 요청 연령대 길이:", ageGroup.length);
+  console.log("🔥 [API] 요청 연령대:", ageGroup);
 
   try {
     // 스웨거 문서 기반 올바른 엔드포인트
     let url = "/popular-ingredients";
     let params: any = { limit: 5 };
 
-    // ageGroup 파라미터 처리 - 빈 문자열이 아닌 경우에만 전송
-    if (ageGroup && ageGroup.trim() !== "") {
-      params.ageGroup = ageGroup.trim();
-    }
+    // ageGroup 파라미터 처리 - 항상 전송
+    params.ageGroup = ageGroup;
 
     console.log("🔥 [API] 요청 URL:", url);
     console.log("🔥 [API] 요청 파라미터:", params);

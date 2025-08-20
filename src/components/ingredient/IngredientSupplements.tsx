@@ -24,12 +24,6 @@ const API_BASE = import.meta.env.VITE_SERVER_API_URL ?? "";
 
 // 백엔드가 절대경로/상대경로/빈 값 등으로 내려줘도 안전하게 보정
 const normalizeImageUrl = (url?: string, coupangUrl?: string) => {
-  console.log("🏠 [Image] normalizeImageUrl 호출:", {
-    url,
-    coupangUrl,
-    type: typeof url,
-  });
-
   // 1) imageUrl이 있으면 그대로 사용
   if (url) {
     if (
@@ -37,54 +31,22 @@ const normalizeImageUrl = (url?: string, coupangUrl?: string) => {
       url.startsWith("https://") ||
       url.startsWith("data:")
     ) {
-      console.log("🏠 [Image] 절대 URL 사용:", url);
       return url;
     }
 
     // 상대경로인 경우 API_BASE와 결합
     const path = url.startsWith("/") ? url : `/${url}`;
     const fullUrl = `${API_BASE}${path}`;
-    console.log("🏠 [Image] 상대경로를 절대경로로 변환:", {
-      original: url,
-      full: fullUrl,
-    });
     return fullUrl;
   }
 
-  // 2) imageUrl이 없을 때만 coupangUrl 처리
+  // 2) imageUrl이 없을 때는 바로 fallback 이미지 사용 (외부 이미지 서버 에러 방지)
   if (coupangUrl && !url) {
-    console.log(
-      "🏠 [Image] imageUrl이 없어서 coupangUrl을 활용한 이미지 생성 시도:",
-      coupangUrl
-    );
-
-    // 쿠팡 상품 ID 추출 시도
-    const coupangMatch = coupangUrl.match(/products\/(\d+)/);
-    if (coupangMatch) {
-      const productId = coupangMatch[1];
-      console.log("🏠 [Image] 쿠팡 상품 ID 추출:", productId);
-
-      // 실제 제품 이미지를 가져오는 방법들 시도
-      if (coupangUrl.includes("smartstore.naver.com")) {
-        // 네이버 스마트스토어인 경우
-        const naverImageUrl = `https://shopping-phinf.pstatic.net/${productId}_1.jpg`;
-        console.log("🏠 [Image] 네이버 이미지 URL 시도:", naverImageUrl);
-        return naverImageUrl;
-      } else if (coupangUrl.includes("coupang.com")) {
-        // 쿠팡인 경우
-        const coupangImageUrl = `https://image.coupangcdn.com/image/retail/images/${productId}_1.jpg`;
-        console.log("🏠 [Image] 쿠팡 이미지 URL 시도:", coupangImageUrl);
-        return coupangImageUrl;
-      } else {
-        // 기타 쇼핑몰인 경우
-        console.log("🏠 [Image] 알 수 없는 쇼핑몰, 로컬 fallback 사용");
-        return FALLBACK_IMG;
-      }
-    }
+    // 외부 이미지 서버 URL 생성 대신 fallback 이미지 사용
+    return FALLBACK_IMG;
   }
 
   // 3) 모든 방법이 실패하면 fallback 이미지 사용
-  console.log("🏠 [Image] URL이 없음, fallback 이미지 사용");
   return FALLBACK_IMG;
 };
 
@@ -136,10 +98,15 @@ const IngredientSupplements = ({ data }: Props) => {
           const formatted: CardSupplement[] = data.supplements.map(
             (item: IngredientSupplement) => {
               console.log("🏠 [Supplements] 아이템 처리:", item);
+              const imageUrl = normalizeImageUrl(
+                item.imageUrl,
+                item.coupangUrl
+              );
+              // 이미지 URL이 유효하지 않으면 fallback 이미지 사용
               return {
                 id: item.id,
                 name: item.name,
-                imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
+                imageUrl: imageUrl || FALLBACK_IMG,
               };
             }
           );
@@ -164,11 +131,17 @@ const IngredientSupplements = ({ data }: Props) => {
             result.supplements[0]
           );
           const formatted: CardSupplement[] = result.supplements.map(
-            (item: any) => ({
-              id: item.id ?? item.supplementId,
-              name: item.name ?? item.supplementName,
-              imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
-            })
+            (item: any) => {
+              const imageUrl = normalizeImageUrl(
+                item.imageUrl,
+                item.coupangUrl
+              );
+              return {
+                id: item.id ?? item.supplementId,
+                name: item.name ?? item.supplementName,
+                imageUrl: imageUrl || FALLBACK_IMG,
+              };
+            }
           );
           setProducts(formatted);
           setNextCursor(result.nextCursor);
@@ -205,11 +178,14 @@ const IngredientSupplements = ({ data }: Props) => {
 
       if (result.supplements && result.supplements.length > 0) {
         const formatted: CardSupplement[] = result.supplements.map(
-          (item: any) => ({
-            id: item.id ?? item.supplementId,
-            name: item.name ?? item.supplementName,
-            imageUrl: normalizeImageUrl(item.imageUrl, item.coupangUrl),
-          })
+          (item: any) => {
+            const imageUrl = normalizeImageUrl(item.imageUrl, item.coupangUrl);
+            return {
+              id: item.id ?? item.supplementId,
+              name: item.name ?? item.supplementName,
+              imageUrl: imageUrl || FALLBACK_IMG,
+            };
+          }
         );
 
         setProducts((prev) => [...prev, ...formatted]);
@@ -283,7 +259,7 @@ const IngredientSupplements = ({ data }: Props) => {
   }
 
   return (
-    <div className="px-4 md:px-30 max-w-screen-xl mx-auto">
+    <div className="w-full max-w-[1120px] mx-auto px-4 sm:px-6 lg:px-8">
       {/* 기존 검색바 UI 유지 */}
       <section className="flex justify-center mb-6">
         <div
@@ -323,7 +299,7 @@ const IngredientSupplements = ({ data }: Props) => {
             <ProductCard
               id={product.id}
               name={product.name}
-              imageSrc={product.imageUrl}
+              imageSrc={product.imageUrl || FALLBACK_IMG}
             />
           </div>
         ))}

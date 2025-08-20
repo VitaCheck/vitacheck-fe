@@ -113,7 +113,7 @@ export default function IngredientAlternatives({
   };
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-5 sm:gap-x-8 md:gap-x-12 gap-y-4 sm:gap-y-8 md:gap-y-12 max-w-md sm:max-w-xl md:max-w-4xl mx-auto px-5 pb-8">
+    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 gap-x-5 sm:gap-x-8 md:gap-x-12 gap-y-4 sm:gap-y-8 md:gap-y-12 w-full pb-8">
       {items.map((food, idx) => {
         // 안전한 값 추출
         const safeName = food?.name || `대체식품 ${idx + 1}`;
@@ -122,7 +122,7 @@ export default function IngredientAlternatives({
         return (
           <div
             key={`${safeName}-${idx}`}
-            className="flex items-center justify-start px-5 py-5 bg-gray-100 rounded-[35px] shadow-sm h-[64px] w-full"
+            className="flex items-center justify-start px-5 py-5 bg-[#F3F3F3] rounded-[35px] shadow-sm h-[64px] w-full"
           >
             {renderIcon(safeImageOrEmoji)}
             <span className="ml-3 text-base font-medium">{safeName}</span>
