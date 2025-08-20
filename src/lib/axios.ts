@@ -1,25 +1,23 @@
-import axios from "axios";
-console.debug(
-  "[ENV] VITE_SERVER_API_URL =",
-  import.meta.env.VITE_SERVER_API_URL
-);
+import axios, { AxiosError, type AxiosRequestConfig } from "axios";
+import {
+  getAccessToken,
+  getRefreshToken,
+  saveTokens,
+  clearTokens,
+} from "@/lib/auth";
 
-// 공개 엔드포인트: 인증 헤더를 추가하지 않음 (CORS preflight 회피)
 const PUBLIC_PATH_PREFIXES: string[] = [
   "/api/v1/combinations/recommend",
   "/api/v1/supplements/search",
 ];
 
-const instance = axios.create({
+const api = axios.create({
   baseURL: import.meta.env.VITE_SERVER_API_URL,
-  // 교차 출처 쿠키 사용이 필요하지 않은 API는 credentials를 비활성화
   withCredentials: false,
 });
 
-instance.interceptors.request.use((config) => {
-  const token = localStorage.getItem("accessToken");
-
-  // 요청 경로 파싱 (상대/절대 URL 모두 대응)
+// 보호 API에만 AT 부착
+api.interceptors.request.use((config) => {
   let pathname = "";
   try {
     pathname = new URL(config.url ?? "", config.baseURL).pathname;
@@ -27,25 +25,102 @@ instance.interceptors.request.use((config) => {
     pathname = config.url ?? "";
   }
 
-  const isPublic = PUBLIC_PATH_PREFIXES.some((prefix) =>
-    pathname.startsWith(prefix)
-  );
+  const isPublic = PUBLIC_PATH_PREFIXES.some((p) => pathname.startsWith(p));
+  const isRefresh = pathname.includes("/api/v1/auth/refresh");
 
-  if (!isPublic && token && config.headers) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (isRefresh && config.headers) {
+    // refresh엔 AT 불필요(보통 RT로 인증)
+    delete (config.headers as any).Authorization;
+    return config;
   }
 
-  return config;
-});
-
-instance.interceptors.request.use((config) => {
-  if (config.url?.includes("/api/v1/auth/signup")) {
-    console.debug(
-      "[request → /auth/signup] headers.Authorization:",
-      config.headers?.Authorization
-    );
+  const at = (getAccessToken() || "").trim();
+  if (!isPublic && at && config.headers) {
+    (config.headers as any).Authorization = `Bearer ${at}`;
   }
   return config;
 });
 
-export default instance;
+let isRefreshing = false;
+let queue: Array<(t: string) => void> = [];
+
+api.interceptors.response.use(
+  (res) => res,
+  async (error: AxiosError) => {
+    const { config, response } = error;
+    const original = config as AxiosRequestConfig & {
+      __isRetryRequest?: boolean;
+    };
+
+    if (response?.status !== 401 || original?.__isRetryRequest) {
+      return Promise.reject(error);
+    }
+
+    // refresh 자체가 401이면 즉시 로그아웃
+    const path = (() => {
+      try {
+        return new URL(original?.url ?? "", original?.baseURL ?? "").pathname;
+      } catch {
+        return original?.url ?? "";
+      }
+    })();
+    if (path?.includes("/api/v1/auth/refresh")) {
+      clearTokens();
+      window.location.replace("/login");
+      return Promise.reject(error);
+    }
+
+    const rt = (getRefreshToken() || "").trim();
+    if (!rt) {
+      clearTokens();
+      window.location.replace("/login");
+      return Promise.reject(error);
+    }
+
+    if (!isRefreshing) {
+      isRefreshing = true;
+      try {
+        // 🔐 백엔드 스펙: 바디로 RT 전달(필요 시 헤더 Bearer로 변경)
+        const { data } = await axios.post(
+          `${import.meta.env.VITE_SERVER_API_URL}/api/v1/auth/refresh`,
+          { refreshToken: rt },
+          { timeout: 15000 }
+        );
+
+        const newAT =
+          (data as any)?.result?.accessToken ?? (data as any)?.accessToken;
+        const newRT =
+          (data as any)?.result?.refreshToken ?? (data as any)?.refreshToken;
+
+        if (!newAT) throw new Error("No access token in refresh response");
+
+        // ✅ 갱신 저장
+        saveTokens(newAT, newRT || rt);
+
+        // 대기 요청 재시도
+        queue.forEach((cb) => cb(newAT));
+        queue = [];
+      } catch (e) {
+        queue = [];
+        clearTokens();
+        window.location.replace("/login");
+        return Promise.reject(e);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    return new Promise((resolve) => {
+      queue.push((newToken) => {
+        original.__isRetryRequest = true;
+        original.headers = {
+          ...(original.headers || {}),
+          Authorization: `Bearer ${newToken}`,
+        };
+        resolve(api(original));
+      });
+    });
+  }
+);
+
+export default api;

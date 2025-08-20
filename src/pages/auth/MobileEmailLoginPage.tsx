@@ -2,7 +2,9 @@ import { useState } from "react";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 
-const MobileEmailLoginPage = () => {
+type Props = { onLoginSuccess?: () => Promise<void> }; // 비동기 반환 가정
+
+const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -27,12 +29,26 @@ const MobileEmailLoginPage = () => {
       const token =
         response.data?.result?.accessToken ?? response.data?.accessToken;
 
-      if (token) {
-        localStorage.setItem("accessToken", token);
-        navigate("/mypage", { replace: true });
-      } else {
+      if (!token) {
         setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
+        return;
       }
+
+      // 1) 토큰 저장 (axios 인스턴스가 이 값을 Authorization으로 쓰는지 확인!)
+      localStorage.setItem("accessToken", token);
+
+      // 2) 푸시 연동 (권한 요청 + FCM 토큰 발급 + 서버 PUT)
+      //    실패해도 UX 막지 않도록 try/catch 내부 처리 권장
+      if (onLoginSuccess) {
+        try {
+          await onLoginSuccess();
+        } catch (e) {
+          console.warn("[web-push] onLoginSuccess failed:", e);
+        }
+      }
+
+      // 3) 마지막에 라우팅
+      navigate("/mypage", { replace: true });
     } catch (error: any) {
       setErrorMessage(
         error?.response?.data?.message ||
@@ -46,7 +62,6 @@ const MobileEmailLoginPage = () => {
 
   return (
     <div className="relative mx-auto min-h-dvh bg-white">
-      {/* 상단 헤더 */}
       <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-[20px] py-[20px]">
         <button onClick={() => navigate(-1)} aria-label="뒤로가기">
           <img
@@ -58,7 +73,6 @@ const MobileEmailLoginPage = () => {
         <h1 className="text-[24px] font-semibold">로그인</h1>
       </header>
 
-      {/* 본문 폼 */}
       <main className="px-5 pb-40 pt-[20px]">
         <form onSubmit={handleLogin} className="space-y-8">
           <div>
@@ -98,19 +112,15 @@ const MobileEmailLoginPage = () => {
                 className="shrink-0 px-2 py-2 active:scale-95"
                 aria-label={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
               >
-                {showPassword ? (
-                  <img
-                    src="/images/ion_eye-1.png"
-                    alt="비밀번호 숨기기"
-                    className="w-[18px]"
-                  />
-                ) : (
-                  <img
-                    src="/images/ion_eye.png"
-                    alt="비밀번호 보기"
-                    className="w-[18px]"
-                  />
-                )}
+                <img
+                  src={
+                    showPassword
+                      ? "/images/ion_eye-1.png"
+                      : "/images/ion_eye.png"
+                  }
+                  alt={showPassword ? "비밀번호 숨기기" : "비밀번호 보기"}
+                  className="w-[18px]"
+                />
               </button>
             </div>
           </div>
@@ -118,19 +128,17 @@ const MobileEmailLoginPage = () => {
           {errorMessage && (
             <p className="text-red-500 text-sm">{errorMessage}</p>
           )}
+
+          {/* ✅ 버튼을 form 안에 두고 submit으로 처리 */}
+          <button
+            type="submit"
+            disabled={loading || !email || !password}
+            className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black"
+          >
+            {loading ? "로그인 중..." : "로그인"}
+          </button>
         </form>
       </main>
-
-      {/* 로그인 버튼 */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] bg-white/60 px-4 pb-6 pt-2 backdrop-blur">
-        <button
-          onClick={handleLogin}
-          disabled={loading || !email || !password}
-          className="pointer-events-auto inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black"
-        >
-          로그인
-        </button>
-      </div>
     </div>
   );
 };
