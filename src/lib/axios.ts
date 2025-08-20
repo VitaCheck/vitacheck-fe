@@ -9,6 +9,7 @@ import {
 const PUBLIC_PATH_PREFIXES: string[] = [
   "/api/v1/combinations/recommend",
   "/api/v1/supplements/search",
+  // 메인에서 쓰는 다른 퍼블릭 API도 여기에 추가
 ];
 
 const api = axios.create({
@@ -16,7 +17,7 @@ const api = axios.create({
   withCredentials: false,
 });
 
-// 보호 API에만 AT 부착
+// ✅ 보호 API에만 AT 부착 (복구)
 api.interceptors.request.use((config) => {
   let pathname = "";
   try {
@@ -29,7 +30,6 @@ api.interceptors.request.use((config) => {
   const isRefresh = pathname.includes("/api/v1/auth/refresh");
 
   if (isRefresh && config.headers) {
-    // refresh엔 AT 불필요(보통 RT로 인증)
     delete (config.headers as any).Authorization;
     return config;
   }
@@ -44,6 +44,7 @@ api.interceptors.request.use((config) => {
 let isRefreshing = false;
 let queue: Array<(t: string) => void> = [];
 
+// ✅ 단일 response 인터셉터만 유지
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
@@ -56,7 +57,7 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // refresh 자체가 401이면 즉시 로그아웃
+    // 요청 path 파싱
     const path = (() => {
       try {
         return new URL(original?.url ?? "", original?.baseURL ?? "").pathname;
@@ -64,6 +65,19 @@ api.interceptors.response.use(
         return original?.url ?? "";
       }
     })();
+
+    // 퍼블릭 여부 + 원래 Authorization 있었는지
+    const isPublic = PUBLIC_PATH_PREFIXES.some((p) => path.startsWith(p));
+    const hadAuthHeader = !!(
+      original?.headers && (original.headers as any).Authorization
+    );
+
+    // ⛔ 게스트/퍼블릭 요청: refresh/리다이렉트 금지
+    if (isPublic || !hadAuthHeader) {
+      return Promise.reject(error);
+    }
+
+    // refresh 자체가 401이면 즉시 로그아웃
     if (path?.includes("/api/v1/auth/refresh")) {
       clearTokens();
       window.location.replace("/login");
@@ -80,7 +94,6 @@ api.interceptors.response.use(
     if (!isRefreshing) {
       isRefreshing = true;
       try {
-        // 🔐 백엔드 스펙: 바디로 RT 전달(필요 시 헤더 Bearer로 변경)
         const { data } = await axios.post(
           `${import.meta.env.VITE_SERVER_API_URL}/api/v1/auth/refresh`,
           { refreshToken: rt },
@@ -94,10 +107,8 @@ api.interceptors.response.use(
 
         if (!newAT) throw new Error("No access token in refresh response");
 
-        // ✅ 갱신 저장
         saveTokens(newAT, newRT || rt);
 
-        // 대기 요청 재시도
         queue.forEach((cb) => cb(newAT));
         queue = [];
       } catch (e) {
