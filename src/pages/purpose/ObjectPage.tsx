@@ -177,8 +177,6 @@ const PurposeCardList = () => {
     </div>
   );
 
-  
-
   // 카드 리스트 렌더링
   const renderCardList = () => {
     if (isLoading) {

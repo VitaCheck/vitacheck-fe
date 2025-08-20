@@ -106,20 +106,18 @@ const ProductDetailPage = () => {
         
           
         // 브랜드 제품 리스트 호출
-        const brandResponse = await axios.get<{ [key: string]: ApiProduct[] }>(
+        const brandResponse = await axios.get<{ [key: string]: BrandProduct[] }>(
           `/api/v1/supplements/brand`,
           { params: { id: brandIdToFetch } }
         );
 
         // API에서 additionalProp1, 2, 3 형태로 들어오는 경우 통합
-        const brandProductsArray: BrandProduct[] = Object.values(
-          brandResponse.data
-        )
+        const brandProductsArray: BrandProduct[] = Object.values(brandResponse.data)
           .flat()
           .map((item) => ({
-            id: item.supplementId,
-            name: item.supplementName,
-            imageUrl: item.supplementImageUrl,
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl,
           }));
 
         setBrandProducts(brandProductsArray);
