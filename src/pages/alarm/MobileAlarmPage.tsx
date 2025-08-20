@@ -90,7 +90,7 @@ const MobileAlarmPage = ({
       }),
       axios.get("/api/v1/notifications/records", {
         params: { date: ymd, tzOffset },
-      }),
+      }), // 존재하지 않는 API
     ]);
 
     // records → Map<routineId, isTaken>

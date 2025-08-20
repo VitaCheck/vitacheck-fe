@@ -1,15 +1,10 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useMediaQuery } from "react-responsive";
+
 import MobileAlarmPage from "./MobileAlarmPage";
 import DesktopAlarmPage from "./DesktopAlarmPage";
-import {
-  requestNotificationPermission,
-  getFcmToken,
-  registerServiceWorker,
-} from "@/lib/firebase";
-import axios from "@/lib/axios";
 
-const LAST_POSTED_FCM_TOKEN_KEY = "lastPostedFcmToken";
+import { enableWebPush, syncFcmToken } from "@/lib/push";
 
 const AlarmPage = () => {
   const isMobile = useMediaQuery({ maxWidth: 639 });
@@ -26,55 +21,56 @@ const AlarmPage = () => {
     );
   };
 
-  // === FCM 동기화(권한 요청 + 토큰 업서트) ===
-  const ensureFcmSynced = useCallback(async () => {
-    // 1) 권한
-    const perm = await requestNotificationPermission();
-    if (perm !== "granted") return;
-
-    // 2) 토큰
-    const token = await getFcmToken();
-    if (!token) return;
-
-    // 3) 이전에 업서트한 토큰과 같으면 스킵
-    const last = localStorage.getItem(LAST_POSTED_FCM_TOKEN_KEY);
-    if (last === token) return;
-
-    // 4) 서버 업서트
-    await axios.put("/api/v1/users/me/fcm-token", { token });
-
-    // 5) 기록
-    localStorage.setItem(LAST_POSTED_FCM_TOKEN_KEY, token);
-  }, []);
-
-  // 페이지 최초 진입 시: SW 등록 + 권한이 이미 허용된 경우 자동 동기화
+  // ✅ 앱 최초 진입 시: 권한이 이미 허용(granted)된 경우에만 조용히 서버와 토큰 동기화
   useEffect(() => {
     if (initRef.current) return;
     initRef.current = true;
 
-    (async () => {
-      // 서비스워커 등록 (루트: /firebase-messaging-sw.js 이어야 함)
-      await registerServiceWorker();
+    if (
+      typeof Notification !== "undefined" &&
+      Notification.permission === "granted"
+    ) {
+      // 로그인 전이면 서버에서 401이 날 수 있으니 에러는 무시
+      syncFcmToken(false).catch(() => {});
+    }
+  }, []);
 
-      // 권한이 이미 granted면 자동으로 동기화 (조용히)
-      if ("Notification" in window && Notification.permission === "granted") {
-        await ensureFcmSynced();
-      }
-    })();
-  }, [ensureFcmSynced]);
+  // ✅ 사용자 액션으로 푸시 활성화 (권한 요청 → 토큰 발급 → 서버 업서트)
+  const onEnablePush = useCallback(async () => {
+    const res = await enableWebPush({
+      onMessage: (p) => {
+        // 포그라운드 메시지 수신 처리 (원하면 토스트로 변경)
+        console.log("[PUSH][FG] payload:", p);
+      },
+    });
+
+    if (!res.ok) {
+      alert(`푸시 활성화 실패: ${res.reason}`);
+      return;
+    }
+    // 성공 시 배너가 자동으로 사라지도록 상태 갱신 유도
+    // (브라우저가 즉시 permission을 'granted'로 반영함)
+  }, []);
 
   const getDaysInMonth = (year: number, month: number) =>
     new Date(year, month + 1, 0).getDate();
 
+  const needPermissionBanner =
+    typeof Notification !== "undefined" &&
+    Notification.permission !== "granted";
+
+  const perm =
+    typeof Notification !== "undefined" ? Notification.permission : "default";
+
   return (
     <div className="relative">
-      {/* 상단: 알림 안내/버튼 (권한이 없을 때만 보이도록) */}
-      {"Notification" in window && Notification.permission !== "granted" && (
-        <div className="mb-3 rounded-lg border px-3 py-2 text-sm flex items-center justify-between">
+      {/* 상단: 브라우저 푸시 안내 배너 (권한 미허용 시에만 노출) */}
+      {needPermissionBanner && (
+        <div className="mb-3 rounded-lg border px-3 py-2 text-sm flex items-center justify-between bg-white">
           <span>브라우저 알림을 켜면 설정한 시간에 복용 알림을 받아요.</span>
           <button
             className="ml-3 rounded-md border px-3 py-1 text-sm"
-            onClick={ensureFcmSynced}
+            onClick={onEnablePush}
           >
             알림 켜기
           </button>

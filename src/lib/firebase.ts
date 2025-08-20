@@ -106,3 +106,5 @@ export async function removeFcmToken() {
     return false;
   }
 }
+// @ts-ignore
+window.__fcm = { registerServiceWorker, getFcmToken };
