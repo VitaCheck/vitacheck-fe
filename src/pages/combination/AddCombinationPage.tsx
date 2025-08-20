@@ -407,7 +407,7 @@ const AddCombinationPage = () => {
                           className="absolute top-3 right-4"
                         >
                           <img
-                            src="/src/assets/delete.png"
+                            src="public/images/PNG/조합 2-1/delete.png"
                             alt="삭제"
                             className="w-[40px] h-[40px]"
                           />
