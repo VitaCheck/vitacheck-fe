@@ -37,6 +37,8 @@ interface Product {
 }
 
 const AddCombinationPage = () => {
+
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const location = useLocation();
@@ -167,8 +169,8 @@ const AddCombinationPage = () => {
   const hasAside = results.length > 0;
 
   return (
-    <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
-      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+<div className="px-4 sm:px-36 pt-2 sm:pt-10 pb-24 lg:pb-16 max-w-screen-xl mx-auto"> {/* ← 하단 패딩 추가 */}
+{/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
       <div className="md:hidden">
         <Navbar />
       </div>
@@ -274,32 +276,18 @@ onClick={() => {
       {searchHistory.length > 0 && (
         <div className="hidden md:flex justify-center gap-[24px] flex-wrap px-[35.64px] mb-5">
           {searchHistory.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2 px-8 py-2">
+            <div key={idx} className="flex items-center gap-[8px] px-[12px] py-[4px] rounded-[6px] hover:bg-gray-100 transition">
               <button
                 onClick={() => {
                   setSearchTerm(item);
-                  navigate(
-                    `/add-combination?query=${encodeURIComponent(item)}`,
-                    {
-                      replace: false,
-                      state: { selectedItems },
-                    }
-                  );
+                  navigate(`/add-combination?query=${encodeURIComponent(item)}`);
                 }}
-                className="text-[20px] font-medium leading-[120%] tracking-[-0.02em] text-[#000000] hover:underline"
+                className="text-[18px] font-Pretendard font-medium leading-[120%] tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
                 {item}
               </button>
-              <button
-                onClick={() => handleDelete(item)}
-                className="text-[16px] text-[#8A8A8A]"
-                title="삭제"
-              >
-                <img 
-                src="/images/PNG/조합 2-1/delete.png"
-                alt="삭제 아이콘" 
-                className="w-[28px] h-[28px] mt-[2.5px]" />
-
+              <button onClick={() => handleDelete(item)} className="flex items-center justify-center w-[20px] h-[20px]" title="삭제">
+                <img src="/images/PNG/조합 2-1/delete.png" alt="삭제" className="w-[16px] h-[16px]" />
               </button>
             </div>
           ))}
@@ -307,8 +295,14 @@ onClick={() => {
       )}
 
       {/* 본문 */}
-      <div className={`relative ${hasAside ? "lg:grid lg:grid-cols-[minmax(0,1fr)_340px] lg:gap-12" : "lg:max-w-5xl lg:mx-auto"}`}>
-  <div className={hasAside ? "flex-1" : "w-full"}>
+<div
+  className={`relative ${
+    hasAside
+      ? "lg:grid lg:grid-cols-[minmax(0,1fr)_250px] lg:gap-5 lg:items-start"  // ← aside 폭 250px + 교차축 정렬
+      : "lg:max-w-5xl lg:mx-auto"
+  }`}
+>
+  <div className={hasAside ? "flex-1 min-w-0" : "w-full min-w-0"}> {/* ← min-w-0 추가로 가로 튐 방지 */}
 
           {query && (
             <>
@@ -338,9 +332,13 @@ onClick={() => {
 
               {/* PC 카드 */}
               <div className="hidden md:block mt-12">
-  <div className="mx-auto max-w-5xl">
-    <div className="grid w-full gap-x-10 gap-y-10 place-items-center
-      grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5">
+  <div className="mx-auto max-w-5xl px-[35.64px] pb-10"> {/* ← 바닥 여백 추가 */}
+    <div
+      className="grid w-full gap-x-8 gap-y-8 place-items-center
+                 grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+    >
+
 
                   {results.map((item: Product) => (
                     <CombinationProductCard
@@ -413,38 +411,39 @@ onClick={() => {
         {results.length > 0 && (
           <>
             {/* PC 분석 목록 */}
-<aside className="hidden lg:block sticky top-8 w-full max-w-[340px]">
+             <aside className="hidden lg:block sticky top-8 self-start w-full max-w-[250px]"> {/* ← 핵심 수정 */}
   <div className="w-full">
+
     <button
       onClick={handleAnalyze}
-      className="w-full h-[64px] bg-[#FFEB9D] rounded-[59px] text-[28px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center"
+      className="w-full h-[55px] bg-[#FFEB9D] rounded-[59px] text-[18px] font-semibold font-pretendard leading-[120%] tracking-[-0.02em] text-center"
     >
       분석 시작
     </button>
 
     {selectedItems.length > 0 && (
-      <div className="mt-6 bg-[#F2F2F2] border border-[#9C9A9A] rounded-[24px] px-6 py-6 flex flex-col gap-6">
+      <div className="mt-6 bg-[#F2F2F2] border border-[#9C9A9A] rounded-[24px] px-5 py-5 flex flex-col gap-6">
         {selectedItems.map((item, idx) => (
           <div
             key={idx}
-            className="relative w-full h-[250px] bg-white border border-gray-200 rounded-[24px] flex flex-col items-center justify-center px-4 py-6 shadow"
+            className="relative w-full h-[180px] bg-white border border-gray-200 rounded-[24px] flex flex-col items-center justify-center px-4 py-6 shadow"
           >
             <button
               onClick={() => handleRemove(item.supplementName)}
               className="absolute top-3 right-4"
             >
               <img
-                src="public/images/PNG/조합 2-1/delete.png"
+                src="/images/PNG/조합 2-1/delete.png"
                 alt="삭제"
-                className="w-[40px] h-[40px]"
+                className="w-[30px] h-[35px]"
               />
             </button>
 
             <img
               src={item.imageUrl}
-              className="w-[120px] h-[120px] object-contain mt-4"
+              className="w-[100px] h-[75px] object-contain mt-4"
             />
-            <p className="text-[20px] text-center font-medium leading-tight mt-3">
+            <p className="text-[15px] text-center font-medium leading-tight mt-3">
               {item.supplementName}
             </p>
           </div>
@@ -531,7 +530,7 @@ onClick={() => {
                         className="absolute bottom-23 right-1"
                       >
                         <img
-                            src="public/images/PNG/조합 2-1/delete.png"
+                            src="/images/PNG/조합 2-1/delete.png"
                             alt="삭제"
                           className="w-[27px] h-[27px]"
                         />

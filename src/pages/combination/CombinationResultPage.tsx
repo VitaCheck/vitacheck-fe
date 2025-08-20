@@ -9,6 +9,7 @@ import axios from "@/lib/axios";
 import selectionLine1 from "../../assets/selection line 1.png";
 import selectionLine2 from "../../assets/selection line 2.png";
 import Navbar from "@/components/NavBar";
+import line from "/images/PNG/조합 2-1/background line.png";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -348,24 +349,21 @@ export default function CombinationResultPage() {
     };
   }, [isMobile]);
 
-  const CARD_W = 250;
-  const GAP_W = 8;
+  // 카드 가로 사이즈를 전체 비율의 0.154로 설정
   const PAGE_COUNT = 4;
-  const PAGE_W = CARD_W * PAGE_COUNT + GAP_W * (PAGE_COUNT - 1);
+const GAP_W = 16; // tailwind gap과 맞추기
+const cardWidthCSS = `calc((100% - ${GAP_W * (PAGE_COUNT - 1)}px) / ${PAGE_COUNT})`;
 
-  const handleScroll = (direction: "left" | "right") => {
-    const el = scrollRef.current;
-    if (!el) return;
-
-    const current = el.scrollLeft;
-    const pageIndex = Math.round(current / PAGE_W);
-    const nextIndex = direction === "right" ? pageIndex + 1 : pageIndex - 1;
-    const maxIndex = Math.ceil((el.scrollWidth - el.clientWidth) / PAGE_W);
-    const clamped = Math.max(0, Math.min(nextIndex, maxIndex));
-    const target = clamped * PAGE_W;
-
-    el.scrollTo({ left: target, behavior: "smooth" });
-  };
+const handleScroll = (direction: "left" | "right") => {
+  const el = scrollRef.current;
+  if (!el) return;
+  const page = el.clientWidth; // 현재 보이는 영역 너비
+  const delta = direction === "right" ? page : -page;
+  let target = el.scrollLeft + delta;
+  // 경계 보정
+  target = Math.max(0, Math.min(target, el.scrollWidth - el.clientWidth));
+  el.scrollTo({ left: target, behavior: "smooth" });
+};
 
   const handleToggleCheckbox = (idx: number) => {
     setCheckedIndices((prev) =>
@@ -491,97 +489,109 @@ export default function CombinationResultPage() {
         조합 분석
       </h1>
       
-      {/* 조합분석 - PC */}
-      <h1 className="hidden md:block text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">조합 분석</h1>
-      
-      {/* PC 버전 버튼들 */}
-      <div className="hidden md:flex justify-end gap-4 mb-8">
-        <button
-          onClick={handleRecombination}
-          className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
-        >
-          재조합
-        </button>
-        <button
-          onClick={() => navigate("/alarm/settings")}
-          className={`w-[280px] h-[55px] font-bold ${
-            checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
-          } rounded-[62.5px] flex items-center justify-center`}
-        >
-          섭취알림 등록하기
-        </button>
-      </div>
-      {/* PC 슬라이더 */}
-      <div className="hidden md:block px-4">
-        <div className="relative w-full max-w-[1050px] h-[300px] bg-white border border-[#B2B2B2] rounded-[45.51px] mx-auto px-[60px] py-[30px] overflow-hidden">
-          <div className="mx-auto" style={{ width: `${PAGE_W}px` }}>
-            <div
-              ref={scrollRef}
-              className="flex gap-[8px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
-            >
-              {selectedItems.map((item: SupplementItem) => (
-                <div
-                  key={item.supplementId}
-                  className={`w-[239px] h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px] relative flex-shrink-0 snap-start
-          ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
-                >
-                  <img
-                    src={
-                      checkedIndices.includes(item.supplementId)
-                        ? checkedBoxIcon
-                        : boxIcon
-                    }
-                    alt="checkbox"
-                    onClick={() => handleToggleCheckbox(item.supplementId)}
-                    className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
-                  />
-                  <img
-                    src={item.imageUrl}
-                    className="w-[120px] h-[120px] object-contain mb-3 mt-[-25px]"
-                  />
-                  <p
-                    className="text-center font-pretendard font-medium mt-1"
-                    style={{
-                      fontSize: "18px",
-                      lineHeight: "100%",
-                      letterSpacing: "-0.02em",
-                      color: "#000000",
-                    }}
-                  >
-                    {item.supplementName}
-                  </p>
-                </div>
-              ))}
-            </div>
-          </div>
+      {/* PC 제목 + 버튼들 한 줄 배치 */}
+<div className="hidden md:flex items-center justify-between mb-8 px-8">
+  <h1 className="text-2xl sm:text-4xl font-semibold">
+    조합 분석
+  </h1>
+  <div className="flex gap-4">
+    <button
+      onClick={handleRecombination}
+      className="w-[150px] h-[55px] bg-[#EEEEEE] rounded-full text-lg font-semibold flex items-center justify-center"
+    >
+      재조합
+    </button>
+    <button
+      onClick={() => navigate("/alarm/settings")}
+      className={`w-[280px] h-[55px] font-bold ${
+        checkedIndices.length > 0 ? "bg-[#FFEB9D]" : "bg-[#EEEEEE]"
+      } rounded-[62.5px] flex items-center justify-center`}
+    >
+      섭취알림 등록하기
+    </button>
+  </div>
+</div>
 
-          {/* 좌우 스크롤 버튼 (4개 초과일 때만 표시) */}
-          {selectedItems.length > 4 && (
-            <>
-              <button
-                onClick={() => handleScroll("left")}
-                className="absolute top-1/2 left-6 -translate-y-1/2"
+             {/* PC 슬라이더 */}
+<div className="hidden md:block px-4">
+  {/* 래퍼: 화살표가 테두리 밖으로 반쯤 나오도록 overflow-visible */}
+  <div className="relative w-full max-w-[1050px] mx-auto overflow-visible">
+    {/* 컨테이너: 내용은 안에서만 보이도록 overflow-hidden */}
+    <div
+      className="relative h-[300px] bg-white border border-[#B2B2B2] rounded-[45.5px]
+                 px-[60px] py-[30px] overflow-hidden"
+    >
+      {/* 👇 w-full로 두고, 카드 폭은 calc로 4등분 */}
+      <div className="w-full">
+        <div
+          ref={scrollRef}
+          className="flex gap-[16px] overflow-x-auto scroll-smooth snap-x snap-mandatory hide-scrollbar"
+        >
+          {selectedItems.map((item: SupplementItem) => (
+            <div
+              key={item.supplementId}
+              className={`h-[250px] rounded-[22.76px] flex flex-col items-center pt-[80px]
+                          relative flex-shrink-0 snap-start
+                          ${checkedIndices.includes(item.supplementId) ? "bg-[#EEEEEE]" : "bg-white"}`}
+              style={{ width: cardWidthCSS, minWidth: cardWidthCSS }} // ⭐ 핵심: 4등분 고정
+            >
+              <img
+                src={checkedIndices.includes(item.supplementId) ? checkedBoxIcon : boxIcon}
+                alt="checkbox"
+                onClick={() => handleToggleCheckbox(item.supplementId)}
+                className="absolute top-[10px] left-[18px] w-[50px] h-[50px] cursor-pointer"
+              />
+              <img
+                src={item.imageUrl}
+                className="w-[120px] h-[100px] object-contain mb-3 mt-[-20px]"
+              />
+              <p
+                className="text-center font-pretendard font-medium mt-1"
+                style={{
+                  fontSize: "18px",
+                  lineHeight: "100%",
+                  letterSpacing: "-0.02em",
+                  color: "#000000",
+                }}
               >
-                <img
-                  src="/images/PNG/조합 3-1/Frame 724.png"
-                  alt="왼쪽 스크롤"
-                  className="w-[80px] h-[80px] object-contain"
-                />
-              </button>
-              <button
-                onClick={() => handleScroll("right")}
-                className="absolute top-1/2 right-6 -translate-y-1/2"
-              >
-                <img
-                  src="/images/PNG/조합 3-1/Frame 667.png"
-                  alt="오른쪽 스크롤"
-                  className="w-[80px] h-[80px] object-contain"
-                />
-              </button>
-            </>
-          )}
+                {item.supplementName}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
+    </div>
+
+    {/* 좌우 화살표: 아이콘만 표시(반쯤 밖으로) */}
+    {selectedItems.length > 4 && (
+      <>
+        <button
+          onClick={() => handleScroll("left")}
+          aria-label="왼쪽으로 스크롤"
+          className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-1/2"
+        >
+          <img
+            src="/images/PNG/조합 3-1/Frame 724.png"
+            alt="왼쪽"
+            className="w-[65px] h-[65px] object-contain"
+          />
+        </button>
+        <button
+          onClick={() => handleScroll("right")}
+          aria-label="오른쪽으로 스크롤"
+          className="absolute top-1/2 right-0 -translate-y-1/2 translate-x-1/2"
+        >
+          <img
+            src="/images/PNG/조합 3-1/Frame 667.png"
+            alt="오른쪽"
+            className="w-[65px] h-[65px] object-contain"
+          />
+        </button>
+      </>
+    )}
+  </div>
+</div>
+
       {/* 모바일 슬라이더 */}
       <div className="md:hidden w-[370px] h-[165px] bg-white border border-[#B2B2B2] rounded-[20px] mx-auto overflow-x-auto scrollbar-hide px-4 py-3 mt-3">
         <div className="flex gap-3 w-max">
@@ -630,80 +640,66 @@ export default function CombinationResultPage() {
         </button>
       </div>
       {/* PC 섭취량 탭 - 전체 / 초과 */}
-      <div className="hidden md:flex flex-col items-center mt-[55px] relative">
-        {/* 탭 버튼 */}
-        <div className="flex justify-center gap-[350px] w-full z-10">
-          {["전체", "초과"].map((tab) => (
-            <div
-              key={tab}
-              className="flex flex-col items-center cursor-pointer"
-              onClick={() => setActiveTab(tab as "전체" | "초과")}
-            >
-              <span
-                className={`w-[100px] h-[58px] font-pretendard font-semibold text-[35px] leading-[120%] tracking-[-0.02em] text-center ${
-                  activeTab === tab
-                    ? tab === "초과"
-                      ? "text-[#E70000]"
-                      : "text-black"
-                    : "text-[#9C9A9A]"
-                }`}
-              >
-                {tab}
-              </span>
-            </div>
-          ))}
-        </div>
+<div className="hidden md:block mt-[55px]">
+  <div className="relative w-full max-w-[850px] mx-auto">
+    {/* 배경 라인 */}
+    <div
+  className="w-full"
+  style={{ borderTop: "8px solid var(--F4-Gray, #F4F4F4)" }}
+/>
 
-        {/* 선택 라인 */}
-        <img
-          src={activeTab === "초과" ? selectionLine2 : selectionLine1}
-          alt="선택 라인"
-          className="mt-1"
-          style={{
-            width: "1100px",
-            height: "5px",
-            opacity: 1,
-          }}
-        />
-      </div>
+    {/* 탭 */}
+    <div className="grid grid-cols-2 w-full max-w-[1100px] mx-auto text-center relative z-10">
+      {["전체", "초과"].map((tab) => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab as "전체" | "초과")}
+          className="py-2 font-pretendard font-semibold text-[30px] leading-[120%] tracking-[-0.02em] relative mb-5"
+        >
+          <span className={activeTab === tab ? "text-black" : "text-[#9C9A9A]"}>{tab}</span>
+
+          {/* 활성 언더바 */}
+          {activeTab === tab && (
+            <span className="absolute left-1/2 -translate-x-1/2 bottom-[-20px] w-[140px] h-[8px] bg-black rounded-full" />
+          )}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
       {/* 모바일 버전 탭 */}
-      <div className="relative flex flex-col items-center md:hidden mt-10 mb-2">
-        {/* 탭 버튼 */}
-        <div className="flex justify-center gap-25 w-full z-10">
-          {["전체", "초과"].map((tab) => (
-            <div
-              key={tab}
-              className="flex flex-col items-center cursor-pointer"
-              onClick={() => setActiveTab(tab as "전체" | "초과")}
-            >
-              <span
-                className={`w-[50px] h-[24px] font-pretendard font-medium text-[20px] leading-[100%] tracking-[-0.02em] text-center ${
-                  activeTab === tab
-                    ? tab === "초과"
-                      ? "text-[#E70000]"
-                      : "text-black"
-                    : "text-[#9C9A9A]"
-                }`}
-              >
-                {tab}
-              </span>
-            </div>
-          ))}
-        </div>
+<div className="md:hidden mt-10 mb-2">
+  <div className="relative w-[350px] mx-auto">
+    {/* 배경 라인 */}
+    <img
+      src={line}
+      alt=""
+      className="pointer-events-none select-none absolute bottom-0 left-0 w-full h-[6px]"
+    />
 
-        {/* 모바일도 동일하게 이미지 조건부 처리 */}
-        <img
-          src={activeTab === "초과" ? selectionLine2 : selectionLine1}
-          alt="선택 라인"
-          className="absolute top-5"
-          style={{
-            width: "350px",
-            height: "4px",
-            opacity: 1,
-            marginTop: "8px",
-          }}
-        />
-      </div>
+    {/* 탭 */}
+    <div className="grid grid-cols-2 text-center relative z-10">
+      {["전체", "초과"].map((tab) => (
+        <button
+          key={tab}
+          onClick={() => setActiveTab(tab as "전체" | "초과")}
+          className="py-2 relative"
+        >
+          <span className={`text-[20px] font-pretendard font-medium ${activeTab === tab ? "text-black" : "text-[#9C9A9A]"}`}>
+            {tab}
+          </span>
+
+          {/* 활성 언더바 */}
+          {activeTab === tab && (
+            <span className="absolute left-1/2 -translate-x-1/2 bottom-[-6px] w-[100px] h-[6px] bg-black rounded-full" />
+          )}
+        </button>
+      ))}
+    </div>
+  </div>
+</div>
+
       {activeTab === "초과" && (
         <>
           {/* PC 버전 */}
@@ -1043,7 +1039,7 @@ export default function CombinationResultPage() {
           </div>
 
           {/* 💻 PC - 주의 조합 */}
-          <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px] mt-10">
+          <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[550px] mt-10">
             <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
               주의가 필요한 조합 TOP 5
             </h2>
