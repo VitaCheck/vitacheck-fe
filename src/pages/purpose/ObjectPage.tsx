@@ -163,7 +163,8 @@ const PurposeCardList = () => {
           />
         </div>
       </div>
-      <p className="mt-[18px] text-[clamp(12px,4vw,20px)] sm:text-[20px] text-center font-semibold">
+      <p className="mt-[18px] text-[clamp(12px,4vw,20px)] whitespace-normal break-keep
+                    sm:text-[20px] sm:whitespace-nowrap text-center font-semibold">
         {card.description}
       </p>
     </div>

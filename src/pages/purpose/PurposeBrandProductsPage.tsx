@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import axios from "@/lib/axios";
 
 interface Product {
@@ -68,8 +68,8 @@ const PurposeBrandProducts = () => {
   }, [brandId, batchSize]);
 
   
-  // ⭐️ 1. 다음 데이터를 불러오는 함수를 분리합니다.
-  const loadNextBatch = () => {
+  // ⭐️ 1. loadNextBatch 함수를 useCallback으로 감싸서 안정화합니다.
+  const loadNextBatch = useCallback(() => {
     if (isLoading || displayProducts.length >= products.length) {
       return;
     }
@@ -77,10 +77,10 @@ const PurposeBrandProducts = () => {
       displayProducts.length,
       displayProducts.length + batchSize
     );
-    setDisplayProducts((prev) => [...prev, ...nextBatch]);
-  };
+    // 함수형 업데이트를 사용해 displayProducts 의존성을 제거할 수 있습니다.
+    setDisplayProducts(prev => [...prev, ...nextBatch]);
+  }, [isLoading, displayProducts.length, products, batchSize]); // displayProducts 대신 displayProducts.length 사용
 
-  // ⭐️ 2. 무한 스크롤 useEffect에 PC 자동 로딩 로직을 추가합니다.
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -90,29 +90,16 @@ const PurposeBrandProducts = () => {
       },
       { threshold: 1 }
     );
-    
-    const mobileRef = mobileLoadMoreRef.current;
-    if (mobileRef) observer.observe(mobileRef);
-    
-    const pcRef = pcLoadMoreRef.current;
-    if (pcRef) observer.observe(pcRef);
 
-    // PC에서 화면이 비어있으면 자동으로 더 불러오는 로직
-    if (pcRef && !isLoading) {
-      const isPcRefVisible = pcRef.getBoundingClientRect().top <= window.innerHeight;
-      if (isPcRefVisible && displayProducts.length < products.length) {
-        loadNextBatch();
-      }
-    }
+    if (mobileLoadMoreRef.current) observer.observe(mobileLoadMoreRef.current);
+    if (pcLoadMoreRef.current) observer.observe(pcLoadMoreRef.current);
 
-    // cleanup 함수
     return () => {
-        if (mobileRef) observer.unobserve(mobileRef);
-        if (pcRef) observer.unobserve(pcRef);
+      if (mobileLoadMoreRef.current) observer.unobserve(mobileLoadMoreRef.current);
+      if (pcLoadMoreRef.current) observer.unobserve(pcLoadMoreRef.current);
     };
-  }, [isLoading, displayProducts, products, batchSize]);
+  }, [isLoading, loadNextBatch]);
 
-  // 스켈레톤 및 카드 렌더링 함수들... (이하 동일)
   const renderSkeletonCard = () => (
     <div className="flex flex-col items-center animate-pulse">
       <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
@@ -144,16 +131,16 @@ const PurposeBrandProducts = () => {
     }
     return filteredProducts.map((product) => (
       <div
-        key={product.id}
+        key={`brand-${product.id}`}
         onClick={() => navigate(`/product/${product.id}`, { state: product })}
         className="flex-shrink-0 flex flex-col items-center cursor-pointer"
       >
         <div
           className={`${
             isMobile
-              ? "w-full max-w-[166px] h-[150px] rounded-xl"
+              ? "w-full aspect-square rounded-xl"
               : "w-full h-[160px] rounded-[16px]"
-          } bg-white shadow-lg overflow-hidden`}
+          } bg-white shadow-lg overflow-hidden flex items-center justify-center`}
         >
           <img
             src={product.imageUrl}
@@ -161,9 +148,9 @@ const PurposeBrandProducts = () => {
             loading="lazy"
             className={`${
               isMobile
-                ? "w-[122px] h-[122px] mt-[22px]"
+                ? "w-[70%] h-[70%]"
                 : "w-[135px] h-[135px] mt-[14px]"
-            } mx-auto object-cover`}
+            } object-contain`}
           />
         </div>
         <p
@@ -171,7 +158,7 @@ const PurposeBrandProducts = () => {
             isMobile
               ? "mt-[18px] text-[18px]"
               : "mt-[16px] text-[22px]"
-          } font-medium text-center h-[54px] line-clamp-2`}
+          } font-medium text-center line-clamp-2`}
         >
           {product.name}
         </p>

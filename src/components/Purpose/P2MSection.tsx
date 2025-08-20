@@ -112,7 +112,7 @@ const RecommendedProductSectionMobile = ({
           ) : (
             paginatedProducts.map((product) => (
               <div
-                key={product.id}
+                key={`recommendM-${product.id}`}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
                 className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
               >
@@ -123,7 +123,7 @@ const RecommendedProductSectionMobile = ({
                     className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                   />
                 </div>
-                <p className="mt-[12px] text-[17px] font-medium text-center">
+                <p className="mt-[12px] text-[17px] font-medium text-center line-clamp-2">
                   {product.title}
                 </p>
               </div>
