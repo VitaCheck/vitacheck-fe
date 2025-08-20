@@ -16,12 +16,38 @@ interface IngredientTabProps {
   onFirstNutrientChange?: React.Dispatch<React.SetStateAction<string>>;
 }
 
+const PositionedLabel: React.FC<{ percentage: number; children: React.ReactNode; isMobile: boolean; }> = ({ percentage, children, isMobile }) => {
+  
+  // 퍼센트 위치에 따라 transform 스타일을 동적으로 결정
+  let transformValue = '-50%';
+  if (percentage < 15) {
+    transformValue = '0%';
+  } else if (percentage > 85) {
+    transformValue = '-100%';
+  }
+
+  const style = {
+    left: `${percentage}%`,
+    transform: `translate(${transformValue}, -50%)`,
+  };
+
+  const textSizeClass = isMobile ? "text-[10px]" : "text-xs";
+
+  return (
+    <span 
+      className={`absolute top-1/2 ${textSizeClass} font-semibold text-black whitespace-nowrap`}
+      style={style}
+    >
+      {children}
+    </span>
+  );
+};
+
 const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutrientChange }) => {
   const navigate = useNavigate();
   const [nutrientData, setNutrientData] = useState<Nutrient[]>([]);
   const firstNutrientName = nutrientData[0]?.name ?? "";
 
-  // ⭐️ 1. 함수 이름을 더 명확하게 변경합니다.
   const goToFirstIngredientPage = () => {
     if (!firstNutrientName) return;
     navigate(`/ingredients/${encodeURIComponent(firstNutrientName)}`);
@@ -35,6 +61,7 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
         const response = await axios.get(`/api/v1/supplements/detail`, {
           params: { id: supplementId },
         });
+        console.log("✅ 상세 성분 API 응답 데이터:", response.data);
 
         if (response.data && response.data.ingredients) {
             const mapped = response.data.ingredients
@@ -81,11 +108,10 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
           
           {nutrientData.length > 0 && (
             <>
-              <div className="mt-[24px] ml-[148px] w-full max-w-[203px] flex justify-center gap-[41px]">
-                <span className="text-[13px] font-medium">권장</span>
-                <span className="text-[13px] font-medium">상한</span>
+              <div className="mt-[24px] w-full  max-w-[351px] flex justify-end">
+                <span className="text-[13px] font-medium">상한 100%</span>
               </div>
-              <div className="flex flex-col gap-[28px] mt-[15px] w-[351px]">
+              <div className="flex flex-col gap-[28px] mt-[15px] w-full max-w-[351px]">
                 {nutrientData.map((nutrient) => (
                   <div key={nutrient.name} className="flex items-center justify-between">
                     <div
@@ -110,6 +136,11 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                         className="absolute top-0 bottom-0 w-[1px] border-l border-black border-dotted"
                         style={{ left: `${nutrient.upperLimit}%` }}
                       />
+                      {nutrient.recommended > 0 && (
+                        <PositionedLabel percentage={nutrient.recommended} isMobile={true}>
+                          권장 {nutrient.recommended}%
+                        </PositionedLabel>
+                      )}
                     </div>
                   </div>
                 ))}
@@ -137,9 +168,8 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
           {/* nutrientData가 있을 때만 그래프와 라벨을 렌더링 */}
           {nutrientData.length > 0 && (
             <>
-              <div className="mt-[40px] ml-[227px] w-[133px] flex justify-between">
-                <span className="text-[14px] font-medium">권장</span>
-                <span className="text-[14px] font-medium">상한</span>
+              <div className="mt-[40px] w-full flex justify-end">
+                <span className="text-[14px] font-medium">상한 100%</span>
               </div>
               <div className="flex flex-col gap-[32px] mt-[16px] w-full">
                 {nutrientData.map((nutrient) => (
@@ -166,6 +196,11 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                         className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted"
                         style={{ left: `${nutrient.upperLimit}%` }}
                       />
+                      {nutrient.recommended > 0 && (
+                        <PositionedLabel percentage={nutrient.recommended} isMobile={false}>
+                          권장 {nutrient.recommended}%
+                        </PositionedLabel>
+                      )}
                     </div>
                   </div>
                 ))}

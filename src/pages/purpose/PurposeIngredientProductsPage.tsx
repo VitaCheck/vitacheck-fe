@@ -211,7 +211,7 @@ const PurposeIngredientProducts = () => {
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="찾고 싶은 제품을 입력해주세요."
-                className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none"
+                className="flex-grow font-light text-[18px] text-[#AAAAAA] outline-none truncate min-w-0"
               />
               <AiOutlineSearch className="text-gray-500 text-[30px] ml-2" />
             </div>

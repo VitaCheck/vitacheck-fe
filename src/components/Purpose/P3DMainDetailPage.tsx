@@ -72,9 +72,9 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
     <div className="hidden sm:block w-full bg-[#FAFAFA] px-[50px]">
       <div className="max-w-[766px] mx-auto mb-[3px] pt-[70px] pb-[100px]">
         {/* 제품 이미지 + 브랜드명/제품명 */}
-        <div className="flex justify-between gap-6">
+        <div className="flex justify-between gap-6 flex-nowrap">
           {/* 제품 이미지 */}
-          <div className="w-full max-w-[344px] aspect-square rounded-[25px] shadow-lg overflow-hidden">
+          <div className="w-full max-w-[344px] max-h-[344px] aspect-square rounded-[25px] shadow-lg overflow-hidden">
             <img
               src={product.supplementImageUrl}
               alt={product.supplementName}
@@ -90,7 +90,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                   <h2 className="text-[21px] tracking-[-0.4px] text-[#757575] font-medium">
                     {product.brandName || "브랜드"}
                   </h2>
-                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold">
+                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold whitespace-normal break-keep">
                     {product.supplementName}
                   </h1>
                 </div>
@@ -117,7 +117,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               </div>
             </div>
 
-            <div>
+            <div className="mt-8">
               <div className="flex flex-wrap gap-[14px] mb-[26px]">
                 {product.coupangLink && (
                   <a
