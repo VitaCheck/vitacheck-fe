@@ -57,8 +57,15 @@ const IngredientSearchSection = () => {
     } catch (err: unknown) {
       const axiosErr = err as AxiosError;
       console.error("검색 실패:", axiosErr.response?.data || axiosErr.message);
-      setError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
-      setResults([]);
+
+      // 404 에러는 "검색 결과 없음"으로 처리, 다른 에러는 에러 메시지 표시
+      if (axiosErr.response?.status === 404) {
+        setError(null); // 에러 메시지 제거
+        setResults([]); // 빈 결과로 설정하여 NoSearchResult 컴포넌트 표시
+      } else {
+        setError("검색 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+        setResults([]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -84,40 +91,44 @@ const IngredientSearchSection = () => {
   }, [initialKeyword]);
 
   return (
-    <div className="p-4">
-      <h1 className="text-4xl font-bold mb-10">성분별</h1>
+    <div className="px-5 sm:px-36 pt-5 sm:pt-10 sm:pb-20 max-w-screen-xl mx-auto">
+      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8">
+        성분별
+      </h1>
 
       {/* 검색창 */}
       <div className="relative mb-10">
-        <input
-          type="text"
-          placeholder="성분을 입력하세요"
-          value={keyword}
-          onChange={(e) => setKeyword(e.target.value)}
-          onKeyDown={handleEnterKey}
-          className="w-full border border-gray-300 rounded-full py-4 px-5 pr-20 text-md outline-none"
-        />
+        <div className="relative w-full max-w-6xl">
+          <input
+            type="text"
+            placeholder="성분을 입력하세요"
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
+            onKeyDown={handleEnterKey}
+            className="w-full border border-gray-300 rounded-full py-4 px-5 pr-20 text-md outline-none"
+          />
 
-        {keyword && (
+          {keyword && (
+            <button
+              onClick={handleClear}
+              className="absolute right-12 top-1/2 transform -translate-y-1/2 cursor-pointer"
+            >
+              <img
+                src="/images/성분 검색결과/x.png"
+                alt="지우기"
+                className="w-5 h-5"
+              />
+            </button>
+          )}
+
           <button
-            onClick={handleClear}
-            className="absolute right-12 top-1/2 transform -translate-y-1/2 cursor-pointer"
+            onClick={handleSearch}
+            disabled={isLoading}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2 disabled:opacity-50"
           >
-            <img
-              src="/images/성분 검색결과/x.png"
-              alt="지우기"
-              className="w-5 h-5"
-            />
+            <img src={searchIcon} alt="검색" className="w-5 h-5" />
           </button>
-        )}
-
-        <button
-          onClick={handleSearch}
-          disabled={isLoading}
-          className="absolute right-3 top-1/2 transform -translate-y-1/2 disabled:opacity-50"
-        >
-          <img src={searchIcon} alt="검색" className="w-5 h-5" />
-        </button>
+        </div>
       </div>
 
       {/* 에러 메시지 */}
@@ -141,7 +152,7 @@ const IngredientSearchSection = () => {
           <div className="space-y-4">
             {results.length > 0 ? (
               <>
-                <div className="text-center mb-6">
+                <div className="mb-6">
                   <p className="text-gray-600 text-lg">
                     <span className="font-semibold text-blue-600">
                       {results.length}
@@ -150,24 +161,26 @@ const IngredientSearchSection = () => {
                   </p>
                 </div>
                 <div className="space-y-3">
-                  {results.map((result) => (
-                    <div
-                      key={result.ingredientId}
-                      className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
-                      onClick={() =>
-                        navigate(`/ingredient/${result.ingredientName}`)
-                      }
-                    >
-                      <span className="text-lg font-medium">
-                        {result.ingredientName}
-                      </span>
-                      <img
-                        src="/images/PNG/성분 1/arrow_forward_ios.png"
-                        alt="화살표"
-                        className="w-5 h-5"
-                      />
-                    </div>
-                  ))}
+                  <div className="w-full max-w-6xl space-y-3">
+                    {results.map((result) => (
+                      <div
+                        key={result.ingredientId}
+                        className="flex items-center justify-between p-4 bg-white border border-gray-200 rounded-lg cursor-pointer hover:bg-gray-50 transition-colors shadow-sm"
+                        onClick={() =>
+                          navigate(`/ingredient/${result.ingredientName}`)
+                        }
+                      >
+                        <span className="text-lg font-medium">
+                          {result.ingredientName}
+                        </span>
+                        <img
+                          src="/images/PNG/성분 1/arrow_forward_ios.png"
+                          alt="화살표"
+                          className="w-5 h-5"
+                        />
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </>
             ) : (

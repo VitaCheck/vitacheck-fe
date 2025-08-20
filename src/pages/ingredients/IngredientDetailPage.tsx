@@ -1,6 +1,6 @@
 // src/pages/ingredients/IngredientDetailPage.tsx
 import { useState, useEffect, useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import {
   useQuery,
   useMutation,
@@ -205,9 +205,22 @@ const IngredientDetailInner = () => {
   const [liked, setLiked] = useState(false);
   const isMobile = useIsMobile();
   const { ingredientName } = useParams<{ ingredientName: string }>();
+  const navigate = useNavigate();
 
   // 제목/탭/액션 공통 래퍼(네비 안쪽 그리드와 좌우 정렬 맞춤)
   const WRAP = "mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8";
+
+  // 로그인 상태 확인
+  const isLoggedIn = () => {
+    return !!localStorage.getItem("accessToken");
+  };
+
+  // 로그인 상태가 변경될 때마다 liked 상태 초기화
+  useEffect(() => {
+    if (!isLoggedIn()) {
+      setLiked(false);
+    }
+  }, []);
 
   const handleTabChange = (newTab: "info" | "alternatives" | "supplements") => {
     setTabHistory((p) => [...p, newTab]);
@@ -269,11 +282,28 @@ const IngredientDetailInner = () => {
     onSuccess: (res) => {
       if (res?.result?.isLiked !== undefined) setLiked(res.result.isLiked);
     },
-    onError: () => setLiked((prev) => !prev),
+    onError: (error: any) => {
+      // 401 에러인 경우 로그인 페이지로 이동
+      if (error?.response?.status === 401) {
+        navigate("/login");
+        setLiked(false); // liked 상태를 false로 초기화
+      } else {
+        // 다른 에러의 경우 이전 상태로 되돌리기
+        setLiked((prev) => !prev);
+      }
+    },
   });
 
   const handleLikeClick = () => {
+    // 로그인 상태 확인
+    if (!isLoggedIn()) {
+      navigate("/login");
+      return;
+    }
+
     if (!data?.id) return;
+
+    // API 호출 전에 UI 상태 업데이트
     setLiked((prev) => !prev);
     likeMutation.mutate(data.id);
   };
@@ -369,7 +399,7 @@ const IngredientDetailInner = () => {
     <div className={`${isMobile ? "pt-3 pb-5" : "py-10"}`}>
       {/* 제목 + 액션: 네비와 같은 내부 폭/인셋 */}
       <div className={`${WRAP} mb-4 sm:mb-6 flex items-center`}>
-        <h1 className="text-xl sm:text-2xl font-bold">{result.name}</h1>
+        <h1 className="text-2xl sm:text-2xl font-bold pl-4">{result.name}</h1>
         <div className="ml-auto flex space-x-3">
           <button
             onClick={onClickShare}
@@ -402,12 +432,12 @@ const IngredientDetailInner = () => {
         </div>
       </div>
 
-      {/* 탭: 같은 래퍼로 좌우 정렬 통일 */}
-      <div className={`${WRAP} mb-6`}>
+      {/* 탭: 제목과 같은 시작점으로 정렬 */}
+      <div className={`${WRAP}`}>
         <IngredientTabs activeTab={activeTab} setActiveTab={handleTabChange} />
       </div>
 
-      {/* 본문: 폭이 넓어지면 읽기 폭 제한 */}
+      {/* 본문: 탭과 같은 시작점으로 정렬 */}
       <div className={`${WRAP}`}>
         {activeTab === "info" && (
           <IngredientInfo id={ingredientName!} data={result} />

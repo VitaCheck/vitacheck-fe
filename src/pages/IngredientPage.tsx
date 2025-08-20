@@ -5,6 +5,7 @@ import catImage from "../assets/cat.png";
 import searchIcon from "../assets/search.png";
 import downIcon from "../assets/arrow_drop_down.png";
 import Navbar from "@/components/NavBar";
+import NoSearchResult from "@/components/ingredient/NoSearchResult";
 import {
   fetchIngredientSearch,
   fetchPopularIngredients,
@@ -168,9 +169,17 @@ const IngredientPage = () => {
       } else {
         setSearchResults([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("성분 검색 실패:", error);
-      setSearchResults([]);
+
+      // 404 에러나 다른 에러의 경우에도 빈 결과로 처리하여 "검색 결과 없음" UI 표시
+      if (error?.response?.status === 404) {
+        // 404 에러는 "검색 결과 없음"으로 처리
+        setSearchResults([]);
+      } else {
+        // 다른 에러의 경우에도 빈 결과로 처리
+        setSearchResults([]);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -214,13 +223,13 @@ const IngredientPage = () => {
   }, [isMobile]);
 
   return (
-    <div className="px-4 sm:px-36 pt-2 sm:pt-10 max-w-screen-xl mx-auto">
+    <div className="px-4 sm:px-36 pt-0 sm:pt-10 max-w-screen-xl mx-auto">
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
-      <div className="md:hidden">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50">
         <Navbar />
       </div>
 
-      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8 pl-2 sm:ml-8">
+      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8">
         성분별
       </h1>
 
@@ -229,8 +238,8 @@ const IngredientPage = () => {
         <div
           className={`flex items-center w-full ${
             isMobile
-              ? "max-w-md px-4 py-3 rounded-full border border-gray-300"
-              : "max-w-3xl rounded-full border border-gray-300 px-6 py-4 bg-white shadow-sm"
+              ? "max-w-sm px-6 py-3 rounded-full border border-gray-300 bg-white"
+              : "max-w-5xl rounded-full border border-gray-300 px-6 py-4 bg-gray-100 shadow-sm"
           }`}
         >
           <input
@@ -274,27 +283,18 @@ const IngredientPage = () => {
 
       {/* 검색 결과 또는 검색 결과 없음 메시지 */}
       {!isLoading && hasSearched && searchResults.length === 0 ? (
-        <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <img
-              src="/images/PNG/검색결과 없음 페이지/비타체크 캐릭터_0%_채도 낮춤.png"
-              alt="검색 결과 없음"
-              className="w-32 h-32 object-contain"
-            />
-          </div>
-          <p className="text-gray-500 text-lg">
-            일치하는 검색 결과가 없습니다.
-          </p>
-        </div>
+        <NoSearchResult />
       ) : !isLoading && searchResults.length > 0 ? (
         <div className="mb-8">
-          <h3 className="text-lg font-semibold mb-4 pl-2">검색 결과</h3>
+          <h3 className="text-lg font-semibold mb-4">검색 결과</h3>
           <div className="grid grid-cols-1 gap-3">
             {searchResults.map((item) => (
               <Link
                 key={item.id}
                 to={`/ingredient/${encodeURIComponent(item.name)}`}
-                className="w-full flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2]"
+                className={`flex justify-between items-center py-4 px-5 rounded-3xl hover:bg-gray-300 transition bg-[#f2f2f2] ${
+                  isMobile ? "w-full max-w-sm mx-auto" : "w-full"
+                }`}
               >
                 <span className="font-semibold text-base">{item.name}</span>
                 <FiChevronRight size={20} className="text-gray-500" />

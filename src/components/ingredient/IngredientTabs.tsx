@@ -30,12 +30,12 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
 
   return isMobile ? (
     /* 모바일 */
-    <div className="w-full border-b border-gray-200 flex">
+    <div className="w-full border-b border-gray-200 flex mb-10">
       {tabList.map((tab) => (
         <button
           key={tab.key}
           onClick={() => setActiveTab(tab.key)}
-          className="relative pb-2 font-semibold text-base transition-all duration-200 flex-1"
+          className="relative pb-4 font-semibold text-base transition-all duration-200 flex-1"
         >
           <span
             className={activeTab === tab.key ? "text-black" : "text-gray-400"}
@@ -43,7 +43,7 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
             {tab.label}
           </span>
           {activeTab === tab.key && (
-            <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[60px] h-[2px] bg-black rounded-full" />
+            <div className="absolute left-1/2 -translate-x-1/2 bottom-0 w-[60px] h-[3px] bg-black rounded-full" />
           )}
         </button>
       ))}
