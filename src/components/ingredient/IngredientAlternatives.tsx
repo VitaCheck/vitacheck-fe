@@ -98,6 +98,13 @@ export default function IngredientAlternatives({
       return <span className="text-lg font-medium">🥗</span>; // 기본 이모지
     }
 
+    const cleaned = v.trim().toLowerCase();
+
+    // "null", "undefined", "", "NULL" 등은 이모지로 대체
+    if (!cleaned || cleaned === "null" || cleaned === "undefined") {
+      return <span className="text-lg font-medium"> </span>;
+    }
+
     if (v.startsWith("http") || v.startsWith("/")) {
       return <img src={v} alt="" className="w-6 h-6 rounded object-cover" />;
     } else {
