@@ -144,13 +144,10 @@ function App() {
 
         const token = await getFcmToken();
         if (token && mounted) {
-          // 서버에 토큰 업서트 (백엔드와 합의된 스키마에 맞춰 전송)
+          // 서버에 토큰 업서트
           await axios
             .put("/api/v1/users/me/fcm-token", {
-              token,
-              platform: "web",
-              origin: location.origin,
-              userAgent: navigator.userAgent,
+              fcmToken: token,
             })
             .catch((e) => {
               console.warn("[FCM] upsert failed:", e);
