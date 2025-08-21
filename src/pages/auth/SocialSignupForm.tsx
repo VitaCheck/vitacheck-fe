@@ -302,10 +302,6 @@ export default function SocialSignupForm() {
         phoneNumber: form.phoneNumber.trim(),
       };
 
-      console.log("🚀 API 요청 데이터 확인");
-      console.log("🔑 Social Temp Token:", socialTempToken);
-      console.log("📦 Body Payload:", body);
-
       const result = await postSocialSignup(body, socialTempToken);
 
       const at = result?.result?.accessToken ?? result?.accessToken ?? "";
@@ -317,18 +313,14 @@ export default function SocialSignupForm() {
         replace: true,
       });
     } catch (err: any) {
-      console.error("회원가입 API 에러:", err); // PC 디버깅을 위해 콘솔 에러는 유지
+      console.error("회원가입 API 에러:", err);
 
       if (err?.response?.status === 401) {
         alert("인증이 만료되었습니다. 다시 소셜 로그인 해주세요.");
       } else {
-        // ================================================================
-        // ▼▼▼ [수정된 부분] 서버 에러 메시지를 alert에 직접 표시 ▼▼▼
-        // ================================================================
         const serverMessage = err?.response?.data?.message || JSON.stringify(err?.response?.data);
         const errorMessage = `회원가입에 실패했습니다.\n\n[서버 응답]\n${serverMessage}`;
         alert(errorMessage);
-        // ================================================================
       }
     } finally {
       setSubmitting(false);
@@ -339,6 +331,16 @@ export default function SocialSignupForm() {
 
   return (
     <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-6 p-6">
+      {/* ===== [수정된 부분] 디버깅 UI 추가 ===== */}
+      <div style={{ border: '2px solid red', padding: '10px', fontSize: '12px', borderRadius: '8px' }}>
+        <strong style={{ display: 'block', marginBottom: '4px' }}>[디버깅용 정보]</strong>
+        <p style={{ wordBreak: 'break-all' }}>
+          <strong>임시 토큰: </strong>
+          {(preset as any).mode === "token" ? ((preset as any).socialTempToken || "토큰 없음") : "N/A (토큰 모드 아님)"}
+        </p>
+      </div>
+      {/* ======================================= */}
+
       <h1 className="text-[22px] font-semibold">회원가입</h1>
 
       <div className="space-y-1">
