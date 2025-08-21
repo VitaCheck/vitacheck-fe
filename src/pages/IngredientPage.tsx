@@ -247,7 +247,7 @@ const IngredientPage = () => {
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 pt-0 sm:px-36 sm:pt-10">
-      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      {/* 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
       <div className="fixed top-0 right-3 left-3 z-50 bg-white md:hidden">
         {/* Safe Area 지원 및 배포 환경 대응 */}
         <div
