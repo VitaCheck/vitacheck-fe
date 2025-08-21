@@ -1,5 +1,7 @@
 // public/firebase-messaging-sw.js
+// v2025-08-21
 
+// 최신 compat 로더
 importScripts(
   "https://www.gstatic.com/firebasejs/10.12.4/firebase-app-compat.js"
 );
@@ -7,30 +9,41 @@ importScripts(
   "https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js"
 );
 
+// ✅ vitacheck-1ee1d 로 통일 (프로젝트 불일치 금지)
 firebase.initializeApp({
-  apiKey: "AIzaSyD3_7NpZi9Haw_IR4qzwpX-KQDzMIwlam8",
-  authDomain: "vitacheck-93554.firebaseapp.com",
-  projectId: "vitacheck-93554",
-  storageBucket: "vitacheck-93554.appspot.com",
-  messagingSenderId: "498954682157",
-  appId: "1:498954682157:web:7ca8b0a8ff2a736e785da4",
+  apiKey: "AIzaSyDhCaf3Ockukla3eR3lx4B3m9TsDhvscMY",
+  authDomain: "vitacheck-1ee1d.firebaseapp.com",
+  projectId: "vitacheck-1ee1d",
+  storageBucket: "vitacheck-1ee1d.appspot.com",
+  messagingSenderId: "802557675495",
+  appId: "1:802557675495:web:7c6c855f4ca135ca049f42",
 });
 
 const messaging = firebase.messaging();
+
+// 설치 즉시 활성화(배포 후 SW 교체 확실히 반영)
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (e) => e.waitUntil(self.clients.claim()));
 
 messaging.onBackgroundMessage(async (payload) => {
   const n = payload.notification || {};
   const d = payload.data || {};
   const title = n.title || d.title || "VitaCheck";
   const body = n.body || d.body || "알림이 도착했어요.";
+
+  // ✅ 서비스 도메인에 맞춘 기본 링크
   const link =
     (payload.fcmOptions && payload.fcmOptions.link) ||
     d.link ||
-    "https://vitachecking.com/alarm";
-  await self.registration.showNotification(title, { body, data: { link } });
+    "https://vita-check.com/alarm";
+
+  await self.registration.showNotification(title, {
+    body,
+    icon: "/icons/icon-192.png",
+    data: { link },
+  });
 });
 
-// public/firebase-messaging-sw.js (click 핸들러만 교체/추가)
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
   const raw =
