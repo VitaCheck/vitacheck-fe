@@ -366,8 +366,7 @@ export default function SocialSignupForm() {
       onSubmit={onSubmit}
       className="w-full max-w-[420px] mx-auto px-5 py-6"
     >
-      <h1 className="text-[22px] font-semibold text-[#2B2B2B]">회원가입</h1>
-
+      <h1 className="text-[24px] font-semibold">회원가입</h1>
       <div className="mt-8 space-y-8">
         {/* 이메일 */}
         <div className="space-y-2">
@@ -401,9 +400,7 @@ export default function SocialSignupForm() {
             onChange={onChange}
             placeholder="예: 유저1234"
             required
-            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
-                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
-                     focus:outline-none focus:border-[#2B2B2B]"
+            className="ml-[12px] w-full border-0 border-b border-[#D9D9D9] bg-transparent py-3 text-[16px] text-[#6B6B6B] placeholder-[#AAAAAA] outline-none focus:border-[#202020]"
           />
         </div>
 
@@ -420,13 +417,11 @@ export default function SocialSignupForm() {
             maxLength={13}
             placeholder="010-0000-0000"
             required
-            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
-                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
-                     focus:outline-none focus:border-[#2B2B2B]"
+            className="ml-[12px] w-full border-0 border-b border-[#D9D9D9] bg-transparent py-3 text-[16px] text-[#6B6B6B] placeholder-[#AAAAAA] outline-none focus:border-[#202020]"
           />
         </div>
       </div>
-
+      <br /> <br />
       {/* 약관 동의 */}
       <div className="mb-6 space-y-3 text-[#202020]">
         <label className="flex items-center gap-2 font-semibold text-[22px]">
@@ -458,20 +453,17 @@ export default function SocialSignupForm() {
           handleCheckboxChange={(key) => handleCheckboxChange(key)}
         />
       </div>
-
       {errorMessage && (
         <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
       )}
-
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] bg-white/70 px-4 pb-6 pt-2 backdrop-blur">
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-12 w-full h-[68px] rounded-[16px] bg-[#FFE88D] text-[20px] font-semibold text-blackshadow-[0_2px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition"
-        >
-          다음
-        </button>
-      </div>
+      {/* CTA 버튼 */}
+      <button
+        type="submit"
+        disabled={submitting}
+        className="mt-12 w-full h-[68px] rounded-[16px] bg-[#FFE88D] text-[20px] font-semibold text-blackshadow-[0_2px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition"
+      >
+        다음
+      </button>
     </form>
   );
 }
