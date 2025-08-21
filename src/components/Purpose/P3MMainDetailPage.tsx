@@ -2,7 +2,6 @@
 import React, { useState, useRef } from "react";
 import ShareLinkPopup from "./P3MShareLinkPopup";
 import { useNavigate } from "react-router-dom";
-import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
 import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
