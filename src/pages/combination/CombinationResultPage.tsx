@@ -2,15 +2,104 @@ import { useState, useEffect, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import checkedBoxIcon from '../../assets/check box.png';
 import vitaminArrow from '../../assets/비타민 C_arrow.png';
-import checkboxIcon from '../../assets/check box.png';
 import boxIcon from '../../assets/box.png';
 import flipIcon from '../../assets/flip.png';
 import axios from '@/lib/axios';
-import selectionLine1 from '../../assets/selection line 1.png';
-import selectionLine2 from '../../assets/selection line 2.png';
 import Navbar from '@/components/NavBar';
 import line from '/images/PNG/조합 2-1/background line.png';
-import ShareLinkPopup from '@/components/Purpose/P3MShareLinkPopup';
+import ShareLinkPopup from '../../components/combination/ShareLinkPopup'
+// Kakao SDK 타입 정의
+interface KakaoSDK {
+  init: (key: string) => void;
+  isInitialized: () => boolean;
+  Share: {
+    sendCustom: (opt: { templateId: number; templateArgs?: Record<string, any> }) => void;
+  };
+}
+
+const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY!;
+if (!window.Kakao?.isInitialized()) {
+  window.Kakao?.init(KAKAO_JS_KEY);
+}
+const KAKAO_TEMPLATE_ID = 3139; // 콘솔의 템플릿 ID
+
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const el = document.createElement("textarea");
+    el.value = text;
+    el.style.position = "fixed";
+    el.style.left = "-9999px";
+    document.body.appendChild(el);
+    el.select();
+    document.execCommand("copy");
+    document.body.removeChild(el);
+    return true;
+  }
+}
+
+async function ensureKakaoReady() {
+  if (window.Kakao?.isInitialized()) return true;
+
+  // 스크립트가 없다면 주입
+  if (!window.Kakao) {
+    await new Promise<void>((res, rej) => {
+      const s = document.createElement("script");
+      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
+      s.async = true;
+      s.onload = () => res();
+      s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  if (!window.Kakao) return false;
+  if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY);
+  return true;
+}
+
+
+function ShareSheet({
+  open, onClose, onKakao, onCopy,
+}: { open: boolean; onClose: () => void; onKakao: () => void; onCopy: () => void; }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      <button className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="닫기" />
+      <div className="absolute left-0 right-0 bottom-0 w-full" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
+        <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
+          <div className="px-5 pt-6 pb-4"><h3 className="text-[15px] font-semibold text-center">공유하기</h3></div>
+          <button onClick={onKakao} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+            <img src="/images/PNG/성분 2-1/kakao.png" className="h-9 w-9" alt="카카오톡" />
+            <span className="text-[15px]">카카오톡으로 공유하기</span>
+          </button>
+          <div className="h-px w-full bg-gray-200" />
+          <button onClick={onCopy} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+            <img src="/images/PNG/성분 2-1/link.png" className="h-9 w-9" alt="링크" />
+            <span className="text-[15px]">링크 복사하기</span>
+          </button>
+          <div className="h-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({ open, onClose, message }: { open: boolean; onClose: () => void; message: string; }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      <button className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="닫기" />
+      <div className="absolute left-1/2 top-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
+        <p className="mb-5 whitespace-pre-line text-center text-gray-700">{message}</p>
+        <div className="flex justify-center">
+          <button onClick={onClose} className="h-10 min-w-[120px] rounded-xl bg-[#FFE17E] font-semibold text-black hover:brightness-95">확인</button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -63,7 +152,6 @@ interface Combination {
 
 export default function CombinationResultPage() {
   const isMobile = useIsMobile();
-  const [showSharePopup, setShowSharePopup] = useState(false);
 
   // 선택: 더 촘촘한 올림 (1250 -> 1300)
   function niceRoundUp(n: number) {
@@ -203,6 +291,79 @@ export default function CombinationResultPage() {
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const [cautionCombinations, setCautionCombinations] = useState<Combination[]>([]);
 
+
+  // 공유 바텀시트/확인 모달
+const [sheetOpen, setSheetOpen] = useState(false);
+const [confirmOpen, setConfirmOpen] = useState(false);
+
+const [shareOpen, setShareOpen] = useState(false);
+
+const shareUrl = window.location.origin.includes("vitachecking.com")
+  ? window.location.href
+  : "https://vitachecking.com/combination-result";
+
+const shareImage = selectedItems?.[0]?.imageUrl
+  ?? "https://vitachecking.com/static/share-default.png";
+
+const shareTitle = "내 영양제 조합 결과";
+
+// 템플릿 숫자: 초과/권장충족/주의조합
+const overCount = ingredientResults.filter(i => computeFillPercent(i) > UPPER_LINE_POS).length;
+
+const metCount = ingredientResults.filter(i =>
+  (i.recommendedAmount ?? 0) > 0 && i.totalAmount >= (i.recommendedAmount ?? 0)
+).length;
+
+const cautionCount = cautionCombinations.length;
+
+function isMobileUA() {
+  return /iPhone|Android/i.test(navigator.userAgent);
+}
+
+const onClickShare = () => setShareOpen(true);
+
+async function onShareCopy() {
+  const ok = await copyToClipboard(shareUrl);
+  setSheetOpen(false);
+  setConfirmOpen(ok);
+}
+
+async function onShareKakao() {
+  try {
+    // 모바일에서만 시도 (PC는 KakaoLink 열 수 없음)
+    if (!isMobileUA()) {
+      const ok = await copyToClipboard(shareUrl);
+      setSheetOpen(false);
+      setConfirmOpen(ok);
+      return;
+    }
+
+    const ready = await ensureKakaoReady();
+    if (!ready) throw new Error("Kakao SDK not ready");
+
+    // ✅ 커스텀 템플릿 호출: #{over_count} / #{met_count} / #{caution_count} 치환
+    (window.Kakao as any)!.Share.sendCustom({
+      templateId: KAKAO_TEMPLATE_ID,
+      templateArgs: {
+        over_count: String(overCount),
+        met_count: String(metCount),
+        caution_count: String(cautionCount),
+        WEB_URL: shareUrl,
+        MOBILE_WEB_URL: shareUrl,
+      },
+    });
+
+    setSheetOpen(false);
+    setConfirmOpen(true);
+  } catch (e) {
+    // 실패/비설치 → 복사 폴백
+    const ok = await copyToClipboard(shareUrl);
+    setSheetOpen(false);
+    setConfirmOpen(ok);
+  }
+}
+
+
   const filteredIngredients: IngredientResult[] =
     activeTab === '전체'
       ? ingredientResults
@@ -243,6 +404,23 @@ export default function CombinationResultPage() {
           const shouldShow = computeFillPercent(i) > UPPER_LINE_POS;
           return shouldShow;
         });
+
+        const copyShareLink = async () => {
+          const shareUrl = window.location.origin.includes("vitachecking.com")
+            ? window.location.href
+            : "https://vitachecking.com/combination-result";
+          try {
+            await navigator.clipboard.writeText(shareUrl);
+            alert("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
+          } catch {
+            const el = document.createElement("textarea");
+            el.value = shareUrl;
+            el.style.position = "fixed"; el.style.left = "-9999px";
+            document.body.appendChild(el); el.select();
+            document.execCommand("copy"); document.body.removeChild(el);
+            alert("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
+          }
+        };
 
   const fetchCombinationResult = async () => {
     try {
@@ -365,14 +543,6 @@ export default function CombinationResultPage() {
     });
   };
 
-  const handleShare = () => {
-    setShowSharePopup(true);
-  };
-
-  const handleCloseSharePopup = () => {
-    setShowSharePopup(false);
-  };
-
   const FlipCard: React.FC<{ name: string; description: string }> = ({ name, description }) => {
     const [flipped, setFlipped] = useState(false);
     return (
@@ -469,8 +639,8 @@ export default function CombinationResultPage() {
 
         <div className="flex items-center gap-3">
           {/* 공유 */}
-          <button type="button" aria-label="공유" className="active:scale-95" onClick={handleShare}>
-            <img
+          <button type="button" aria-label="공유" className="active:scale-95" onClick={onClickShare}>
+          <img
               src="/images/PNG/조합 3-1/공유.png"
               alt="공유"
               className="h-[35px] w-[35px] object-contain"
@@ -625,10 +795,21 @@ export default function CombinationResultPage() {
       {/* 모바일 섭취알림 버튼 */}
       <div className="mt-4 flex justify-center md:hidden">
         <button
-          onClick={() => navigate('/alarm/settings')}
-          className="mt-2 flex h-[54px] w-[370px] items-center justify-center rounded-[14px] bg-[#FFEB9D]"
+          onClick={() => {
+            if (!alarmEnabled) return; // 가드
+            navigate('/alarm/settings');
+          }}
+          disabled={!alarmEnabled}
+          aria-disabled={!alarmEnabled}
+          title={!alarmEnabled ? '제품을 1개만 선택해주세요' : '섭취알림 등록하기'}
+          className={[
+            'mt-2 flex h-[54px] w-[370px] items-center justify-center rounded-[14px] font-medium transition',
+            alarmEnabled
+              ? 'bg-[#FFEB9D] hover:brightness-95'
+              : 'cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]',
+          ].join(' ')}
         >
-          <span className="text-[20px] font-medium">섭취알림 등록하기 →</span>
+          <span className="text-[20px]">섭취알림 등록하기 →</span>
         </button>
       </div>
       {/* PC 섭취량 탭 - 전체 / 초과 */}
@@ -1049,14 +1230,16 @@ export default function CombinationResultPage() {
           </section>
         </>
       )}
+      {/* ===== 공유 팝업 ===== */}
+      {shareOpen && (
+  <ShareLinkPopup
+    onClose={() => setShareOpen(false)}
+    supplementUrl={shareUrl}
+    supplementImageUrl={shareImage}
+    supplementName={shareTitle}
+  />
+)}
 
-      {/* 모바일 공유 팝업 */}
-      {showSharePopup && isMobile && (
-        <ShareLinkPopup
-          onClose={handleCloseSharePopup}
-          supplementUrl={window.location.href}
-        />
-      )}
     </div>
   );
 }
