@@ -9,6 +9,7 @@ import NoSearchResult from "@/components/ingredient/NoSearchResult";
 import {
   fetchIngredientSearch,
   fetchPopularIngredients,
+  recordSearchLog,
 } from "@/apis/ingredient";
 import type {
   IngredientSearchResult,
@@ -206,6 +207,9 @@ const IngredientPage = () => {
     saveSearchHistory(trimmed);
 
     try {
+      // 검색 기록 API 호출 (성공/실패와 관계없이 진행)
+      await recordSearchLog(trimmed);
+
       // 실제 API 호출로 성분 검색
       const response = await fetchIngredientSearch({ keyword: trimmed });
 
