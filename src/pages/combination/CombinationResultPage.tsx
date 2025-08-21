@@ -798,7 +798,7 @@ const cautionCount = cautionCombinations.length;
                   <div
                     className="flex w-[120px] cursor-pointer items-center px-2"
                     onClick={() =>
-                      navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
+                      navigate(`/ingredients/${encodeURIComponent(ingredientName)}`)
                     }
                   >
                     <span
@@ -914,7 +914,7 @@ const cautionCount = cautionCombinations.length;
                     <div
                       className="flex h-[48px] cursor-pointer items-center"
                       onClick={() =>
-                        navigate(`/ingredient?name=${encodeURIComponent(ingredientName)}`)
+                        navigate(`/ingredients/${encodeURIComponent(ingredientName)}`)
                       }
                     >
                       <span className="text-[20px] font-medium lg:text-[24px]">
@@ -1072,23 +1072,16 @@ const cautionCount = cautionCombinations.length;
       )}
       {/* ===== 공유 팝업 ===== */}
       // 하단 공유 팝업 호출부만 수정
-{shareOpen && (
+      {shareOpen && (
   <ShareLinkPopup
     onClose={() => setShareOpen(false)}
     supplementUrl={shareUrl}
     supplementImageUrl={shareImage}
     supplementName={shareTitle}
-    templateId={KAKAO_TEMPLATE_ID}
-    templateArgs={{
-      // 텍스트 변수들: 값은 문자열이어야 함
-      over_count: String(overCount),
-      met_count: String(metCount),
-      caution_count: String(cautionCount),
-
-      // 링크 변수: 콘솔 변수명과 정확히 일치 (예: web_url / mobile_web_url)
-      web_url: shareUrl,
-      mobile_web_url: shareUrl,
-    }}
+    // templateId={KAKAO_TEMPLATE_ID}  // ← 커스텀 템플릿은 잠시 끄세요
+    overCount={overCount}
+    metCount={metCount}
+    cautionCount={cautionCount}
   />
 )}
 
