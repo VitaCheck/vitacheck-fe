@@ -110,7 +110,7 @@ export const postSocialSignup = async (
   signupToken?: string
 ) => {
   const res = await axios.post<SocialSignupResponse>(
-    `${BASE_URL}/api/v1/auth/login`,
+    `${BASE_URL}/api/v1/auth/social-signup`,
     data,
     {
       withCredentials: true,
