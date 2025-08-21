@@ -38,7 +38,10 @@ const CameraView = ({ onClose }: CameraViewProps) => {
       {/* 상단 바 */}
       <div className="w-full text-white text-sm py-2 px-4 flex justify-between items-center">
         <span>카메라</span>
-        <button onClick={onClose} className="text-2xl leading-none">
+        <button
+          onClick={onClose}
+          className="text-2xl leading-none cursor-pointer"
+        >
           ✕
         </button>
       </div>
