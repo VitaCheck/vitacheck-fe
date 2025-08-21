@@ -192,7 +192,7 @@ const PurposeIngredientProducts = () => {
             isMobile
               ? "mt-[12px] text-[16px]"
               : "mt-[16px] text-[22px]"
-          } font-medium text-center line-clamp-2`}
+          } font-medium text-center whitespace-normal break-keep line-clamp-2`}
         >
           {product.name}
         </p>

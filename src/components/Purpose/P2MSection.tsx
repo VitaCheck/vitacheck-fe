@@ -121,7 +121,7 @@ const RecommendedProductSectionMobile = ({
                     className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                   />
                 </div>
-                <p className="mt-[12px] text-[17px] font-medium text-center line-clamp-2">
+                <p className="mt-[12px] text-[17px] font-medium text-center whitespace-normal break-keep line-clamp-2">
                   {product.title}
                 </p>
               </div>

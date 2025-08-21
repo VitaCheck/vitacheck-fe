@@ -7,6 +7,10 @@ import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
 import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
+import heart from "@/assets/detailpagepng/heart.png";
+import heartfill from "@/assets/detailpagepng/heartfill.png";
+import share from "@/assets/detailpagepng/share.png";
+import i from "@/assets/detailpagepng/i.png";
 
 interface MobileProps {
   product: any;
@@ -52,7 +56,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
   return (
     <div className="sm:hidden flex flex-col">
-      <div className="mx-auto mt-[70px] mb-[24px] flex flex-col items-center">
+      <div className="mx-auto mt-[70px] flex flex-col items-center">
         {/* 제품 이미지, 브랜드명, 제품명 */}
         <div className="flex flex-col w-full max-w-[338px] mx-[46px]">
           <div className="relative w-full max-w-[338px] h-[338px]">
@@ -64,19 +68,19 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             <div className="absolute bottom-[19px] right-[23px] flex gap-[7px]">
               <button
                 onClick={handleSharePopupOpen}
-                className="w-[32px] h-[32px] flex items-center justify-center border-[#AAAAAA] border-1 bg-white rounded-full"
+                className="w-[44px] h-[44px] flex items-center justify-center bg-white rounded-full"
               >
-                <GoShareAndroid className="w-[20px] h-[20px] cursor-pointer text-black" />
+                <img src={share} alt="공유" className="w-[44px] h-[44px]" />
               </button>
               <button
                 onClick={toggleLike}
-                className="w-[32px] h-[32px] flex items-center justify-center border-[#AAAAAA] border-1 bg-white rounded-full cursor-pointer"
+                className="w-[44px] h-[44px] flex items-center justify-center bg-white rounded-full cursor-pointer"
               >
-                {liked ? (
-                  <GoHeartFill className="w-[20px] h-[20px] text-[#FD657E]" />
-                ) : (
-                  <GoHeart className="w-[20px] h-[20px] text-[#FD657E]" />
-                )}
+                <img
+                  src={liked ? heartfill : heart}
+                  alt="찜"
+                  className="w-[44px] h-[44px]"
+                />
               </button>
             </div>
           </div>
@@ -114,7 +118,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
         />
 
         {/* 상세정보 / 쿠팡 바로가기 */}
-        <div className="flex justify-center mx-auto w-full max-w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
+        <div className="flex justify-center mx-auto w-full max-w-[320px] h-[46px] mt-[12px] mb-[17px] gap-x-[12px]">
           <div
             onClick={scrollToIngredientTab}
             className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px] cursor-pointer"
@@ -134,10 +138,14 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
             </a>
           )}
         </div>
+        <div className="flex justify-start items-center gap-[4px]">
+          <img src={i} alt="i" className="w-[11px] h-[11px]" />
+          <span className="font-medium text-[#353535] text-[9px] tracking-[-0.3px]">위 쿠팡링크는 쿠팡 파트너스 활동의 일환으로 이에 따른 일정액의 수수료를 제공받습니다.</span>
+        </div>
       </div>
 
       {/* 회색 선 */}
-      <div className="mt-[24px] bg-[#F3F3F3] w-full h-[4px]" />
+      <div className="mt-[26px] bg-[#F3F3F3] w-full h-[4px]" />
 
       {/* 브랜드 제품 리스트 */}
       <div className="w-full mx-auto mt-[28px]">

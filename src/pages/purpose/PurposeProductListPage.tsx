@@ -75,8 +75,6 @@ const PurposeProductList = () => {
   );
 
   const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
-  
-  // ⭐️ 1. ref를 모바일과 PC용으로 분리합니다.
   const mobileLoaderRef = useRef<HTMLDivElement | null>(null);
   const pcLoaderRef = useRef<HTMLDivElement | null>(null);
 
@@ -94,7 +92,7 @@ const PurposeProductList = () => {
   const handleClosePopup = () => setIsPopupOpen(false);
   const handlePurposeSelect = (item: string) => {
     setActivePurpose(item);
-    setVisibleCount(ITEMS_PER_PAGE); // 목적 변경 시 리스트를 처음부터 보여주도록 초기화
+    setVisibleCount(ITEMS_PER_PAGE);
     handleClosePopup();
   };
 
@@ -178,7 +176,6 @@ const PurposeProductList = () => {
 
   // ---------------- 무한 스크롤 ----------------
   useEffect(() => {
-    // ⭐️ 3. IntersectionObserver 로직을 수정하여 두 ref를 모두 감시합니다.
     const observer = new IntersectionObserver(
       (entries) => {
         const target = entries[0];
@@ -223,8 +220,8 @@ const PurposeProductList = () => {
       );
 
       uniquePurposes.sort((a, b) => {
-        const keyA = codePurposeMap[a]; // '눈건강' -> 'EYE'
-        const keyB = codePurposeMap[b]; // '뼈건강' -> 'BONE'
+        const keyA = codePurposeMap[a];
+        const keyB = codePurposeMap[b];
         return purposeOrder.indexOf(keyA) - purposeOrder.indexOf(keyB);
       });
 
@@ -332,7 +329,6 @@ const PurposeProductList = () => {
               Array.from({ length: 2 }).map((_, i) => (
                 <SkeletonSection key={`more-${i}`} />
               ))}
-            {/* ⭐️ 2. 모바일용 ref를 연결합니다. */}
             <div ref={mobileLoaderRef} className="h-[50px] w-full"></div>
           </>
         ) : (
@@ -366,7 +362,6 @@ const PurposeProductList = () => {
                 Array.from({ length: 2 }).map((_, i) => (
                   <SkeletonSection key={`more-${i}`} />
                 ))}
-              {/* ⭐️ 2. PC용 ref를 연결합니다. */}
               <div ref={pcLoaderRef}></div>
             </>
           ) : (
