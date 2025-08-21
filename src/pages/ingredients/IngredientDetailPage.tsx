@@ -339,6 +339,7 @@ const IngredientDetailInner = () => {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
   const shareUrl = useMemo(() => window.location.href, []);
   const shareTitle = useMemo(() => data?.name ?? "VitaCheck", [data]);
 
@@ -347,8 +348,73 @@ const IngredientDetailInner = () => {
       setSheetOpen(true);
       return;
     }
-    const ok = await copyToClipboard(shareUrl);
-    setConfirmOpen(ok);
+    // PC 버전에서는 카카오톡 공유 시도
+    try {
+      // 카카오 SDK 초기화 확인
+      if (typeof window === "undefined" || !window.Kakao) {
+        console.error("카카오 SDK가 로드되지 않았습니다.");
+        // SDK 로드 실패 시 링크 복사로 대체
+        const ok = await copyToClipboard(shareUrl);
+        setConfirmOpen(ok);
+        return;
+      }
+
+      // 카카오 SDK 초기화
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_APP_KEY);
+        console.log("카카오 SDK 초기화 완료");
+      }
+
+      // 성분 정보를 포함한 공유 템플릿
+      const shareDescription = data?.description
+        ? `${data.description.substring(0, 100)}...`
+        : "VitaCheck에서 성분 정보를 확인해 보세요.";
+
+      // 기본 이미지 사용 (성분별 이미지가 없는 경우)
+      const shareImageUrl =
+        "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png";
+
+      // 공유 데이터 로깅
+      const shareData = {
+        objectType: "feed",
+        content: {
+          title: `${shareTitle} - VitaCheck`,
+          description: shareDescription,
+          imageUrl: shareImageUrl,
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+        buttons: [
+          {
+            title: "바로 보기",
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+        ],
+      };
+
+      console.log("🔥 [카카오톡] PC 공유 데이터:", shareData);
+      console.log("🔥 [카카오톡] PC 공유 URL:", shareUrl);
+      console.log("🔥 [카카오톡] PC 공유 제목:", shareTitle);
+
+      // 카카오톡 공유 실행
+      window.Kakao.Share.sendDefault(shareData);
+
+      console.log("카카오톡 PC 공유 성공");
+
+      // PC 버전 카카오톡 공유 성공 메시지
+      setConfirmMessage("카카오톡으로 전송하실 수 있습니다!");
+      setConfirmOpen(true);
+    } catch (error) {
+      console.error("카카오톡 PC 공유 실패:", error);
+      // 공유 실패 시 링크 복사로 대체
+      const ok = await copyToClipboard(shareUrl);
+      setConfirmOpen(ok);
+    }
   }
 
   async function onShareKakao() {
@@ -426,6 +492,7 @@ const IngredientDetailInner = () => {
       // 공유 실패 시 링크 복사로 대체
       const ok = await copyToClipboard(shareUrl);
       setSheetOpen(false);
+      setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
       setConfirmOpen(ok);
     }
   }
@@ -433,6 +500,8 @@ const IngredientDetailInner = () => {
   async function onShareCopy() {
     const ok = await copyToClipboard(shareUrl);
     setSheetOpen(false);
+    // 모바일 링크 복사 메시지
+    setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
     setConfirmOpen(ok);
   }
 
@@ -540,9 +609,7 @@ const IngredientDetailInner = () => {
       <ConfirmModal
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        message={
-          "공유가 완료되었습니다!\n카카오톡으로 전송되었거나 링크가 복사되었습니다."
-        }
+        message={confirmMessage}
       />
     </div>
   );
