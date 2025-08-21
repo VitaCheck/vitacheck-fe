@@ -1,4 +1,3 @@
-// src/lib/push.ts
 import axios from "@/lib/axios";
 import { registerServiceWorker, getFcmToken } from "@/lib/firebase";
 import { isSupported } from "firebase/messaging";
@@ -6,32 +5,27 @@ import {
   onForegroundMessage,
   requestNotificationPermission,
 } from "@/lib/firebase";
-
-// ★ 추가: AT 확인, 중복호출/중복업로드 방지
 import { getAccessToken } from "@/lib/auth";
 
-let fcmSyncInFlight = false;           // 동시 호출 락
-let lastSyncedToken: string | null = null; // 같은 토큰 재업서트 방지(메모리)
-const LS_KEY = "vc_last_fcm_token";    // 새로고침 후에도 캐시 유지하려면 로컬스토리지 사용
+let fcmSyncInFlight = false;
+let lastSyncedToken: string | null = null;
+const LS_KEY = "vc_last_fcm_token";
 
 try {
   const cached = localStorage.getItem(LS_KEY);
   if (cached) lastSyncedToken = cached;
 } catch { /* safari 프라이버시 모드 대비 */ }
 
-// 내부 공통 업서트 함수
-async function upsertToServer(payload: Record<string, any>) {
+/** ✅ 서버에 정확히 { fcmToken, deviceType: "WEB" } 형태로 업서트 */
+async function upsertFcmToken(token: string) {
   await axios.put("/api/v1/users/me/fcm-token", {
-    ...payload,
-    platform: payload.platform ?? "web",
-    origin: location.origin,
-    userAgent: navigator.userAgent,
+    fcmToken: token,
+    deviceType: "WEB",
   });
 }
 
 /** 공통 가드: 비로그인/미지원/권한 미허용 등 빠른 리턴 */
 async function preconditions(forceRequest: boolean) {
-  // ★ AT 없으면 즉시 중단 → 로그인 페이지에서 401 폭주 방지
   const at = getAccessToken();
   if (!at) return { ok: false as const, reason: "no_access_token" };
 
@@ -51,8 +45,6 @@ async function preconditions(forceRequest: boolean) {
 
 export async function syncFcmToken(options?: { forceRequest?: boolean }) {
   const force = options?.forceRequest ?? false;
-
-  // ★ 중복 호출 방지
   if (fcmSyncInFlight) return false;
   fcmSyncInFlight = true;
 
@@ -63,10 +55,9 @@ export async function syncFcmToken(options?: { forceRequest?: boolean }) {
     const token = await getFcmToken().catch(() => null);
     if (!token) return false;
 
-    // ★ 동일 토큰이면 서버 호출 생략
     if (lastSyncedToken === token) return true;
 
-    await upsertToServer({ token });
+    await upsertFcmToken(token);
 
     lastSyncedToken = token;
     try { localStorage.setItem(LS_KEY, token); } catch {}
@@ -90,11 +81,10 @@ export async function enableWebPush(opts?: {
         | "permission_blocked"
         | "no_token"
         | "sw_error"
-        | "no_access_token"; // ★ 추가
+        | "no_access_token";
       error?: any;
     }
 > {
-  // ★ 로그인 여부 확인
   if (!getAccessToken()) {
     return { ok: false, reason: "no_access_token" };
   }
@@ -117,7 +107,7 @@ export async function enableWebPush(opts?: {
   const token = await getFcmToken().catch(() => null);
   if (!token) return { ok: false, reason: "no_token" };
 
-  await upsertToServer({ token });
+  await upsertFcmToken(token);
 
   lastSyncedToken = token;
   try { localStorage.setItem(LS_KEY, token); } catch {}
@@ -145,12 +135,11 @@ export async function getCurrentFcmToken(): Promise<string | null> {
   return getFcmToken().catch(() => null);
 }
 
-/** 서버 컨벤션이 fcmToken 키일 때 */
+/** (호환용) fcmToken 키를 쓰던 기존 호출부도 동일 포맷으로 전송 */
 export async function syncFcmTokenAsFcmTokenKey(options?: {
   forceRequest?: boolean;
 }) {
   const force = options?.forceRequest ?? false;
-
   if (fcmSyncInFlight) return false;
   fcmSyncInFlight = true;
 
@@ -163,7 +152,7 @@ export async function syncFcmTokenAsFcmTokenKey(options?: {
 
     if (lastSyncedToken === token) return true;
 
-    await upsertToServer({ fcmToken: token });
+    await upsertFcmToken(token);
 
     lastSyncedToken = token;
     try { localStorage.setItem(LS_KEY, token); } catch {}
