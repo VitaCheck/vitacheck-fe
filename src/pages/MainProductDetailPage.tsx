@@ -59,18 +59,32 @@ const ProductDetailPage = () => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  /** 내 찜 목록으로 liked 상태 재확정 */
+  /** 서버 내 찜 상태로 liked 업데이트 + 콘솔 출력 */
   const refreshLikedState = useCallback(async (supplementId: number) => {
     const accessToken = localStorage.getItem("accessToken");
-    if (!accessToken) return; // 비로그인 시 스킵
+    if (!accessToken) return;
 
     try {
-      const res = await axios.get<{ id: number }[]>("/api/v1/likes/me", {
+      const res = await axios.get("/api/v1/likes/me", {
         headers: { Authorization: `Bearer ${accessToken}` },
       });
-      const likedIds = new Set(res.data.map((x) => x.id));
+
+      // 서버 응답 배열 안전 처리
+      const likedList = Array.isArray(res.data.result)
+        ? res.data.result
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+      const likedIds = new Set(likedList.map((x: { supplementId: number }) => x.supplementId));
       const isLiked = likedIds.has(supplementId);
+
       setProduct((prev) => (prev ? { ...prev, liked: isLiked } : prev));
+
+      console.log(
+        `💖 서버 찜 상태 확인 (supplementId=${supplementId}):`,
+        isLiked ? "찜 되어 있음 ❤️" : "찜 안 되어 있음 🤍"
+      );
     } catch (e) {
       console.warn("[likes/me] refresh failed", e);
     }
@@ -84,13 +98,13 @@ const ProductDetailPage = () => {
 
       try {
         const supplementId = Number(id);
+        const accessToken = localStorage.getItem("accessToken");
+
         // 상세 정보(liked 포함)
         const productResponse = await axios.get<ApiProduct>("/api/v1/supplements", {
           params: { id: supplementId },
           headers: {
-            Authorization: localStorage.getItem("accessToken")
-              ? `Bearer ${localStorage.getItem("accessToken")}`
-              : "",
+            Authorization: accessToken ? `Bearer ${accessToken}` : "",
           },
         });
 
@@ -101,13 +115,9 @@ const ProductDetailPage = () => {
         };
 
         setProduct(mappedProduct);
-        // 상세의 liked와 서버 '내 찜' 목록이 다를 수 있으므로 재확정
-        refreshLikedState(mappedProduct.id);
 
-        console.log(
-          "💖 페이지 로드 시 서버 찜 상태:",
-          mappedProduct.liked ? "찜 되어 있음" : "찜 안 되어 있음"
-        );
+        // 서버 찜 상태로 재확정 및 콘솔 출력
+        refreshLikedState(mappedProduct.id);
 
         // 브랜드 제품 리스트
         const brandIdToFetch = fetchedProduct.brandId || fetchedProduct.supplementId;
@@ -148,14 +158,16 @@ const ProductDetailPage = () => {
       return;
     }
 
+    const supplementId = product.id;
     const newLikedState = !product.liked;
+
     // Optimistic UI
     setProduct((prev) => (prev ? { ...prev, liked: newLikedState } : null));
 
     try {
       await axios.post(
-        `/api/v1/supplements/${product.id}/like`,
-        { supplementId: product.id },
+        `/api/v1/supplements/${supplementId}/like`,
+        {}, // API 토글용 빈 body
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -166,11 +178,10 @@ const ProductDetailPage = () => {
       console.log("✅ 서버에 찜 상태 반영 완료");
     } catch (error) {
       console.error("❌ 찜 상태 업데이트 실패:", error);
-      // 롤백
       setProduct((prev) => (prev ? { ...prev, liked: !newLikedState } : null));
     } finally {
-      // 최종 서버 상태로 동기화
-      refreshLikedState(product.id);
+      // 최종 서버 상태로 동기화 + 콘솔 출력
+      refreshLikedState(supplementId);
     }
   };
 
