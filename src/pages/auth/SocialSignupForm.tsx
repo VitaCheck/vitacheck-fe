@@ -16,8 +16,8 @@ function decodeJwt(token: string): JwtPayload | null {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
-    return JSON.parse(json);
-  } catch {
+    return JSON.parse(json); 
+  } catch { 
     return null;
   }
 }
