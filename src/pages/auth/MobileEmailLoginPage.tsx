@@ -149,9 +149,9 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black disabled:opacity-60 active:scale-[0.99] transition"
+            className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black active:scale-[0.99] transition"
           >
-            {loading ? "로그인 중..." : "로그인"}
+            로그인
           </button>
         </form>
       </main>

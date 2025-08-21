@@ -68,7 +68,7 @@ const DesktopEmailLoginPage = ({ onLoginSuccess }: Props) => {
         }
       }
 
-      // ✅ 마지막에 라우팅
+      //  마지막에 라우팅
       navigate("/mypage", { replace: true });
     } catch (error: any) {
       setErrorMessage(

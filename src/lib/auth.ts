@@ -48,7 +48,7 @@ export const getRefreshToken = () => localStorage.getItem("refreshToken");
 export const clearTokens = () => {
   localStorage.removeItem("accessToken");
   localStorage.removeItem("refreshToken");
-  // ✅ 로그아웃 시에도 FCM 캐시 정리
+  // s로그아웃 시에도 FCM 캐시 정리
   try {
     localStorage.removeItem("vc_last_fcm_token");
     localStorage.removeItem("vc_last_fcm_user");
