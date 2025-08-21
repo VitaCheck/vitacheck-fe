@@ -3,21 +3,67 @@ import ShareModal from "../Purpose/P3DShareModal";
 import link from "@/assets/link/link.png";
 import kakaolink from "@/assets/link/kakaolink.png";
 
-declare global {
-  interface Window {
-    Kakao: any;
-  }
-}
+/** Kakao SDK 타입(전역 선언 안 함: 중복충돌 방지) */
+type KakaoSDK = {
+  init(key: string): void;
+  isInitialized(): boolean;
+  Share: { sendDefault(options: any): void };
+};
 
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
+const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY as string | undefined;
 
-// 중복 로딩 방지용(한 번만 로딩)
+/** 중복 로딩 방지 */
 let kakaoLoadingPromise: Promise<boolean> | null = null;
 
+/** SDK 로드+초기화 보장 */
+async function ensureKakaoReady(): Promise<boolean> {
+  if (!KAKAO_JS_KEY) {
+    console.warn("VITE_KAKAO_JS_KEY 가 설정되어 있지 않습니다.");
+    return false;
+  }
+
+  const w = window as any;
+
+  // 이미 로드 & 초기화
+  if (w.Kakao?.isInitialized?.()) return true;
+
+  // 로드O, 초기화만 X
+  if (w.Kakao?.init && !w.Kakao.isInitialized()) {
+    w.Kakao.init(KAKAO_JS_KEY);
+    return true;
+  }
+
+  // 스크립트 로드 (중복 방지)
+  if (!kakaoLoadingPromise) {
+    kakaoLoadingPromise = new Promise<boolean>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
+      s.async = true;
+      s.onload = () => {
+        try {
+          const Kakao = (window as any).Kakao as KakaoSDK;
+          if (!Kakao.isInitialized()) Kakao.init(KAKAO_JS_KEY!);
+          resolve(true);
+        } catch (e) {
+          reject(e);
+        }
+      };
+      s.onerror = reject;
+      document.head.appendChild(s);
+    }).finally(() => {
+      kakaoLoadingPromise = null;
+    });
+  }
+
+  return kakaoLoadingPromise;
+}
+
+/** 모바일 UA 판별 */
 function isMobileUA() {
   return /iPhone|Android/i.test(navigator.userAgent);
 }
 
+/** 클립보드 복사(폴백 포함) */
 async function copyWithFallback(text: string) {
   try {
     await navigator.clipboard.writeText(text);
@@ -35,71 +81,11 @@ async function copyWithFallback(text: string) {
   }
 }
 
-async function ensureKakaoReady(): Promise<boolean> {
-  // 키 없으면 바로 실패
-  if (!KAKAO_JS_KEY) {
-    console.warn("VITE_KAKAO_JS_KEY 가 설정되어 있지 않습니다.");
-    return false;
-  }
-
-  // 이미 초기화됨
-  if (window.Kakao?.isInitialized?.()) return true;
-
-  // 로딩 중인 요청이 있으면 공유
-  if (kakaoLoadingPromise) return kakaoLoadingPromise;
-
-  kakaoLoadingPromise = new Promise<boolean>((res, rej) => {
-    // 스크립트가 없다면 주입
-    if (!window.Kakao) {
-      const s = document.createElement("script");
-      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
-      s.async = true;
-      s.onload = () => {
-        try {
-          if (!window.Kakao.isInitialized()) {
-            window.Kakao.init(KAKAO_JS_KEY);
-          }
-          res(true);
-        } catch (e) {
-          rej(e);
-        }
-      };
-      s.onerror = rej;
-      document.head.appendChild(s);
-    } else {
-      try {
-        if (!window.Kakao.isInitialized()) {
-          window.Kakao.init(KAKAO_JS_KEY);
-        }
-        res(true);
-      } catch (e) {
-        rej(e);
-      }
-    }
-  });
-
-  try {
-    const ok = await kakaoLoadingPromise;
-    return ok;
-  } finally {
-    // 성공/실패와 무관하게 다음 호출을 위해 해제
-    kakaoLoadingPromise = null;
-  }
-}
-
 interface Props {
   onClose: () => void;
-  supplementUrl: string;
-  supplementImageUrl?: string;
-  supplementName?: string;
-
-  /** 커스텀 템플릿을 쓰고 싶다면 templateId를 넘겨주면 sendCustom으로 전송 */
-  templateId?: number;
-  /** 커스텀 템플릿에 치환할 값(없으면 기본적으로 WEB_URL/MOBILE_WEB_URL만 넣어줌) */
-  templateArgs?: Record<string, any>;
-  overCount?: number;
-  metCount?: number;
-  cautionCount?: number;
+  supplementUrl: string;       // 공유할 절대 URL
+  supplementImageUrl?: string; // 공개 HTTPS 이미지
+  supplementName?: string;     // 제목
 }
 
 const ShareLinkPopup: React.FC<Props> = ({
@@ -107,14 +93,11 @@ const ShareLinkPopup: React.FC<Props> = ({
   supplementUrl,
   supplementImageUrl,
   supplementName,
-  overCount = 0,
-  metCount = 0,
-  cautionCount = 0,
 }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
+  // SDK 준비 (실패해도 무시)
   useEffect(() => {
-    // 페이지 진입 시 미리 준비(실패해도 무시)
     ensureKakaoReady().catch(() => {});
   }, []);
 
@@ -124,73 +107,51 @@ const ShareLinkPopup: React.FC<Props> = ({
   };
 
   const handleKakaoShare = async () => {
-    // 데스크탑에서는 카카오톡 앱을 열 수 없어 사용성 저하 → 링크복사 폴백
+    // 데스크톱은 카카오 앱이 없어 UX 저하 → 링크복사로 폴백
     if (!isMobileUA()) {
       const ok = await copyWithFallback(supplementUrl);
       if (ok) setIsShareModalOpen(true);
       return;
     }
 
-    try {
-      const ready = await ensureKakaoReady();
-      if (!ready) throw new Error("Kakao SDK not ready");
-
-      window.Kakao.Share.sendDefault({
-        objectType: "list",
-        headerTitle: supplementName || "내 영양제 조합 결과",
-        headerLink: {
-          webUrl: supplementUrl,
-          mobileWebUrl: supplementUrl,
-        },
-        contents: [
-          {
-            title: "초과 성분",
-            description: `${overCount}개`,
-            imageUrl:
-              supplementImageUrl ||
-              "https://vitachecking.com/static/share-default.png",
-            link: {
-              webUrl: supplementUrl,
-              mobileWebUrl: supplementUrl,
-            },
-          },
-          {
-            title: "권장 충족",
-            description: `${metCount}개`,
-            imageUrl:
-              supplementImageUrl ||
-              "https://vitachecking.com/static/share-default.png",
-            link: {
-              webUrl: supplementUrl,
-              mobileWebUrl: supplementUrl,
-            },
-          },
-          {
-            title: "주의 조합",
-            description: `${cautionCount}건`,
-            imageUrl:
-              supplementImageUrl ||
-              "https://vitachecking.com/static/share-default.png",
-            link: {
-              webUrl: supplementUrl,
-              mobileWebUrl: supplementUrl,
-            },
-          },
-        ],
-        buttons: [
-          {
-            title: "자세히 보기",
-            link: {
-              webUrl: supplementUrl,
-              mobileWebUrl: supplementUrl,
-            },
-          },
-        ],
-      });
-    } catch (e) {
-      console.error(e);
-      alert("공유에 실패했습니다. 잠시 후 다시 시도해주세요.");
+    // SDK 준비 시도
+    const ready = await ensureKakaoReady();
+    if (!ready) {
+      const ok = await copyWithFallback(supplementUrl);
+      if (ok) setIsShareModalOpen(true);
+      return;
     }
+
+    const Kakao = (window as any).Kakao as KakaoSDK | undefined;
+    if (!Kakao) {
+      const ok = await copyWithFallback(supplementUrl);
+      if (ok) setIsShareModalOpen(true);
+      return;
+    }
+
+    // 기본 피드 템플릿으로 공유(콘솔 템플릿 불필요)
+    Kakao.Share.sendDefault({
+      objectType: "feed",
+      content: {
+        title: supplementName || "VitaCheck",
+        description: "내 영양제 조합 결과를 확인해보세요!",
+        imageUrl:
+          supplementImageUrl || "https://vitachecking.com/static/share-default.png",
+        link: {
+          mobileWebUrl: supplementUrl,
+          webUrl: supplementUrl,
+        },
+      },
+      buttons: [
+        {
+          title: "자세히 보기",
+          link: {
+            mobileWebUrl: supplementUrl,
+            webUrl: supplementUrl,
+          },
+        },
+      ],
+    });
   };
 
   return (
