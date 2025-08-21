@@ -200,7 +200,12 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
       {/* 공유 팝업 */}
       {isSharePopupOpen && (
-        <ShareLinkPopup onClose={handleSharePopupClose} supplementUrl={currentUrl} />
+        <ShareLinkPopup
+          onClose={handleSharePopupClose}
+          supplementUrl={currentUrl}
+          supplementImageUrl={product.supplementImageUrl}
+          supplementName={product.supplementName}
+        />
       )}
     </div>
   );
