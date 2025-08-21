@@ -41,6 +41,11 @@ const Footer = () => {
           >
             공식인스타그램
           </a>
+
+          {/* === 추가된 설정 페이지 링크 === */}
+          <Link to="/settings" className="mx-4 hover:underline">
+            ios-pwa
+          </Link>
         </div>
       </div>
     </footer>
