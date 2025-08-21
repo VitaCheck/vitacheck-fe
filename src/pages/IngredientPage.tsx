@@ -78,11 +78,7 @@ const IngredientPage = () => {
       else if (ageGroup === "50대") apiAgeGroup = "50대";
       else if (ageGroup === "60대 이상") apiAgeGroup = "60대 이상";
       else if (ageGroup === "전체 연령") {
-        // 전체 연령은 여러 가지 가능한 값으로 시도
-        // 백엔드에서 기대하는 정확한 형식을 찾기 위해
-        apiAgeGroup = "전체"; // 한글 "전체"로 시도
-        // 만약 이것도 안 되면: apiAgeGroup = "ALL"; // 영문 "ALL"로 시도
-        // 또는: apiAgeGroup = ""; // 빈 문자열로 시도
+        apiAgeGroup = "전체";
       }
 
       // 공백 제거하여 정확한 파라미터 전송
@@ -267,7 +263,7 @@ const IngredientPage = () => {
         <div
           className="w-full"
           style={{
-            paddingTop: "max(env(safe-area-inset-top), 16px)",
+            paddingTop: "max(env(safe-area-inset-top), 20px)",
           }}
         >
           <Navbar />
@@ -276,10 +272,11 @@ const IngredientPage = () => {
       {/* 모바일에서 상단바 높이만큼 여백 추가 */}
       <div
         className="md:hidden"
-        style={{ height: "env(safe-area-inset-top, 0px)" }}
+        style={{ height: "max(env(safe-area-inset-top), 20px)" }}
       />
-      <div className="md:hidden h-16" /> {/* Navbar 높이만큼 여백 */}
-      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:pt-8 sm:mb-8">
+      <div className="md:hidden h-20" />{" "}
+      {/* Navbar 높이만큼 여백 (20px + Navbar 높이) */}
+      <h1 className="text-2xl sm:text-4xl font-semibold mb-6  sm:pt-8 sm:mb-8">
         성분별
       </h1>
       {/* 검색창 */}
@@ -460,10 +457,9 @@ const IngredientPage = () => {
           </div>
 
           {/* 모바일 버전: 하단에서 올라오는 모달 */}
-          {/* 모바일 버전: 하단에서 올라오는 모달 */}
           {showAgeModal && isMobile && (
             <div className="fixed inset-0 z-50">
-              {/* 🔹 어두운 오버레이 */}
+              {/* 어두운 오버레이 */}
               <button
                 aria-label="모달 닫기"
                 className="absolute inset-0 bg-black/40"
@@ -537,14 +533,11 @@ const IngredientPage = () => {
               </span>
             </div>
           ) : !isLoggedIn ? (
-            <div className="text-center py-8">
-              <p className="text-gray-500 mb-2">로그인 후 이용할 수 있습니다</p>
-              <p className="text-sm text-gray-400 mb-4">
-                연령대별 인기성분을 확인하려면 로그인해주세요
-              </p>
+            <div className="text-center py-4">
+              <p className="text-gray-500 mb-5">로그인 후 이용할 수 있습니다</p>
               <Link
                 to="/login"
-                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                className="inline-block px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 transition-colors"
               >
                 로그인하기
               </Link>

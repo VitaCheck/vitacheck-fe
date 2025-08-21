@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import type { IngredientDetail } from "@/types/ingredient";
 import { getUserInfo, type UserInfo } from "@/apis/user";
 
@@ -24,21 +25,17 @@ const IngredientInfo = ({ id, data }: Props) => {
   }, []);
 
   const fetchUserInfo = async () => {
-    // 로그인 상태가 아닌 경우 API 호출하지 않음
-    if (!localStorage.getItem("accessToken")) {
-      return;
-    }
-
+    if (!localStorage.getItem("accessToken")) return;
     try {
       const user = await getUserInfo();
       setUserInfo(user);
-    } catch (error) {
+    } catch {
       setIsLoggedIn(false);
       setUserInfo(null);
     }
   };
 
-  // 디버깅 로그
+  // 디버깅 로그 (필요시 유지)
   useEffect(() => {
     console.log("=== IngredientInfo 데이터 디버깅 ===");
     console.log("data:", data);
@@ -79,7 +76,7 @@ const IngredientInfo = ({ id, data }: Props) => {
     data.upperLimit != null &&
     data.recommendedDosage != null;
 
-  // 부분 데이터(하나만 존재) - errorCode 명시 + 둘 중 하나라도 존재
+  // 부분 데이터(하나만 존재)
   const hasPartialDosageData = () =>
     data.dosageErrorCode === "INGREDIENT_DOSAGE_HAVE_NULL" &&
     (data.recommendedDosage != null || data.upperLimit != null);
@@ -194,36 +191,55 @@ const IngredientInfo = ({ id, data }: Props) => {
 
           {/* 에러 메시지(로그인 후만 노출) */}
           {data.dosageErrorCode && isLoggedIn && (
-            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="mt-3 p-4 bg-red-50 border border-red-200 rounded-lg">
               <p className="text-red-700 text-sm">
                 {getDosageErrorMessage(data.dosageErrorCode)}
               </p>
             </div>
           )}
 
-          {/* 로그인 미완료 → 블러 */}
+          {/* 로그인 미완료 → 블러 (PC: 제목 바로 밑 정렬/좌측 정렬, Mobile: 가운데) */}
           {!isLoggedIn ? (
-            <div className="mt-6">
-              <div className="relative w-full max-w-[400px]">
-                <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
-                  <div
-                    className="absolute left-0 top-0 bottom-0 bg-[#FFE17E] rounded-full"
-                    style={{ width: "66.67%" }}
-                    aria-hidden
-                  />
+            <div className="mt-3 md:mt-2">
+              {/* 그래프 전체를 클릭 가능하게 */}
+              <Link to="/login" className="block">
+                <div className="relative w-full max-w-[400px] group cursor-pointer md:mx-0 mx-auto">
+                  {/* 그래프 박스(오버레이와 정확히 겹치도록 하나의 컨테이너) */}
+                  <div className="relative h-8 w-full rounded-full overflow-hidden">
+                    {/* 배경 막대 */}
+                    <div className="absolute inset-0 bg-gray-200" />
+                    {/* 채워진 막대(예시) */}
+                    <div
+                      className="absolute left-0 top-0 h-full bg-[#FFE17E]"
+                      style={{ width: "66.67%" }}
+                      aria-hidden
+                    />
+                    {/* 블러/화이트 오버레이: 그래프와 정확히 일치 */}
+                    <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-full pointer-events-none" />
+                    {/* 가운데 안내 문구 */}
+                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                      <p className="text-sm font-medium text-black">
+                        로그인 후 확인해보세요!
+                      </p>
+                    </div>
+                    {/* 호버 테두리 효과(데스크톱만 느낌) */}
+                    <div className="absolute inset-0 border-2 border-transparent rounded-full group-hover:border-blue-300 transition-colors duration-200 pointer-events-none" />
+                  </div>
                 </div>
-                <div className="absolute inset-0 bg-white/80 backdrop-blur-sm rounded-full" />
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <p className="text-sm font-medium text-black">
-                    로그인 후 확인 해보세요!
-                  </p>
-                </div>
+              </Link>
+
+              {/* 안내 문구: 그래프 '아래'에 배치 */}
+              <div className="mt-2 w-full max-w-[400px] md:mx-33 mx-auto md:text-left text-center">
+                <p className="text-xs text-gray-600">
+                  그래프 클릭하여 로그인하기
+                </p>
               </div>
             </div>
-          ) : isUnauthorized || isNotFound ? null : canShowDetailedDosage() || // 로그인 완료 & 데이터 존재(완전/부분 공통 그래프) // 접속 권한 없음/데이터 없음 → 그래프 미노출
+          ) : isUnauthorized || isNotFound ? null : canShowDetailedDosage() ||
             canShowPartialDosage() ? (
-            <div className="mt-6">
-              <div className="relative w-full max-w-[400px]">
+            // 로그인 완료 & 데이터 존재(완전/부분 공통 그래프)
+            <div className="mt-3 md:mt-2">
+              <div className="relative w-full max-w-[400px] md:mx-0 mx-auto">
                 {/* 막대 */}
                 <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
                   <div
@@ -266,7 +282,7 @@ const IngredientInfo = ({ id, data }: Props) => {
                   상한
                 </div>
 
-                {/* 수치: null/undefined만 회색 null, 0은 정상 출력 */}
+                {/* 수치 */}
                 <div
                   className="absolute text-sm text-black"
                   style={{
