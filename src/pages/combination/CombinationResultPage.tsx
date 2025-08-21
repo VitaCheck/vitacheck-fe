@@ -7,7 +7,7 @@ import flipIcon from '../../assets/flip.png';
 import axios from '@/lib/axios';
 import Navbar from '@/components/NavBar';
 import line from '/images/PNG/조합 2-1/background line.png';
-import ShareLinkPopup from '@/components/combination/ShareLinkPopup'
+import ShareLinkPopup from '@/components/combination/ShareLinkPopup' 
 
 const KAKAO_TEMPLATE_ID = 123624; // 콘솔의 템플릿 ID
 
