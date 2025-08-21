@@ -116,7 +116,13 @@ function NotificationSettingsPage() {
         {/* 상단 헤더 */}
         <div className="w-full pt-4 pb-2 flex items-center sm:border-b sm:border-[#D9D9D9] sm:pt-0">
           <button
-            onClick={() => navigate("/NotificationCenter")}
+            onClick={() => {
+              if (window.history.length > 1) {
+                navigate(-1);
+              } else {
+                navigate("/NotificationCenter", { replace: true }); 
+              }
+            }}
             className="mr-2 text-2xl text-black sm:hidden"
           >
             <img
