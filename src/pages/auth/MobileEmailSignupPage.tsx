@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import TermsAgreement from "@/components/terms/TermsAgreement";
 
 const MobileEmailSignupPage = () => {
   const [email, setEmail] = useState("");
@@ -218,62 +219,39 @@ const MobileEmailSignupPage = () => {
           </div>
 
           {/* 약관 동의 */}
-          <div className="space-y-3 text-[#202020]">
-            <label className="relative flex items-center gap-2 text-[18px] font-semibold">
+          <div className="mb-6 space-y-3 text-[#202020]">
+            <label className="flex items-center gap-2 font-semibold text-[22px]">
               <input
                 type="checkbox"
                 checked={agrees.all}
                 onChange={handleToggleAll}
-                className="appearance-none w-[24px] h-[24px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none"
+                className="appearance-none w-[28px] h-[28px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none relative"
               />
-              {/* 체크마크 오버레이 */}
-              <span className="absolute left-0 w-[24px] h-[24px] pointer-events-none flex items-center justify-center">
+              <span className="absolute w-[28px] h-[28px] pointer-events-none flex justify-center items-center">
                 {agrees.all && (
                   <img
                     src="/images/check-white.png"
-                    alt="전체 동의"
-                    className="w-[14px]"
+                    alt="전체 동의 체크"
+                    className="w-[16px]"
                   />
                 )}
               </span>
               전체 동의
             </label>
 
-            <div className="ml-7 space-y-2 text-[16px] font-medium text-[#6B6B6B]">
-              {(
-                [
-                  { key: "terms", label: "서비스 이용약관 동의 (필수)" },
-                  {
-                    key: "privacy",
-                    label: "개인정보 수집 및 이용 동의 (필수)",
-                  },
-                  { key: "marketing", label: "마케팅 이용 동의 (선택)" },
-                ] as const
-              ).map(({ key, label }) => (
-                <label key={key} className="relative flex items-center gap-2">
-                  <input
-                    type="checkbox"
-                    checked={agrees[key]}
-                    onChange={() => handleCheckboxChange(key)}
-                    className="appearance-none w-[24px] h-[24px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none"
-                  />
-                  <span className="absolute left-0 w-[24px] h-[24px] pointer-events-none flex items-center justify-center">
-                    {agrees[key] && (
-                      <img
-                        src="/images/check-white.png"
-                        alt="체크"
-                        className="w-[14px]"
-                      />
-                    )}
-                  </span>
-                  {label}
-                </label>
-              ))}
-            </div>
+            {/* 전체 동의 영역 위/아래 구조는 그대로 두고 */}
+            <TermsAgreement
+              agrees={{
+                terms: agrees.terms,
+                privacy: agrees.privacy,
+                marketing: agrees.marketing,
+              }}
+              handleCheckboxChange={(key) => handleCheckboxChange(key)}
+            />
           </div>
 
           {errorMessage && (
-            <p className="text-red-500 text-sm">{errorMessage}</p>
+            <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
           )}
         </form>
       </main>

@@ -35,12 +35,6 @@ const NavSection = () => {
           icon={Alarm}
           to="/alarm"
         />
-        <MainCard
-          title="ios"
-          subtitle={"iOS PWA 디버그<br/>체-크"}
-          icon={Alarm}
-          to="/settings"
-        />
       </div>
 
       {/* 모바일에서 MobileMainCard 사용 */}
