@@ -47,7 +47,7 @@ const PurposeIngredientProducts = () => {
         return;
     }
     
-    if (cursor) setIsFetchingMore(true);
+    if (cursor !== null) setIsFetchingMore(true);
     else setIsLoading(true);
 
     try {
@@ -89,21 +89,26 @@ const PurposeIngredientProducts = () => {
     }
   }, [ingredientId]);
 
+  useEffect(() => {
+    fetchSupplements(null); // 최초 1회 호출
+  }, [fetchSupplements]);
+
   // --- 초기 데이터 로딩 ---
  useEffect(() => {
     // IntersectionObserver의 콜백 함수 정의
     const handleObserver = (entries: IntersectionObserverEntry[]) => {
       const target = entries[0];
-      // 타겟이 보이고, 더 불러올 데이터가 있으며, 현재 fetching 중이 아닐 때만 실행
       if (target.isIntersecting && hasMore && !isFetchingRef.current) {
-        // nextCursor 상태를 직접 사용
-        fetchSupplements(nextCursor);
+        setTimeout(() => {
+          fetchSupplements(nextCursor);  // nextCursor를 state에서 바로 참조
+        }, 0);
       }
     };
 
     // Observer 인스턴스 생성
     const observer = new IntersectionObserver(handleObserver, {
       threshold: 0.5,
+      
     });
 
     // 관찰할 요소(ref)가 있으면 관찰 시작
@@ -195,7 +200,6 @@ const PurposeIngredientProducts = () => {
     ));
   };
 
-
   return (
     <>
       {/* 모바일 */}
@@ -221,13 +225,21 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
-          {/* 스켈레톤 UI 추가 로딩 */}
-          {isFetchingMore && Array.from({ length: 2 }).map((_, i) => <div key={`skel-m-${i}`} className="w-full">{renderSkeletonCard()}</div>)}
-          <div ref={loadMoreRef} style={{ height: "50px" }}></div>
+
+          {/* 스켈레톤 UI */}
+          {isFetchingMore && (
+            <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
+              {Array.from({ length: 2 }).map((_, i) => (
+                <div key={`skel-m-${i}`} className="w-full">
+                  {renderSkeletonCard()}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* PC */}
+      {/* 데스크탑 */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
           <h1 className="text-[30px] font-semibold">{ingredientName}</h1>
@@ -244,11 +256,18 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
-          {/* 스켈레톤 UI 추가 로딩 */}
-          {isFetchingMore && Array.from({ length: 4 }).map((_, i) => <div key={`skel-d-${i}`} className="w-full">{renderSkeletonCard()}</div>)}
-          <div ref={loadMoreRef} style={{ height: "50px" }}></div>
+          {isFetchingMore && (
+            <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <div key={`skel-d-${i}`} className="w-full">
+                  {renderSkeletonCard()}
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
+      <div ref={loadMoreRef} style={{ height: "50px", width: "100%" }} />
     </>
   );
 };
