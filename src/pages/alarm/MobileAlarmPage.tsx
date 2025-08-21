@@ -78,76 +78,117 @@ const MobileAlarmPage = ({
   const onClickDate = (day: number) =>
     setSelectedDate(new Date(year, month, day));
 
-  /** 데스크탑과 동일한 규칙: /routines + /records 병합 */
+  // /** 데스크탑과 동일한 규칙: /routines + /records 병합 */
+  // const fetchSupplementsByDate = async (date: Date) => {
+  //   const ymd = fmtYmd(date);
+  //   const dowKey = DOW_KEYS[date.getDay()];
+  //   const tzOffset = -new Date().getTimezoneOffset();
+
+  //   const [routinesRes, recordsRes] = await Promise.allSettled([
+  //     axios.get("/api/v1/notifications/routines", {
+  //       params: { date: ymd, tzOffset },
+  //     }),
+  //     axios.get("/api/v1/notifications/records", {
+  //       params: { date: ymd, tzOffset },
+  //     }), // 존재하지 않는 API
+  //   ]);
+
+  //   // records → Map<routineId, isTaken>
+  //   let recordMap = new Map<number, boolean>();
+  //   if (recordsRes.status === "fulfilled") {
+  //     const body = recordsRes.value.data;
+  //     const list: any[] = Array.isArray(body?.result)
+  //       ? body.result
+  //       : Array.isArray(body)
+  //         ? body
+  //         : Array.isArray(body?.data)
+  //           ? body.data
+  //           : Array.isArray(body?.content)
+  //             ? body.content
+  //             : [];
+  //     recordMap = new Map(
+  //       list.map((it: any) => {
+  //         const id = Number(
+  //           it?.notificationRoutineId ?? it?.routineId ?? it?.id ?? 0
+  //         );
+  //         const taken =
+  //           typeof it?.isTaken === "boolean"
+  //             ? it.isTaken
+  //             : typeof it?.taken === "boolean"
+  //               ? it.taken
+  //               : it?.status === "TAKEN";
+  //         return [id, Boolean(taken)];
+  //       })
+  //     );
+  //   }
+
+  //   // routines 정규화 + 요일 필터/시간 추출 + records 병합
+  //   let rawList: any[] = [];
+  //   if (routinesRes.status === "fulfilled") {
+  //     const body = routinesRes.value.data;
+  //     rawList = Array.isArray(body?.result)
+  //       ? body.result
+  //       : Array.isArray(body)
+  //         ? body
+  //         : Array.isArray(body?.data)
+  //           ? body.data
+  //           : Array.isArray(body?.content)
+  //             ? body.content
+  //             : [];
+  //   }
+
+  //   const normalized: Supplement[] = rawList
+  //     .map(normalizeSupplement)
+  //     .filter(
+  //       (s) =>
+  //         (s.daysOfWeek?.length ?? 0) === 0 || s.daysOfWeek.includes(dowKey)
+  //     )
+  //     .map((s) => {
+  //       const id = s.notificationRoutineId;
+  //       const mergedIsTaken = recordMap.get(id) ?? s.isTaken;
+  //       return { ...s, isTaken: mergedIsTaken, times: timesForDay(s, dowKey) };
+  //     });
+
+  //   setSupplements(normalized);
+  // };
+
+  /** 선택한 날짜 기준 루틴 목록만 조회 */
   const fetchSupplementsByDate = async (date: Date) => {
     const ymd = fmtYmd(date);
     const dowKey = DOW_KEYS[date.getDay()];
     const tzOffset = -new Date().getTimezoneOffset();
 
-    const [routinesRes, recordsRes] = await Promise.allSettled([
-      axios.get("/api/v1/notifications/routines", {
-        params: { date: ymd, tzOffset },
-      }),
-      axios.get("/api/v1/notifications/records", {
-        params: { date: ymd, tzOffset },
-      }), // 존재하지 않는 API
-    ]);
+    // ✅ routines만 호출
+    const res = await axios.get("/api/v1/notifications/routines", {
+      params: { date: ymd, tzOffset },
+    });
 
-    // records → Map<routineId, isTaken>
-    let recordMap = new Map<number, boolean>();
-    if (recordsRes.status === "fulfilled") {
-      const body = recordsRes.value.data;
-      const list: any[] = Array.isArray(body?.result)
-        ? body.result
-        : Array.isArray(body)
-          ? body
-          : Array.isArray(body?.data)
-            ? body.data
-            : Array.isArray(body?.content)
-              ? body.content
-              : [];
-      recordMap = new Map(
-        list.map((it: any) => {
-          const id = Number(
-            it?.notificationRoutineId ?? it?.routineId ?? it?.id ?? 0
-          );
-          const taken =
-            typeof it?.isTaken === "boolean"
-              ? it.isTaken
-              : typeof it?.taken === "boolean"
-                ? it.taken
-                : it?.status === "TAKEN";
-          return [id, Boolean(taken)];
-        })
-      );
-    }
+    // 응답 유연 파싱
+    const body = res.data;
+    const rawList: any[] = Array.isArray(body?.result)
+      ? body.result
+      : Array.isArray(body)
+        ? body
+        : Array.isArray(body?.data)
+          ? body.data
+          : Array.isArray(body?.content)
+            ? body.content
+            : [];
 
-    // routines 정규화 + 요일 필터/시간 추출 + records 병합
-    let rawList: any[] = [];
-    if (routinesRes.status === "fulfilled") {
-      const body = routinesRes.value.data;
-      rawList = Array.isArray(body?.result)
-        ? body.result
-        : Array.isArray(body)
-          ? body
-          : Array.isArray(body?.data)
-            ? body.data
-            : Array.isArray(body?.content)
-              ? body.content
-              : [];
-    }
-
+    // 정규화 + 요일 필터 + 해당 요일의 times만 추출
     const normalized: Supplement[] = rawList
       .map(normalizeSupplement)
       .filter(
         (s) =>
           (s.daysOfWeek?.length ?? 0) === 0 || s.daysOfWeek.includes(dowKey)
       )
-      .map((s) => {
-        const id = s.notificationRoutineId;
-        const mergedIsTaken = recordMap.get(id) ?? s.isTaken;
-        return { ...s, isTaken: mergedIsTaken, times: timesForDay(s, dowKey) };
-      });
+      .map((s) => ({
+        ...s,
+        times: timesForDay(s, dowKey),
+        // isTaken은 백엔드가 해당 date 기준으로 내려준 값을 그대로 사용
+        // (필요 시 기본값 false 처리)
+        isTaken: typeof s.isTaken === "boolean" ? s.isTaken : false,
+      }));
 
     setSupplements(normalized);
   };

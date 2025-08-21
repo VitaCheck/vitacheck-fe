@@ -10,12 +10,12 @@ import {
 } from "firebase/messaging";
 
 const firebaseConfig = {
-  apiKey: import.meta.env.VITE_FB_API_KEY,
-  authDomain: "vitacheck-93554.firebaseapp.com",
-  projectId: "vitacheck-93554",
-  storageBucket: "vitacheck-93554.appspot.com",
-  messagingSenderId: "498954682157",
-  appId: "1:498954682157:web:7ca8b0a8ff2a736e785da4",
+  apiKey: "AIzaSyDhCaf3Ockukla3eR3lx4B3m9TsDhvscMY",
+  authDomain: "vitacheck-1ee1d.firebaseapp.com",
+  projectId: "vitacheck-1ee1d",
+  storageBucket: "vitacheck-1ee1d.appspot.com",
+  messagingSenderId: "802557675495",
+  appId: "1:802557675495:web:7c6c855f4ca135ca049f42",
 };
 
 const app = initializeApp(firebaseConfig);

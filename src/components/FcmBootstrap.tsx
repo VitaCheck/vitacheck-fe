@@ -2,6 +2,7 @@
 import { useEffect } from "react";
 import { registerServiceWorker, getFcmToken } from "@/lib/firebase";
 import { onForegroundMessage } from "@/lib/firebase";
+import { updateFcmTokenWithLocalStorageFetch } from "@/apis/user";
 
 /**
  * 역할:
