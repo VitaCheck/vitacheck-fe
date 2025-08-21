@@ -1,7 +1,7 @@
-import React, { useEffect, useState } from "react";
-import CombinationProductCard from "./CombinationProductCard";
-import { FiChevronDown } from "react-icons/fi";
-import axios from "@/lib/axios";
+import React, { useEffect, useState } from 'react';
+import CombinationProductCard from './CombinationProductCard';
+import { FiChevronDown } from 'react-icons/fi';
+import axios from '@/lib/axios';
 
 interface Product {
   supplementId: number;
@@ -26,12 +26,7 @@ interface Props {
   hideTitle?: boolean;
 }
 
-const ExpandableProductGroup = ({
-  title,
-  selectedItems,
-  onToggle,
-  hideTitle = false,
-}: Props) => {
+const ExpandableProductGroup = ({ title, selectedItems, onToggle, hideTitle = false }: Props) => {
   const [expanded, setExpanded] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -41,14 +36,14 @@ const ExpandableProductGroup = ({
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const res = await axios.get("/api/v1/supplements/search", {
+      const res = await axios.get('/api/v1/supplements/search', {
         params: { keyword: title },
       });
 
       const content = res.data.result?.supplements?.content || [];
       setProducts(content);
     } catch (error) {
-      console.error("영양제 검색 실패:", error);
+      console.error('영양제 검색 실패:', error);
       setProducts([]);
     } finally {
       setLoading(false);
@@ -62,7 +57,7 @@ const ExpandableProductGroup = ({
   return (
     <div className="mb-8">
       {/* 카테고리 제목 (조건부) */}
-      {!hideTitle && <h2 className="text-[22px] font-bold mb-4">{title}</h2>}
+      {!hideTitle && <h2 className="mb-4 text-[22px] font-bold">{title}</h2>}
 
       {/* 로딩 중 표시 */}
       {loading ? (
@@ -70,14 +65,12 @@ const ExpandableProductGroup = ({
       ) : (
         <>
           {/* 카드 리스트 */}
-          <div className="flex flex-wrap justify-center gap-8">
+          <div className="grid grid-cols-2 justify-items-center gap-4">
             {visibleProducts.map((item) => (
               <CombinationProductCard
                 key={item.supplementId}
                 item={item}
-                isSelected={selectedItems.some(
-                  (i) => i.supplementId === item.supplementId
-                )}
+                isSelected={selectedItems.some((i) => i.supplementId === item.supplementId)}
                 onToggle={() => onToggle(item)}
               />
             ))}
@@ -87,27 +80,27 @@ const ExpandableProductGroup = ({
           {!expanded && products.length > 2 && (
             <div className="mt-4 w-full">
               <div
-                className="flex justify-center items-center cursor-pointer"
+                className="flex cursor-pointer items-center justify-center"
                 onClick={() => setExpanded(true)}
               >
                 <span
-                  className="text-[12px] font-medium leading-[120%] tracking-[-0.02em] text-center font-pretendard text-black"
-                  style={{ width: "50px", height: "14px" }}
+                  className="font-pretendard text-center text-[12px] leading-[120%] font-medium tracking-[-0.02em] text-black"
+                  style={{ width: '50px', height: '14px' }}
                 >
                   펼쳐보기
                 </span>
-                <span className="ml-1" style={{ marginTop: "3px" }}>
+                <span className="ml-1" style={{ marginTop: '3px' }}>
                   <FiChevronDown size={16} color="#1C1B1F" />
                 </span>
               </div>
 
               {/* 하단 회색 선 */}
               <div
-                className="mt-2 mx-auto"
+                className="mx-auto mt-2"
                 style={{
-                  width: "360px",
-                  height: "0px",
-                  borderTop: "0.52px solid #B2B2B2",
+                  width: '360px',
+                  height: '0px',
+                  borderTop: '0.52px solid #B2B2B2',
                   opacity: 1,
                 }}
               />
