@@ -16,11 +16,6 @@ import IngredientAlternatives from "@/components/ingredient/IngredientAlternativ
 import IngredientSupplements from "@/components/ingredient/IngredientSupplements";
 import { FiShare2, FiHeart } from "react-icons/fi";
 
-declare global {
-  interface Window {
-    Kakao?: any;
-  }
-}
 
 const queryClient = new QueryClient();
 
