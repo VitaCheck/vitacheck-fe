@@ -25,6 +25,7 @@ function NotificationCenterPage() {
   const [nickname, setNickname] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [loggedIn, setLoggedIn] = useState<boolean>(true);
 
   const today = useMemo(() => {
     const d = new Date();
@@ -36,20 +37,32 @@ function NotificationCenterPage() {
 
   useEffect(() => {
     let ignore = false;
+
     const run = async () => {
       try {
         setLoading(true);
         setError(null);
 
-        const [me, data] = await Promise.all([
-          getUserInfo().catch(() => null),
-          getRoutinesByDate(today),
-        ]);
+        // 1) 로그인 여부 확인
+        const me = await getUserInfo().catch(() => null);
 
-        if (!ignore) {
-          setNickname(me?.nickname ?? "");
-          setRoutines(data);
+        if (!me) {
+          if (!ignore) {
+            setLoggedIn(false);
+            setNickname("");
+            setRoutines([]);
+          }
+          return;
         }
+
+        if (ignore) return;
+
+        setLoggedIn(true);
+        setNickname(me.nickname ?? "");
+
+        // 2) 로그인된 경우에만 루틴 조회
+        const data = await getRoutinesByDate(today);
+        if (!ignore) setRoutines(data);
       } catch (e) {
         if (!ignore) setError("섭취 알림을 불러오지 못했습니다.");
         console.error(e);
@@ -57,6 +70,7 @@ function NotificationCenterPage() {
         if (!ignore) setLoading(false);
       }
     };
+
     run();
     return () => {
       ignore = true;
@@ -85,36 +99,37 @@ function NotificationCenterPage() {
   };
 
   const items = useMemo(() => {
-  const list: Array<{
-    key: string;
-    type: "섭취알림";
-    icon: string;
-    message: string;
-    sub?: string;
-    taken: boolean;
-    image?: string;
-  }> = [];
-  for (const r of routines) {
-    for (const s of r.schedules ?? []) {
-      const { hour, minute } = parseTime(s.time);
-      list.push({
-        key: `${r.notificationRoutineId}-${s.dayOfWeek}-${hour}-${minute}`,
-        type: "섭취알림",
-        icon: "💊",
-        message: `${nickname ? `${nickname}님, ` : ""}'${
-          r.supplementName
-        }' 복용 시간이에요! ⏰`,
-        sub: `설정하신 시간 ${dayKo[s.dayOfWeek]}요일 ${formatTime(
-          hour,
-          minute
-        )} 입니다.`,
-        taken: r.taken,
-        image: r.supplementImageUrl,
-      });
+    const list: Array<{
+      key: string;
+      type: "섭취알림";
+      icon: string;
+      message: string;
+      sub?: string;
+      taken: boolean;
+      image?: string;
+    }> = [];
+
+    for (const r of routines) {
+      for (const s of r.schedules ?? []) {
+        const { hour, minute } = parseTime(s.time);
+        list.push({
+          key: `${r.notificationRoutineId}-${s.dayOfWeek}-${hour}-${minute}`,
+          type: "섭취알림",
+          icon: "💊",
+          message: `${nickname ? `${nickname}님, ` : ""}'${
+            r.supplementName
+          }' 복용 시간이에요! ⏰`,
+          sub: `설정하신 시간 ${dayKo[s.dayOfWeek]}요일 ${formatTime(
+            hour,
+            minute
+          )} 입니다.`,
+          taken: r.taken,
+          image: r.supplementImageUrl,
+        });
+      }
     }
-  }
-  return list.sort((a, b) => (a.sub ?? "").localeCompare(b.sub ?? ""));
-}, [routines, nickname]);
+    return list.sort((a, b) => (a.sub ?? "").localeCompare(b.sub ?? ""));
+  }, [routines, nickname]);
 
   return (
     <div className="min-h-screen bg-white sm:bg-[#F3F3F3] px-4 py-6 flex justify-center items-start sm:mt-10">
@@ -138,52 +153,63 @@ function NotificationCenterPage() {
             src={Setting}
             alt="알림 설정"
             className="w-6 h-6 cursor-pointer"
-            onClick={() => navigate("/setting")}
+            onClick={() => navigate(loggedIn ? "/setting" : "/login")}
           />
         </div>
 
-        {/* 내용 */}
-        {loading && (
-          <div className="mt-6 text-sm text-[#6B6B6B]">불러오는 중…</div>
+        {/* 비로그인 안내 */}
+        {!loggedIn && !loading && !error && (
+          <div className="mt-6 text-sm text-[#6B6B6B]">
+            로그인 후 사용할 수 있습니다.
+          </div>
         )}
-        {error && <div className="mt-6 text-sm text-red-600">{error}</div>}
 
-        {!loading &&
-          !error &&
-          (items.length === 0 ? (
-            <div className="mt-6 text-sm text-[#6B6B6B]">
-              섭취 알림이 없습니다.
-            </div>
-          ) : (
-            <ul className="space-y-6 mt-4">
-              {items.map((it) => (
-                <li key={it.key} className="flex items-start space-x-3">
-                  <span className="text-xl">{it.icon}</span>
-                  <div className="flex-1">
-                    <p className="text-lg font-medium text-black">
-                      {it.type}{" "}
-                      {it.taken ? (
-                        <span className="ml-1 text-[#00A878] text-sm">
-                          (복용 완료)
-                        </span>
-                      ) : null}
-                    </p>
-                    <p className="text-sm text-gray-800">{it.message}</p>
-                    {it.sub && (
-                      <p className="text-sm text-gray-800 mt-1">{it.sub}</p>
-                    )}
-                  </div>
-                  {it.image && (
-                    <img
-                      src={it.image}
-                      alt="supplement"
-                      className="w-10 h-10 rounded-md object-cover border border-[#E5E5E5]"
-                    />
-                  )}
-                </li>
+        {/* 내용 */}
+        {loggedIn && (
+          <>
+            {loading && (
+              <div className="mt-6 text-sm text-[#6B6B6B]">불러오는 중…</div>
+            )}
+            {error && <div className="mt-6 text-sm text-red-600">{error}</div>}
+
+            {!loading &&
+              !error &&
+              (items.length === 0 ? (
+                <div className="mt-6 text-sm text-[#6B6B6B]">
+                  섭취 알림이 없습니다.
+                </div>
+              ) : (
+                <ul className="space-y-6 mt-4">
+                  {items.map((it) => (
+                    <li key={it.key} className="flex items-start space-x-3">
+                      <span className="text-xl">{it.icon}</span>
+                      <div className="flex-1">
+                        <p className="text-lg font-medium text-black">
+                          {it.type}{" "}
+                          {it.taken ? (
+                            <span className="ml-1 text-[#00A878] text-sm">
+                              (복용 완료)
+                            </span>
+                          ) : null}
+                        </p>
+                        <p className="text-sm text-gray-800">{it.message}</p>
+                        {it.sub && (
+                          <p className="text-sm text-gray-800 mt-1">{it.sub}</p>
+                        )}
+                      </div>
+                      {it.image && (
+                        <img
+                          src={it.image}
+                          alt="supplement"
+                          className="w-10 h-10 rounded-md object-cover border border-[#E5E5E5]"
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
               ))}
-            </ul>
-          ))}
+          </>
+        )}
       </div>
     </div>
   );

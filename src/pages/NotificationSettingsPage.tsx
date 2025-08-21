@@ -144,7 +144,7 @@ function NotificationSettingsPage() {
             onToggle={() => toggle("benefit", "sms")}
           /> */}
           <SettingRow
-            label="앱 푸시"
+            label="푸시 알림"
             checked={settings.benefit.push}
             onToggle={() => toggle("benefit", "push")}
           />
@@ -154,7 +154,7 @@ function NotificationSettingsPage() {
         <section className="mt-4 px-3">
           <h2 className="text-[20px] font-semibold mb-4">섭취알림</h2>
           <SettingRow
-            label="나의 영양제 복용알림"
+            label="이메일"
             checked={settings.intake.supplement}
             onToggle={() => toggle("intake", "supplement")}
           />
@@ -164,7 +164,7 @@ function NotificationSettingsPage() {
             onToggle={() => toggle("benefit", "sms")}
           /> */}
           <SettingRow
-            label="앱 푸시"
+            label="푸시 알림"
             checked={settings.intake.push}
             onToggle={() => toggle("intake", "push")}
           />
