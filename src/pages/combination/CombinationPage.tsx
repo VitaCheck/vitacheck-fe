@@ -231,7 +231,7 @@ const CombinationPage = () => {
             className="w-full bg-transparent text-lg text-gray-400 placeholder-gray-300"
           />
           <img
-            src="/src/assets/search.png"
+            src="/images/search.png"
             alt="검색"
             onClick={handleSearch}
             className="ml-2 h-5 w-5 cursor-pointer"
@@ -258,7 +258,7 @@ const CombinationPage = () => {
             </button>
           )}
           <img
-            src="/src/assets/search.png"
+            src="/images/search.png"
             alt="검색"
             onClick={handleSearch}
             className="ml-2 h-6 w-6"

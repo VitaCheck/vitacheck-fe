@@ -67,46 +67,52 @@ export default function CombinationProductCard({ item, isSelected, onToggle }: P
 
       {/* PC 카드 */}
       <div
-        onClick={onToggle}
-        className={clsx(
-          'relative box-border hidden cursor-default md:block',
-          isSelected ? 'bg-[#EEEEEE]' : 'bg-white',
-          'h-[220px] w-full rounded-[25px] p-6 shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg',
-        )}
-        title={item.supplementName} // 툴팁으로 전체명 제공
-      >
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            onToggle();
-          }}
-          className={clsx(
-            'absolute top-[10px] right-[15px] text-[#1C1B1F]',
-            isSelected ? 'mt-2 text-[20px] font-bold' : 'text-[30px]',
-          )}
-        >
-          {isSelected ? '—' : '+'}
-        </button>
+  onClick={onToggle}
+  className={clsx(
+    'relative box-border hidden md:flex flex-col items-center justify-start',
+    isSelected ? 'bg-[#EEEEEE]' : 'bg-white',
+    // 👇 고정 크기 + 넘침 방지
+    'h-[200px] w-[200px] overflow-hidden rounded-[25px] p-3 shadow-[2px_3px_12.4px_0px_rgba(0,0,0,0.16)] hover:shadow-lg'
+  )}
+  title={item.supplementName}
+>
+  <button
+    onClick={(e) => {
+      e.stopPropagation();
+      onToggle();
+    }}
+    className={clsx(
+      'absolute top-[10px] right-[15px] text-[#1C1B1F]',
+      isSelected ? 'mt-2 text-[20px] font-bold' : 'text-[30px]',
+    )}
+    aria-label={isSelected ? '제거' : '추가'}
+  >
+    {isSelected ? '—' : '+'}
+  </button>
 
-        <img
-          src={item.imageUrl}
-          alt={item.supplementName}
-          className="mx-auto mt-3 h-[100px] w-[130px] object-contain"
-        />
+  {/* 이미지 영역: 고정 높이 박스 안에서 가운데 정렬 */}
+  <div className="mt-4 flex h-[120px] w-full items-center justify-center">
+    <img
+      src={item.imageUrl}
+      alt={item.supplementName}
+      className="max-h-[100px] max-w-[140px] object-contain"
+    />
+  </div>
 
-        {/* 텍스트: 고정 높이(두 줄) + 말줄임 + 단어 제어 */}
-        <div className="mt-3 flex h-[50px] items-center justify-center px-2">
-          <p
-            className={clsx(
-              'font-pretendard text-center leading-[120%] font-medium tracking-[-0.02em]',
-              isLongNamePC ? 'text-[16px]' : 'text-[18px]',
-              'line-clamp-2 overflow-hidden break-words break-keep',
-            )}
-          >
-            {item.supplementName}
-          </p>
-        </div>
-      </div>
+  {/* 텍스트: 고정 높이(두 줄) */}
+  <div className="mt-3 flex h-[48px] w-full items-center justify-center px-2">
+    <p
+      className={clsx(
+        'font-pretendard text-center leading-[120%] font-medium tracking-[-0.02em]',
+        // PC도 길이에 따라 살짝만 줄임
+        item.supplementName.length > 24 ? 'text-[16px]' : 'text-[18px]',
+        'line-clamp-2 overflow-hidden break-words break-keep'
+      )}
+    >
+      {item.supplementName}
+    </p>
+  </div>
+</div>
     </>
   );
 }
