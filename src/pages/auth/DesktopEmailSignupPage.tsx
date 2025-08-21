@@ -284,9 +284,9 @@ const DesktopEmailSignupPage = () => {
 
           <button
             type="submit"
-            className="w-full h-[83px] bg-[#FFE88D] text-black text-[22px] font-bold py-3 rounded-lg transition-colors"
+            className="w-full h-[83px] bg-[#FFE88D] text-black text-[22px] font-bold py-3 rounded-lg"
           >
-            {isSubmitting ? "처리 중..." : "다음"}
+            다음
           </button>
         </form>
       </main>

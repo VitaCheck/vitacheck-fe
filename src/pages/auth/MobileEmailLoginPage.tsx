@@ -129,13 +129,12 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
             <p className="text-red-500 text-sm">{errorMessage}</p>
           )}
 
-          {/* ✅ 버튼을 form 안에 두고 submit으로 처리 */}
           <button
             type="submit"
             disabled={loading || !email || !password}
             className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black"
           >
-            {loading ? "로그인 중..." : "로그인"}
+            로그인
           </button>
         </form>
       </main>

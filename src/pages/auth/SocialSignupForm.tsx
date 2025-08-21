@@ -3,6 +3,7 @@ import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
+import TermsAgreement from "@/components/terms/TermsAgreement";
 
 /* ---------- 유틸 (이하 동일) ---------- */
 type JwtPayload = Record<string, any>;
@@ -99,6 +100,29 @@ export default function SocialSignupForm() {
   const { state } = useLocation() as { state: LocationState };
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const [agrees, setAgrees] = useState({
+    all: false,
+    terms: false,
+    privacy: false,
+    marketing: false,
+  });
+  const [errorMessage, setErrorMessage] = useState("");
+
+  const handleToggleAll = () => {
+    const newValue = !agrees.all;
+    setAgrees({
+      all: newValue,
+      terms: newValue,
+      privacy: newValue,
+      marketing: newValue,
+    });
+  };
+
+  const handleCheckboxChange = (key: keyof typeof agrees) => {
+    const updated = { ...agrees, [key]: !agrees[key] } as typeof agrees;
+    updated.all = updated.terms && updated.privacy && updated.marketing;
+    setAgrees(updated);
+  };
 
   // 쿼리 파싱 (동일)
   const fromQuery = useMemo(
@@ -403,16 +427,48 @@ export default function SocialSignupForm() {
         </div>
       </div>
 
+      {/* 약관 동의 */}
+      <div className="mb-6 space-y-3 text-[#202020]">
+        <label className="flex items-center gap-2 font-semibold text-[22px]">
+          <input
+            type="checkbox"
+            checked={agrees.all}
+            onChange={handleToggleAll}
+            className="appearance-none w-[28px] h-[28px] border border-gray-300 rounded-[4px] checked:bg-[#FFD54E] checked:border-none relative"
+          />
+          <span className="absolute w-[28px] h-[28px] pointer-events-none flex justify-center items-center">
+            {agrees.all && (
+              <img
+                src="/images/check-white.png"
+                alt="전체 동의 체크"
+                className="w-[16px]"
+              />
+            )}
+          </span>
+          전체 동의
+        </label>
+
+        {/* 전체 동의 영역 위/아래 구조는 그대로 두고 */}
+        <TermsAgreement
+          agrees={{
+            terms: agrees.terms,
+            privacy: agrees.privacy,
+            marketing: agrees.marketing,
+          }}
+          handleCheckboxChange={(key) => handleCheckboxChange(key)}
+        />
+      </div>
+
+      {errorMessage && (
+        <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
+      )}
       {/* CTA 버튼 */}
       <button
         type="submit"
         disabled={submitting}
-        className="mt-12 w-full h-[56px] rounded-[16px] bg-[#FFE88D]
-                 text-black text-[16px] font-semibold
-                 shadow-[0_2px_0_rgba(0,0,0,0.05)]
-                 disabled:opacity-60 active:scale-[0.98] transition"
+        className="mt-12 w-full h-[68px] rounded-[16px] bg-[#FFE88D] text-[20px] font-semibold text-blackshadow-[0_2px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition"
       >
-        {submitting ? "처리 중..." : "다음"}
+        다음
       </button>
     </form>
   );
