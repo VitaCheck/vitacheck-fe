@@ -1,5 +1,5 @@
 // src/pages/ingredients/IngredientDetailPage.tsx
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, createContext, useContext } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fetchIngredientDetail, toggleIngredientLike } from '@/apis/ingredient';
@@ -10,6 +10,69 @@ import IngredientInfo from '@/components/ingredient/IngredientInfo';
 import IngredientAlternatives from '@/components/ingredient/IngredientAlternatives';
 import IngredientSupplements from '@/components/ingredient/IngredientSupplements';
 import { FiShare2, FiHeart } from 'react-icons/fi';
+
+// 찜하기 상태를 관리하는 Context
+interface LikeContextType {
+  likedIngredients: Set<string>;
+  toggleLike: (ingredientId: string, isLiked: boolean) => void;
+  isLiked: (ingredientId: string) => boolean;
+}
+
+const LikeContext = createContext<LikeContextType | undefined>(undefined);
+
+// 찜하기 상태를 관리하는 Provider 컴포넌트
+const LikeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [likedIngredients, setLikedIngredients] = useState<Set<string>>(new Set());
+
+  // localStorage에서 찜하기 상태 불러오기
+  useEffect(() => {
+    const savedLikes = localStorage.getItem('likedIngredients');
+    if (savedLikes) {
+      try {
+        const parsed = JSON.parse(savedLikes);
+        setLikedIngredients(new Set(parsed));
+      } catch (error) {
+        console.error('찜하기 상태 로드 실패:', error);
+      }
+    }
+  }, []);
+
+  // 찜하기 상태 토글
+  const toggleLike = (ingredientId: string, isLiked: boolean) => {
+    setLikedIngredients((prev) => {
+      const newSet = new Set(prev);
+      if (isLiked) {
+        newSet.add(ingredientId);
+      } else {
+        newSet.delete(ingredientId);
+      }
+
+      // localStorage에 저장
+      localStorage.setItem('likedIngredients', JSON.stringify(Array.from(newSet)));
+      return newSet;
+    });
+  };
+
+  // 특정 성분의 찜하기 상태 확인
+  const isLiked = (ingredientId: string) => {
+    return likedIngredients.has(ingredientId);
+  };
+
+  return (
+    <LikeContext.Provider value={{ likedIngredients, toggleLike, isLiked }}>
+      {children}
+    </LikeContext.Provider>
+  );
+};
+
+// 찜하기 Context 사용 훅
+const useLike = () => {
+  const context = useContext(LikeContext);
+  if (!context) {
+    throw new Error('useLike must be used within a LikeProvider');
+  }
+  return context;
+};
 
 // Kakao SDK 타입 정의
 declare global {
@@ -196,10 +259,10 @@ const IngredientDetailInner = () => {
   const [tabHistory, setTabHistory] = useState<Array<'info' | 'alternatives' | 'supplements'>>([
     'info',
   ]);
-  const [liked, setLiked] = useState(false);
   const isMobile = useIsMobile();
   const { ingredientName } = useParams<{ ingredientName: string }>();
   const navigate = useNavigate();
+  const { isLiked, toggleLike } = useLike();
 
   // 제목/탭/액션 공통 래퍼(네비 안쪽 그리드와 좌우 정렬 맞춤)
   const WRAP = 'mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8';
@@ -209,10 +272,10 @@ const IngredientDetailInner = () => {
     return !!localStorage.getItem('accessToken');
   };
 
-  // 로그인 상태가 변경될 때마다 liked 상태 초기화
+  // 로그인 상태가 변경될 때마다 찜하기 상태 확인
   useEffect(() => {
     if (!isLoggedIn()) {
-      setLiked(false);
+      // 로그아웃 시 찜하기 상태는 유지 (localStorage에 저장되어 있음)
     }
   }, []);
 
@@ -274,16 +337,24 @@ const IngredientDetailInner = () => {
   const likeMutation = useMutation({
     mutationFn: toggleIngredientLike,
     onSuccess: (res) => {
-      if (res?.result?.isLiked !== undefined) setLiked(res.result.isLiked);
+      if (res?.result?.isLiked !== undefined) {
+        toggleLike(data?.id?.toString() || '', res.result.isLiked);
+      }
     },
     onError: (error: any) => {
       // 401 에러인 경우 로그인 페이지로 이동
       if (error?.response?.status === 401) {
         navigate('/login');
-        setLiked(false); // liked 상태를 false로 초기화
+        // 에러 시 찜하기 상태를 false로 설정
+        if (data?.id) {
+          toggleLike(data.id.toString(), false);
+        }
       } else {
         // 다른 에러의 경우 이전 상태로 되돌리기
-        setLiked((prev) => !prev);
+        if (data?.id) {
+          const currentLiked = isLiked(data.id.toString());
+          toggleLike(data.id.toString(), !currentLiked);
+        }
       }
     },
   });
@@ -298,7 +369,8 @@ const IngredientDetailInner = () => {
     if (!data?.id) return;
 
     // API 호출 전에 UI 상태 업데이트
-    setLiked((prev) => !prev);
+    const currentLiked = isLiked(data.id.toString());
+    toggleLike(data.id.toString(), !currentLiked);
     likeMutation.mutate(data.id);
   };
 
@@ -468,7 +540,11 @@ const IngredientDetailInner = () => {
               <div className="h-4 w-4 animate-spin rounded-full border-b-2 border-pink-500"></div>
             ) : (
               <FiHeart
-                className={liked ? 'fill-red-500 text-red-500' : 'text-pink-500'}
+                className={
+                  data?.id && isLiked(data.id.toString())
+                    ? 'fill-red-500 text-red-500'
+                    : 'text-pink-500'
+                }
                 size={18}
               />
             )}
@@ -512,7 +588,9 @@ const IngredientDetailInner = () => {
 /* Provider */
 const IngredientDetailPage = () => (
   <QueryClientProvider client={queryClient}>
-    <IngredientDetailInner />
+    <LikeProvider>
+      <IngredientDetailInner />
+    </LikeProvider>
   </QueryClientProvider>
 );
 
