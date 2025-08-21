@@ -97,6 +97,9 @@ interface Props {
   templateId?: number;
   /** 커스텀 템플릿에 치환할 값(없으면 기본적으로 WEB_URL/MOBILE_WEB_URL만 넣어줌) */
   templateArgs?: Record<string, any>;
+  overCount?: number;
+  metCount?: number;
+  cautionCount?: number;
 }
 
 const ShareLinkPopup: React.FC<Props> = ({
@@ -104,8 +107,9 @@ const ShareLinkPopup: React.FC<Props> = ({
   supplementUrl,
   supplementImageUrl,
   supplementName,
-  templateId,
-  templateArgs = {},
+  overCount = 0,
+  metCount = 0,
+  cautionCount = 0,
 }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
 
@@ -131,43 +135,58 @@ const ShareLinkPopup: React.FC<Props> = ({
       const ready = await ensureKakaoReady();
       if (!ready) throw new Error("Kakao SDK not ready");
 
-      if (templateId) {
-        // ✅ 커스텀 템플릿 사용 (콘솔에서 #{변수}로 치환)
-        window.Kakao.Share.sendCustom({
-          templateId,
-          templateArgs: {
-            // URL 키는 콘솔에서 "웹링크" 필드에 매핑되도록 동일 키로 사용
-            WEB_URL: supplementUrl,
-            MOBILE_WEB_URL: supplementUrl,
-            ...templateArgs,
-          },
-        });
-      } else {
-        // ✅ 기본 feed 템플릿 사용
-        window.Kakao.Share.sendDefault({
-          objectType: "feed",
-          content: {
-            title: supplementName || "추천 영양제",
-            description: "이 영양제를 VitaCheck에서 확인해보세요!",
+      window.Kakao.Share.sendDefault({
+        objectType: "list",
+        headerTitle: supplementName || "내 영양제 조합 결과",
+        headerLink: {
+          webUrl: supplementUrl,
+          mobileWebUrl: supplementUrl,
+        },
+        contents: [
+          {
+            title: "초과 성분",
+            description: `${overCount}개`,
             imageUrl:
               supplementImageUrl ||
-              "https://vitachecking.com/static/share-default.png", // 공개 HTTPS 이미지 권장
+              "https://vitachecking.com/static/share-default.png",
             link: {
-              mobileWebUrl: supplementUrl,
               webUrl: supplementUrl,
+              mobileWebUrl: supplementUrl,
             },
           },
-          buttons: [
-            {
-              title: "자세히 보기",
-              link: {
-                mobileWebUrl: supplementUrl,
-                webUrl: supplementUrl,
-              },
+          {
+            title: "권장 충족",
+            description: `${metCount}개`,
+            imageUrl:
+              supplementImageUrl ||
+              "https://vitachecking.com/static/share-default.png",
+            link: {
+              webUrl: supplementUrl,
+              mobileWebUrl: supplementUrl,
             },
-          ],
-        });
-      }
+          },
+          {
+            title: "주의 조합",
+            description: `${cautionCount}건`,
+            imageUrl:
+              supplementImageUrl ||
+              "https://vitachecking.com/static/share-default.png",
+            link: {
+              webUrl: supplementUrl,
+              mobileWebUrl: supplementUrl,
+            },
+          },
+        ],
+        buttons: [
+          {
+            title: "자세히 보기",
+            link: {
+              webUrl: supplementUrl,
+              mobileWebUrl: supplementUrl,
+            },
+          },
+        ],
+      });
     } catch (e) {
       console.error(e);
       alert("공유에 실패했습니다. 잠시 후 다시 시도해주세요.");
