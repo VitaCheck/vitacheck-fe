@@ -52,6 +52,8 @@ import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // 앞서 준 가�
 
 import { fcmTokenStore } from "@/lib/fcmTokenStore";
 
+import SettingsPage from "./pages/SettingsPage";
+
 const queryClient = new QueryClient();
 
 const router = createBrowserRouter([
@@ -121,7 +123,9 @@ const router = createBrowserRouter([
         element: <IngredientDetailPage />,
       },
       { path: "/terms/:slug", element: <TermsViewPage /> }, // privacy | service | marketing
+      { path: "/settings", element: <SettingsPage /> }, 
     ],
+
   },
 ]);
 
