@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
 
+/* ---------- 유틸 ---------- */
 type JwtPayload = Record<string, any>;
 function decodeJwt(token: string): JwtPayload | null {
   try {
@@ -30,6 +31,7 @@ const mapGender = (g?: string | null): Gender | "" => {
   if (up === "F") return "FEMALE";
   return "";
 };
+
 const toBirthDate = (
   birthDate?: string | null,
   birthyear?: string | null,
@@ -41,6 +43,36 @@ const toBirthDate = (
   return "";
 };
 
+/** 010-0000-0000 마스킹 고정 */
+function maskPhone010(input: string): string {
+  // 숫자만
+  let digits = (input || "").replace(/\D/g, "");
+  // 최대 11자리까지만
+  digits = digits.slice(0, 11);
+
+  // 접두사는 무조건 010
+  if (!digits.startsWith("010")) {
+    // 뒤 8자리만 보존
+    const tail8 = digits.slice(-8);
+    digits = "010" + tail8;
+  }
+
+  const tail = digits.slice(3); // 나머지 8자리
+  const mid = tail.slice(0, 4);
+  const end = tail.slice(4, 8);
+  let out = "010";
+  if (mid) out += `-${mid}`;
+  if (end) out += `-${end}`;
+  return out;
+}
+
+/** 유저 + 4자리 랜덤 */
+function genUserNick() {
+  const n = Math.floor(1000 + Math.random() * 9000);
+  return `유저${n}`;
+}
+
+/* ---------- 타입 ---------- */
 type StateByValues = {
   provider: string;
   providerId: string;
@@ -68,12 +100,13 @@ type StateByTempToken = {
 };
 type LocationState = StateByValues | StateByTempToken | undefined;
 
+/* ---------- 컴포넌트 ---------- */
 export default function SocialSignupForm() {
   const { state } = useLocation() as { state: LocationState };
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  // -------- preset(네이버에서 받은 정보) 파싱 --------
+  // 쿼리 파싱
   const fromQuery = useMemo(
     () => ({
       email: params.get("email") || "",
@@ -97,6 +130,7 @@ export default function SocialSignupForm() {
     [params]
   );
 
+  // preset 생성(네이버/토큰 값)
   const preset = useMemo(() => {
     const base = {
       email: fromQuery.email,
@@ -158,7 +192,8 @@ export default function SocialSignupForm() {
         providerId:
           state.providerId ?? (base.providerId || fromToken.providerId),
         email: state.email ?? (base.email || fromToken.email),
-        fullName: state.fullName ?? (base.fullNameFromState || fromToken.fullName),
+        fullName:
+          state.fullName ?? (base.fullNameFromState || fromToken.fullName),
         next: state.next ?? base.next,
         gender: mapGender(state.gender) || base.gender || fromToken.gender,
         birthDate:
@@ -195,14 +230,14 @@ export default function SocialSignupForm() {
     return { mode: "values" as const, ...base, fullName: base.fullNameFromState };
   }, [state, fromQuery]);
 
-  // -------- 폼: 화면에는 이메일만 표시, 닉네임/전화번호는 입력 --------
+  /* ---- 화면노출 폼: 이메일(readonly), 닉네임/전화번호 입력 ---- */
   const [form, setForm] = useState({
     email: "",
     nickname: "",
     phoneNumber: "",
   });
 
-  // 숨겨진(화면 미노출) 값: 전송용으로만 보관
+  /* ---- 숨김값: 서버전송용 (수정 불가) ---- */
   const [hiddenInfo, setHiddenInfo] = useState({
     fullName: "",
     provider: "",
@@ -212,13 +247,14 @@ export default function SocialSignupForm() {
   });
 
   useEffect(() => {
-    setForm((prev) => ({
-      ...prev,
-      email: (preset as any).email ?? prev.email,
-      // nickname/phoneNumber는 사용자가 입력하므로 preset 값이 있으면 초기값으로만 채움
-      nickname: (preset as any).nickname ?? prev.nickname,
-      phoneNumber: (preset as any).phoneNumber ?? prev.phoneNumber,
-    }));
+    // 기본 세팅
+    setForm({
+      email: (preset as any).email ?? "",
+      // 닉네임은 요청대로 "유저XXXX"로 자동 생성
+      nickname: genUserNick(),
+      // 전화번호는 010-0000-0000 형식으로 마스킹하여 초기값 세팅(없으면 010-)
+      phoneNumber: maskPhone010((preset as any).phoneNumber ?? ""),
+    });
     setHiddenInfo({
       fullName: (preset as any).fullName ?? "",
       provider: (preset as any).provider ?? "",
@@ -226,13 +262,17 @@ export default function SocialSignupForm() {
       gender: ((preset as any).gender as Gender | "") ?? "",
       birthDate: (preset as any).birthDate ?? "",
     });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset]);
 
-  const onChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
-  ) => {
+  const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setForm((f) => ({ ...f, [name]: value }));
+    setForm((f) => {
+      if (name === "phoneNumber") {
+        return { ...f, phoneNumber: maskPhone010(value) };
+      }
+      return { ...f, [name]: value };
+    });
   };
 
   const [submitting, setSubmitting] = useState(false);
@@ -241,12 +281,14 @@ export default function SocialSignupForm() {
     e.preventDefault();
     if (submitting) return;
 
+    // 유효성
     if (!form.nickname.trim()) {
       alert("닉네임을 입력해주세요.");
       return;
     }
-    if (!form.phoneNumber.trim()) {
-      alert("전화번호를 입력해주세요.");
+    // 010-0000-0000 정확 길이 13
+    if (form.phoneNumber.length !== 13) {
+      alert("전화번호를 010-0000-0000 형식으로 입력해주세요.");
       return;
     }
 
@@ -263,16 +305,16 @@ export default function SocialSignupForm() {
         return;
       }
 
-      // ✅ DB로 넘길 전체 정보 (네이버에서 받은 값 + 사용자가 입력한 값)
+      // 서버로 넘길 전체 데이터(네이버 값 + 사용자가 입력한 값)
       const body = {
         email: form.email,
-        fullName: hiddenInfo.fullName,          // 네이버에서 받은 값
-        provider: hiddenInfo.provider,          // "naver"
-        providerId: hiddenInfo.providerId,      // 네이버 고유 ID
-        nickname: form.nickname.trim(),         // 사용자 입력
-        gender: (hiddenInfo.gender || "OTHER") as Gender, // 네이버 값(없으면 OTHER)
-        birthDate: hiddenInfo.birthDate,        // 네이버 값
-        phoneNumber: form.phoneNumber.trim(),   // 사용자 입력(있으면 네이버 값보다 우선)
+        fullName: hiddenInfo.fullName,
+        provider: hiddenInfo.provider,
+        providerId: hiddenInfo.providerId,
+        nickname: form.nickname.trim(),                 // 유저 + 4자리
+        gender: (hiddenInfo.gender || "OTHER") as Gender,
+        birthDate: hiddenInfo.birthDate,
+        phoneNumber: form.phoneNumber.trim(),           // 010-0000-0000 형식
       };
 
       const result = await postSocialSignup(body, socialTempToken);
@@ -297,18 +339,14 @@ export default function SocialSignupForm() {
     }
   };
 
-  // 닉네임 자동생성(이메일 앞부분 기반) 옵션 — 필요 없으면 버튼 제거 가능
-  const genNickname = () => {
-    const local = form.email.split("@")[0] || "user";
-    const suffix = Math.floor(100 + Math.random() * 900);
-    setForm((f) => ({ ...f, nickname: `${local}${suffix}` }));
-  };
+  // 닉네임 재생성 버튼
+  const regenNickname = () => setForm((f) => ({ ...f, nickname: genUserNick() }));
 
   return (
     <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-6 p-6">
       <h1 className="text-[22px] font-semibold">회원가입</h1>
 
-      {/* 이메일 (readonly) */}
+      {/* 이메일 (읽기전용) */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">이메일</label>
         <input
@@ -319,13 +357,13 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 닉네임 (입력 가능) */}
+      {/* 닉네임 */}
       <div className="space-y-2">
         <label className="text-sm text-gray-600 flex items-center justify-between">
           <span>닉네임</span>
           <button
             type="button"
-            onClick={genNickname}
+            onClick={regenNickname}
             className="border px-2 py-1 text-xs rounded hover:bg-gray-50"
           >
             자동생성
@@ -335,13 +373,13 @@ export default function SocialSignupForm() {
           name="nickname"
           value={form.nickname}
           onChange={onChange}
-          placeholder="닉네임을 입력하세요"
+          placeholder="예: 유저1234"
           className="w-full border-b border-gray-300 px-3 py-3"
           required
         />
       </div>
 
-      {/* 전화번호 (입력 가능) */}
+      {/* 전화번호 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">전화번호</label>
         <input
@@ -349,13 +387,13 @@ export default function SocialSignupForm() {
           value={form.phoneNumber}
           onChange={onChange}
           inputMode="tel"
-          placeholder="예: 010-1234-5678"
+          maxLength={13}                         // 010-0000-0000
+          placeholder="010-0000-0000"
           className="w-full border-b border-gray-300 px-3 py-3"
           required
         />
       </div>
 
-      {/* 제출 */}
       <button
         type="submit"
         disabled={submitting}
@@ -363,9 +401,6 @@ export default function SocialSignupForm() {
       >
         {submitting ? "처리 중..." : "다음"}
       </button>
-
-      {/* 숨긴값(화면 노출 안 함) — 디버깅 시 보고 싶으면 주석 해제해서 확인 */}
-      {/* <pre className="text-xs text-gray-400">{JSON.stringify(hiddenInfo, null, 2)}</pre> */}
     </form>
   );
 }
