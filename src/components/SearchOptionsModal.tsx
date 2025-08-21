@@ -75,7 +75,7 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
   }, [stream]);
 
   const handleDirectInput = () => {
-    navigate("/searchresult");
+    navigate("/search");
     onClose();
   };
 
