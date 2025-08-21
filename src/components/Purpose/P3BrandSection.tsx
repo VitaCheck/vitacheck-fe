@@ -21,10 +21,12 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
   const [currentPage, setCurrentPage] = useState(0);
   const itemsPerPage = 4;
 
-  const productsToDisplay = brandProducts || [];
-  
-  const totalPages = Math.ceil(productsToDisplay.length / itemsPerPage);
-  const paginatedProducts = productsToDisplay.slice(
+  // 모바일용 최대 16개
+  const mobileProductsToDisplay = (brandProducts || []).slice(0, 16);
+  const pcProductsToDisplay = (brandProducts || []).slice(0, 16);
+
+  const totalPages = Math.ceil(pcProductsToDisplay.length / itemsPerPage);
+  const paginatedProducts = pcProductsToDisplay.slice(
     currentPage * itemsPerPage,
     currentPage * itemsPerPage + itemsPerPage
   );
@@ -45,9 +47,9 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
   return (
     <>
       {/* 모바일 전용 */}
-      <div className="sm:hidden">
+      <div className="sm:hidden w-full max-w-[338px] mx-auto">
         {/* 브랜드 이미지와 브랜드명 */}
-        <div className="flex items-center justify-between w-[338px] gap-[18px]">
+        <div className="flex items-center justify-between w-full gap-[18px]">
           <div className="flex items-center justify-center gap-[10px]">
             {/* brandImageUrl이 null일 경우 <img>를 렌더링하지 않습니다. */}
             <div className="w-[40px] h-[40px] rounded-[36px] border-[0.5px] border-gray-300 flex items-center justify-center overflow-hidden">
@@ -59,7 +61,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                 />
               )}
             </div>
-            <span className="text-[20px] tracking-[-0.4px] font-medium">{brandName}</span>
+            <span className="text-[20px] tracking-[-0.4px] font-medium max-w-[180px] truncate">{brandName}</span>
           </div>
           <button
             onClick={navigateToBrandProducts}
@@ -72,14 +74,14 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
         </div>
 
         {/* 카드 리스트 */}
-        <div className="w-[388px] overflow-x-auto hide-scrollbar">
-          <div className="flex gap-[24px] mt-[24px] mb-[22px]">
-            {productsToDisplay.length === 0 ? (
+        <div className="w-full overflow-x-auto hide-scrollbar">
+          <div className="inline-flex gap-[24px] mt-6 mb-5">
+            {mobileProductsToDisplay.length === 0 ? (
               <p className="text-center w-full">제품이 없습니다.</p>
             ) : (
-              productsToDisplay.map((product) => (
+              mobileProductsToDisplay.map((product) => (
                 <div
-                  key={product.id}
+                  key={`detail-${product.id}`}
                   onClick={() => navigate(`/product/${product.id}`, { state: product })}
                   className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
                 >
@@ -87,10 +89,10 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                     <img
                       src={product.imageUrl}
                       alt={product.name}
-                      className="w-[109px] h-[109px] mx-auto px-[22px] py-[15px] object-cover"
+                      className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                     />
                   </div>
-                  <p className="mt-[17px] text-[17px] font-medium text-center">
+                  <p className="mt-[17px] text-[17px] font-medium text-center w-full line-clamp-2 break-words break-keep">
                     {product.name}
                   </p>
                 </div>
@@ -133,12 +135,12 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
         {/* 카드 리스트 */}
         <div className="w-full h-[204px] mb-[70px] hide-scrollbar relative">
           <div className="grid grid-cols-4 gap-x-5 mt-[30px] transition-all duration-300">
-            {productsToDisplay.length === 0 ? (
+            {pcProductsToDisplay.length === 0 ? (
               <p className="text-center w-full mt-[80px]">제품이 없습니다.</p>
             ) : (
               paginatedProducts.map((product) => (
                 <div
-                  key={product.id}
+                  key={`detail-${product.id}`}
                   onClick={() => navigate(`/product/${product.id}`, { state: product })}
                   className="flex-shrink-0 flex flex-col items-center cursor-pointer"
                 >
@@ -149,7 +151,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                       className="w-full h-full object-contain p-4"
                     />
                   </div>
-                  <p className="mt-[16px] h-[28px] text-[22px] font-medium text-center">
+                  <p className="mt-[16px] text-[22px] font-medium text-center w-full line-clamp-2 break-words break-keep">
                     {product.name}
                   </p>
                 </div>

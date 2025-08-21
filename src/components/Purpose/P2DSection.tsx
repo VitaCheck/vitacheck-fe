@@ -14,7 +14,7 @@ interface RecommendedProductSectionDesktopProps {
   paginatedProducts: Product[];
   isLoading: boolean;
   goToIngredientPage: () => void;
-  goToAllIngredientPage: () => void;
+   goToAllIngredientPage: () => void;
   currentPage: number;
   totalPages: number;
   handleNextPage: () => void;
@@ -113,7 +113,7 @@ const RecommendedProductSectionDesktop = ({
           ) : (
             paginatedProducts.map((product) => (
               <div
-                key={product.id}
+                key={`recommendD-${product.id}`}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
                 className="flex-shrink-0 flex flex-col items-center cursor-pointer"
               >
@@ -124,7 +124,7 @@ const RecommendedProductSectionDesktop = ({
                     className="w-full h-full object-contain p-4"
                   />
                 </div>
-                <p className="mt-[16px] h-[28px] text-[22px] font-medium text-center">
+                <p className="mt-[16px] text-[22px] font-medium text-center whitespace-normal break-keep line-clamp-2">
                   {product.title}
                 </p>
               </div>

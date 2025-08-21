@@ -29,6 +29,7 @@ declare global {
   }
 }
 
+
 const queryClient = new QueryClient();
 
 const BREAKPOINT = 640;

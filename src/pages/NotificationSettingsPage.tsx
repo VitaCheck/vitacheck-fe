@@ -11,6 +11,7 @@ type UISettings = {
   benefit: { email: boolean; push: boolean };
   intake: { supplement: boolean; push: boolean };
 };
+import Back from "../assets/back.svg";
 
 function NotificationSettingsPage() {
   const navigate = useNavigate();
@@ -118,20 +119,11 @@ function NotificationSettingsPage() {
             onClick={() => navigate("/NotificationCenter")}
             className="mr-2 text-2xl text-black sm:hidden"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <img
+              src={Back}
+              alt="icon"
+              className="w-[20px] h-[20px] object-contain cursor-pointer"
+            />
           </button>
           <h1 className="text-xl font-semibold py-2 sm:ml-2">알림설정</h1>
         </div>
@@ -152,7 +144,7 @@ function NotificationSettingsPage() {
             onToggle={() => toggle("benefit", "sms")}
           /> */}
           <SettingRow
-            label="앱 푸시"
+            label="푸시 알림"
             checked={settings.benefit.push}
             onToggle={() => toggle("benefit", "push")}
           />
@@ -162,7 +154,7 @@ function NotificationSettingsPage() {
         <section className="mt-4 px-3">
           <h2 className="text-[20px] font-semibold mb-4">섭취알림</h2>
           <SettingRow
-            label="나의 영양제 복용알림"
+            label="이메일"
             checked={settings.intake.supplement}
             onToggle={() => toggle("intake", "supplement")}
           />
@@ -172,7 +164,7 @@ function NotificationSettingsPage() {
             onToggle={() => toggle("benefit", "sms")}
           /> */}
           <SettingRow
-            label="앱 푸시"
+            label="푸시 알림"
             checked={settings.intake.push}
             onToggle={() => toggle("intake", "push")}
           />

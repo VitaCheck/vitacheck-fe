@@ -1,26 +1,112 @@
 import MenuItem from "../components/MyPage/MenuItem";
-import ProfileCat from "../assets/ProfileCat.svg";
-import Profile from "../assets/Profile2.svg";
+import ProfileCat from "../assets/ProfileCat.png";
+import Profile from "../assets/baseprofile.png";
 import { useNavigate } from "react-router-dom";
-// import Service from "../assets/Service.svg";
+import Back from "../assets/back.svg";
 import Bell from "../assets/MyPageBell.svg";
 import Scrap from "../assets/MyPageScrap.svg";
 import Vita from "../assets/MyPageVita.svg";
 import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
-import { useEffect, useState } from "react";
-import { getMyProfileImageUrl, getUserInfo, type UserInfo } from "@/apis/user";
+import { useEffect, useMemo, useState } from "react";
+import { deleteMyAccount, getMyProfileImageUrl, getUserInfo, type UserInfo } from "@/apis/user";
 import { useLogout } from "@/hooks/useLogout";
+
+// ✅ 약관 API 훅 (이미 작성해둔 파일)
+import { useTerms, type Term } from "@/apis/terms";
+import Modal from "@/components/Modal";
+
+/** ─────────────────────────────────────────────────────────
+ * 간단 모달 컴포넌트 (TermsModal 대체/내장)
+ * 프로젝트에 이미 TermsModal 컴포넌트가 있으면 그걸 import 해서 써도 됩니다.
+ * ───────────────────────────────────────────────────────── */
+function InlineTermsModal({
+  open,
+  title,
+  html,
+  onClose,
+}: {
+  open: boolean;
+  title?: string;
+  html?: string;
+  onClose: () => void;
+}) {
+  if (!open) return null;
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center"
+      aria-modal="true"
+      role="dialog"
+    >
+      {/* backdrop */}
+      <button
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+        aria-label="닫기"
+      />
+      {/* panel */}
+      <div className="relative max-h-[80vh] w-[min(680px,92vw)] overflow-hidden rounded-2xl bg-white p-6 shadow-xl">
+        <div className="mb-4 flex items-center justify-between">
+          <h3 className="text-xl font-semibold">{title ?? "약관"}</h3>
+          <button
+            onClick={onClose}
+            className="rounded-md border px-3 py-1 text-sm"
+          >
+            닫기
+          </button>
+        </div>
+        <div
+          className="prose max-w-none overflow-y-auto pr-1"
+          style={{ maxHeight: "60vh" }}
+          dangerouslySetInnerHTML={{
+            __html: html ?? "<p>내용이 없습니다.</p>",
+          }}
+        />
+      </div>
+    </div>
+  );
+}
 
 function MyPage() {
   const navigate = useNavigate();
   const logout = useLogout();
   const [userLoadFailed, setUserLoadFailed] = useState(false);
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
 
-  const handleLogout = async () => {
-    alert("로그아웃 되었습니다.");
-    await logout("/social-login"); //토큰/캐시 삭제 후 /social-login으로 이동
+  const openLogoutModal = () => setShowLogoutModal(true);
+  const closeLogoutModal = () => setShowLogoutModal(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+
+  const openDeleteModal = () => setShowDeleteModal(true);
+  const closeDeleteModal = () => setShowDeleteModal(false);
+
+  const confirmDelete = async () => {
+  closeDeleteModal();
+
+  try {
+    // 1) 서버에 탈퇴 요청
+    await deleteMyAccount();
+
+    // 2) 로컬 정리
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refreshToken");
+    // 필요하면 fcmToken 제거
+    localStorage.removeItem("fcmToken");
+
+    // 3) 완료 안내 후 로그인 화면으로
+    alert("탈퇴가 완료되었습니다.");
+    navigate("/login", { replace: true });
+  } catch (err) {
+    console.error("회원 탈퇴 실패:", err);
+    alert("탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요.");
+  }
+};
+
+  const confirmLogout = async () => {
+    closeLogoutModal();
+    await logout("/login");
   };
 
   const goToMain = () => {
@@ -54,7 +140,58 @@ function MyPage() {
     fetchUser();
   }, []);
 
-  const imgSrc = userLoadFailed ? Profile : (profileUrl ?? ProfileCat);
+  const imgSrc = userLoadFailed ? ProfileCat : (profileUrl ?? ProfileCat);
+
+  /** ─────────────────────────────────────────────────────────
+   * 약관 모달 상태 + 데이터
+   * ───────────────────────────────────────────────────────── */
+  const {
+    data: allTerms,
+    isLoading: termsLoading,
+    error: termsError,
+  } = useTerms();
+  const [openKey, setOpenKey] = useState<null | "service" | "privacy">(null);
+
+  // 키워드로 약관 고르기: 제목에 포함되는 텍스트 우선, 실패 시 합리적 fallback
+  const pickTerm = (keyword: "service" | "privacy"): Term | undefined => {
+    const list = allTerms ?? [];
+    if (list.length === 0) return undefined;
+
+    const byTitle =
+      keyword === "service"
+        ? list.find(
+            (t) => t.title?.includes("이용약관") || t.title?.includes("서비스")
+          )
+        : list.find((t) => t.title?.includes("개인정보"));
+
+    if (byTitle) return byTitle;
+
+    const required = list.filter((t) => t.required);
+    if (keyword === "privacy") {
+      // 개인정보는 보통 필수 약관 2개 중 하나일 가능성이 높음
+      return required[1] ?? required[0] ?? list[0];
+    }
+    // service
+    return required[0] ?? list[0];
+  };
+
+  const selectedTerm = useMemo(() => {
+    if (!openKey) return undefined;
+    return pickTerm(openKey);
+  }, [openKey, allTerms]);
+
+  const modalTitle = termsLoading
+    ? "로딩 중…"
+    : termsError
+      ? "약관 조회 오류"
+      : selectedTerm?.title ||
+        (openKey === "privacy" ? "개인정보 처리방침" : "서비스 이용약관");
+
+  const modalHtml = termsLoading
+    ? "<p>약관을 불러오는 중...</p>"
+    : termsError
+      ? "<p style='color:#ef4444'>약관을 불러오는 중 오류가 발생했습니다.</p>"
+      : selectedTerm?.content || "<p>내용이 없습니다.</p>";
 
   return (
     <div className="min-h-screen flex flex-col sm:mr-[18%] sm:ml-[18%]">
@@ -67,20 +204,11 @@ function MyPage() {
             onClick={goToMain}
             className="mr-2 text-2xl text-black cursor-pointer"
           >
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              strokeWidth={2}
-              stroke="currentColor"
-              className="w-6 h-6"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15 19l-7-7 7-7"
-              />
-            </svg>
+            <img
+              src={Back}
+              alt="icon"
+              className="w-[20px] h-[20px] object-contain"
+            />
           </button>
           <h1 className="text-[24px] font-semibold py-2">마이페이지</h1>
         </div>
@@ -205,7 +333,7 @@ function MyPage() {
 
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => navigate("/notificationCenter")}
+                onClick={() => navigate("/setting")}
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl ml-1">
@@ -236,10 +364,10 @@ function MyPage() {
           <div className="w-full mt-6 mb-6">
             {/* 박스 전체 */}
             <div className="bg-white rounded-2xl shadow overflow-hidden">
-              {/* 나의 영양제 관리 (위쪽) */}
+              {/* 서비스 이용약관 */}
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => navigate("")}
+                onClick={() => navigate("/terms/service")}
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl ml-1">
@@ -265,9 +393,10 @@ function MyPage() {
                 </svg>
               </div>
 
+              {/* 개인정보 처리방침 */}
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => navigate("")}
+                onClick={() => navigate("/terms/privacy")}
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl ml-1">
@@ -300,7 +429,7 @@ function MyPage() {
               <MenuItem
                 label="로그아웃"
                 icon={Logout}
-                onClick={() => logout("/login")}
+                onClick={openLogoutModal}
               />
             </div>
           )}
@@ -308,14 +437,52 @@ function MyPage() {
 
         {/* 로그아웃 */}
         {!userLoadFailed && (
-          <div
-            className="mt-auto mb-2 text-black text-sm underline cursor-pointer sm:hidden"
-            onClick={handleLogout}
-          >
-            로그아웃
+          <div className="mt-auto mb-3 flex items-center justify-center gap-4 sm:hidden">
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openLogoutModal}
+            >
+              로그아웃
+            </button>
+            <span className="text-[#D1D1D1]">|</span>
+            <button
+              className="text-[#6B6B6B] text-sm cursor-pointer hover:text-black"
+              onClick={openDeleteModal}
+            >
+              회원 탈퇴
+            </button>
           </div>
         )}
       </div>
+
+      {/* ✅ 약관 모달 (공통) */}
+      <InlineTermsModal
+        open={openKey !== null}
+        title={modalTitle}
+        html={modalHtml}
+        onClose={() => setOpenKey(null)}
+      />
+
+      <Modal
+        open={showLogoutModal}
+        title="로그아웃"
+        description="로그아웃 하시겠습니까?"
+        cancelText="닫기"
+        confirmText="로그아웃"
+        onCancel={closeLogoutModal}
+        onConfirm={confirmLogout}
+      />
+
+      {/* ✅ 탈퇴 모달 */}
+      <Modal
+        open={showDeleteModal}
+        title="탈퇴하기"
+        description="정말 비타체크 서비스를 탈퇴하시겠습니까?"
+        cancelText="닫기"
+        confirmText="탈퇴하기"
+        onCancel={closeDeleteModal}
+        onConfirm={confirmDelete}
+      />
     </div>
   );
 }

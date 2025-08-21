@@ -11,6 +11,7 @@ import {
   toggleLikeSupplement,
   toggleLikeIngredient,
 } from "@/apis/scrapIngredientList";
+import Back from "../assets/back.svg";
 
 const ScrapPage = () => {
   const [tab, setTab] = useState<"product" | "ingredient">("product");
@@ -112,20 +113,11 @@ const ScrapPage = () => {
               className="mr-2 text-2xl text-black cursor-pointer sm:hidden"
               aria-label="뒤로가기"
             >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                strokeWidth={2}
-                stroke="currentColor"
-                className="w-6 h-6"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M15 19l-7-7 7-7"
-                />
-              </svg>
+              <img
+                src={Back}
+                alt="icon"
+                className="w-[20px] h-[20px] object-contain"
+              />
             </button>
             <div className="flex-1">
               <h1 className="text-[24px] font-semibold py-2">찜한 제품/성분</h1>

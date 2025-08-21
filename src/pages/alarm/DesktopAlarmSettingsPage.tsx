@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "@/lib/axios";
-import { FiSearch, FiType } from "react-icons/fi";
 
 // ==== 타입 ====
 type DayOfWeek = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
+
 interface Schedule {
   dayOfWeek: DayOfWeek;
   time: string; // 정규화 후 항상 "HH:mm"
 }
+
 interface Alarm {
   notificationRoutineId: number;
   supplementId: number;
@@ -21,6 +22,34 @@ interface Alarm {
 }
 
 // ==== 헬퍼 ====
+
+// 요일 한글 라벨
+const DAY_LABEL: Record<DayOfWeek, string> = {
+  SUN: "일",
+  MON: "월",
+  TUE: "화",
+  WED: "수",
+  THU: "목",
+  FRI: "금",
+  SAT: "토",
+};
+
+// schedules 또는 daysOfWeek에서 요일 집합을 얻고, SUN~SAT 순으로 정렬
+const getDaysForAlarm = (alarm: Alarm): DayOfWeek[] => {
+  const fromSchedules =
+    Array.isArray(alarm.schedules) && alarm.schedules.length > 0;
+  const days: DayOfWeek[] = fromSchedules
+    ? (alarm.schedules!.map((s) => s.dayOfWeek).filter(Boolean) as DayOfWeek[])
+    : ((alarm.daysOfWeek ?? []) as DayOfWeek[]);
+
+  const order: DayOfWeek[] = ["MON", "TUE", "WED", "THU", "FRI", "SAT", "SUN"];
+  const uniq = Array.from(new Set(days));
+  return order.filter((d) => uniq.includes(d));
+};
+
+const formatDaysLine = (days: DayOfWeek[]) =>
+  days.length ? days.map((d) => DAY_LABEL[d]).join(" ") : "—";
+
 const pad2 = (n?: number) =>
   typeof n === "number" ? String(n).padStart(2, "0") : undefined;
 
@@ -30,7 +59,17 @@ const formatTimeObject = (t?: { hour?: number; minute?: number }) => {
   return hh && mm ? `${hh}:${mm}` : undefined;
 };
 
-const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
+/** 문자열 시간 보정: "H:m", "HH:mm:ss" 등 → "HH:mm" */
+const fixTime = (t?: string) => {
+  if (!t) return "";
+  const m = t.match(/^(\d{1,2}):(\d{1,2})/);
+  if (m) {
+    const hh = m[1].padStart(2, "0");
+    const mm = m[2].padStart(2, "0");
+    return `${hh}:${mm}`;
+  }
+  return t.slice(0, 5);
+};
 
 // 서버 응답 한 항목을 안전하게 정규화
 const normalizeAlarm = (raw: any): Alarm => {
@@ -52,9 +91,14 @@ const normalizeAlarm = (raw: any): Alarm => {
     ? raw.schedules.map((s: any) => s?.dayOfWeek).filter(Boolean)
     : [];
 
-  const times: string[] = Array.isArray(raw?.times)
+  const rawTimes: string[] = Array.isArray(raw?.times)
     ? raw.times.filter(Boolean).map(fixTime)
     : timesFromSchedules;
+
+  //시간 고유화 + 정렬(문자열 비교로 "07:30" < "18:00")
+  const times = Array.from(new Set(rawTimes)).sort((a, b) =>
+    a.localeCompare(b)
+  );
 
   const daysOfWeek: string[] = Array.isArray(raw?.daysOfWeek)
     ? raw.daysOfWeek.filter(Boolean)
@@ -68,7 +112,7 @@ const normalizeAlarm = (raw: any): Alarm => {
 
   return {
     notificationRoutineId: id,
-    supplementId: Number(raw?.supplementId ?? 0),
+    supplementId: Number(raw?.suplemmentId ?? raw?.supplementId ?? 0),
     supplementName: String(raw?.supplementName ?? raw?.name ?? "알 수 없음"),
     supplementImageUrl: raw?.supplementImageUrl ?? raw?.imageUrl ?? undefined,
     times,
@@ -89,7 +133,8 @@ const normalizeAlarm = (raw: any): Alarm => {
 };
 
 const formatTimes = (times?: string[]) => {
-  const arr = Array.isArray(times) ? times : [];
+  // 이중 안전장치: 혹시 상위에서 중복이 들어와도 제거
+  const arr = Array.isArray(times) ? Array.from(new Set(times)) : [];
   if (arr.length === 0) return "—";
   if (arr.length <= 3) return arr.join(" | ");
   return arr.slice(0, 3).join(" | ") + " ...";
@@ -109,6 +154,38 @@ const DesktopAlarmSettingsPage = () => {
   const lastPatchedRef = useRef<Map<number, number>>(new Map());
   const RECENT_MS = 2000; // 2초 보호
 
+  // 중복 alert 방지용
+  const alertedRef = useRef(false);
+  const safeAlert = (msg: string) => {
+    if (alertedRef.current) return;
+    alertedRef.current = true;
+    alert(msg);
+  };
+
+  // 토큰 읽기 유틸
+  const getToken = () => {
+    const raw =
+      localStorage.getItem("accessToken") ||
+      localStorage.getItem("ACCESS_TOKEN") ||
+      localStorage.getItem("token") ||
+      "";
+    const val = raw.trim();
+    if (!val || val === "null" || val === "undefined") return "";
+    return val;
+  };
+
+  // 로그인 가드: 통과 여부 상태
+  const [authChecked, setAuthChecked] = useState(false);
+  useEffect(() => {
+    const token = getToken();
+    if (!token) {
+      safeAlert("로그인이 필요합니다.");
+      navigate("/social-login", { replace: true });
+      return;
+    }
+    setAuthChecked(true);
+  }, [navigate]);
+
   // 목록 재조회
   const fetchAlarms = useCallback(async () => {
     try {
@@ -120,7 +197,6 @@ const DesktopAlarmSettingsPage = () => {
           : [];
       const list = listRaw.map(normalizeAlarm);
 
-      // 최근 토글 보호 + 서버 enabled 미제공 시 이전값 보존
       setAlarms((prev) => {
         const now = Date.now();
         const prevMap = new Map<number, Alarm>(
@@ -135,19 +211,31 @@ const DesktopAlarmSettingsPage = () => {
             typeof lastAt === "number" && now - lastAt < RECENT_MS;
 
           const resolvedEnabled = isProtected
-            ? prevItem?.isEnabled // 보호 중이면 이전값 유지
+            ? prevItem?.isEnabled
             : typeof nextItem.isEnabled === "boolean"
-              ? nextItem.isEnabled // 서버가 명시하면 서버값
-              : prevItem?.isEnabled; // 서버가 안 주면 이전값
+              ? nextItem.isEnabled
+              : prevItem?.isEnabled;
 
           return { ...nextItem, isEnabled: resolvedEnabled };
         });
       });
-    } catch (error) {
+    } catch (error: any) {
+      // 401에서도 한 번만 alert
+      const status = error?.response?.status;
+      if (status === 401) {
+        safeAlert("세션이 만료되었습니다. 다시 로그인해주세요.");
+        navigate("/login", { replace: true });
+        return;
+      }
       console.error("알람 리스트 불러오기 실패:", error);
       setAlarms([]);
     }
-  }, []);
+  }, [navigate]);
+
+  //  로그인 확인 후에만 데이터 로드 (StrictMode 2회 호출도 안전)
+  useEffect(() => {
+    if (authChecked) fetchAlarms();
+  }, [authChecked, fetchAlarms]);
 
   // mount 시 1회 로드
   useEffect(() => {
@@ -282,6 +370,7 @@ const DesktopAlarmSettingsPage = () => {
                 <img
                   src="/images/search.png"
                   className="text-xl w-[48px] h-[48px]"
+                  alt="제품 검색"
                 />
               </span>
               <div className="text-left">
@@ -304,9 +393,12 @@ const DesktopAlarmSettingsPage = () => {
                 <img
                   src="/images/text.png"
                   className="text-xl w-[48px] h-[48px]"
+                  alt="직접 입력"
                 />
               </span>
-              <div className="text-[20px] font-semibold">직접 입력하기</div>
+              <div className="text-left">
+                <div className="text-[20px] font-semibold">직접 입력하기</div>
+              </div>
             </button>
           </div>
         )}
@@ -319,7 +411,8 @@ const DesktopAlarmSettingsPage = () => {
             {alarms.map((alarm) => {
               const on = alarm.isEnabled === true; // undefined면 회색(off)
               const busy = togglingIds.has(alarm.notificationRoutineId);
-
+              const daysLine = formatDaysLine(getDaysForAlarm(alarm));
+              const timesLine = formatTimes(alarm.times);
               return (
                 <div
                   key={alarm.notificationRoutineId}
@@ -330,13 +423,20 @@ const DesktopAlarmSettingsPage = () => {
                   }
                   className="flex justify-between items-center border-b border-gray-300 pb-6 cursor-pointer"
                 >
-                  {/* 왼쪽: 이름/시간 */}
                   <div className="flex flex-col">
+                    {/* 이름 */}
                     <div className="text-[35.57px] font-semibold">
                       {alarm.supplementName}
                     </div>
+
+                    {/* 요일 라인 */}
+                    <div className="text-[31px] text-[#9C9A9A] font-medium mt-1">
+                      {daysLine}
+                    </div>
+
+                    {/* 시간 라인 */}
                     <div className="text-[35.57px] font-medium text-gray-500 mt-1">
-                      {formatTimes(alarm.times)}
+                      {timesLine}
                     </div>
                   </div>
 

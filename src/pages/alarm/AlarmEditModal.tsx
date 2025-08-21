@@ -1,112 +1,260 @@
 import { useEffect, useState } from "react";
-import Picker from "react-mobile-picker";
 import axios from "@/lib/axios";
+import { uploadImageToCloudinary } from "@/utils/cloudinary";
+import TimePickerModal from "./TimePickerModal";
+
+type DayEn = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
+type Schedule = { dayOfWeek: DayEn; time: string };
+
+const EN_TO_KO: Record<DayEn, string> = {
+  SUN: "일",
+  MON: "월",
+  TUE: "화",
+  WED: "수",
+  THU: "목",
+  FRI: "금",
+  SAT: "토",
+};
+const KO_TO_EN: Record<string, DayEn> = {
+  일: "SUN",
+  월: "MON",
+  화: "TUE",
+  수: "WED",
+  목: "THU",
+  금: "FRI",
+  토: "SAT",
+};
+const DAY_ORDER: DayEn[] = ["SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"];
+
+const fixTime = (t?: string) => (t ? t.slice(0, 5) : "");
+const unique = <T,>(arr: T[]) => Array.from(new Set(arr));
+
+const normalizeRoutine = (raw: any) => {
+  const supplementName: string = String(raw?.supplementName ?? raw?.name ?? "");
+  const supplementImageUrl: string | null =
+    raw?.supplementImageUrl ?? raw?.imageUrl ?? null;
+
+  let daysOfWeek: DayEn[] | undefined = Array.isArray(raw?.daysOfWeek)
+    ? raw.daysOfWeek.filter(Boolean)
+    : undefined;
+  let times: string[] | undefined = Array.isArray(raw?.times)
+    ? raw.times.filter(Boolean).map(fixTime)
+    : undefined;
+
+  const schedules: Schedule[] | undefined = Array.isArray(raw?.schedules)
+    ? raw.schedules
+    : undefined;
+
+  if ((!daysOfWeek || !daysOfWeek.length) && schedules) {
+    daysOfWeek = unique(
+      schedules.map((s) => s?.dayOfWeek).filter((v): v is DayEn => Boolean(v))
+    );
+  }
+  if ((!times || !times.length) && schedules) {
+    times = unique(schedules.map((s) => fixTime(s?.time)).filter(Boolean));
+  }
+
+  return {
+    supplementName,
+    supplementImageUrl: supplementImageUrl ?? null,
+    daysOfWeek: daysOfWeek ?? [],
+    times: times ?? [],
+  };
+};
 
 interface Props {
   id: number;
   onClose: () => void;
+  onSaved?: () => void; // 저장/삭제 후 부모 갱신용
 }
 
-const AlarmEditModal = ({ id, onClose }: Props) => {
+const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
   const [name, setName] = useState("");
-  const [days, setDays] = useState<string[]>([]);
+  const [days, setDays] = useState<DayEn[]>([]);
   const [times, setTimes] = useState<string[]>([]);
-  const [image, setImage] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+  const [timePickerDefault, setTimePickerDefault] = useState<
+    { hour: string; minute: string } | undefined
+  >(undefined);
 
-  const DAY_MAP: Record<string, string> = {
-    SUN: "일",
-    MON: "월",
-    TUE: "화",
-    WED: "수",
-    THU: "목",
-    FRI: "금",
-    SAT: "토",
-  };
-
-  const selections = {
-    hour: Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0")),
-    minute: Array.from({ length: 60 }, (_, i) => i.toString().padStart(2, "0")),
-  };
-  const [pickerValue, setPickerValue] = useState({
-    hour: "09",
-    minute: "00",
-  });
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false); // ✅ 삭제 상태
 
   useEffect(() => {
-    axios.get("/api/v1/notifications/routines").then((res) => {
-      const routine = res.data.result.find(
-        (r: any) => r.notificationRoutineId === id
-      );
-      if (routine) {
-        setName(routine.supplementName);
-        // 영어 → 한글 요일 변환
-        const convertedDays = routine.daysOfWeek.map(
-          (day: string) => DAY_MAP[day]
+    (async () => {
+      try {
+        const res = await axios.get("/api/v1/notifications/routines");
+        const all = Array.isArray(res?.data?.result) ? res.data.result : [];
+        const routine = all.find(
+          (r: any) => Number(r?.notificationRoutineId) === Number(id)
         );
-        setDays(convertedDays);
-        // setDays(routine.daysOfWeek);
+        if (!routine) throw new Error("해당 루틴이 없습니다.");
 
-        setTimes(routine.times);
-        setPreviewUrl(routine.supplementImageUrl);
+        const norm = normalizeRoutine(routine);
+        setName(norm.supplementName);
+        setDays(
+          unique(norm.daysOfWeek).sort(
+            (a, b) => DAY_ORDER.indexOf(a) - DAY_ORDER.indexOf(b)
+          )
+        );
+        setTimes(unique(norm.times).sort());
+        setPreviewUrl(norm.supplementImageUrl);
+      } catch (e) {
+        console.error("루틴 불러오기 실패:", e);
+        alert("알림 정보를 불러오지 못했습니다.");
+        onClose();
       }
-    });
-  }, [id]);
+    })();
+  }, [id, onClose]);
 
-  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setImage(file);
-      setPreviewUrl(URL.createObjectURL(file));
-      setShowImagePicker(false);
-    }
-  };
+  useEffect(() => {
+    // 모달 열릴 때 body 스크롤 막기
+    document.body.style.overflow = "hidden";
+    return () => {
+      // 모달 닫힐 때 원래대로 복원
+      document.body.style.overflow = "";
+    };
+  }, []);
 
-  const toggleDay = (day: string) => {
+  const toggleDay = (ko: string) => {
+    const en = KO_TO_EN[ko];
     setDays((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
+      prev.includes(en) ? prev.filter((d) => d !== en) : [...prev, en]
     );
   };
 
-  const handleAddTime = () => {
-    const newTime = `${pickerValue.hour}:${pickerValue.minute}`;
-    if (!times.includes(newTime)) {
-      setTimes([...times, newTime]);
-    }
+  const openAddTime = () => {
+    setEditingIndex(null);
+    setTimePickerDefault({ hour: "09", minute: "00" });
+    setShowTimePicker(true);
+  };
+
+  const openEditTime = (index: number) => {
+    const t = times[index] ?? "09:00";
+    const [h, m] = t.split(":");
+    setEditingIndex(index);
+    setTimePickerDefault({ hour: h, minute: m });
+    setShowTimePicker(true);
+  };
+
+  const removeTime = (index: number) => {
+    setTimes((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleConfirmTime = (v: { hour: string; minute: string }) => {
+    const newTime = `${v.hour}:${v.minute}`;
+    setTimes((prev) => {
+      let next = [...prev];
+      if (editingIndex === null) next = unique([...next, newTime]);
+      else {
+        next[editingIndex] = newTime;
+        next = unique(next);
+      }
+      return next.sort();
+    });
+    setShowTimePicker(false);
+    setEditingIndex(null);
+    setTimePickerDefault(undefined);
   };
 
   const formatTime = (time: string) => {
-    const [hourStr, minute] = time.split(":");
-    const hour = parseInt(hourStr, 10);
+    const [h, m] = time.split(":");
+    const hour = parseInt(h, 10);
     const isPM = hour >= 12;
     const displayHour = hour % 12 === 0 ? 12 : hour % 12;
     return `${isPM ? "오후" : "오전"} ${displayHour
       .toString()
-      .padStart(2, "0")}:${minute}`;
+      .padStart(2, "0")}:${m}`;
+  };
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setImageFile(file);
+    setPreviewUrl(URL.createObjectURL(file));
+    setShowImagePicker(false);
   };
 
   const handleSubmit = async () => {
-    const formData = new FormData();
-    formData.append("supplementName", name);
-    formData.append("weekDays", JSON.stringify(days));
-    formData.append("intakeTimes", JSON.stringify(times));
-    if (image) {
-      formData.append("image", image);
+    if (!name.trim()) return alert("영양제 이름을 입력해 주세요.");
+    if (!days.length) return alert("복용 요일을 선택해 주세요.");
+    if (!times.length) return alert("복용 시간을 한 개 이상 추가해 주세요.");
+    if (times.some((t) => !/^\d{2}:\d{2}$/.test(t)))
+      return alert("시간 형식이 올바르지 않습니다.");
+
+    try {
+      setSaving(true);
+
+      let imageUrl = previewUrl ?? undefined;
+      if (imageFile) {
+        const uploaded = await uploadImageToCloudinary(imageFile);
+        if (!uploaded) {
+          alert("이미지 업로드에 실패했습니다.");
+          setSaving(false);
+          return;
+        }
+        imageUrl = uploaded;
+      }
+
+      const schedules: Schedule[] = days.flatMap((d) =>
+        times.map((t) => ({ dayOfWeek: d, time: fixTime(t) }))
+      );
+
+      const payload = {
+        notificationRoutineId: Number(id),
+        name: name.trim(),
+        imageUrl,
+        schedules,
+      };
+
+      await axios.post("/api/v1/notifications/routines/custom", payload);
+      onSaved?.();
+      alert("알림이 수정되었습니다");
+      onClose();
+    } catch (err: any) {
+      console.error("알림 저장 실패:", err?.response ?? err);
+      alert(
+        err?.response?.data?.message ??
+          "알림 수정에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
+    } finally {
+      setSaving(false);
     }
+  };
 
-    await axios.post(`/api/v1/notifications/routines`, formData, {
-      headers: { "Content-Type": "multipart/form-data" },
-    });
+  // 삭제
+  const handleDelete = async () => {
+    if (deleting) return;
+    const ok = window.confirm("정말 이 알림을 삭제할까요?");
+    if (!ok) return;
 
-    onClose();
+    try {
+      setDeleting(true);
+      await axios.delete(`/api/v1/notifications/routines/${id}`);
+      onSaved?.();
+      alert("알림을 삭제했습니다.");
+      onClose();
+    } catch (err: any) {
+      console.error("알림 삭제 실패:", err?.response ?? err);
+      alert(
+        err?.response?.data?.message ??
+          "알림 삭제에 실패했습니다. 잠시 후 다시 시도해 주세요."
+      );
+    } finally {
+      setDeleting(false);
+    }
   };
 
   return (
     <div
       className="fixed inset-0 z-50 flex items-end justify-center"
       style={{ backgroundColor: "rgba(0, 0, 0, 0.3)" }}
+      onClick={onClose}
     >
       <div
         className="w-full bg-white rounded-t-3xl px-6 pt-5 pb-10 h-[70%] overflow-y-auto animate-slide-up"
@@ -118,8 +266,12 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
             취소
           </button>
           <span className="text-gray-500 font-bold text-[25px]">알림 수정</span>
-          <button className="font-bold text-[23px]" onClick={handleSubmit}>
-            저장
+          <button
+            className="font-bold text-[23px]"
+            onClick={handleSubmit}
+            disabled={saving}
+          >
+            {"저장"}
           </button>
         </div>
 
@@ -161,167 +313,91 @@ const AlarmEditModal = ({ id, onClose }: Props) => {
           복용 요일 선택
         </label>
         <div className="flex justify-between mb-4">
-          {["일", "월", "화", "수", "목", "금", "토"].map((day) => (
-            <button
-              key={day}
-              className={`w-[47.5px] h-[47.5px] rounded-[9.5px] border border-[#AAAAAA] ${
-                days.includes(day)
-                  ? "bg-[#808080] text-white"
-                  : "bg-white text-black"
-              }`}
-              onClick={() => toggleDay(day)}
-            >
-              {day}
-            </button>
-          ))}
+          {DAY_ORDER.map((en) => {
+            const ko = EN_TO_KO[en];
+            const active = days.includes(en);
+            return (
+              <button
+                key={en}
+                className={`w-[47.5px] h-[47.5px] rounded-[9.5px] border border-[#AAAAAA] ${
+                  active ? "bg-[#808080] text-white" : "bg-white text-black"
+                }`}
+                onClick={() => toggleDay(ko)}
+              >
+                {ko}
+              </button>
+            );
+          })}
         </div>
 
-        {/* 추가된 시간 리스트 */}
+        {/* 추가된 시간 리스트 (편집/삭제 가능) */}
         {times.length > 0 && (
           <div className="flex flex-col gap-2 mt-4">
             {times.map((t, idx) => (
-              <div
-                key={t}
-                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white"
+              <button
+                key={`${t}-${idx}`}
+                type="button"
+                onClick={() => openEditTime(idx)}
+                className="w-full h-[60px] border border-[#AAAAAA] rounded-[10px] px-4 py-2 flex justify-between items-center bg-white text-left"
+                title="탭하여 시간 편집"
               >
                 <span className="text-[16px] text-[#AAAAAA]">
                   복용 시간 {idx + 1}
                 </span>
-                <span className="text-[16px] font-semibold text-[#4D4D4D]">
-                  {formatTime(t)}
-                </span>
-              </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-[16px] font-semibold text-[#4D4D4D]">
+                    {formatTime(t)}
+                  </span>
+                  <span
+                    role="button"
+                    aria-label="시간 삭제"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      removeTime(idx);
+                    }}
+                    className="text-[#AAAAAA] text-[18px] leading-none px-2"
+                  >
+                    ×
+                  </span>
+                </div>
+              </button>
             ))}
           </div>
         )}
 
-        {/* 복용 시간 추가 버튼 */}
+        {/* 시간 추가 버튼 */}
         <div className="flex justify-center mt-4">
           <button
             className="w-full h-[60px] border border-[#AAAAAA] text-[#AAAAAA] rounded-[10px] px-3 py-2 bg-white mx-auto"
-            onClick={() => setShowTimePicker(true)}
+            onClick={openAddTime}
           >
             복용 시간 추가
           </button>
         </div>
 
+        {/* 알림 삭제 버튼 */}
+        <div className="flex justify-center mt-8">
+          <button
+            onClick={handleDelete}
+            disabled={deleting}
+            className={`w-full h-[60px] rounded-[10px] text-[18px] font-semibold
+              ${deleting ? "bg-[#E5E5E5] text-[#9E9E9E] cursor-not-allowed" : "bg-[#EEEEEE] text-[#333333]"}`}
+          >
+            {"알림 삭제"}
+          </button>
+        </div>
+
         {/* 시간 선택 모달 */}
         {showTimePicker && (
-          <div
-            className="fixed inset-0 bg-black/40 flex items-end z-50"
-            onClick={() => setShowTimePicker(false)}
-          >
-            <div
-              className="w-full bg-white rounded-t-2xl px-6 py-6"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <div className="relative flex justify-center items-center w-full mx-auto h-[180px]">
-                <div className="absolute top-1/2 -translate-y-1/2 w-full h-[36px] bg-[#F1F1F1] rounded-md z-0" />
-                <div className="relative z-10 flex gap-3">
-                  <Picker
-                    value={pickerValue}
-                    onChange={setPickerValue}
-                    height={180}
-                    itemHeight={36}
-                    className="flex gap-3"
-                  >
-                    <Picker.Column
-                      name="hour"
-                      className="flex flex-col items-center"
-                    >
-                      {selections.hour.map((h) => (
-                        <Picker.Item
-                          key={h}
-                          value={h}
-                          className="text-[24px] leading-[36px]"
-                        >
-                          {h}
-                        </Picker.Item>
-                      ))}
-                    </Picker.Column>
-
-                    <div className="flex items-center justify-center text-[24px] w-[20px]">
-                      :
-                    </div>
-
-                    <Picker.Column
-                      name="minute"
-                      className="flex flex-col items-center"
-                    >
-                      {selections.minute.map((m) => (
-                        <Picker.Item
-                          key={m}
-                          value={m}
-                          className="text-[24px] leading-[36px]"
-                        >
-                          {m}
-                        </Picker.Item>
-                      ))}
-                    </Picker.Column>
-                  </Picker>
-                </div>
-              </div>
-
-              <button
-                className="w-full mt-4 h-[50px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-bold"
-                onClick={() => {
-                  handleAddTime();
-                  setShowTimePicker(false);
-                }}
-              >
-                시간 추가
-              </button>
-            </div>
-          </div>
-        )}
-
-        {/* 이미지 선택 모달 */}
-        {showImagePicker && (
-          <div
-            className="fixed inset-0 bg-black/40 flex items-end z-50"
-            onClick={() => setShowImagePicker(false)}
-          >
-            <div
-              className="w-full bg-white rounded-t-2xl px-6 py-4"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <p className="text-[18px] font-semibold mb-4">
-                제품 사진 추가하기
-              </p>
-
-              <div className="flex flex-col">
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 border-b border-[#D9D9D9] cursor-pointer flex items-center">
-                  <img
-                    src="/images/cameraModal.png"
-                    alt="camera icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
-                  />
-                  카메라로 촬영하기
-                  <input
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-                <label className="w-full h-[90px] text-left text-[18px] text-black py-3 px-4 cursor-pointer flex items-center">
-                  <img
-                    src="/images/galleryModal.png"
-                    alt="gallery icon"
-                    className="w-[50px] h-[50px] object-cover mr-[22px]"
-                  />
-                  사진 앨범에서 선택하기
-                  <input
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleImageChange}
-                  />
-                </label>
-              </div>
-            </div>
-          </div>
+          <TimePickerModal
+            onClose={() => {
+              setShowTimePicker(false);
+              setEditingIndex(null);
+              setTimePickerDefault(undefined);
+            }}
+            onConfirm={handleConfirmTime}
+            defaultValue={timePickerDefault}
+          />
         )}
       </div>
     </div>

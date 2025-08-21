@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { getMyProfileImageUrl } from "@/apis/user";
-import ProfileCat from "../../assets/ProfileCat.svg";
+import ProfileCat from "../../assets/ProfileCat.png";
 import CameraIcon from "../../assets/camera.svg";
 
 interface ProfileImageSectionProps {

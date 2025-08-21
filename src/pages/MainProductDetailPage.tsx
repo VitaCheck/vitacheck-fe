@@ -1,14 +1,14 @@
 import { useParams, useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import axios from "@/lib/axios"; // 설정된 axios 인스턴스 사용
+import { useEffect, useState, useCallback } from "react";
+import axios from "@/lib/axios";
 import MainDetailPageMobile from "@/components/Purpose/P3MMainDetailPage";
 import MainDetailPageDesktop from "@/components/Purpose/P3DMainDetailPage";
 import ShareModal from "@/components/Purpose/P3DShareModal";
 import LoginPromptModal from "@/components/Purpose/LoginPromptModal";
 
-// API 응답과 컴포넌트 내부에서 사용할 타입 정의
 interface ApiProduct {
   supplementId: number;
+  brandId: number;
   brandName: string;
   brandImageUrl: string | null;
   supplementName: string;
@@ -16,12 +16,17 @@ interface ApiProduct {
   liked: boolean;
   coupangLink: string | null;
   intakeTime: string;
-  ingredients: string[];
-  brandId: number;
+  ingredients: Ingredient[];
+}
+
+interface Ingredient {
+  name: string;
+  amount: string;
 }
 
 interface Product {
   id: number;
+  brandId: number;
   brandName: string;
   brandImageUrl: string | null;
   supplementName: string;
@@ -29,8 +34,7 @@ interface Product {
   liked: boolean;
   coupangLink: string | null;
   intakeTime: string;
-  ingredients: string[];
-  brandId: number;
+  ingredients: Ingredient[];
 }
 
 interface BrandProduct {
@@ -41,55 +45,99 @@ interface BrandProduct {
 
 const ProductDetailPage = () => {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const state = location.state as { product?: Product } | undefined;
+
   const [product, setProduct] = useState<Product | null>(null);
   const [brandProducts, setBrandProducts] = useState<BrandProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(!state?.product);
   const [activeTab, setActiveTab] = useState<"ingredient" | "timing">("ingredient");
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
-  const location = useLocation();
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [location.pathname]);
 
-  useEffect(() => {
-    if (!id) {
-      setIsLoading(false);
-      return;
+  /** 서버 내 찜 상태로 liked 업데이트 + 콘솔 출력 */
+  const refreshLikedState = useCallback(async (supplementId: number) => {
+    const accessToken = localStorage.getItem("accessToken");
+    if (!accessToken) return;
+
+    try {
+      const res = await axios.get("/api/v1/likes/me", {
+        headers: { Authorization: `Bearer ${accessToken}` },
+      });
+
+      // 서버 응답 배열 안전 처리
+      const likedList = Array.isArray(res.data.result)
+        ? res.data.result
+        : Array.isArray(res.data)
+        ? res.data
+        : [];
+
+      const likedIds = new Set(likedList.map((x: { supplementId: number }) => x.supplementId));
+      const isLiked = likedIds.has(supplementId);
+
+      setProduct((prev) => (prev ? { ...prev, liked: isLiked } : prev));
+
+      console.log(
+        `💖 서버 찜 상태 확인 (supplementId=${supplementId}):`,
+        isLiked ? "찜 되어 있음 ❤️" : "찜 안 되어 있음 🤍"
+      );
+    } catch (e) {
+      console.warn("[likes/me] refresh failed", e);
     }
+  }, []);
+
+  useEffect(() => {
+    if (!id) return;
 
     const fetchProductAndBrandDetails = async () => {
       setIsLoading(true);
-      const accessToken = localStorage.getItem('accessToken');
 
       try {
-        const productResponse = await axios.get<ApiProduct>(`/api/v1/supplements`, {
-          params: { id },
+        const supplementId = Number(id);
+        const accessToken = localStorage.getItem("accessToken");
+
+        // 상세 정보(liked 포함)
+        const productResponse = await axios.get<ApiProduct>("/api/v1/supplements", {
+          params: { id: supplementId },
           headers: {
             Authorization: accessToken ? `Bearer ${accessToken}` : "",
           },
         });
-        
-        console.log("--- 페이지 로드 시 서버가 직접 보내준 데이터 ---", productResponse.data);
+
         const fetchedProduct = productResponse.data;
         const mappedProduct: Product = {
-            id: fetchedProduct.supplementId,
-            ...fetchedProduct
+          id: fetchedProduct.supplementId,
+          ...fetchedProduct,
         };
+
         setProduct(mappedProduct);
-        
-        console.log("✅ 제품 상세 정보 로드 성공", fetchedProduct);
 
-        // 브랜드 제품 목록 요청
+        // 서버 찜 상태로 재확정 및 콘솔 출력
+        refreshLikedState(mappedProduct.id);
+
+        // 브랜드 제품 리스트
         const brandIdToFetch = fetchedProduct.brandId || fetchedProduct.supplementId;
-        const brandResponse = await axios.get<{ supplements: BrandProduct[] }>(
-          `/api/v1/supplements/brand`, { params: { id: brandIdToFetch } }
+        const brandResponse = await axios.get<{ [key: string]: BrandProduct[] }>(
+          "/api/v1/supplements/brand",
+          { params: { id: brandIdToFetch } }
         );
-        setBrandProducts(brandResponse.data.supplements);
 
-      } catch (error) {
+        const brandProductsArray: BrandProduct[] = Object.values(brandResponse.data)
+          .flat()
+          .map((item) => ({
+            id: item.id,
+            name: item.name,
+            imageUrl: item.imageUrl,
+          }));
+
+        setBrandProducts(brandProductsArray);
+      } catch (error: any) {
         console.error("❌ 제품 정보를 불러오는데 실패했습니다:", error);
+        if (error.response?.status === 401) setIsLoginModalOpen(true);
         setProduct(null);
       } finally {
         setIsLoading(false);
@@ -97,42 +145,43 @@ const ProductDetailPage = () => {
     };
 
     fetchProductAndBrandDetails();
-  }, [id]);
+  }, [id, refreshLikedState]);
 
+  /** 찜 토글 */
   const toggleLike = async () => {
     if (!product) return;
 
-    const accessToken = localStorage.getItem('accessToken');
-    console.log("--- 찜 버튼 클릭 시점 ---");
-    console.log("[1] localStorage에서 'accessToken'을 찾습니다...");
-    console.log(`[2] 찾은 토큰 값:`, accessToken);
-
-    // [핵심] 1. 로그인 여부 확인
+    const accessToken = localStorage.getItem("accessToken");
     if (!accessToken) {
-      // 로그인이 안 되어 있으면 로그인 안내 모달 표시
-      console.log("❌ [3] 토큰이 없으므로 로그인 안내 모달을 켭니다.");
       setIsLoginModalOpen(true);
-      return; // API 요청 중단
+      console.log("💡 로그인 필요: 찜 기능 사용 불가");
+      return;
     }
 
-    // [핵심] 2. 로그인 상태라면 찜 API 요청
-    console.log("✅ [3] 토큰이 있으므로 찜하기 API를 호출합니다.");
+    const supplementId = product.id;
     const newLikedState = !product.liked;
 
-    // UI 즉시 업데이트 (Optimistic Update)
-    setProduct(prev => prev ? { ...prev, liked: newLikedState } : null);
+    // Optimistic UI
+    setProduct((prev) => (prev ? { ...prev, liked: newLikedState } : null));
 
     try {
-      await axios.post(`/api/v1/supplements/${product.id}/like`, {}, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-      });
-      console.log(`✅ 찜 상태 서버 업데이트 성공: ${newLikedState}`);
+      await axios.post(
+        `/api/v1/supplements/${supplementId}/like`,
+        {}, // API 토글용 빈 body
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("✅ 서버에 찜 상태 반영 완료");
     } catch (error) {
       console.error("❌ 찜 상태 업데이트 실패:", error);
-      // 실패 시 UI 원상 복구
-      setProduct(prev => prev ? { ...prev, liked: !newLikedState } : null);
+      setProduct((prev) => (prev ? { ...prev, liked: !newLikedState } : null));
+    } finally {
+      // 최종 서버 상태로 동기화 + 콘솔 출력
+      refreshLikedState(supplementId);
     }
   };
 
@@ -168,9 +217,10 @@ const ProductDetailPage = () => {
         toggleLike={toggleLike}
         activeTab={activeTab}
         setActiveTab={setActiveTab}
-        showButton={true} // 스크롤 관련 로직은 일단 제거
+        showButton={true}
         brandProducts={brandProducts}
         brandId={product.brandId ?? product.id}
+        intakeTime={product.intakeTime}
       />
       <MainDetailPageDesktop
         product={product}
@@ -180,6 +230,7 @@ const ProductDetailPage = () => {
         setActiveTab={setActiveTab}
         brandProducts={brandProducts}
         brandId={product.brandId ?? product.id}
+        intakeTime={product.intakeTime}
         onCopyUrl={handleCopyUrl}
       />
 
