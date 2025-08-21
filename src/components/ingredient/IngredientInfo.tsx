@@ -227,7 +227,7 @@ const IngredientInfo = ({ id, data }: Props) => {
               // 둘 다 없음: 0% (회색 바만)
 
               return (
-                <div className="mt-8 md:mt-10">
+                <div className="mt-12 md:mt-10">
                   <div className="relative w-full max-w-[400px] md:mx-0 mx-auto">
                     <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
                       {/* 노란색 바 */}
@@ -318,6 +318,8 @@ const IngredientInfo = ({ id, data }: Props) => {
           )}
         </section>
       )}
+      {/* 모바일에서 맨 아래 여백 추가 */}
+      <div className="pb-16 md:pb-8"></div>
     </div>
   );
 };
