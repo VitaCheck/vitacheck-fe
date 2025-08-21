@@ -1,6 +1,9 @@
+// src/pages/auth/MobileEmailLoginPage.tsx
 import { useState } from "react";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
+import { saveTokens } from "@/lib/auth";
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // ✅ 추가
 
 type Props = { onLoginSuccess?: () => Promise<void> }; // 비동기 반환 가정
 
@@ -12,6 +15,9 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
+  const mask = (t?: string) =>
+    t ? `${t.slice(0, 4)}...${t.slice(-6)}` : "none";
+
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
@@ -19,6 +25,7 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
 
     try {
       setLoading(true);
+
       const response = await axios.post(
         "/api/v1/auth/login",
         { email, password },
@@ -26,19 +33,30 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
       );
 
       console.log("로그인 응답 데이터:", response.data);
-      const token =
-        response.data?.result?.accessToken ?? response.data?.accessToken;
 
-      if (!token) {
-        setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
-        return;
+      // ✅ 우선: result 내부 토큰
+      const { accessToken: at, refreshToken: rt } = response.data?.result ?? {};
+
+      if (at) {
+        console.debug("[LOGIN][M] parsed AT:", mask(at), "RT:", mask(rt));
+        saveTokens(at, rt);
+        await syncFcmTokenAfterLoginSilently(); // ✅ 권한이 granted면 PUT 업서트 발생
+      } else {
+        // ✅ 구형/임시 스펙 대비 (바디 루트 토큰)
+        const fallbackAT = response.data?.accessToken;
+        const fallbackRT = response.data?.refreshToken;
+
+        if (!fallbackAT) {
+          setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
+          return;
+        }
+
+        console.warn("[LOGIN][M] using fallback token fields");
+        saveTokens(fallbackAT, fallbackRT);
+        await syncFcmTokenAfterLoginSilently(); // ✅ 동일 처리
       }
 
-      // 1) 토큰 저장 (axios 인스턴스가 이 값을 Authorization으로 쓰는지 확인!)
-      localStorage.setItem("accessToken", token);
-
-      // 2) 푸시 연동 (권한 요청 + FCM 토큰 발급 + 서버 PUT)
-      //    실패해도 UX 막지 않도록 try/catch 내부 처리 권장
+      // 추가 UX(알림 켜기 버튼 흐름 등)
       if (onLoginSuccess) {
         try {
           await onLoginSuccess();
@@ -47,7 +65,6 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
         }
       }
 
-      // 3) 마지막에 라우팅
       navigate("/mypage", { replace: true });
     } catch (error: any) {
       setErrorMessage(
@@ -129,11 +146,10 @@ const MobileEmailLoginPage = ({ onLoginSuccess }: Props) => {
             <p className="text-red-500 text-sm">{errorMessage}</p>
           )}
 
-          {/* ✅ 버튼을 form 안에 두고 submit으로 처리 */}
           <button
             type="submit"
             disabled={loading || !email || !password}
-            className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black"
+            className="mt-6 inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[20px] font-semibold text-black disabled:opacity-60 active:scale-[0.99] transition"
           >
             {loading ? "로그인 중..." : "로그인"}
           </button>
