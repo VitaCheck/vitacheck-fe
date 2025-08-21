@@ -108,14 +108,3 @@ export async function removeFcmToken() {
 }
 // @ts-ignore
 window.__fcm = { registerServiceWorker, getFcmToken };
-
-console.log("[ENV]", {
-  VITE_FB_API_KEY: import.meta.env.VITE_FB_API_KEY,
-  VITE_FB_VAPID_KEY: import.meta.env.VITE_FB_VAPID_KEY,
-});
-
-console.log(
-  "[ENV check]",
-  !!import.meta.env.VITE_FB_API_KEY,
-  !!import.meta.env.VITE_FB_VAPID_KEY
-);
