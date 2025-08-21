@@ -29,10 +29,7 @@ export default function FcmBootstrap() {
             permission: Notification.permission,
           };
         }
-      } catch (e) {
-        // @ts-ignore
-        window.__fcmDebug = { error: String(e) };
-      }
+      } catch (e) {}
     })();
   }, []);
 

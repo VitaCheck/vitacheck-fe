@@ -143,7 +143,7 @@ const DesktopEmailLoginPage = ({ onLoginSuccess }: Props) => {
             disabled={loading || !email || !password}
             className="w-full h-[83px] bg-[#FFE88D] text-black text-[22px] font-bold py-3 rounded-lg transition-colors disabled:opacity-60"
           >
-            {loading ? "로그인 중..." : "로그인"}
+            {"로그인"}
           </button>
         </form>
       </main>
