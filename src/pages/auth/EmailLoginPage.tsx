@@ -4,6 +4,8 @@ import { useMediaQuery } from "react-responsive";
 import axios from "@/lib/axios";
 import MobileLoginPage from "./MobileEmailLoginPage";
 import DesktopLoginPage from "./DesktopEmailLoginPage";
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // ✅ 공용 유틸만 사용
+
 
 // 🔔 firebase 헬퍼
 import {
@@ -19,6 +21,11 @@ const EmailLoginPage = () => {
   useEffect(() => {
     registerServiceWorker().catch(console.error);
   }, []);
+
+  // ✅ 로그인 성공 직후: 무음 동기화만 (권한 없으면 조용히 패스)
+  // const onLoginSuccess = async () => {
+  //   await syncFcmTokenAfterLoginSilently();
+  // };
 
   // 2) 로그인 성공 시 호출할 콜백
   const onLoginSuccess = async () => {
