@@ -55,17 +55,10 @@ const IngredientPage = () => {
 
   // 인기성분 데이터 로드
   const loadPopularIngredients = async (ageGroup: string) => {
-    // 토큰이 없거나 유효하지 않은 경우 API 호출하지 않음
-    if (!token) {
-      console.log("🔥 [UI] 토큰이 없음 - 인기성분 로드 중단");
-      setPopularIngredients([]);
-      setIsLoadingPopular(false);
-      return;
-    }
-
     setIsLoadingPopular(true);
+
     try {
-      console.log("🔥 [UI] loadPopularIngredients 호출:", ageGroup);
+      console.log("🔥 [UI] 인기성분 API 호출 시작:", ageGroup);
 
       // 연령대별 파라미터 매핑 개선
       let apiAgeGroup: string = ageGroup;
@@ -91,25 +84,50 @@ const IngredientPage = () => {
       console.log("🔥 [UI] loadPopularIngredients 응답:", response);
 
       if (response && response.result) {
-        console.log("🔥 [UI] 인기성분 데이터 설정:", response.result);
-        setPopularIngredients(response.result);
+        // 새로운 API 응답 구조 처리: result.content 또는 result 배열
+        let ingredientsData = response.result;
+
+        // result.content가 있는 경우 (페이징 응답)
+        if (response.result.content && Array.isArray(response.result.content)) {
+          ingredientsData = response.result.content;
+        }
+        // result가 직접 배열인 경우
+        else if (Array.isArray(response.result)) {
+          ingredientsData = response.result;
+        }
+        // 둘 다 아닌 경우 빈 배열
+        else {
+          console.log("🔥 [UI] 응답 구조가 예상과 다름:", response.result);
+          ingredientsData = [];
+        }
+
+        console.log("🔥 [UI] 인기성분 데이터 설정:", ingredientsData);
+        setPopularIngredients(ingredientsData);
       } else {
         console.log("🔥 [UI] 응답에 result가 없음");
-        setPopularIngredients([]);
+        // 기본 성분 리스트 표시
+        const defaultIngredients = [
+          { id: 1, ingredientName: "비타민C" },
+          { id: 2, ingredientName: "오메가3" },
+          { id: 3, ingredientName: "프로바이오틱스" },
+          { id: 4, ingredientName: "마그네슘" },
+          { id: 5, ingredientName: "비타민D" },
+        ];
+        setPopularIngredients(defaultIngredients);
       }
     } catch (error: any) {
       console.error("🔥 [UI] 인기성분 로드 실패:", error);
 
-      // 401 에러가 발생하면 토큰이 유효하지 않다고 판단
-      if (error?.response?.status === 401) {
-        console.log("🔥 [UI] 401 에러 발생 - 토큰이 유효하지 않음");
-        // 토큰을 제거하고 로그인 상태를 false로 설정
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        setPopularIngredients([]);
-      } else {
-        setPopularIngredients([]);
-      }
+      // API 호출 실패 시 기본 성분 리스트 표시
+      console.log("🔥 [UI] API 호출 실패 - 기본 성분 리스트 표시");
+      const defaultIngredients = [
+        { id: 1, ingredientName: "비타민C" },
+        { id: 2, ingredientName: "오메가3" },
+        { id: 3, ingredientName: "프로바이오틱스" },
+        { id: 4, ingredientName: "마그네슘" },
+        { id: 5, ingredientName: "비타민D" },
+      ];
+      setPopularIngredients(defaultIngredients);
     } finally {
       setIsLoadingPopular(false);
     }
@@ -132,11 +150,7 @@ const IngredientPage = () => {
 
   // 로그인 상태가 변경될 때마다 인기성분 다시 로드
   useEffect(() => {
-    if (isLoggedIn) {
-      loadPopularIngredients(selected);
-    } else {
-      setPopularIngredients([]);
-    }
+    loadPopularIngredients(selected);
   }, [isLoggedIn, selected]);
 
   const saveSearchHistory = (keyword: string) => {
@@ -171,10 +185,8 @@ const IngredientPage = () => {
   const handleChange = (age: string) => {
     setSelected(age);
     setShowAgeModal(false);
-    // 연령대 변경 시 새로운 인기성분 로드 (토큰이 있는 경우에만)
-    if (token) {
-      loadPopularIngredients(age);
-    }
+    // 연령대 변경 시 새로운 인기성분 로드
+    loadPopularIngredients(age);
   };
 
   const toggleAgeModal = () => {
@@ -531,16 +543,6 @@ const IngredientPage = () => {
               <span className="ml-3 text-gray-500">
                 인기성분을 불러오는 중...
               </span>
-            </div>
-          ) : !isLoggedIn ? (
-            <div className="text-center py-4">
-              <p className="text-gray-500 mb-5">로그인 후 이용할 수 있습니다</p>
-              <Link
-                to="/login"
-                className="inline-block px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-400 transition-colors"
-              >
-                로그인하기
-              </Link>
             </div>
           ) : popularIngredients.length === 0 ? (
             <div className="text-center py-8">
