@@ -39,6 +39,7 @@ const CombinationPage = () => {
   const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
   const placeholder = '제품을 입력해주세요.';
   const isMobile = useIsMobile();
 
@@ -74,10 +75,16 @@ const CombinationPage = () => {
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
+    
+    setIsSearching(true);
     const updated = [trimmed, ...searchHistory.filter((v) => v !== trimmed)].slice(0, 3);
     setSearchHistory(updated);
     localStorage.setItem('searchHistory', JSON.stringify(updated));
-    navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
+    
+    // 약간의 지연 후 페이지 이동 (로딩 상태를 보여주기 위해)
+    setTimeout(() => {
+      navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
+    }, 500);
   };
 
   const handleDelete = (itemToDelete: string) => {
@@ -226,16 +233,23 @@ const CombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === 'Enter' && !isSearching) handleSearch();
             }}
-            className="w-full bg-transparent text-lg text-gray-400 placeholder-gray-300"
+            disabled={isSearching}
+            className={`w-full bg-transparent text-lg placeholder-gray-300 ${
+              isSearching ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400'
+            }`}
           />
-          <img
-            src="/images/search.png"
-            alt="검색"
-            onClick={handleSearch}
-            className="ml-2 h-5 w-5 cursor-pointer"
-          />
+          {isSearching ? (
+            <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          ) : (
+            <img
+              src="/images/search.png"
+              alt="검색"
+              onClick={handleSearch}
+              className="ml-2 h-5 w-5 cursor-pointer"
+            />
+          )}
         </div>
       </div>
 
@@ -248,21 +262,28 @@ const CombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === 'Enter' && !isSearching) handleSearch();
             }}
-            className="w-full text-base text-gray-800 placeholder-gray-400 outline-none"
+            disabled={isSearching}
+            className={`w-full text-base placeholder-gray-400 outline-none ${
+              isSearching ? 'text-gray-300 cursor-not-allowed' : 'text-gray-800'
+            }`}
           />
           {searchTerm && (
             <button onClick={() => setSearchTerm('')} className="ml-2 cursor-pointer">
               <img src="/images/성분 검색결과/x.png" alt="지우기" className="h-6 w-6" />
             </button>
           )}
-          <img
-            src="/images/search.png"
-            alt="검색"
-            onClick={handleSearch}
-            className="ml-2 h-6 w-6"
-          />
+          {isSearching ? (
+            <div className="ml-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          ) : (
+            <img
+              src="/images/search.png"
+              alt="검색"
+              onClick={handleSearch}
+              className="ml-2 h-6 w-6 cursor-pointer"
+            />
+          )}
         </div>
       </section>
 
@@ -278,7 +299,10 @@ const CombinationPage = () => {
                 <button
                   onClick={() => {
                     setSearchTerm(item);
-                    navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                    setIsSearching(true);
+                    setTimeout(() => {
+                      navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                    }, 500);
                   }}
                   className="text-[13px] font-medium text-gray-700"
                 >
@@ -312,7 +336,10 @@ const CombinationPage = () => {
               <button
                 onClick={() => {
                   setSearchTerm(item);
-                  navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                  setIsSearching(true);
+                  setTimeout(() => {
+                    navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                  }, 500);
                 }}
                 className="font-Pretendard text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
