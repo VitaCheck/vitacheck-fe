@@ -75,12 +75,12 @@ const CombinationPage = () => {
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
-    
+
     setIsSearching(true);
     const updated = [trimmed, ...searchHistory.filter((v) => v !== trimmed)].slice(0, 3);
     setSearchHistory(updated);
     localStorage.setItem('searchHistory', JSON.stringify(updated));
-    
+
     // 약간의 지연 후 페이지 이동 (로딩 상태를 보여주기 위해)
     setTimeout(() => {
       navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
@@ -237,7 +237,7 @@ const CombinationPage = () => {
             }}
             disabled={isSearching}
             className={`w-full bg-transparent text-lg placeholder-gray-300 ${
-              isSearching ? 'text-gray-300 cursor-not-allowed' : 'text-gray-400'
+              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-400'
             }`}
           />
           {isSearching ? (
@@ -266,7 +266,7 @@ const CombinationPage = () => {
             }}
             disabled={isSearching}
             className={`w-full text-base placeholder-gray-400 outline-none ${
-              isSearching ? 'text-gray-300 cursor-not-allowed' : 'text-gray-800'
+              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-800'
             }`}
           />
           {searchTerm && (

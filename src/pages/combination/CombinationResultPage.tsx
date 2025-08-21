@@ -128,58 +128,54 @@ export default function CombinationResultPage() {
     };
   }
   // 공통 점선 위치
-const REC_LINE_POS = 33.33;
-const UPPER_LINE_POS = 66.67;
+  const REC_LINE_POS = 33.33;
+  const UPPER_LINE_POS = 66.67;
 
-function computeFillPercent(ing: IngredientResult) {
-  const total = ing.totalAmount ?? 0;
-  const rec = ing.recommendedAmount ?? null;
-  const upper = ing.upperAmount ?? null;
+  function computeFillPercent(ing: IngredientResult) {
+    const total = ing.totalAmount ?? 0;
+    const rec = ing.recommendedAmount ?? null;
+    const upper = ing.upperAmount ?? null;
 
-  // 상한을 초과했을 때, 66.67%~100% 구간을 "초과량"에 비례해서 채우는 도우미
-  // capMultiplier: 상한의 몇 배까지를 100%로 볼지 (예: 1.5배면 150%에서 막음)
-  const overMap = (totalVal: number, upperVal: number, capMultiplier = 1.5) => {
-    const extra = Math.max(0, totalVal - upperVal);         // 초과량
-    const maxExtra = Math.max(upperVal * (capMultiplier - 1), 1e-6); // cap까지 초과량
-    const t = Math.min(extra / maxExtra, 1);                 // 0..1
-    return UPPER_LINE_POS + t * (100 - UPPER_LINE_POS);      // 66.67% → 100%
-  };
+    // 상한을 초과했을 때, 66.67%~100% 구간을 "초과량"에 비례해서 채우는 도우미
+    // capMultiplier: 상한의 몇 배까지를 100%로 볼지 (예: 1.5배면 150%에서 막음)
+    const overMap = (totalVal: number, upperVal: number, capMultiplier = 1.5) => {
+      const extra = Math.max(0, totalVal - upperVal); // 초과량
+      const maxExtra = Math.max(upperVal * (capMultiplier - 1), 1e-6); // cap까지 초과량
+      const t = Math.min(extra / maxExtra, 1); // 0..1
+      return UPPER_LINE_POS + t * (100 - UPPER_LINE_POS); // 66.67% → 100%
+    };
 
-  if (upper && upper > 0) {
-    if (rec && rec > 0) {
-      if (total <= rec) {
-        const r = total / rec;
-        return Math.max(0, Math.min(100, r * REC_LINE_POS));
+    if (upper && upper > 0) {
+      if (rec && rec > 0) {
+        if (total <= rec) {
+          const r = total / rec;
+          return Math.max(0, Math.min(100, r * REC_LINE_POS));
+        }
+        if (total <= upper) {
+          const r = (total - rec) / Math.max(upper - rec, 1e-6);
+          return Math.max(0, Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS)));
+        }
+        // ✅ 상한 초과: 66.67%~100% 구간으로 매핑
+        return overMap(total, upper, 1.5); // cap 150% (원하면 1.3, 2.0 등으로 조절)
       }
+
+      // 권장 없음: 0~upper 를 0~66.67%로, 초과는 66.67%~100%로 매핑
       if (total <= upper) {
-        const r = (total - rec) / Math.max(upper - rec, 1e-6);
-        return Math.max(
-          0,
-          Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS))
-        );
+        const r = total / upper;
+        return Math.max(0, Math.min(100, r * UPPER_LINE_POS));
       }
-      // ✅ 상한 초과: 66.67%~100% 구간으로 매핑
-      return overMap(total, upper, 1.5); // cap 150% (원하면 1.3, 2.0 등으로 조절)
+      // ✅ 상한 초과 매핑
+      return overMap(total, upper, 1.5);
     }
 
-    // 권장 없음: 0~upper 를 0~66.67%로, 초과는 66.67%~100%로 매핑
-    if (total <= upper) {
-      const r = total / upper;
-      return Math.max(0, Math.min(100, r * UPPER_LINE_POS));
+    if (rec && rec > 0) {
+      const r = total / rec;
+      return Math.max(0, Math.min(100, r <= 1 ? r * REC_LINE_POS : 100));
     }
-    // ✅ 상한 초과 매핑
-    return overMap(total, upper, 1.5);
+
+    // 권장/상한 둘 다 없으면 살짝만 표시
+    return Math.min(REC_LINE_POS, total > 0 ? REC_LINE_POS * 0.7 : 0);
   }
-
-  if (rec && rec > 0) {
-    const r = total / rec;
-    return Math.max(0, Math.min(100, r <= 1 ? r * REC_LINE_POS : 100));
-  }
-
-  // 권장/상한 둘 다 없으면 살짝만 표시
-  return Math.min(REC_LINE_POS, total > 0 ? REC_LINE_POS * 0.7 : 0);
-}
-
 
   function isOverUpper(ing: IngredientResult) {
     const total = ing.totalAmount ?? 0;
@@ -250,9 +246,7 @@ function computeFillPercent(ing: IngredientResult) {
     try {
       // supplementId가 있는 경우에만 필터링하여 사용
       const validItems = selectedItems.filter((item: SupplementItem) => item.supplementId);
-      const supplementIds = validItems.map(
-        (item: SupplementItem) => item.supplementId!,
-      );
+      const supplementIds = validItems.map((item: SupplementItem) => item.supplementId!);
       console.log('API 호출 시작 - supplementIds:', supplementIds);
       console.log('selectedItems 전체:', selectedItems);
 
@@ -328,7 +322,7 @@ function computeFillPercent(ing: IngredientResult) {
   const GAP_W = 16; // tailwind gap과 맞추기
   const cardWidthCSS = `calc((100% - ${GAP_W * (PAGE_COUNT - 1)}px) / ${PAGE_COUNT})`;
 
-  const alarmEnabled = checkedIndices.length >= 2;
+  const alarmEnabled = checkedIndices.length === 1;
 
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
@@ -354,12 +348,12 @@ function computeFillPercent(ing: IngredientResult) {
 
     // 선택된 아이템들의 이름을 검색어로 사용하여 검색 결과를 미리 보여주기
     const searchTerms = selectedFiltered.map((item: SupplementItem) => item.supplementName);
-    
+
     // 검색기록에 선택된 제품들의 이름을 추가
     const currentHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
     const updatedHistory = [...new Set([...searchTerms, ...currentHistory])].slice(0, 10); // 중복 제거하고 최대 10개 유지
     localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
-    
+
     navigate('/add-combination', {
       state: {
         selectedItems: selectedFiltered,
@@ -473,18 +467,14 @@ function computeFillPercent(ing: IngredientResult) {
             />
           </button>
 
-                     {/* 재조합 */}
-           <button 
-             type="button" 
-             className="m-0 p-0 leading-none"
-             onClick={handleRecombination}
-           >
-             <img
-               src="/images/PNG/조합 3-1/재조합.png"
-               alt="재조합"
-               className="block h-[35px] w-auto align-middle"
-             />
-           </button>
+          {/* 재조합 */}
+          <button type="button" className="m-0 p-0 leading-none" onClick={handleRecombination}>
+            <img
+              src="/images/PNG/조합 3-1/재조합.png"
+              alt="재조합"
+              className="block h-[35px] w-auto align-middle"
+            />
+          </button>
         </div>
       </div>
 
@@ -505,7 +495,7 @@ function computeFillPercent(ing: IngredientResult) {
             }}
             disabled={!alarmEnabled}
             aria-disabled={!alarmEnabled}
-            title={!alarmEnabled ? '두 개 이상 선택 시 등록 가능' : '섭취알림 등록하기'}
+            title={!alarmEnabled ? '제품을 1개만 선택해주세요' : '섭취알림 등록하기'}
             className={[
               'flex h-[55px] w-[280px] items-center justify-center rounded-[62.5px] font-bold transition',
               alarmEnabled
@@ -530,18 +520,18 @@ function computeFillPercent(ing: IngredientResult) {
                 ref={scrollRef}
                 className="hide-scrollbar flex snap-x snap-mandatory gap-[16px] overflow-x-auto scroll-smooth"
               >
-                                 {selectedItems.map((item: SupplementItem) => (
-                   <div
-                     key={item.cursorId}
-                     className={`relative flex h-[250px] flex-shrink-0 snap-start flex-col items-center rounded-[22.76px] pt-[80px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
-                     style={{ width: cardWidthCSS, minWidth: cardWidthCSS }} // ⭐ 핵심: 4등분 고정
-                   >
-                     <img
-                       src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
-                       alt="checkbox"
-                       onClick={() => handleToggleCheckbox(item.cursorId)}
-                       className="absolute top-[10px] left-[18px] h-[50px] w-[50px] cursor-pointer"
-                     />
+                {selectedItems.map((item: SupplementItem) => (
+                  <div
+                    key={item.cursorId}
+                    className={`relative flex h-[250px] flex-shrink-0 snap-start flex-col items-center rounded-[22.76px] pt-[80px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
+                    style={{ width: cardWidthCSS, minWidth: cardWidthCSS }} // ⭐ 핵심: 4등분 고정
+                  >
+                    <img
+                      src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
+                      alt="checkbox"
+                      onClick={() => handleToggleCheckbox(item.cursorId)}
+                      className="absolute top-[10px] left-[18px] h-[50px] w-[50px] cursor-pointer"
+                    />
                     <img
                       src={item.imageUrl}
                       className="mt-[-20px] mb-3 h-[100px] w-[120px] object-contain"
@@ -596,18 +586,18 @@ function computeFillPercent(ing: IngredientResult) {
       {/* 모바일 슬라이더 */}
       <div className="/* 부모 컨텐츠 폭 100% */ /* iPhone 12 Pro 안전치 */ scrollbar-hide /* ← → 로 축소 */ mx-auto mt-3 w-full max-w-[358px] overflow-x-auto overflow-y-hidden rounded-[20px] border border-[#B2B2B2] bg-white px-3 py-2 py-3 md:hidden">
         <div className="flex w-max gap-3">
-                     {selectedItems.map((item: SupplementItem) => (
-             <div
-               key={item.cursorId}
-               className={`relative flex h-[135px] w-[135px] flex-shrink-0 flex-col items-center rounded-[22.76px] pt-[35px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
-             >
-               {/* 체크박스 */}
-               <img
-                 src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
-                 alt="checkbox"
-                 onClick={() => handleToggleCheckbox(item.cursorId)}
-                 className="absolute top-[1px] left-[110px] h-[30px] w-[30px] cursor-pointer"
-               />
+          {selectedItems.map((item: SupplementItem) => (
+            <div
+              key={item.cursorId}
+              className={`relative flex h-[135px] w-[135px] flex-shrink-0 flex-col items-center rounded-[22.76px] pt-[35px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
+            >
+              {/* 체크박스 */}
+              <img
+                src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
+                alt="checkbox"
+                onClick={() => handleToggleCheckbox(item.cursorId)}
+                className="absolute top-[1px] left-[110px] h-[30px] w-[30px] cursor-pointer"
+              />
               {/* 이미지 */}
               <img
                 src={item.imageUrl}
@@ -632,33 +622,42 @@ function computeFillPercent(ing: IngredientResult) {
         </button>
       </div>
       {/* PC 섭취량 탭 - 전체 / 초과 */}
-<div className="mt-[55px] hidden md:block">
-  <div className="relative mx-auto w-full max-w-[1100px]">
-         {/* 배경 라인 (절대배치) */}
-     <div className="pointer-events-none absolute left-1/15 right-1/15 top-[56px] z-0 h-[8px] rounded-full bg-[#E5E5E5]" />
+      <div className="mt-[55px] hidden md:block">
+        <div className="relative mx-auto w-full max-w-[1100px]">
+          {/* 배경 라인 (절대배치) */}
+          <div className="pointer-events-none absolute top-[56px] right-1/15 left-1/15 z-0 h-[8px] rounded-full bg-[#E5E5E5]" />
 
-         {/* 탭 버튼들 */}
-     <div className="relative z-10 flex justify-center">
-       <div className="flex gap-80">
-         {['전체', '초과'].map((tab) => (
-           <button
-             key={tab}
-             onClick={() => setActiveTab(tab as '전체' | '초과')}
-             className="font-pretendard relative py-2 mb-5 text-[30px] font-semibold leading-[120%] tracking-[-0.02em]"
-           >
-             <span className={activeTab === tab ? (tab === '초과' ? 'text-[#E70000]' : 'text-black') : 'text-[#9C9A9A]'}>{tab}</span>
+          {/* 탭 버튼들 */}
+          <div className="relative z-10 flex justify-center">
+            <div className="flex gap-80">
+              {['전체', '초과'].map((tab) => (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab as '전체' | '초과')}
+                  className="font-pretendard relative mb-5 py-2 text-[30px] leading-[120%] font-semibold tracking-[-0.02em]"
+                >
+                  <span
+                    className={
+                      activeTab === tab
+                        ? tab === '초과'
+                          ? 'text-[#E70000]'
+                          : 'text-black'
+                        : 'text-[#9C9A9A]'
+                    }
+                  >
+                    {tab}
+                  </span>
 
-             {/* 활성 언더바: 배경 라인과 같은 y좌표에 겹치게 */}
-             {activeTab === tab && (
-               <span className="absolute left-1/2 top-[56px] z-10 h-[8px] w-[140px] -translate-x-1/2 rounded-full bg-black" />
-             )}
-           </button>
-         ))}
-       </div>
-     </div>
-  </div>
-</div>
-
+                  {/* 활성 언더바: 배경 라인과 같은 y좌표에 겹치게 */}
+                  {activeTab === tab && (
+                    <span className="absolute top-[56px] left-1/2 z-10 h-[8px] w-[140px] -translate-x-1/2 rounded-full bg-black" />
+                  )}
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* 모바일 버전 탭 */}
       <div className="mt-10 mb-2 md:hidden">
@@ -680,7 +679,11 @@ function computeFillPercent(ing: IngredientResult) {
               >
                 <span
                   className={`font-pretendard text-[20px] font-medium ${
-                    activeTab === tab ? (tab === '초과' ? 'text-[#E70000]' : 'text-black') : 'text-[#9C9A9A]'
+                    activeTab === tab
+                      ? tab === '초과'
+                        ? 'text-[#E70000]'
+                        : 'text-black'
+                      : 'text-[#9C9A9A]'
                   }`}
                 >
                   {tab}
@@ -698,34 +701,30 @@ function computeFillPercent(ing: IngredientResult) {
 
       {activeTab === '초과' && (
         <>
-                     {/* PC 버전 */}
- <div className="mt-8 hidden md:block">
-   <div className="relative z-20 mx-auto w-full max-w-[1100px] px-6">
-     <div className="flex h-[102px] w-full items-center justify-center rounded-[22px] bg-[#E5E5E5]">
-       <p className="font-pretendard text-center text-[32px]">
-         적정 섭취량을 준수하세요!
-       </p>
-     </div>
-   </div>
- </div>
+          {/* PC 버전 */}
+          <div className="mt-8 hidden md:block">
+            <div className="relative z-20 mx-auto w-full max-w-[1100px] px-6">
+              <div className="flex h-[102px] w-full items-center justify-center rounded-[22px] bg-[#E5E5E5]">
+                <p className="font-pretendard text-center text-[32px]">적정 섭취량을 준수하세요!</p>
+              </div>
+            </div>
+          </div>
 
-
- {/* 모바일 버전 */}
- <div className="mt-2 flex justify-center md:hidden">
-   <div
-     className="flex items-center justify-center rounded-[15px]"
-     style={{
-       width: '350px',
-       height: '68px',
-       background: '#F4F4F4',  // ← 더 진한 색상으로 변경
-     }}
-   >
-     <p className="font-inter text-[20px] font-medium text-black">
-       적정 섭취량을 준수하세요!
-     </p>
-   </div>
- </div>
-
+          {/* 모바일 버전 */}
+          <div className="mt-2 flex justify-center md:hidden">
+            <div
+              className="flex items-center justify-center rounded-[15px]"
+              style={{
+                width: '350px',
+                height: '68px',
+                background: '#F4F4F4', // ← 더 진한 색상으로 변경
+              }}
+            >
+              <p className="font-inter text-[20px] font-medium text-black">
+                적정 섭취량을 준수하세요!
+              </p>
+            </div>
+          </div>
         </>
       )}
       {/* 모바일 섭취량 그래프 */}
