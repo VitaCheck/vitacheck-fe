@@ -160,7 +160,7 @@ const PurposeBrandProducts = () => {
             className={`${isMobile ? "w-[70%] h-[70%]" : "w-[135px] h-[135px] mt-[14px]"} object-contain`}
           />
         </div>
-        <p className={`${isMobile ? "mt-[18px] text-[18px]" : "mt-[16px] text-[22px]"} font-medium text-center whitespace-normal break-keep line-clamp-2`}>
+        <p className={`${isMobile ? "mt-[18px] text-[18px]" : "mt-[16px] text-[22px]"} font-medium text-center line-clamp-2 break-words leading-tight`}>
           {product.name}
         </p>
       </div>
