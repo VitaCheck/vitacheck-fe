@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import CombinationProductCard from '../../components/combination/CombinationProductCard';
-import ExpandableProductGroup from '../../components/combination/ExpandableProductGroup';
+// ✂️ 미사용이라면 주석/삭제하세요.
+// import ExpandableProductGroup from '../../components/combination/ExpandableProductGroup';
 import SadCat from '../../../public/images/rate1.png';
 import searchIcon from '../../assets/search.png';
 import axios from '@/lib/axios';
@@ -48,34 +49,47 @@ const AddCombinationPage = () => {
   const [searchTerm, setSearchTerm] = useState(query);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
-  const [results, setResults] = useState<any[]>([]);
+  // results를 null 허용
+  const [results, setResults] = useState<any[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
-
   const placeholder = '제품을 입력해주세요.';
 
-  const fetchSupplements = async (search: string) => {
-    try {
-      setIsLoading(true);
-      const res = await axios.get('/api/v1/supplements/search', {
-        params: { keyword: search, page: 0, size: 20 },
-      });
-      setResults(res.data.result?.supplements?.content || []);
-    } catch (error) {
-      console.error('검색 실패:', error);
-    } finally {
-      setIsLoading(false);
-    }
+  // 검색 API
+  const fetchSupplements = async (search: string, signal?: AbortSignal) => {
+    const keyword = (search ?? '').trim();
+    if (!keyword) return [];
+    const res = await axios.get('/api/v1/supplements/search', {
+      params: { keyword, page: 0, size: 20 },
+      signal,
+    });
+    return res.data?.result?.supplements?.content ?? [];
   };
 
   useEffect(() => {
     setSearchTerm(query);
-  }, [query]);
 
-  useEffect(() => {
-    if (query) {
-      fetchSupplements(query);
+    if (!query) {
+      setResults([]);
+      setIsLoading(false);
+      return;
     }
+
+    const controller = new AbortController();
+
+    setIsLoading(true);
+    setResults(null); // ← 로딩 상태 표기용
+
+    fetchSupplements(query, controller.signal)
+      .then((list) => setResults(list))
+      .catch((err) => {
+        if (err?.name !== 'AbortError' && err?.name !== 'CanceledError') {
+          console.error('검색 실패:', err);
+        }
+        setResults([]); // 실패 시에도 null 방지
+      })
+      .finally(() => setIsLoading(false));
+
+    return () => controller.abort();
   }, [query]);
 
   useEffect(() => {
@@ -106,18 +120,11 @@ const AddCombinationPage = () => {
     };
   }, [isMobile]);
 
-  const handleToggleCheckbox = (idx: number) => {
-    setCheckedIndices((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
-    );
-  };
-
   const handleSearch = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
 
     const updated = [trimmed, ...searchHistory.filter((item) => item !== trimmed)].slice(0, 3);
-
     localStorage.setItem('searchHistory', JSON.stringify(updated));
     setSearchHistory(updated);
 
@@ -129,9 +136,7 @@ const AddCombinationPage = () => {
 
   const handleAnalyze = () => {
     localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
-    navigate('/combination-result', {
-      state: { selectedItems: selectedItems },
-    });
+    navigate('/combination-result', { state: { selectedItems } });
   };
 
   const handleToggle = (item: any) => {
@@ -157,24 +162,25 @@ const AddCombinationPage = () => {
     localStorage.setItem('searchHistory', JSON.stringify(updated));
   };
 
-  const hasAside = results.length > 0;
+  const hasAside = Array.isArray(results) && results.length > 0;
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 pt-2 pb-24 sm:px-36 sm:pt-10 lg:pb-16">
-      {' '}
-      {/* ← 하단 패딩 추가 */}
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
       <div className="md:hidden">
         <Navbar />
       </div>
+
       {/* 조합추가 - 모바일 */}
       <h1 className="font-Pretendard mb-5 block pt-6 pl-2 text-[24px] leading-[100%] font-bold tracking-[-0.02em] md:hidden">
         조합 추가
       </h1>
+
       {/* 조합추가 - PC */}
       <h1 className="mb-6 hidden pl-2 text-2xl font-semibold sm:mb-8 sm:ml-8 sm:text-4xl md:block">
         조합 추가
       </h1>
+
       {/* 검색창 - 모바일 */}
       <div className="mb-4 flex justify-center md:hidden">
         <div className="flex w-full max-w-md items-center rounded-full border border-gray-300 bg-white px-4 py-3">
@@ -189,13 +195,14 @@ const AddCombinationPage = () => {
             className="w-full bg-transparent text-lg text-gray-400 placeholder-gray-300"
           />
           <img
-            src="/src/assets/search.png"
+            src={searchIcon}
             alt="검색"
             onClick={handleSearch}
             className="ml-2 h-5 w-5 cursor-pointer"
           />
         </div>
       </div>
+
       {/* 검색창 - PC */}
       <section className="mb-6 hidden justify-center md:flex">
         <div className="flex w-full max-w-3xl items-center rounded-full border border-gray-300 bg-white px-6 py-4 shadow-sm">
@@ -214,14 +221,10 @@ const AddCombinationPage = () => {
               <img src="/images/성분 검색결과/x.png" alt="지우기" className="h-6 w-6" />
             </button>
           )}
-          <img
-            src="/src/assets/search.png"
-            alt="검색"
-            onClick={handleSearch}
-            className="ml-2 h-6 w-6"
-          />
+          <img src={searchIcon} alt="검색" onClick={handleSearch} className="ml-2 h-6 w-6" />
         </div>
       </section>
+
       {/* 검색 기록 - 모바일 */}
       {searchHistory.length > 0 && (
         <div className="mb-12 block flex justify-center md:hidden">
@@ -232,18 +235,19 @@ const AddCombinationPage = () => {
             {searchHistory.map((item, idx) => (
               <div key={idx} className="flex items-center gap-[4px]">
                 <button
-                  // 검색 기록 버튼 onClick 내부
                   onClick={() => {
-                    // 입력창 반영
-                    setSearchTerm(item);
-
-                    // 선택한 항목을 히스토리 맨 앞으로(옵션)
-                    const updated = [item, ...searchHistory.filter((v) => v !== item)].slice(0, 3);
+                    const clean = item.trim();
+                    setSearchTerm(clean);
+                    const updated = [
+                      clean,
+                      ...searchHistory.filter((v) => v.trim() !== clean),
+                    ].slice(0, 3);
                     setSearchHistory(updated);
                     localStorage.setItem('searchHistory', JSON.stringify(updated));
-
-                    // 페이지 이동
-                    navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                    navigate(`/add-combination?query=${encodeURIComponent(clean)}`, {
+                      replace: false,
+                      state: { selectedItems },
+                    });
                   }}
                   className="text-[13px] font-medium text-gray-700"
                 >
@@ -265,6 +269,7 @@ const AddCombinationPage = () => {
           </div>
         </div>
       )}
+
       {/* 검색 기록 - PC */}
       {searchHistory.length > 0 && (
         <div className="mb-5 hidden flex-wrap justify-center gap-[24px] px-[35.64px] md:flex">
@@ -275,8 +280,12 @@ const AddCombinationPage = () => {
             >
               <button
                 onClick={() => {
-                  setSearchTerm(item);
-                  navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                  const clean = item.trim();
+                  setSearchTerm(clean);
+                  navigate(`/add-combination?query=${encodeURIComponent(clean)}`, {
+                    replace: false,
+                    state: { selectedItems },
+                  });
                 }}
                 className="font-Pretendard text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
@@ -297,117 +306,106 @@ const AddCombinationPage = () => {
           ))}
         </div>
       )}
+
       {/* 본문 */}
       <div
         className={`relative ${
           hasAside
-            ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start lg:gap-5' // ← aside 폭 250px + 교차축 정렬
+            ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_250px] lg:items-start lg:gap-5'
             : 'lg:mx-auto lg:max-w-5xl'
         }`}
       >
         <div className={hasAside ? 'min-w-0 flex-1' : 'w-full min-w-0'}>
-          {' '}
-          {/* ← min-w-0 추가로 가로 튐 방지 */}
+          {/* 검색어 제목 */}
           {query && (
             <>
-              {/* 검색어 제목 - 모바일 */}
               <h2 className="font-pretendard mb-6 block pl-2 text-[20px] leading-[120%] font-bold tracking-[-0.02em] md:hidden">
                 {query}
               </h2>
-
-              {/* 검색어 제목 - PC */}
               <h2 className="font-pretendard mb-8 hidden pl-2 text-[25px] leading-[120%] font-bold tracking-[-0.02em] sm:ml-8 md:block">
                 {query}
               </h2>
             </>
           )}
-          {results.length > 0 ? (
-            <>
-              {/* 모바일 카드 리스트 */}
-              <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-6 px-4 md:hidden">
-                {results.map((item: Product) => (
-                  <CombinationProductCard
-                    key={item.supplementId}
-                    item={item}
-                    isSelected={selectedItems.some((i) => i.supplementId === item.supplementId)}
-                    onToggle={() => handleToggle(item)}
-                  />
-                ))}
-              </div>
 
-              {/* PC 카드 */}
-              <div className="mt-12 hidden md:block">
-                <div className="mx-auto max-w-5xl px-[35.64px] pb-10">
-                  {' '}
-                  {/* ← 바닥 여백 추가 */}
-                  <div
-                    className="grid w-full grid-cols-2 place-items-center gap-x-8 gap-y-8 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
-                    style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
-                  >
-                    {results.map((item: Product) => (
-                      <CombinationProductCard
-                        key={item.supplementId}
-                        item={item}
-                        isSelected={selectedItems.some((i) => i.supplementId === item.supplementId)}
-                        onToggle={() => handleToggle(item)}
-                      />
-                    ))}
+          {query &&
+            (results === null ? (
+              <>
+                {/* 로딩 UI (모바일) */}
+                <div className="mt-20 block flex flex-col items-center justify-center md:hidden">
+                  <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-[#FFEB9D]" />
+                  <p className="font-pretendard mt-4 text-center text-[24px] font-medium text-[#808080]">
+                    검색 중...
+                  </p>
+                </div>
+                {/* 로딩 UI (PC) */}
+                <div className="mt-20 mb-50 hidden flex-col items-center justify-center md:flex">
+                  <div className="h-20 w-20 animate-spin rounded-full border-b-10 border-[#FFEB9D]" />
+                  <p className="font-pretendard mt-4 text-[36px] font-medium text-[#808080]">
+                    검색 중...
+                  </p>
+                </div>
+              </>
+            ) : Array.isArray(results) && results.length > 0 ? (
+              <>
+                {/* 모바일 카드 리스트 */}
+                <div className="grid grid-cols-2 justify-items-center gap-x-4 gap-y-6 px-4 md:hidden">
+                  {results.map((item: Product) => (
+                    <CombinationProductCard
+                      key={item.supplementId}
+                      item={item}
+                      isSelected={selectedItems.some((i) => i.supplementId === item.supplementId)}
+                      onToggle={() => handleToggle(item)}
+                    />
+                  ))}
+                </div>
+
+                {/* PC 카드 */}
+                <div className="mt-12 hidden md:block">
+                  <div className="mx-auto max-w-5xl px-[35.64px] pb-10">
+                    <div
+                      className="grid w-full grid-cols-2 place-items-center gap-x-8 gap-y-8 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-3"
+                      style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}
+                    >
+                      {results.map((item: Product) => (
+                        <CombinationProductCard
+                          key={item.supplementId}
+                          item={item}
+                          isSelected={selectedItems.some(
+                            (i) => i.supplementId === item.supplementId,
+                          )}
+                          onToggle={() => handleToggle(item)}
+                        />
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
-            </>
-          ) : (
-            query && (
-              <>
-                {isLoading ? (
-                  // 로딩 중 표시
-                  <>
-                    <div className="mt-20 block flex flex-col items-center justify-center md:hidden">
-                      <div className="h-16 w-16 animate-spin rounded-full border-b-4 border-[#FFEB9D]"></div>
-                      <p className="font-pretendard mt-4 text-center text-[24px] leading-[120%] font-medium tracking-[-0.02em] text-[#808080]">
-                        검색 중...
-                      </p>
-                    </div>
-
-                    {/* PC 전용: 로딩 중 */}
-                    <div className="mt-20 mb-50 hidden flex-col items-center justify-center md:flex">
-                      <div className="h-20 w-20 animate-spin rounded-full border-b-10 border-[#FFEB9D]"></div>
-                      <p className="font-pretendard mt-4 text-[36px] leading-[120%] font-medium tracking-[-0.02em] text-[#808080]">
-                        검색 중...
-                      </p>
-                    </div>
-                  </>
-                ) : (
-                  // 검색 결과 없음 표시
-                  <>
-                    <div className="mt-20 block flex flex-col items-center justify-center md:hidden">
-                      <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[160px]" />
-                      <p className="font-pretendard text-center text-[24px] leading-[120%] font-medium tracking-[-0.02em] text-[#808080]">
-                        일치하는 검색 결과가 없습니다.
-                      </p>
-                    </div>
-
-                    {/* PC 전용: 검색 결과 없음 */}
-                    <div className="mt-20 hidden flex-col items-center justify-center md:flex">
-                      <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[150px]" />
-                      <p className="font-pretendard mb-[120px] text-[30px] leading-[120%] font-medium tracking-[-0.02em] text-[#808080]">
-                        일치하는 검색 결과가 없습니다.
-                      </p>
-                    </div>
-                  </>
-                )}
               </>
-            )
-          )}
+            ) : (
+              <>
+                {/* 결과 없음 (모바일) */}
+                <div className="mt-20 block flex flex-col items-center justify-center md:hidden">
+                  <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[160px]" />
+                  <p className="font-pretendard text-center text-[24px] font-medium text-[#808080]">
+                    일치하는 검색 결과가 없습니다.
+                  </p>
+                </div>
+                {/* 결과 없음 (PC) */}
+                <div className="mt-20 hidden flex-col items-center justify-center md:flex">
+                  <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[150px]" />
+                  <p className="font-pretendard mb-[120px] text-[30px] font-medium text-[#808080]">
+                    일치하는 검색 결과가 없습니다.
+                  </p>
+                </div>
+              </>
+            ))}
         </div>
 
         {/* 분석 목록 (검색 결과 있을 때만) */}
-        {results.length > 0 && (
+        {hasAside && (
           <>
             {/* PC 분석 목록 */}
             <aside className="sticky top-8 hidden w-full max-w-[250px] self-start lg:block">
-              {' '}
-              {/* ← 핵심 수정 */}
               <div className="w-full">
                 <button
                   onClick={handleAnalyze}
@@ -466,10 +464,8 @@ const AddCombinationPage = () => {
                 <h3 className="font-pretendard px-3 text-[22px] leading-[120%] font-bold tracking-[-0.02em]">
                   분석 목록
                 </h3>
-                <button
-                  onClick={handleAnalyze}
-                  className="border-none bg-transparent p-0" // 버튼 배경 제거 및 여백 제거
-                >
+                <button onClick={handleAnalyze} className="border-none bg-transparent p-0">
+                  {/* 버튼 배경 제거 및 여백 제거 */}
                   <img
                     src="/images/PNG/조합 2-1/시작.png"
                     alt="분석 시작"
@@ -493,10 +489,7 @@ const AddCombinationPage = () => {
                     <div
                       key={idx}
                       className="relative flex h-[130px] w-[130px] flex-shrink-0 flex-col items-center rounded-[10px] bg-white"
-                      style={{
-                        paddingTop: '22px',
-                        paddingBottom: '12px',
-                      }}
+                      style={{ paddingTop: '22px', paddingBottom: '12px' }}
                     >
                       <img
                         src={item.imageUrl}
@@ -505,13 +498,11 @@ const AddCombinationPage = () => {
                       {/* 제목 래퍼: 고정 높이 + 중앙 정렬 */}
                       <div className="mt-[-4px] flex h-[34px] items-center justify-center px-4">
                         <p
-                          title={item.supplementName} // 전체명 툴팁
+                          title={item.supplementName} /* 전체명 툴팁 */
                           className={[
                             'font-pretendard text-center font-medium tracking-[-0.02em] text-black',
                             'leading-[120%]',
-                            // 긴 제목 대응: 2줄 말줄임 + 한글 어절 유지 + 영어 단어는 break 허용
                             'line-clamp-2 overflow-hidden break-words break-keep',
-                            // 기본 13px, 너무 길면 줄바꿈되며 시각적으로 깔끔
                             'text-[13px]',
                           ].join(' ')}
                         >
