@@ -1195,27 +1195,13 @@ export default function CombinationResultPage() {
       {/* ===== 공유 팝업 ===== */}
       // 하단 공유 팝업 호출부만 수정
       {shareOpen && (
-        <ShareLinkPopup
-          onClose={() => setShareOpen(false)}
-          supplementUrl={shareUrl}
-          supplementImageUrl={shareImage}
-          supplementName={shareTitle}
-          // templateId={KAKAO_TEMPLATE_ID}  // ← 커스텀 템플릿은 잠시 끄세요
-          overCount={overCount}
-          metCount={metCount}
-          cautionCount={cautionCount}
-        />
-      )}
-      {/* ===== 알람 추가 모달 (모바일에서만 열림) ===== */}
-      {selectedItem && (
-        <AlarmAddToSearchModal
-          open={openAlarmModal}
-          onClose={() => setOpenAlarmModal(false)}
-          supplementId={selectedItem.supplementId ?? selectedItem.cursorId}
-          supplementName={selectedItem.supplementName}
-          supplementImageUrl={selectedItem.imageUrl}
-        />
-      )}
+  <ShareLinkPopup
+    onClose={() => setShareOpen(false)}
+    supplementUrl={shareUrl}                 // 예: window.location.href
+    supplementImageUrl={shareImage}          // 절대 https 이미지 권장
+    supplementName={shareTitle}
+  />
+)}
     </div>
   );
 }
