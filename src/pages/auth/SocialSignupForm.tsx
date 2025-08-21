@@ -4,7 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
 
-/* ---------- 유틸 ---------- */
+/* ---------- 유틸 (이하 동일) ---------- */
 type JwtPayload = Record<string, any>;
 function decodeJwt(token: string): JwtPayload | null {
   try {
@@ -43,21 +43,16 @@ const toBirthDate = (
   return "";
 };
 
-/** 010-0000-0000 마스킹 고정 */
 function maskPhone010(input: string): string {
-  // 숫자만
   let digits = (input || "").replace(/\D/g, "");
-  // 최대 11자리까지만
   digits = digits.slice(0, 11);
 
-  // 접두사는 무조건 010
   if (!digits.startsWith("010")) {
-    // 뒤 8자리만 보존
     const tail8 = digits.slice(-8);
     digits = "010" + tail8;
   }
 
-  const tail = digits.slice(3); // 나머지 8자리
+  const tail = digits.slice(3);
   const mid = tail.slice(0, 4);
   const end = tail.slice(4, 8);
   let out = "010";
@@ -66,13 +61,12 @@ function maskPhone010(input: string): string {
   return out;
 }
 
-/** 유저 + 4자리 랜덤 */
 function genUserNick() {
   const n = Math.floor(1000 + Math.random() * 9000);
   return `유저${n}`;
 }
 
-/* ---------- 타입 ---------- */
+/* ---------- 타입 (이하 동일) ---------- */
 type StateByValues = {
   provider: string;
   providerId: string;
@@ -106,7 +100,7 @@ export default function SocialSignupForm() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  // 쿼리 파싱
+  // 쿼리 파싱 (동일)
   const fromQuery = useMemo(
     () => ({
       email: params.get("email") || "",
@@ -130,7 +124,7 @@ export default function SocialSignupForm() {
     [params]
   );
 
-  // preset 생성(네이버/토큰 값)
+  // preset 생성 (동일)
   const preset = useMemo(() => {
     const base = {
       email: fromQuery.email,
@@ -230,14 +224,12 @@ export default function SocialSignupForm() {
     return { mode: "values" as const, ...base, fullName: base.fullNameFromState };
   }, [state, fromQuery]);
 
-  /* ---- 화면노출 폼: 이메일(readonly), 닉네임/전화번호 입력 ---- */
   const [form, setForm] = useState({
     email: "",
     nickname: "",
     phoneNumber: "",
   });
 
-  /* ---- 숨김값: 서버전송용 (수정 불가) ---- */
   const [hiddenInfo, setHiddenInfo] = useState({
     fullName: "",
     provider: "",
@@ -247,12 +239,9 @@ export default function SocialSignupForm() {
   });
 
   useEffect(() => {
-    // 기본 세팅
     setForm({
       email: (preset as any).email ?? "",
-      // 닉네임은 요청대로 "유저XXXX"로 자동 생성
       nickname: genUserNick(),
-      // 전화번호는 010-0000-0000 형식으로 마스킹하여 초기값 세팅(없으면 010-)
       phoneNumber: maskPhone010((preset as any).phoneNumber ?? ""),
     });
     setHiddenInfo({
@@ -262,7 +251,6 @@ export default function SocialSignupForm() {
       gender: ((preset as any).gender as Gender | "") ?? "",
       birthDate: (preset as any).birthDate ?? "",
     });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [preset]);
 
   const onChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -281,12 +269,10 @@ export default function SocialSignupForm() {
     e.preventDefault();
     if (submitting) return;
 
-    // 유효성
     if (!form.nickname.trim()) {
       alert("닉네임을 입력해주세요.");
       return;
     }
-    // 010-0000-0000 정확 길이 13
     if (form.phoneNumber.length !== 13) {
       alert("전화번호를 010-0000-0000 형식으로 입력해주세요.");
       return;
@@ -305,17 +291,20 @@ export default function SocialSignupForm() {
         return;
       }
 
-      // 서버로 넘길 전체 데이터(네이버 값 + 사용자가 입력한 값)
       const body = {
         email: form.email,
         fullName: hiddenInfo.fullName,
         provider: hiddenInfo.provider,
         providerId: hiddenInfo.providerId,
-        nickname: form.nickname.trim(),                 // 유저 + 4자리
+        nickname: form.nickname.trim(),
         gender: (hiddenInfo.gender || "OTHER") as Gender,
         birthDate: hiddenInfo.birthDate,
-        phoneNumber: form.phoneNumber.trim(),           // 010-0000-0000 형식
+        phoneNumber: form.phoneNumber.trim(),
       };
+
+      console.log("🚀 API 요청 데이터 확인");
+      console.log("🔑 Social Temp Token:", socialTempToken);
+      console.log("📦 Body Payload:", body);
 
       const result = await postSocialSignup(body, socialTempToken);
 
@@ -328,25 +317,30 @@ export default function SocialSignupForm() {
         replace: true,
       });
     } catch (err: any) {
+      console.error("회원가입 API 에러:", err); // PC 디버깅을 위해 콘솔 에러는 유지
+
       if (err?.response?.status === 401) {
         alert("인증이 만료되었습니다. 다시 소셜 로그인 해주세요.");
       } else {
-        alert("회원가입에 실패했습니다. 잠시 후 다시 시도해 주세요.");
+        // ================================================================
+        // ▼▼▼ [수정된 부분] 서버 에러 메시지를 alert에 직접 표시 ▼▼▼
+        // ================================================================
+        const serverMessage = err?.response?.data?.message || JSON.stringify(err?.response?.data);
+        const errorMessage = `회원가입에 실패했습니다.\n\n[서버 응답]\n${serverMessage}`;
+        alert(errorMessage);
+        // ================================================================
       }
-      console.error(err);
     } finally {
       setSubmitting(false);
     }
   };
 
-  // 닉네임 재생성 버튼
   const regenNickname = () => setForm((f) => ({ ...f, nickname: genUserNick() }));
 
   return (
     <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-6 p-6">
       <h1 className="text-[22px] font-semibold">회원가입</h1>
 
-      {/* 이메일 (읽기전용) */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">이메일</label>
         <input
@@ -357,7 +351,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 닉네임 */}
       <div className="space-y-2">
         <label className="text-sm text-gray-600 flex items-center justify-between">
           <span>닉네임</span>
@@ -379,7 +372,6 @@ export default function SocialSignupForm() {
         />
       </div>
 
-      {/* 전화번호 */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">전화번호</label>
         <input
@@ -387,7 +379,7 @@ export default function SocialSignupForm() {
           value={form.phoneNumber}
           onChange={onChange}
           inputMode="tel"
-          maxLength={13}                         // 010-0000-0000
+          maxLength={13}
           placeholder="010-0000-0000"
           className="w-full border-b border-gray-300 px-3 py-3"
           required
