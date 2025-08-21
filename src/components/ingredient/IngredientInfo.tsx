@@ -238,7 +238,7 @@ const IngredientInfo = ({ id, data }: Props) => {
           ) : isUnauthorized || isNotFound ? null : canShowDetailedDosage() ||
             canShowPartialDosage() ? (
             // 로그인 완료 & 데이터 존재(완전/부분 공통 그래프)
-            <div className="mt-3 md:mt-2">
+            <div className="mt-8 md:mt-10">
               <div className="relative w-full max-w-[400px] md:mx-0 mx-auto">
                 {/* 막대 */}
                 <div className="relative h-8 bg-gray-200 rounded-full overflow-hidden w-full">
