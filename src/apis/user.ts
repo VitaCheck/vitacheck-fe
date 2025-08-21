@@ -67,3 +67,10 @@ export async function updateFcmTokenWithLocalStorageFetch() {
     }
   );
 }
+
+
+export const deleteMyAccount = async (): Promise<void> => {
+  await api.delete("/api/v1/users/me", {
+    validateStatus: (s) => s === 200 || s === 204,
+  });
+};
