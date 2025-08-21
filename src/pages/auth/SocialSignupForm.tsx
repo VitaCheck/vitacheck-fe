@@ -371,20 +371,18 @@ export default function SocialSignupForm() {
       <div className="mt-8 space-y-8">
         {/* 이메일 */}
         <div className="space-y-2">
-          <label className="block text-[13px] text-[#8B8B8B]">이메일</label>
+          <label className="block mb-2 text-[18px] font-semibold">이메일</label>
           <input
             name="email"
             value={form.email}
             readOnly
-            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
-                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
-                     focus:outline-none focus:border-[#2B2B2B]"
+            className="ml-[12px] w-full border-0 border-b border-[#D9D9D9] bg-transparent py-3 text-[16px] text-[#6B6B6B] placeholder-[#AAAAAA] outline-none focus:border-[#202020]"
           />
         </div>
 
         {/* 닉네임 + 자동생성 */}
         <div className="space-y-2">
-          <label className="block text-[13px] text-[#8B8B8B]">
+          <label className="block mb-2 text-[18px] font-semibold">
             <span className="flex items-center justify-between">
               닉네임
               <button
@@ -409,9 +407,11 @@ export default function SocialSignupForm() {
           />
         </div>
 
-        {/* 전화번호 (스샷엔 없지만 유지) */}
+        {/* 전화번호 */}
         <div className="space-y-2">
-          <label className="block text-[13px] text-[#8B8B8B]">전화번호</label>
+          <label className="block mb-2 text-[18px] font-semibold">
+            전화번호
+          </label>
           <input
             name="phoneNumber"
             value={form.phoneNumber}
@@ -462,14 +462,16 @@ export default function SocialSignupForm() {
       {errorMessage && (
         <p className="text-red-500 text-sm mb-4">{errorMessage}</p>
       )}
-      {/* CTA 버튼 */}
-      <button
-        type="submit"
-        disabled={submitting}
-        className="mt-12 w-full h-[68px] rounded-[16px] bg-[#FFE88D] text-[20px] font-semibold text-blackshadow-[0_2px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition"
-      >
-        다음
-      </button>
+
+      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] bg-white/70 px-4 pb-6 pt-2 backdrop-blur">
+        <button
+          type="submit"
+          disabled={submitting}
+          className="mt-12 w-full h-[68px] rounded-[16px] bg-[#FFE88D] text-[20px] font-semibold text-blackshadow-[0_2px_0_rgba(0,0,0,0.05)] active:scale-[0.98] transition"
+        >
+          다음
+        </button>
+      </div>
     </form>
   );
 }
