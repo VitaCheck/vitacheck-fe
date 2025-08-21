@@ -33,7 +33,7 @@ const ScrapIngredientItem = ({
       onKeyDown={(e) => (e.key === "Enter" || e.key === " ") && goDetail()}
       className="relative bg-white sm:bg-[#F4F4F4] rounded-[10px] px-[22px] py-[14px] h-[70px] shadow-[2px_3px_12.4px_rgba(0,0,0,0.16)]
                  flex items-center justify-between cursor-pointer
-                 sm:flex sm:items-center sm:justify-center sm:h-[190px] sm:w-[210px] sm:px-0 sm:py-0"
+                 sm:flex sm:items-center sm:justify-center sm:h-[156px] sm:w-[156px] sm:px-0 sm:py-0"
       title={`${name} 상세 보기`}
       aria-label={`${name} 상세로 이동`}
     >
