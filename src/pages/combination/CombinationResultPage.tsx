@@ -646,7 +646,7 @@ function computeFillPercent(ing: IngredientResult) {
              onClick={() => setActiveTab(tab as '전체' | '초과')}
              className="font-pretendard relative py-2 mb-5 text-[30px] font-semibold leading-[120%] tracking-[-0.02em]"
            >
-             <span className={activeTab === tab ? 'text-black' : 'text-[#9C9A9A]'}>{tab}</span>
+             <span className={activeTab === tab ? (tab === '초과' ? 'text-[#E70000]' : 'text-black') : 'text-[#9C9A9A]'}>{tab}</span>
 
              {/* 활성 언더바: 배경 라인과 같은 y좌표에 겹치게 */}
              {activeTab === tab && (
@@ -680,7 +680,7 @@ function computeFillPercent(ing: IngredientResult) {
               >
                 <span
                   className={`font-pretendard text-[20px] font-medium ${
-                    activeTab === tab ? 'text-black' : 'text-[#9C9A9A]'
+                    activeTab === tab ? (tab === '초과' ? 'text-[#E70000]' : 'text-black') : 'text-[#9C9A9A]'
                   }`}
                 >
                   {tab}
@@ -1019,7 +1019,6 @@ function computeFillPercent(ing: IngredientResult) {
             </div>
           </div>
 
-          {/* 💻 PC - 좋은 조합 */}
           {/* 💻 PC - 좋은 조합 */}
           <section className="mt-10 hidden md:block">
             {/* 제목과 카드가 같은 컨테이너를 공유 → 시작점/양옆 여백 동일 */}
