@@ -73,15 +73,17 @@ const ProductDetailPage = () => {
       try {
         // 서버에서 항상 제품 정보 가져오기 (liked 상태 포함)
         const accessToken = localStorage.getItem("accessToken");
+        const supplementId = Number(id); // string -> number
         const productResponse = await axios.get<ApiProduct>(
           `/api/v1/supplements`,
           {
-            params: { id },
+            params: { id: supplementId },
             headers: {
               Authorization: accessToken ? `Bearer ${accessToken}` : "",
             },
           }
         );
+
 
         console.log("제품 상세 페이지 API 응답 데이터:", productResponse.data);
 

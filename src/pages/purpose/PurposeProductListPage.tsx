@@ -16,6 +16,7 @@ interface Supplement {
 interface SupplementInfo {
   purposes: string[];
   supplements: Supplement[];
+  ingredientId: number;
 }
 
 type ResultData = Record<string, SupplementInfo>;
@@ -130,6 +131,7 @@ const PurposeProductList = () => {
               mappedData[ingredientName] = {
                 purposes: [translatedPurpose],
                 supplements: ing.supplements || [],
+                ingredientId: ing.ingredientId,
               };
             }
           });
@@ -240,9 +242,9 @@ const PurposeProductList = () => {
                 )}`,
                 {
                   state: {
-                    supplements: info.supplements,
-                    cachedData: data,
-                    activePurpose,
+                    ingredientId: info.ingredientId, 
+                    ingredientName: ingredientName,
+                    initialSupplements: info.supplements, 
                   },
                 }
               )

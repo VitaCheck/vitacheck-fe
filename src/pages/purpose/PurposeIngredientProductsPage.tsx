@@ -1,15 +1,11 @@
+// src/pages/PurposeIngredientProducts.tsx
+
 import { useLocation, useNavigate } from "react-router-dom";
 import { AiOutlineSearch } from "react-icons/ai";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
+import axios from "@/lib/axios";
 
-interface Product {
-  id: number;
-  title: string;
-  imageUrl: string;
-}
-
-// ⭐️ 1. location.state에서 받아오는 데이터의 타입을 명확하게 정의합니다.
-interface SupplementFromState {
+interface Supplement {
   id: number;
   name: string;
   imageUrl: string;
@@ -17,150 +13,155 @@ interface SupplementFromState {
 
 const PurposeIngredientProducts = () => {
   const location = useLocation();
-  const searchParams = new URLSearchParams(location.search);
-  const ingredient = searchParams.get("ingredient");
   const navigate = useNavigate();
 
-  const [searchQuery, setSearchQuery] = useState("");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [displayProducts, setDisplayProducts] = useState<Product[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-
-  const mobileLoadMoreRef = useRef<HTMLDivElement>(null);
-  const pcLoadMoreRef = useRef<HTMLDivElement>(null);
-
-  const batchSize = typeof window !== 'undefined' && window.innerWidth >= 768 ? 4 : 2;
-
-  // 초기 데이터 로드
-  useEffect(() => {
-    setIsLoading(true);
-    
-    // ⭐️ 2. `as` 키워드를 사용해 데이터의 타입을 TypeScript에게 알려줍니다.
-    const supplementsFromState = (location.state?.supplements as SupplementFromState[]) || [];
-
-    const initialLoadTimer = setTimeout(() => {
-      if (supplementsFromState.length > 0) {
-        
-        // 이제 `item`의 타입이 명확해져서 에러가 발생하지 않습니다.
-        const uniqueSupplements = Array.from(
-          new Map(supplementsFromState.map(item => [item.id, item])).values()
-        );
-
-        // `uniqueSupplements`의 타입도 명확해져서 여기서도 에러가 발생하지 않습니다.
-        const mappedProducts: Product[] = uniqueSupplements.map(
-          (item) => ({ // item의 타입을 굳이 다시 적어주지 않아도 TypeScript가 추론합니다.
-            id: item.id,
-            title: item.name,
-            imageUrl: item.imageUrl.startsWith("http")
-              ? item.imageUrl
-              : `/images/${item.imageUrl}`,
-          })
-        );
-
-        setProducts(mappedProducts);
-        setDisplayProducts(mappedProducts.slice(0, batchSize));
-      } else {
-        setProducts([]);
-      }
-      setIsLoading(false);
-    }, 1000);
-
-    window.scrollTo(0, 0);
-    return () => clearTimeout(initialLoadTimer);
-  }, [location.state?.supplements, batchSize]);
-
-    const loadNextBatch = () => {
-    if (isLoading || displayProducts.length >= products.length) {
-      return;
-    }
-
-    const nextBatch = products.slice(
-      displayProducts.length,
-      displayProducts.length + batchSize
-    );
-    setDisplayProducts((prev) => [...prev, ...nextBatch]);
+  const { ingredientId, ingredientName, initialSupplements } = location.state || {
+    ingredientId: null,
+    ingredientName: "성분",
+    initialSupplements: [],
   };
 
-  // 무한 스크롤
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0].isIntersecting) {
-          loadNextBatch();
-        }
-      },
-      { threshold: 1 }
-    );
+  const [searchQuery, setSearchQuery] = useState("");
+  
+  // --- 상태 관리 로직 수정 ---
+  const [supplements, setSupplements] = useState<Supplement[]>(initialSupplements || []);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [isFetchingMore, setIsFetchingMore] = useState<boolean>(false);
+  const [nextCursor, setNextCursor] = useState<number | null>(null);
+  const [hasMore, setHasMore] = useState<boolean>(true);
 
-    // 각 ref의 current 요소가 존재할 경우에만 관찰 시작
-    const mobileRef = mobileLoadMoreRef.current;
-    if (mobileRef) {
-      observer.observe(mobileRef);
+  const observerRef = useRef<IntersectionObserver | null>(null);
+  const loadMoreRef = useRef<HTMLDivElement>(null);
+  const isFetchingRef = useRef(false);
+  
+  // --- API 호출 함수 ---
+  const fetchSupplements = useCallback(async (cursor: number | null) => {
+    console.log('API 요청 성분 ID:', ingredientId);
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
+    if (!ingredientId) {
+        console.error("Ingredient ID가 없습니다.");
+        setIsLoading(false);
+        setHasMore(false);
+        return;
     }
+    
+    if (cursor) setIsFetchingMore(true);
+    else setIsLoading(true);
 
-    const pcRef = pcLoadMoreRef.current;
-    if (pcRef) {
-      observer.observe(pcRef);
-    }
+    try {
+      const response = await axios.get(`/api/v1/ingredients/${ingredientId}/supplements`, {
+        params: {
+          cursor: cursor || undefined,
+          size: 20,
+        },
+      });
 
-    if (pcRef && !isLoading) {
-        // pcRef의 상단 위치가 뷰포트 높이보다 작으면 -> 즉, 화면에 보이면
-        const isPcRefVisible = pcRef.getBoundingClientRect().top <= window.innerHeight;
+      console.log(response.data);
+      
+      const result = response.data.result;
+      
+      setSupplements(prev => {
+        const existingSupplements = cursor ? prev : [];
+        const newSupplements = result.supplements || [];
 
-        // pcRef가 보이고, 더 불러올 제품이 있다면
-        if (isPcRefVisible && displayProducts.length < products.length) {
-            loadNextBatch();
-        }
-    }
-
-    // cleanup 함수: 컴포넌트가 unmount될 때 관찰 중단
-    return () => {
-      if (mobileRef) {
-        observer.unobserve(mobileRef);
+        const combined = [...prev, ...newSupplements];
+        const uniqueSupplements = Array.from(
+          new Map(combined.map(item => [item.id, item])).values()
+        );
+        
+        return uniqueSupplements;
+      });
+      
+      setNextCursor(result.nextCursor);
+      
+      if (result.nextCursor === null) {
+        setHasMore(false);
       }
-      if (pcRef) {
-        observer.unobserve(pcRef);
+      
+    } catch (error) {
+      console.error("❌ 성분 관련 영양제 조회 실패:", error);
+    } finally {
+      setIsLoading(false);
+      setIsFetchingMore(false);
+      isFetchingRef.current = false;
+    }
+  }, [ingredientId]);
+
+  // --- 초기 데이터 로딩 ---
+ useEffect(() => {
+    // IntersectionObserver의 콜백 함수 정의
+    const handleObserver = (entries: IntersectionObserverEntry[]) => {
+      const target = entries[0];
+      // 타겟이 보이고, 더 불러올 데이터가 있으며, 현재 fetching 중이 아닐 때만 실행
+      if (target.isIntersecting && hasMore && !isFetchingRef.current) {
+        // nextCursor 상태를 직접 사용
+        fetchSupplements(nextCursor);
       }
     };
-  }, [isLoading, displayProducts, products, batchSize]);
 
-  const filteredProducts = displayProducts.filter((product) =>
-    product.title.toLowerCase().includes(searchQuery.toLowerCase())
+    // Observer 인스턴스 생성
+    const observer = new IntersectionObserver(handleObserver, {
+      threshold: 0.5,
+    });
+
+    // 관찰할 요소(ref)가 있으면 관찰 시작
+    const currentRef = loadMoreRef.current;
+    if (currentRef) {
+      observer.observe(currentRef);
+    }
+
+    // 클린업 함수: 컴포넌트가 언마운트되거나, useEffect가 재실행될 때 기존 observer 연결 해제
+    return () => {
+      if (currentRef) {
+        observer.unobserve(currentRef);
+      }
+    };
+  // `nextCursor`가 바뀔 때마다 observer를 새로 설정하여 항상 최신 cursor 값을 사용하도록 함
+  }, [hasMore, nextCursor, fetchSupplements]); 
+  
+
+  const filteredProducts = supplements.filter((product) =>
+    product.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
+  
+  // --- 렌더링 함수 (renderCards, renderSkeletonCard) ---
+  // 이 부분은 기존 코드를 거의 그대로 사용하되,
+  // `displayProducts` 대신 `filteredProducts`를 사용하고,
+  // `Product` 타입을 `Supplement` 타입으로 통일합니다.
+  
   const renderSkeletonCard = () => (
-    <div className="flex flex-col items-center animate-pulse">
-      {/* 모바일 */}
-      <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
-      <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
-      {/* PC */}
-      <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
-      <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
-    </div>
-  );
+     <div className="flex flex-col items-center animate-pulse">
+       {/* 모바일 */}
+       <div className="w-full max-w-[166px] h-[150px] bg-gray-200 rounded-xl shadow-lg sm:hidden"></div>
+       <div className="mt-[18px] h-[22px] w-3/4 bg-gray-200 rounded-full sm:hidden"></div>
+       {/* PC */}
+       <div className="hidden sm:block w-full h-[160px] bg-gray-200 rounded-[16px] shadow-lg"></div>
+       <div className="hidden sm:block mt-[16px] h-[22px] w-3/4 bg-gray-200 rounded-full"></div>
+     </div>
+   );
 
   const renderCards = (isMobile: boolean) => {
-    if (isLoading && displayProducts.length === 0) {
-      const count = isMobile ? 2 : 4;
+    if (isLoading) {
+      const count = isMobile ? 4 : 8;
       return Array.from({ length: count }).map((_, index) => (
-        <div key={index} className="w-full">
-          {renderSkeletonCard()}
-        </div>
+        <div key={index} className="w-full">{renderSkeletonCard()}</div>
       ));
     }
 
-    if (filteredProducts.length === 0 && searchQuery !== "") {
+    if (filteredProducts.length === 0) {
       return (
-        <p className="w-full text-center text-gray-500 mt-5">
-          검색 결과가 없습니다.
+        <p className="col-span-2 sm:col-span-4 w-full text-center text-gray-500 mt-5">
+          {searchQuery !== "" ? "검색 결과가 없습니다." : "관련 제품이 없습니다."}
         </p>
       );
     }
-
+    
     return filteredProducts.map((product) => (
       <div
         key={`ingredient-${product.id}`}
-        onClick={() => navigate(`/product/${product.id}`, { state: product })}
+        onClick={() => navigate(`/product/${product.id}`, { state: { product } })}
         className="flex flex-col items-center cursor-pointer w-full"
       >
         <div
@@ -172,7 +173,7 @@ const PurposeIngredientProducts = () => {
         >
           <img
             src={product.imageUrl}
-            alt={product.title}
+            alt={product.name}
             loading="lazy"
             className={`${
               isMobile
@@ -188,11 +189,12 @@ const PurposeIngredientProducts = () => {
               : "mt-[16px] text-[22px]"
           } font-medium text-center line-clamp-2`}
         >
-          {product.title}
+          {product.name}
         </p>
       </div>
     ));
   };
+
 
   return (
     <>
@@ -201,7 +203,7 @@ const PurposeIngredientProducts = () => {
         <div className="w-full max-w-[430px] mx-auto mt-[50px] pb-[100px]">
           <div className="flex flex-col ml-[38px]">
             <h1 className="text-[30px] tracking-[-0.6px] font-medium">
-              {ingredient}
+              {ingredientName}
             </h1>
           </div>
           <div className="mx-[32px]">
@@ -219,14 +221,16 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[33px] max-w-[430px] w-full mx-auto justify-items-center grid grid-cols-2 gap-x-[22px] gap-y-[40px] px-[37px]">
             {renderCards(true)}
           </div>
-          <div ref={mobileLoadMoreRef} style={{ height: "1px" }}></div>
+          {/* 스켈레톤 UI 추가 로딩 */}
+          {isFetchingMore && Array.from({ length: 2 }).map((_, i) => <div key={`skel-m-${i}`} className="w-full">{renderSkeletonCard()}</div>)}
+          <div ref={loadMoreRef} style={{ height: "50px" }}></div>
         </div>
       </div>
 
       {/* PC */}
       <div className="hidden sm:block w-full px-[40px] bg-[#FAFAFA]">
         <div className="max-w-[845px] mx-auto pt-[70px] pb-[80px]">
-          <h1 className="text-[30px] font-semibold">{ingredient}</h1>
+          <h1 className="text-[30px] font-semibold">{ingredientName}</h1>
           <div className="flex items-center w-full h-[52px] mt-[26px] mx-auto px-[24px] rounded-full border-[#C7C7C7] border-[1px]">
             <input
               type="text"
@@ -240,7 +244,9 @@ const PurposeIngredientProducts = () => {
           <div className="mt-[55px] grid grid-cols-4 gap-x-[26px] gap-y-[40px]">
             {renderCards(false)}
           </div>
-          <div ref={pcLoadMoreRef} style={{ height: "1px" }}></div>
+          {/* 스켈레톤 UI 추가 로딩 */}
+          {isFetchingMore && Array.from({ length: 4 }).map((_, i) => <div key={`skel-d-${i}`} className="w-full">{renderSkeletonCard()}</div>)}
+          <div ref={loadMoreRef} style={{ height: "50px" }}></div>
         </div>
       </div>
     </>

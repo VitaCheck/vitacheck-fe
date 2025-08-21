@@ -1,5 +1,5 @@
 // src/components/Purpose/P3DMainDetailPageMobile.tsx
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import ShareLinkPopup from "./P3MShareLinkPopup";
 import { useNavigate } from "react-router-dom";
 import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
@@ -36,6 +36,13 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
   const handleSharePopupOpen = () => setIsSharePopupOpen(true);
   const handleSharePopupClose = () => setIsSharePopupOpen(false);
   const currentUrl = window.location.href;
+
+  // IngredientTab 스크롤용 ref
+  const ingredientTabRef = useRef<HTMLDivElement>(null);
+  const scrollToIngredientTab = () => {
+    ingredientTabRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    setActiveTab("ingredient"); // 클릭 시 탭도 활성화
+  };
 
   // 알람 모달 상태
   const [openAlarmModal, setOpenAlarmModal] = useState(false);
@@ -95,7 +102,7 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
                       transition-all duration-300 ease-in-out flex justify-center items-center
                       bg-[#FFEB9D] text-black text-[20px] font-medium
                       ${showButton ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10 pointer-events-none"}`}
-                          >
+        >
           섭취 알림 등록하기
         </button>
         <AlarmAddToSearchModal
@@ -108,15 +115,17 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
 
         {/* 상세정보 / 쿠팡 바로가기 */}
         <div className="flex justify-center mx-auto w-full max-w-[320px] h-[46px] mt-[12px] gap-x-[12px]">
-          <div className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px]">
+          <div
+            onClick={scrollToIngredientTab}
+            className="w-full max-w-[154px] h-[46px] rounded-[30px] bg-[#F2F2F2] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px] cursor-pointer"
+          >
             상세정보
           </div>
           {product.coupangLink && (
-            // ⭐️ 2. a 태그로 감싸서 링크를 연결합니다.
             <a
               href={product.coupangLink}
-              target="_blank" // 새 탭에서 열기
-              rel="noopener noreferrer" // 보안 설정
+              target="_blank"
+              rel="noopener noreferrer"
               className="w-full max-w-[154px]"
             >
               <div className="h-[46px] rounded-[30px] bg-[#FFEB9D] flex items-center justify-center font-medium text-[15px] tracking-[-0.3px] cursor-pointer">
@@ -168,10 +177,12 @@ const MainDetailPageMobile: React.FC<MobileProps> = ({
       {/* 탭 내용 */}
       <div className="mt-[24px] px-[24px] text-[16px] leading-relaxed mb-[120px]">
         {activeTab === "ingredient" ? (
-          <IngredientTab
-            supplementId={product.id}
-            onFirstNutrientChange={setFirstNutrientName}
-          />
+          <div ref={ingredientTabRef}>
+            <IngredientTab
+              supplementId={product.id}
+              onFirstNutrientChange={setFirstNutrientName}
+            />
+          </div>
         ) : (
           <TimingTab
             intakeTime={product.intakeTime}
