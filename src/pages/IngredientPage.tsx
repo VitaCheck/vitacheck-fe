@@ -263,14 +263,26 @@ const IngredientPage = () => {
   return (
     <div className="px-4 sm:px-36 pt-0 sm:pt-10 max-w-screen-xl mx-auto">
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50">
-        <Navbar />
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white shadow-sm">
+        {/* Safe Area 지원 및 배포 환경 대응 */}
+        <div
+          className="w-full"
+          style={{
+            paddingTop: "max(env(safe-area-inset-top), 16px)",
+          }}
+        >
+          <Navbar />
+        </div>
       </div>
-
-      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:mb-8">
+      {/* 모바일에서 상단바 높이만큼 여백 추가 */}
+      <div
+        className="md:hidden"
+        style={{ height: "env(safe-area-inset-top, 0px)" }}
+      />
+      <div className="md:hidden h-16" /> {/* Navbar 높이만큼 여백 */}
+      <h1 className="text-2xl sm:text-4xl font-semibold mb-6 sm:pt-8 sm:mb-8">
         성분별
       </h1>
-
       {/* 검색창 */}
       <section className="flex justify-center mb-6">
         <div
@@ -311,14 +323,12 @@ const IngredientPage = () => {
           />
         </div>
       </section>
-
       {/* 로딩 스피너 */}
       {isLoading && (
         <div className="flex justify-center items-center py-8">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-500"></div>
         </div>
       )}
-
       {/* 검색 결과 또는 검색 결과 없음 메시지 */}
       {!isLoading && hasSearched && searchResults.length === 0 ? (
         <NoSearchResult />
@@ -341,7 +351,6 @@ const IngredientPage = () => {
           </div>
         </div>
       ) : null}
-
       {/* 검색 기록 */}
       {!hasSearched && searchHistory.length > 0 && (
         <section className="flex flex-wrap justify-center items-center font-medium gap-3 text-xs text-gray-700 mb-8">
@@ -366,7 +375,6 @@ const IngredientPage = () => {
           ))}
         </section>
       )}
-
       {/* 캐릭터 & 설명 */}
       {!hasSearched && (
         <section
@@ -396,7 +404,6 @@ const IngredientPage = () => {
           </p>
         </section>
       )}
-
       {/* TOP 5 성분 */}
       {!hasSearched && (
         <section>
@@ -538,7 +545,7 @@ const IngredientPage = () => {
               </p>
               <Link
                 to="/login"
-                className="inline-block px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-500 transition-colors"
+                className="inline-block px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
               >
                 로그인하기
               </Link>
