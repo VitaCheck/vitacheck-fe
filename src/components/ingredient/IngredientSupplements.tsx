@@ -288,12 +288,22 @@ const IngredientSupplements = ({ data }: Props) => {
         </div>
       </section>
 
-      {/* 기존 ProductCard 그리드 UI 유지 */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-20 gap-y-6 md:gap-x-2">
+      {/* ProductCard 그리드 - 모바일에서는 검색바 너비에 맞춤 */}
+      <div
+        className={`grid ${
+          isMobile
+            ? "grid-cols-2 gap-x-2 gap-y-3 max-w-md mx-auto justify-items-center"
+            : "grid-cols-2 md:grid-cols-4 gap-x-2 gap-y-6"
+        }`}
+      >
         {filteredProducts.map((product, index) => (
           <div
             key={`${product.id}-${index}`}
-            className="flex justify-center"
+            className={`${
+              isMobile
+                ? "w-full transform scale-90 flex justify-center"
+                : "flex justify-center"
+            }`}
             ref={index === filteredProducts.length - 1 ? lastElementRef : null}
           >
             <ProductCard
