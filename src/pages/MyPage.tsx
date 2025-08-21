@@ -140,7 +140,7 @@ function MyPage() {
     fetchUser();
   }, []);
 
-  const imgSrc = userLoadFailed ? Profile : (profileUrl ?? ProfileCat);
+  const imgSrc = userLoadFailed ? ProfileCat : (profileUrl ?? ProfileCat);
 
   /** ─────────────────────────────────────────────────────────
    * 약관 모달 상태 + 데이터
