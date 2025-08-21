@@ -86,12 +86,10 @@ const RecommendedProductSectionMobile = ({
           </button>
         )}
 
-        {/* 태그들을 감싸는 컨테이너 */}
-        <div className="flex flex-wrap items-center gap-x-1 leading-tight">
+        <div className="flex justify-start items-center flex-wrap gap-x-1 leading-tight h-[40px]">
           {isLoading ? (
             <div className="w-[100px] h-[18px] bg-gray-200 rounded-full animate-pulse"></div>
           ) : (
-            // .map()을 사용해 각 태그를 개별 <span>으로 렌더링
             purposes.map((purpose, index) => (
               <span key={purpose} className="text-[15px] font-medium">
                 #{purpose}
