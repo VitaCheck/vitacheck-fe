@@ -70,8 +70,10 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
                 onClick={handleCopyLink}
                 className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
               >
-                <div
-                  className="rounded-full bg-gray-100 w-[50px] h-[50px]"
+                <img
+                  src="/images/PNG/성분 2-1/link.png"
+                  alt="링크이미지"
+                  className="rounded-full w-[50px] h-[50px]"
                 />
                 <span className="text-[18px] font-medium">링크 복사하기</span>
               </button>
