@@ -1,5 +1,5 @@
 import MenuItem from "../components/MyPage/MenuItem";
-import ProfileCat from "../assets/ProfileCat.svg";
+import ProfileCat from "../assets/ProfileCat.png";
 import Profile from "../assets/Profile2.svg";
 import { useNavigate } from "react-router-dom";
 import Back from "../assets/back.svg";
@@ -327,7 +327,7 @@ function MyPage() {
 
               <div
                 className="flex items-center justify-between px-4 py-4 cursor-pointer"
-                onClick={() => navigate("/notificationCenter")}
+                onClick={() => navigate("/setting")}
               >
                 <div className="flex items-center space-x-3">
                   <span className="text-xl ml-1">
