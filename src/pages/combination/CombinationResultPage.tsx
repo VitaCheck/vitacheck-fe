@@ -10,6 +10,7 @@ import selectionLine1 from '../../assets/selection line 1.png';
 import selectionLine2 from '../../assets/selection line 2.png';
 import Navbar from '@/components/NavBar';
 import line from '/images/PNG/조합 2-1/background line.png';
+import ShareLinkPopup from '@/components/Purpose/P3MShareLinkPopup';
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -62,6 +63,7 @@ interface Combination {
 
 export default function CombinationResultPage() {
   const isMobile = useIsMobile();
+  const [showSharePopup, setShowSharePopup] = useState(false);
 
   // 선택: 더 촘촘한 올림 (1250 -> 1300)
   function niceRoundUp(n: number) {
@@ -363,6 +365,14 @@ export default function CombinationResultPage() {
     });
   };
 
+  const handleShare = () => {
+    setShowSharePopup(true);
+  };
+
+  const handleCloseSharePopup = () => {
+    setShowSharePopup(false);
+  };
+
   const FlipCard: React.FC<{ name: string; description: string }> = ({ name, description }) => {
     const [flipped, setFlipped] = useState(false);
     return (
@@ -459,7 +469,7 @@ export default function CombinationResultPage() {
 
         <div className="flex items-center gap-3">
           {/* 공유 */}
-          <button type="button" aria-label="공유" className="active:scale-95">
+          <button type="button" aria-label="공유" className="active:scale-95" onClick={handleShare}>
             <img
               src="/images/PNG/조합 3-1/공유.png"
               alt="공유"
@@ -1038,6 +1048,14 @@ export default function CombinationResultPage() {
             </div>
           </section>
         </>
+      )}
+
+      {/* 모바일 공유 팝업 */}
+      {showSharePopup && isMobile && (
+        <ShareLinkPopup
+          onClose={handleCloseSharePopup}
+          supplementUrl={window.location.href}
+        />
       )}
     </div>
   );
