@@ -1,9 +1,9 @@
-// src/pages/auth/OauthRedirect.tsx
+// // src/pages/auth/OauthRedirect.tsx
 import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { saveTokens, clearTokens } from "@/lib/auth";
+import axios from "@/lib/axios";
 import { syncFcmToken } from "@/lib/push";
-import { registerServiceWorker } from "@/lib/firebase";
 import { isSupported } from "firebase/messaging";
 
 export default function OauthRedirect() {
@@ -27,27 +27,21 @@ export default function OauthRedirect() {
         return;
       }
 
-      // 1) 로그인 세션 저장
+      // 1) 세션 저장 + Authorization 헤더 즉시 적용
       saveTokens(at, rt);
+      axios.defaults.headers.common["Authorization"] = `Bearer ${at}`;
 
-      // 2) SW 등록 보장 (대기 필요 없음)
-      registerServiceWorker().catch(() => {});
-
-      // 3) 지원 환경에서만 강제 동기화
-      try {
-        const ok = await isSupported(); // ← 여기서 안전 체크
-        if (
-          ok &&
-          typeof Notification !== "undefined" &&
-          Notification.permission === "granted"
-        ) {
-          await syncFcmToken(true); // PUT /api/v1/users/me/fcm-token
+      // 2) 지원 환경이면 토큰 동기화 (권한창 띄워서라도 저장)
+      const ok = await isSupported().catch(() => false);
+      if (ok) {
+        try {
+          await syncFcmToken({ forceRequest: true });
+        } catch (e) {
+          console.warn("[FCM] sync after OAuth failed:", e);
         }
-      } catch {
-        // 조용히 무시 (메인 앱에서 재동기화됨)
       }
 
-      // 4) 이동 (open redirect 방지)
+      // 3) 안전한 경로로 이동
       const safeNext = next.startsWith("/") ? next : "/";
       navigate(safeNext, { replace: true });
     })();
