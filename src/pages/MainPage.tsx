@@ -12,9 +12,7 @@ const MainPage = () => {
   return (
     <div className="bg-white">
       <MainTop />
-      <div className="px-[8%] justify-center items-center">
         <NavSection />
-      </div>
       <ProductList />
     </div>
   );

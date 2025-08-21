@@ -38,8 +38,8 @@ const NavSection = () => {
       </div>
 
       {/* 모바일에서 MobileMainCard 사용 */}
-      <div className="py-10 sm:hidden justify-center items-center">
-        <div className="mx-auto inline-flex flex-nowrap gap-4 justify-center items-center">
+      <div className="py-10 sm:hidden flex justify-center">
+        <div className="flex flex-nowrap gap-4 justify-center">
           <MobileMainCard title="목적별" icon={Object} to="/object" />
           <MobileMainCard title="성분별" icon={Ingredient} to="/ingredient" />
           <MobileMainCard title="조합" icon={Combination} to="/combination" />
