@@ -61,8 +61,7 @@ import OauthRedirect from "./pages/auth/OauthRedirect"; // 소셜 로그인 리�
 
 import TermsViewPage from "./pages/terms/TermsViewPage";
 
-import FcmBootstrap from "@/components/FcmBootstrap";
-import { syncFcmToken } from "@/lib/push";
+import { fcmTokenStore } from "@/lib/fcmTokenStore";
 
 // React Query 클라이언트 생성
 const queryClient = new QueryClient();
@@ -144,29 +143,10 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  // 앱 시작 시/탭 재활성화 시, 권한이 이미 허용된 경우 조용히 토큰 동기화
-  useEffect(() => {
-    const trySync = () => {
-      if (
-        typeof Notification !== "undefined" &&
-        Notification.permission === "granted"
-      ) {
-        // 로그인 상태가 아니면 서버에서 401이 날 수 있으니 조용히 무시
-        syncFcmToken(false).catch(() => {});
-      }
-    };
-
-    trySync();
-    const onVisible = () => {
-      if (document.visibilityState === "visible") trySync();
-    };
-    document.addEventListener("visibilitychange", onVisible);
-    return () => document.removeEventListener("visibilitychange", onVisible);
-  }, []);
+  fcmTokenStore.migrateFromLocalStorage(); // 기존 값 있으면 세션으로 이관 후 localStorage 비움
 
   return (
     <>
-      <FcmBootstrap />
       <QueryClientProvider client={queryClient}>
         <RouterProvider router={router} />
       </QueryClientProvider>

@@ -124,7 +124,7 @@ export default function SocialSignupForm() {
     const tempTokenFromQuery = fromQuery.signupToken;
     const tokenToUse = tempTokenFromState || tempTokenFromQuery || "";
     const claims = tokenToUse ? decodeJwt(tokenToUse) : null;
-    console.log("JWT Claims:", claims); // 🔍 여기에 추가
+    console.log("JWT Claims:", claims);
 
     const fromToken = {
       email: (claims?.email ?? claims?.user_email ?? "") as string,

@@ -1,4 +1,3 @@
-// src/lib/push.ts
 import api from "@/lib/axios";
 import {
   registerServiceWorker,
@@ -7,12 +6,7 @@ import {
   onForegroundMessage,
   removeFcmToken,
 } from "@/lib/firebase";
-
-/**
- * LocalStorage keys
- */
-const LS_FCM_TOKEN = "fcmToken"; // last known browser token
-const LS_FCM_TOKEN_SENT = "fcmTokenSent"; // last token successfully sent to server
+import { fcmTokenStore } from "@/lib/fcmTokenStore";
 
 type EnableResult =
   | { ok: true; token: string }
@@ -26,25 +20,6 @@ type EnableResult =
         | "server_error";
       error?: unknown;
     };
-
-/** 내부 유틸 */
-const getLS = (k: string) => {
-  try {
-    return localStorage.getItem(k);
-  } catch {
-    return null;
-  }
-};
-const setLS = (k: string, v: string) => {
-  try {
-    localStorage.setItem(k, v);
-  } catch {}
-};
-const delLS = (k: string) => {
-  try {
-    localStorage.removeItem(k);
-  } catch {}
-};
 
 /**
  * 서버에 FCM 토큰 동기화
@@ -91,16 +66,15 @@ export async function enableWebPush(opts?: {
   }
 
   // 5) 서버 동기화 (변경되었거나 forceResend인 경우에만)
-  const prevToken = getLS(LS_FCM_TOKEN);
-  const lastSent = getLS(LS_FCM_TOKEN_SENT);
+  const lastSent = fcmTokenStore.getTokenSent();
   const shouldSend = opts?.forceResend || token !== lastSent;
 
   try {
     if (shouldSend) {
       await sendTokenToServer(token);
-      setLS(LS_FCM_TOKEN_SENT, token);
+      fcmTokenStore.setTokenSent(token);
     }
-    setLS(LS_FCM_TOKEN, token);
+    fcmTokenStore.setToken(token);
   } catch (e) {
     console.error("[PUSH] send token to server failed", e);
     return { ok: false, reason: "server_error", error: e };
@@ -122,22 +96,21 @@ export async function enableWebPush(opts?: {
 export async function syncFcmToken(forceResend = false) {
   if (!("serviceWorker" in navigator) || !("Notification" in window)) return;
 
-  // 권한이 없으면 서버에 비우는 정책을 쓴다면 여기서 처리
   if (Notification.permission !== "granted") return;
 
   const token = await getFcmToken();
   if (!token) return;
 
-  const lastSent = getLS(LS_FCM_TOKEN_SENT);
+  const lastSent = fcmTokenStore.getTokenSent();
   if (forceResend || token !== lastSent) {
     try {
       await sendTokenToServer(token);
-      setLS(LS_FCM_TOKEN_SENT, token);
+      fcmTokenStore.setTokenSent(token);
     } catch (e) {
       console.error("[PUSH] sync send failed", e);
     }
   }
-  setLS(LS_FCM_TOKEN, token);
+  fcmTokenStore.setToken(token);
 }
 
 /**
@@ -156,9 +129,8 @@ export async function disableWebPush() {
   // 클라이언트 토큰 제거
   const ok = await removeFcmToken().catch(() => false);
 
-  // 로컬 상태 정리
-  delLS(LS_FCM_TOKEN);
-  delLS(LS_FCM_TOKEN_SENT);
+  // 로컬 상태 정리 (세션/메모리)
+  fcmTokenStore.clear();
 
   console.log("[PUSH] disabled", { removedLocal: ok });
 }
@@ -167,12 +139,14 @@ export async function disableWebPush() {
  * 디버그 도우미: 현재 상태 로그
  */
 export function debugPushStatus() {
+  const token = fcmTokenStore.getToken();
+  const tokenSent = fcmTokenStore.getTokenSent();
   const state = {
     permission:
       typeof Notification !== "undefined" ? Notification.permission : "n/a",
     swSupported: "serviceWorker" in navigator,
-    token: getLS(LS_FCM_TOKEN)?.slice(0, 20) ?? null,
-    tokenSent: getLS(LS_FCM_TOKEN_SENT)?.slice(0, 20) ?? null,
+    token: token ? token.slice(0, 20) : null,
+    tokenSent: tokenSent ? tokenSent.slice(0, 20) : null,
   };
   console.table(state);
   return state;
