@@ -1,10 +1,10 @@
+// src/pages/auth/SocialSignupForm.tsx
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
-// 파일 상단에 추가
-type JwtPayload = Record<string, any>;
 
+type JwtPayload = Record<string, any>;
 function decodeJwt(token: string): JwtPayload | null {
   try {
     const payload = token.split(".")[1];
@@ -22,7 +22,6 @@ function decodeJwt(token: string): JwtPayload | null {
 }
 
 type Gender = "MALE" | "FEMALE" | "OTHER";
-
 const mapGender = (g?: string | null): Gender | "" => {
   if (!g) return "";
   const up = g.toUpperCase();
@@ -31,7 +30,6 @@ const mapGender = (g?: string | null): Gender | "" => {
   if (up === "F") return "FEMALE";
   return "";
 };
-
 const toBirthDate = (
   birthDate?: string | null,
   birthyear?: string | null,
@@ -57,7 +55,6 @@ type StateByValues = {
   phoneNumber?: string;
   nickname?: string;
 };
-
 type StateByTempToken = {
   socialTempToken: string;
   next?: string;
@@ -69,7 +66,6 @@ type StateByTempToken = {
   phoneNumber?: string;
   nickname?: string;
 };
-
 type LocationState = StateByValues | StateByTempToken | undefined;
 
 export default function SocialSignupForm() {
@@ -77,7 +73,7 @@ export default function SocialSignupForm() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
 
-  // 쿼리 기본값(안전망)
+  // -------- preset(네이버에서 받은 정보) 파싱 --------
   const fromQuery = useMemo(
     () => ({
       email: params.get("email") || "",
@@ -118,13 +114,11 @@ export default function SocialSignupForm() {
       nickname: fromQuery.nickname,
     };
 
-    // 공통: 토큰이 있으면 payload를 미리 파싱해서 보조로 쓴다
     const tempTokenFromState =
       state && "socialTempToken" in state ? state.socialTempToken : "";
     const tempTokenFromQuery = fromQuery.signupToken;
     const tokenToUse = tempTokenFromState || tempTokenFromQuery || "";
     const claims = tokenToUse ? decodeJwt(tokenToUse) : null;
-    console.log("JWT Claims:", claims);
 
     const fromToken = {
       email: (claims?.email ?? claims?.user_email ?? "") as string,
@@ -141,13 +135,10 @@ export default function SocialSignupForm() {
         mode: "token" as const,
         socialTempToken: state.socialTempToken,
         next: state.next ?? base.next,
-
-        // 우선순위: state 값 → query/base → token payload
         email: base.email || fromToken.email,
-        fullNameFromState: base.fullNameFromState || fromToken.fullName,
+        fullName: base.fullNameFromState || fromToken.fullName,
         provider: base.provider || fromToken.provider,
         providerId: base.providerId || fromToken.providerId,
-
         gender: mapGender(state.gender) || base.gender || fromToken.gender,
         birthDate:
           toBirthDate(state.birthDate, state.birthyear, state.birthday) ||
@@ -167,8 +158,7 @@ export default function SocialSignupForm() {
         providerId:
           state.providerId ?? (base.providerId || fromToken.providerId),
         email: state.email ?? (base.email || fromToken.email),
-        fullNameFromState:
-          state.fullName ?? (base.fullNameFromState || fromToken.fullName),
+        fullName: state.fullName ?? (base.fullNameFromState || fromToken.fullName),
         next: state.next ?? base.next,
         gender: mapGender(state.gender) || base.gender || fromToken.gender,
         birthDate:
@@ -191,13 +181,10 @@ export default function SocialSignupForm() {
         mode: "token" as const,
         socialTempToken: fromQuery.signupToken,
         next: base.next,
-
-        // query가 비어 있으면 token payload로 채움
         email: base.email || fromToken.email,
-        fullNameFromState: base.fullNameFromState || fromToken.fullName,
+        fullName: base.fullNameFromState || fromToken.fullName,
         provider: base.provider || fromToken.provider,
         providerId: base.providerId || fromToken.providerId,
-
         gender: base.gender || fromToken.gender,
         birthDate: base.birthDate || fromToken.birthDate,
         phoneNumber: base.phoneNumber || fromToken.phoneNumber,
@@ -205,33 +192,40 @@ export default function SocialSignupForm() {
       };
     }
 
-    // 완전 빈 경우
-    return { mode: "values" as const, ...base };
+    return { mode: "values" as const, ...base, fullName: base.fullNameFromState };
   }, [state, fromQuery]);
 
-  // 폼 상태
+  // -------- 폼: 화면에는 이메일만 표시, 닉네임/전화번호는 입력 --------
   const [form, setForm] = useState({
     email: "",
+    nickname: "",
+    phoneNumber: "",
+  });
+
+  // 숨겨진(화면 미노출) 값: 전송용으로만 보관
+  const [hiddenInfo, setHiddenInfo] = useState({
     fullName: "",
     provider: "",
     providerId: "",
-    nickname: "",
     gender: "" as "" | Gender,
     birthDate: "",
-    phoneNumber: "",
   });
 
   useEffect(() => {
     setForm((prev) => ({
       ...prev,
       email: (preset as any).email ?? prev.email,
-      fullName: (preset as any).fullNameFromState ?? prev.fullName,
-      provider: (preset as any).provider ?? prev.provider,
-      providerId: (preset as any).providerId ?? prev.providerId,
-      gender: ((preset as any).gender as Gender | "") ?? prev.gender,
-      birthDate: (preset as any).birthDate ?? prev.birthDate,
+      // nickname/phoneNumber는 사용자가 입력하므로 preset 값이 있으면 초기값으로만 채움
+      nickname: (preset as any).nickname ?? prev.nickname,
       phoneNumber: (preset as any).phoneNumber ?? prev.phoneNumber,
     }));
+    setHiddenInfo({
+      fullName: (preset as any).fullName ?? "",
+      provider: (preset as any).provider ?? "",
+      providerId: (preset as any).providerId ?? "",
+      gender: ((preset as any).gender as Gender | "") ?? "",
+      birthDate: (preset as any).birthDate ?? "",
+    });
   }, [preset]);
 
   const onChange = (
@@ -246,41 +240,43 @@ export default function SocialSignupForm() {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+
+    if (!form.nickname.trim()) {
+      alert("닉네임을 입력해주세요.");
+      return;
+    }
+    if (!form.phoneNumber.trim()) {
+      alert("전화번호를 입력해주세요.");
+      return;
+    }
+
     setSubmitting(true);
     try {
-      const body = {
-        email: form.email,
-        fullName: form.fullName,
-        provider: form.provider,
-        providerId: form.providerId,
-        nickname: form.nickname.trim(),
-        gender: (form.gender || "OTHER") as Gender,
-        birthDate: form.birthDate,
-        phoneNumber: form.phoneNumber,
-      };
-
       const socialTempToken =
         (preset as any).mode === "token"
           ? (preset as any).socialTempToken
           : undefined;
 
       if (!(socialTempToken && socialTempToken.length > 0)) {
-        alert(
-          "임시 토큰이 만료되었거나 누락되었습니다. 다시 소셜 로그인 해주세요."
-        );
+        alert("임시 토큰이 만료되었거나 누락되었습니다. 다시 소셜 로그인 해주세요.");
         setSubmitting(false);
         return;
       }
 
-      // 개발 중 디버깅에만 사용
-      console.debug(
-        "[signup] using temp token:",
-        socialTempToken.slice(0, 12) + "..."
-      );
+      // ✅ DB로 넘길 전체 정보 (네이버에서 받은 값 + 사용자가 입력한 값)
+      const body = {
+        email: form.email,
+        fullName: hiddenInfo.fullName,          // 네이버에서 받은 값
+        provider: hiddenInfo.provider,          // "naver"
+        providerId: hiddenInfo.providerId,      // 네이버 고유 ID
+        nickname: form.nickname.trim(),         // 사용자 입력
+        gender: (hiddenInfo.gender || "OTHER") as Gender, // 네이버 값(없으면 OTHER)
+        birthDate: hiddenInfo.birthDate,        // 네이버 값
+        phoneNumber: form.phoneNumber.trim(),   // 사용자 입력(있으면 네이버 값보다 우선)
+      };
 
       const result = await postSocialSignup(body, socialTempToken);
 
-      // postSocialSignup은 SocialSignupResponse(data)만 반환
       const at = result?.result?.accessToken ?? result?.accessToken ?? "";
       const rt = result?.result?.refreshToken ?? result?.refreshToken ?? "";
       if (at) saveTokens(at, rt);
@@ -301,100 +297,75 @@ export default function SocialSignupForm() {
     }
   };
 
-  return (
-    <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-4 p-6">
-      <h1 className="text-xl font-semibold">추가 정보 입력</h1>
+  // 닉네임 자동생성(이메일 앞부분 기반) 옵션 — 필요 없으면 버튼 제거 가능
+  const genNickname = () => {
+    const local = form.email.split("@")[0] || "user";
+    const suffix = Math.floor(100 + Math.random() * 900);
+    setForm((f) => ({ ...f, nickname: `${local}${suffix}` }));
+  };
 
+  return (
+    <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-6 p-6">
+      <h1 className="text-[22px] font-semibold">회원가입</h1>
+
+      {/* 이메일 (readonly) */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">이메일</label>
         <input
           name="email"
           value={form.email}
           readOnly
-          className="w-full border rounded px-3 py-2 bg-gray-50"
+          className="w-full border-b border-gray-300 px-3 py-3 bg-transparent text-[#2B2B2B]"
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">소셜 제공자</label>
-        <input
-          name="provider"
-          value={form.provider}
-          readOnly
-          className="w-full border rounded px-3 py-2 bg-gray-50"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">Provider ID</label>
-        <input
-          name="providerId"
-          value={form.providerId}
-          readOnly
-          className="w-full border rounded px-3 py-2 bg-gray-50"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">이름 (fullName)</label>
-        <input
-          name="fullName"
-          value={form.fullName}
-          readOnly
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">닉네임</label>
+      {/* 닉네임 (입력 가능) */}
+      <div className="space-y-2">
+        <label className="text-sm text-gray-600 flex items-center justify-between">
+          <span>닉네임</span>
+          <button
+            type="button"
+            onClick={genNickname}
+            className="border px-2 py-1 text-xs rounded hover:bg-gray-50"
+          >
+            자동생성
+          </button>
+        </label>
         <input
           name="nickname"
           value={form.nickname}
           onChange={onChange}
-          placeholder="별명"
-          className="w-full border rounded px-3 py-2"
+          placeholder="닉네임을 입력하세요"
+          className="w-full border-b border-gray-300 px-3 py-3"
           required
         />
       </div>
 
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">생년월일</label>
-        <input
-          type="date"
-          name="birthDate"
-          value={form.birthDate}
-          readOnly
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">성별</label>
-        <input
-          name="gender"
-          value={form.gender}
-          readOnly
-          className="w-full border rounded px-3 py-2"
-        />
-      </div>
-
+      {/* 전화번호 (입력 가능) */}
       <div className="space-y-1">
         <label className="text-sm text-gray-600">전화번호</label>
         <input
           name="phoneNumber"
           value={form.phoneNumber}
-          readOnly
-          className="w-full border rounded px-3 py-2"
+          onChange={onChange}
+          inputMode="tel"
+          placeholder="예: 010-1234-5678"
+          className="w-full border-b border-gray-300 px-3 py-3"
+          required
         />
       </div>
 
+      {/* 제출 */}
       <button
         type="submit"
         disabled={submitting}
-        className="w-full h-11 rounded bg-black text-white disabled:opacity-60"
+        className="w-full h-[56px] rounded bg-[#FFE88D] text-black font-semibold disabled:opacity-60"
       >
-        {submitting ? "처리 중..." : "회원가입"}
+        {submitting ? "처리 중..." : "다음"}
       </button>
+
+      {/* 숨긴값(화면 노출 안 함) — 디버깅 시 보고 싶으면 주석 해제해서 확인 */}
+      {/* <pre className="text-xs text-gray-400">{JSON.stringify(hiddenInfo, null, 2)}</pre> */}
     </form>
   );
 }
