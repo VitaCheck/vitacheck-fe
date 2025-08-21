@@ -5,10 +5,17 @@ import kakaolink from "@/assets/link/kakaolink.png";
 
 interface ShareLinkPopupProps {
   onClose: () => void;
-  supplementUrl: string; // 공유할 제품 상세 페이지 주소
+  supplementUrl: string;
+  supplementImageUrl?: string;
+  supplementName?: string;
 }
 
-const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl }) => {
+const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
+  onClose,
+  supplementUrl,
+  supplementImageUrl,
+  supplementName
+}) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [kakaoLoaded, setKakaoLoaded] = useState(false);
 
@@ -19,7 +26,7 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
     script.async = true;
     script.onload = () => {
       if (window.Kakao && !window.Kakao.isInitialized()) {
-        window.Kakao.init("2d08e54fea8b27677dfe77d5719f8d23"); // JS 키
+        window.Kakao.init("2d08e54fea8b27677dfe77d5719f8d23");
         console.log("Kakao SDK initialized:", window.Kakao.isInitialized());
         setKakaoLoaded(true);
       }
@@ -38,7 +45,7 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
     onClose();
   };
 
-  // 카카오톡 기본 공유
+  // 카카오톡 공유
   const handleKakaoShare = () => {
     if (!window.Kakao || !window.Kakao.isInitialized()) {
       alert("카카오 SDK가 준비되지 않았습니다.");
@@ -49,12 +56,12 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
       window.Kakao.Share.sendDefault({
         objectType: "feed",
         content: {
-          title: "추천 영양제",
-          description: "이 영양제를 확인해보세요!",
-          imageUrl: "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
+          title: supplementName || "추천 영양제",
+          description: "이 영양제를 VitaCheck에서 확인해보세요!",
+          imageUrl: supplementImageUrl || "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
           link: {
             mobileWebUrl: supplementUrl,
-            webUrl: supplementUrl, // 웹에서는 이 URL로 공유
+            webUrl: supplementUrl,
           },
         },
         buttons: [
@@ -72,7 +79,6 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
       alert("공유 실패: 데스크탑 브라우저에서는 카카오톡 앱을 열 수 없습니다.");
     }
   };
-
 
   const handleBackgroundClick = () => onClose();
   const handlePopupClick = (e: React.MouseEvent) => e.stopPropagation();
@@ -111,7 +117,7 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({ onClose, supplementUrl 
                 onClick={handleCopyLink}
                 className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
               >
-                <img src={link} alt="카카오톡" className="rounded-full w-[50px] h-[50px]" />
+                <img src={link} alt="링크 복사" className="rounded-full w-[50px] h-[50px]" />
                 <span className="text-[18px] font-medium">링크 복사하기</span>
               </button>
             </div>
