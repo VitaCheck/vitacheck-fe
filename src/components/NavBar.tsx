@@ -5,7 +5,7 @@ import Logo from "../assets/logo.svg";
 import Bell from "../assets/Bell.svg";
 import Navfavorite from "../assets/navfavorite.svg";
 import User from "../assets/User.svg";
-import ProfileCat from "../assets/ProfileCat.svg";
+import ProfileCat from "../assets/ProfileCat.png";
 import BackIcon from "../assets/back.svg";
 import HomeIcon from "../assets/Vector.svg";
 import { getMyProfileImageUrl } from "@/apis/user";

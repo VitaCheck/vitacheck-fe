@@ -1,6 +1,6 @@
 import MenuItem from "../components/MyPage/MenuItem";
 import ProfileCat from "../assets/ProfileCat.png";
-import Profile from "../assets/Profile2.svg";
+import Profile from "../assets/baseprofile.png";
 import { useNavigate } from "react-router-dom";
 import Back from "../assets/back.svg";
 import Bell from "../assets/MyPageBell.svg";
@@ -10,7 +10,7 @@ import Mypage4 from "../assets/mypage4.svg";
 import Lock from "../assets/mypagelock.svg";
 import Logout from "../assets/logout.svg";
 import { useEffect, useMemo, useState } from "react";
-import { getMyProfileImageUrl, getUserInfo, type UserInfo } from "@/apis/user";
+import { deleteMyAccount, getMyProfileImageUrl, getUserInfo, type UserInfo } from "@/apis/user";
 import { useLogout } from "@/hooks/useLogout";
 
 // ✅ 약관 API 훅 (이미 작성해둔 파일)
@@ -82,21 +82,27 @@ function MyPage() {
   const closeDeleteModal = () => setShowDeleteModal(false);
 
   const confirmDelete = async () => {
-    // 1) 모달 닫기
-    closeDeleteModal();
+  closeDeleteModal();
 
-    // 2) 로컬 데이터 정리(프로젝트에서 쓰는 키들 전부)
-    try {
-      localStorage.removeItem("accessToken");
-      localStorage.removeItem("access_token"); // 혹시 다른 키도 쓰면 함께 제거
-      localStorage.removeItem("refreshToken");
-      // 필요시 추가: localStorage.clear(); (다 지우고 싶다면)
-    } catch {
-      console.log("");
-    }
+  try {
+    // 1) 서버에 탈퇴 요청
+    await deleteMyAccount();
 
+    // 2) 로컬 정리
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refreshToken");
+    // 필요하면 fcmToken 제거
+    localStorage.removeItem("fcmToken");
+
+    // 3) 완료 안내 후 로그인 화면으로
+    alert("탈퇴가 완료되었습니다.");
     navigate("/login", { replace: true });
-  };
+  } catch (err) {
+    console.error("회원 탈퇴 실패:", err);
+    alert("탈퇴 처리에 실패했어요. 잠시 후 다시 시도해 주세요.");
+  }
+};
 
   const confirmLogout = async () => {
     closeLogoutModal();
