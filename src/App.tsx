@@ -43,14 +43,12 @@ import TermsViewPage from "./pages/terms/TermsViewPage";
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// FCM
+
+
 import axios from "@/lib/axios";
-import {
-  registerServiceWorker,
-  requestNotificationPermission,
-  getFcmToken,
-  onForegroundMessage,
-} from "@/lib/firebase";
+import { registerServiceWorker, onForegroundMessage } from "@/lib/firebase";
+import { getAccessToken } from "@/lib/auth";
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // 앞서 준 가드 포함 버전
 
 import { fcmTokenStore } from "@/lib/fcmTokenStore";
 
@@ -128,47 +126,35 @@ const router = createBrowserRouter([
 ]);
 
 function App() {
-  // 기존 값 있으면 세션으로 이관 후 localStorage 비움
+  // (선택) 기존 마이그레이션 유지
   fcmTokenStore.migrateFromLocalStorage();
 
-  // ✅ 앱 부팅 시 1회: SW 등록 → 권한 → 토큰 발급 → 서버 업서트 → 포그라운드 수신
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
+        // ① SW만 등록 (권한 요청/토큰 발급 X)
         await registerServiceWorker();
 
-        const perm = await requestNotificationPermission();
-        if (perm !== "granted" || !mounted) return;
-
-        const token = await getFcmToken();
-        if (token && mounted) {
-          // 서버에 토큰 업서트
-          await axios
-            .put("/api/v1/users/me/fcm-token", {
-              fcmToken: token,
-            })
-            .catch((e) => {
-              console.warn("[FCM] upsert failed:", e);
-            });
+        // ② 로그인 상태에서만 조용히 동기화(권한 팝업 없이)
+        if (mounted && getAccessToken()) {
+          await syncFcmTokenAfterLoginSilently().catch(() => {});
         }
 
-        // 포그라운드 수신: 인앱 토스트/배지로 처리 (필요 시 UI 연결)
+        // ③ 포그라운드 수신 핸들러(선택)
         onForegroundMessage((p) => {
           const title = p?.notification?.title ?? p?.data?.title ?? "VitaCheck";
           const body = p?.notification?.body ?? p?.data?.body ?? "";
           console.log("[FCM] foreground:", title, body);
-          // TODO: 여기에 토스트 컴포넌트 연결
+          // TODO: 토스트/배지 UI 연결
         });
       } catch (e) {
         console.warn("[FCM] init error:", e);
       }
     })();
 
-    return () => {
-      mounted = false;
-    };
+    return () => { mounted = false; };
   }, []);
 
   return (

@@ -92,6 +92,7 @@ const doRefresh = async (): Promise<string | null> => {
 };
 
 // 응답 인터셉터: 401 처리
+// 응답 인터셉터: 401 처리
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
@@ -111,27 +112,23 @@ api.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    // ⛔ refresh 자체 401이면 로그아웃
+    // ⛔ refresh 자체 401이면 로그아웃 처리 (리다이렉트 ❌)
     if (path.includes("/api/v1/auth/refresh")) {
       clearTokens();
-      window.location.replace("/login");
       return Promise.reject(error);
     }
 
-    // 💡 기존 코드와 달리, hadAuthHeader 여부와 무관하게
-    //    "보호 API + RT 보유"면 리프레시를 시도한다.
+    // 💡 보호 API인데 RT 없음 → 그냥 토큰 클리어 후 에러 반환
     const rt = (getRefreshToken() || "").trim();
     if (!rt && !USE_COOKIE_REFRESH) {
-      // 바디 기반인데 RT가 없다 → 로그아웃
       clearTokens();
-      window.location.replace("/login");
       return Promise.reject(error);
     }
 
     const newAT = await doRefresh();
     if (!newAT) {
-      // 리프레시 실패 → 로그아웃
-      window.location.replace("/login");
+      // 리프레시 실패 → 토큰만 제거
+      clearTokens();
       return Promise.reject(error);
     }
 
@@ -144,5 +141,6 @@ api.interceptors.response.use(
     return api(original);
   }
 );
+
 
 export default api;
