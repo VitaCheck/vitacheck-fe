@@ -16,8 +16,8 @@ function decodeJwt(token: string): JwtPayload | null {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
-    return JSON.parse(json); 
-  } catch { 
+    return JSON.parse(json);
+  } catch {
     return null;
   }
 }
@@ -221,7 +221,11 @@ export default function SocialSignupForm() {
       };
     }
 
-    return { mode: "values" as const, ...base, fullName: base.fullNameFromState };
+    return {
+      mode: "values" as const,
+      ...base,
+      fullName: base.fullNameFromState,
+    };
   }, [state, fromQuery]);
 
   const [form, setForm] = useState({
@@ -286,7 +290,9 @@ export default function SocialSignupForm() {
           : undefined;
 
       if (!(socialTempToken && socialTempToken.length > 0)) {
-        alert("임시 토큰이 만료되었거나 누락되었습니다. 다시 소셜 로그인 해주세요.");
+        alert(
+          "임시 토큰이 만료되었거나 누락되었습니다. 다시 소셜 로그인 해주세요."
+        );
         setSubmitting(false);
         return;
       }
@@ -318,7 +324,8 @@ export default function SocialSignupForm() {
       if (err?.response?.status === 401) {
         alert("인증이 만료되었습니다. 다시 소셜 로그인 해주세요.");
       } else {
-        const serverMessage = err?.response?.data?.message || JSON.stringify(err?.response?.data);
+        const serverMessage =
+          err?.response?.data?.message || JSON.stringify(err?.response?.data);
         const errorMessage = `회원가입에 실패했습니다.\n\n[서버 응답]\n${serverMessage}`;
         alert(errorMessage);
       }
@@ -327,71 +334,83 @@ export default function SocialSignupForm() {
     }
   };
 
-  const regenNickname = () => setForm((f) => ({ ...f, nickname: genUserNick() }));
+  const regenNickname = () =>
+    setForm((f) => ({ ...f, nickname: genUserNick() }));
 
   return (
-    <form onSubmit={onSubmit} className="max-w-md mx-auto space-y-6 p-6">
-      {/* ===== [수정된 부분] 디버깅 UI 추가 ===== */}
-      <div style={{ border: '2px solid red', padding: '10px', fontSize: '12px', borderRadius: '8px' }}>
-        <strong style={{ display: 'block', marginBottom: '4px' }}>[디버깅용 정보]</strong>
-        <p style={{ wordBreak: 'break-all' }}>
-          <strong>임시 토큰: </strong>
-          {(preset as any).mode === "token" ? ((preset as any).socialTempToken || "토큰 없음") : "N/A (토큰 모드 아님)"}
-        </p>
+    <form
+      onSubmit={onSubmit}
+      className="w-full max-w-[420px] mx-auto px-5 py-6"
+    >
+      <h1 className="text-[22px] font-semibold text-[#2B2B2B]">회원가입</h1>
+
+      <div className="mt-8 space-y-8">
+        {/* 이메일 */}
+        <div className="space-y-2">
+          <label className="block text-[13px] text-[#8B8B8B]">이메일</label>
+          <input
+            name="email"
+            value={form.email}
+            readOnly
+            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
+                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
+                     focus:outline-none focus:border-[#2B2B2B]"
+          />
+        </div>
+
+        {/* 닉네임 + 자동생성 */}
+        <div className="space-y-2">
+          <label className="block text-[13px] text-[#8B8B8B]">
+            <span className="flex items-center justify-between">
+              닉네임
+              <button
+                type="button"
+                onClick={regenNickname}
+                className="shrink-0 rounded-[8px] border border-[#D9D9D9] px-2.5 py-1
+                         text-[12px] text-[#6B6B6B] hover:bg-[#FAFAFA] active:bg-[#F3F3F3]"
+              >
+                자동생성
+              </button>
+            </span>
+          </label>
+          <input
+            name="nickname"
+            value={form.nickname}
+            onChange={onChange}
+            placeholder="예: 유저1234"
+            required
+            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
+                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
+                     focus:outline-none focus:border-[#2B2B2B]"
+          />
+        </div>
+
+        {/* 전화번호 (스샷엔 없지만 유지) */}
+        <div className="space-y-2">
+          <label className="block text-[13px] text-[#8B8B8B]">전화번호</label>
+          <input
+            name="phoneNumber"
+            value={form.phoneNumber}
+            onChange={onChange}
+            inputMode="tel"
+            maxLength={13}
+            placeholder="010-0000-0000"
+            required
+            className="block w-full bg-transparent border-0 border-b border-[#E6E6E6] px-0 py-3
+                     text-[16px] text-[#2B2B2B] placeholder:text-[#BDBDBD]
+                     focus:outline-none focus:border-[#2B2B2B]"
+          />
+        </div>
       </div>
-      {/* ======================================= */}
 
-      <h1 className="text-[22px] font-semibold">회원가입</h1>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">이메일</label>
-        <input
-          name="email"
-          value={form.email}
-          readOnly
-          className="w-full border-b border-gray-300 px-3 py-3 bg-transparent text-[#2B2B2B]"
-        />
-      </div>
-
-      <div className="space-y-2">
-        <label className="text-sm text-gray-600 flex items-center justify-between">
-          <span>닉네임</span>
-          <button
-            type="button"
-            onClick={regenNickname}
-            className="border px-2 py-1 text-xs rounded hover:bg-gray-50"
-          >
-            자동생성
-          </button>
-        </label>
-        <input
-          name="nickname"
-          value={form.nickname}
-          onChange={onChange}
-          placeholder="예: 유저1234"
-          className="w-full border-b border-gray-300 px-3 py-3"
-          required
-        />
-      </div>
-
-      <div className="space-y-1">
-        <label className="text-sm text-gray-600">전화번호</label>
-        <input
-          name="phoneNumber"
-          value={form.phoneNumber}
-          onChange={onChange}
-          inputMode="tel"
-          maxLength={13}
-          placeholder="010-0000-0000"
-          className="w-full border-b border-gray-300 px-3 py-3"
-          required
-        />
-      </div>
-
+      {/* CTA 버튼 */}
       <button
         type="submit"
         disabled={submitting}
-        className="w-full h-[56px] rounded bg-[#FFE88D] text-black font-semibold disabled:opacity-60"
+        className="mt-12 w-full h-[56px] rounded-[16px] bg-[#FFE88D]
+                 text-black text-[16px] font-semibold
+                 shadow-[0_2px_0_rgba(0,0,0,0.05)]
+                 disabled:opacity-60 active:scale-[0.98] transition"
       >
         {submitting ? "처리 중..." : "다음"}
       </button>
