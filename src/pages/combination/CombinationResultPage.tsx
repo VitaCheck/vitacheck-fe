@@ -8,98 +8,8 @@ import axios from '@/lib/axios';
 import Navbar from '@/components/NavBar';
 import line from '/images/PNG/조합 2-1/background line.png';
 import ShareLinkPopup from '../../components/combination/ShareLinkPopup'
-// Kakao SDK 타입 정의
-interface KakaoSDK {
-  init: (key: string) => void;
-  isInitialized: () => boolean;
-  Share: {
-    sendCustom: (opt: { templateId: number; templateArgs?: Record<string, any> }) => void;
-  };
-}
 
-const KAKAO_JS_KEY = import.meta.env.VITE_KAKAO_JS_KEY!;
-if (!window.Kakao?.isInitialized()) {
-  window.Kakao?.init(KAKAO_JS_KEY);
-}
-const KAKAO_TEMPLATE_ID = 3139; // 콘솔의 템플릿 ID
-
-async function copyToClipboard(text: string) {
-  try {
-    await navigator.clipboard.writeText(text);
-    return true;
-  } catch {
-    const el = document.createElement("textarea");
-    el.value = text;
-    el.style.position = "fixed";
-    el.style.left = "-9999px";
-    document.body.appendChild(el);
-    el.select();
-    document.execCommand("copy");
-    document.body.removeChild(el);
-    return true;
-  }
-}
-
-async function ensureKakaoReady() {
-  if (window.Kakao?.isInitialized()) return true;
-
-  // 스크립트가 없다면 주입
-  if (!window.Kakao) {
-    await new Promise<void>((res, rej) => {
-      const s = document.createElement("script");
-      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
-      s.async = true;
-      s.onload = () => res();
-      s.onerror = rej;
-      document.head.appendChild(s);
-    });
-  }
-  if (!window.Kakao) return false;
-  if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_JS_KEY);
-  return true;
-}
-
-
-function ShareSheet({
-  open, onClose, onKakao, onCopy,
-}: { open: boolean; onClose: () => void; onKakao: () => void; onCopy: () => void; }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50">
-      <button className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="닫기" />
-      <div className="absolute left-0 right-0 bottom-0 w-full" style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}>
-        <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
-          <div className="px-5 pt-6 pb-4"><h3 className="text-[15px] font-semibold text-center">공유하기</h3></div>
-          <button onClick={onKakao} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
-            <img src="/images/PNG/성분 2-1/kakao.png" className="h-9 w-9" alt="카카오톡" />
-            <span className="text-[15px]">카카오톡으로 공유하기</span>
-          </button>
-          <div className="h-px w-full bg-gray-200" />
-          <button onClick={onCopy} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
-            <img src="/images/PNG/성분 2-1/link.png" className="h-9 w-9" alt="링크" />
-            <span className="text-[15px]">링크 복사하기</span>
-          </button>
-          <div className="h-4" />
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function ConfirmModal({ open, onClose, message }: { open: boolean; onClose: () => void; message: string; }) {
-  if (!open) return null;
-  return (
-    <div className="fixed inset-0 z-50">
-      <button className="absolute inset-0 bg-black/40" onClick={onClose} aria-label="닫기" />
-      <div className="absolute left-1/2 top-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
-        <p className="mb-5 whitespace-pre-line text-center text-gray-700">{message}</p>
-        <div className="flex justify-center">
-          <button onClick={onClose} className="h-10 min-w-[120px] rounded-xl bg-[#FFE17E] font-semibold text-black hover:brightness-95">확인</button>
-        </div>
-      </div>
-    </div>
-  );
-}
+const KAKAO_TEMPLATE_ID = 123624; // 콘솔의 템플릿 ID
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -293,18 +203,12 @@ export default function CombinationResultPage() {
 
 
   // 공유 바텀시트/확인 모달
-const [sheetOpen, setSheetOpen] = useState(false);
-const [confirmOpen, setConfirmOpen] = useState(false);
+const [setSheetOpen] = useState(false);
+const [setConfirmOpen] = useState(false);
 
 const [shareOpen, setShareOpen] = useState(false);
-
-const shareUrl = window.location.origin.includes("vitachecking.com")
-  ? window.location.href
-  : "https://vitachecking.com/combination-result";
-
-const shareImage = selectedItems?.[0]?.imageUrl
-  ?? "https://vitachecking.com/static/share-default.png";
-
+const shareUrl   = window.location.origin.includes("vitachecking.com") ? window.location.href : "https://vitachecking.com/combination-result";
+const shareImage = selectedItems?.[0]?.imageUrl ?? "https://vitachecking.com/static/share-default.png";
 const shareTitle = "내 영양제 조합 결과";
 
 // 템플릿 숫자: 초과/권장충족/주의조합
@@ -315,54 +219,6 @@ const metCount = ingredientResults.filter(i =>
 ).length;
 
 const cautionCount = cautionCombinations.length;
-
-function isMobileUA() {
-  return /iPhone|Android/i.test(navigator.userAgent);
-}
-
-const onClickShare = () => setShareOpen(true);
-
-async function onShareCopy() {
-  const ok = await copyToClipboard(shareUrl);
-  setSheetOpen(false);
-  setConfirmOpen(ok);
-}
-
-async function onShareKakao() {
-  try {
-    // 모바일에서만 시도 (PC는 KakaoLink 열 수 없음)
-    if (!isMobileUA()) {
-      const ok = await copyToClipboard(shareUrl);
-      setSheetOpen(false);
-      setConfirmOpen(ok);
-      return;
-    }
-
-    const ready = await ensureKakaoReady();
-    if (!ready) throw new Error("Kakao SDK not ready");
-
-    // ✅ 커스텀 템플릿 호출: #{over_count} / #{met_count} / #{caution_count} 치환
-    (window.Kakao as any)!.Share.sendCustom({
-      templateId: KAKAO_TEMPLATE_ID,
-      templateArgs: {
-        over_count: String(overCount),
-        met_count: String(metCount),
-        caution_count: String(cautionCount),
-        WEB_URL: shareUrl,
-        MOBILE_WEB_URL: shareUrl,
-      },
-    });
-
-    setSheetOpen(false);
-    setConfirmOpen(true);
-  } catch (e) {
-    // 실패/비설치 → 복사 폴백
-    const ok = await copyToClipboard(shareUrl);
-    setSheetOpen(false);
-    setConfirmOpen(ok);
-  }
-}
-
 
   const filteredIngredients: IngredientResult[] =
     activeTab === '전체'
@@ -405,22 +261,6 @@ async function onShareKakao() {
           return shouldShow;
         });
 
-        const copyShareLink = async () => {
-          const shareUrl = window.location.origin.includes("vitachecking.com")
-            ? window.location.href
-            : "https://vitachecking.com/combination-result";
-          try {
-            await navigator.clipboard.writeText(shareUrl);
-            alert("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
-          } catch {
-            const el = document.createElement("textarea");
-            el.value = shareUrl;
-            el.style.position = "fixed"; el.style.left = "-9999px";
-            document.body.appendChild(el); el.select();
-            document.execCommand("copy"); document.body.removeChild(el);
-            alert("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
-          }
-        };
 
   const fetchCombinationResult = async () => {
     try {
@@ -639,7 +479,7 @@ async function onShareKakao() {
 
         <div className="flex items-center gap-3">
           {/* 공유 */}
-          <button type="button" aria-label="공유" className="active:scale-95" onClick={onClickShare}>
+          <button type="button" aria-label="공유" className="active:scale-95" onClick={() => setShareOpen(true)}>
           <img
               src="/images/PNG/조합 3-1/공유.png"
               alt="공유"
@@ -1231,14 +1071,27 @@ async function onShareKakao() {
         </>
       )}
       {/* ===== 공유 팝업 ===== */}
-      {shareOpen && (
+      // 하단 공유 팝업 호출부만 수정
+{shareOpen && (
   <ShareLinkPopup
     onClose={() => setShareOpen(false)}
     supplementUrl={shareUrl}
     supplementImageUrl={shareImage}
     supplementName={shareTitle}
+    templateId={KAKAO_TEMPLATE_ID}
+    templateArgs={{
+      // 텍스트 변수들: 값은 문자열이어야 함
+      over_count: String(overCount),
+      met_count: String(metCount),
+      caution_count: String(cautionCount),
+
+      // 링크 변수: 콘솔 변수명과 정확히 일치 (예: web_url / mobile_web_url)
+      web_url: shareUrl,
+      mobile_web_url: shareUrl,
+    }}
   />
 )}
+
 
     </div>
   );
