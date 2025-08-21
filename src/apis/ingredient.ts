@@ -468,6 +468,27 @@ export const toggleIngredientLike = async (ingredientId: number) => {
   }
 };
 
+// 검색 기록 API
+export const recordSearchLog = async (keyword: string) => {
+  console.log("📝 [API] recordSearchLog 호출됨");
+  console.log("📝 [API] 검색 키워드:", keyword);
+
+  try {
+    const url = "/api/v1/search/logs";
+    const params = { keyword };
+
+    console.log("📝 [API] 요청 URL:", url);
+    console.log("📝 [API] 요청 파라미터:", params);
+
+    // 검색 기록은 실패해도 검색 기능에 영향을 주지 않도록 처리
+    await axios.get(url, { params });
+    console.log("📝 [API] 검색 기록 성공");
+  } catch (error: any) {
+    console.error("📝 [API] 검색 기록 실패:", error);
+    // 검색 기록 실패는 무시하고 계속 진행
+  }
+};
+
 // 인기성분 TOP 5 조회 API
 export const fetchPopularIngredients = async (ageGroup: string) => {
   console.log("🔥 [API] fetchPopularIngredients 호출됨");

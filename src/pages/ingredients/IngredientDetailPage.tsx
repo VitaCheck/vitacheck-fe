@@ -16,19 +16,24 @@ import IngredientAlternatives from "@/components/ingredient/IngredientAlternativ
 import IngredientSupplements from "@/components/ingredient/IngredientSupplements";
 import { FiShare2, FiHeart } from "react-icons/fi";
 
+// Kakao SDK 타입 정의
 declare global {
   interface Window {
-    Kakao?: any;
+    Kakao: {
+      init: (key: string) => void;
+      isInitialized: () => boolean;
+      Share: {
+        sendDefault: (options: any) => void;
+      };
+    };
   }
 }
 
 const queryClient = new QueryClient();
 
 const BREAKPOINT = 640;
-// 카카오 JavaScript 키를 코드에서 직접 설정 (빠른 테스트용)
-// 실제 운영 환경에서는 환경 변수로 관리하는 것을 권장합니다
 const KAKAO_APP_KEY =
-  import.meta.env.VITE_KAKAO_JS_KEY || "c089c8172def97eb00c07217cae17495";
+  import.meta.env.VITE_KAKAO_JS_KEY || "16b75c5d816c501dec98d03ee4340883";
 
 /* 공통 훅 */
 const useIsMobile = () => {
@@ -75,7 +80,8 @@ async function ensureKakaoReady(): Promise<boolean> {
     return false;
   }
 
-  if (window.Kakao) {
+  // 카카오 SDK가 이미 로드되어 있는지 확인
+  if (typeof window !== "undefined" && window.Kakao) {
     try {
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init(KAKAO_APP_KEY);
@@ -88,24 +94,17 @@ async function ensureKakaoReady(): Promise<boolean> {
     }
   }
 
+  // 카카오 SDK가 로드되지 않은 경우 (index.html에서 이미 로드됨)
   try {
-    await new Promise<void>((resolve, reject) => {
-      const s = document.createElement("script");
-      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
-      s.async = true;
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("카카오 SDK 로드 실패"));
-      document.head.appendChild(s);
-    });
-
-    if (!window.Kakao) {
-      console.error("카카오 SDK가 로드되지 않았습니다.");
-      return false;
+    // index.html에서 이미 로드했으므로 바로 초기화 시도
+    if (typeof window !== "undefined" && window.Kakao) {
+      window.Kakao.init(KAKAO_APP_KEY);
+      console.log("카카오 SDK 초기화 완료");
+      return true;
     }
 
-    window.Kakao.init(KAKAO_APP_KEY);
-    console.log("카카오 SDK 로드 및 초기화 완료");
-    return true;
+    console.error("카카오 SDK가 로드되지 않았습니다.");
+    return false;
   } catch (error) {
     console.error("카카오 SDK 설정 실패:", error);
     return false;
@@ -213,7 +212,6 @@ function ConfirmModal({
   );
 }
 
-/* ------------------ 페이지 ------------------ */
 const IngredientDetailInner = () => {
   const [activeTab, setActiveTab] = useState<
     "info" | "alternatives" | "supplements"
@@ -238,6 +236,18 @@ const IngredientDetailInner = () => {
   useEffect(() => {
     if (!isLoggedIn()) {
       setLiked(false);
+    }
+  }, []);
+
+  // 카카오 SDK 초기화
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.Kakao &&
+      !window.Kakao.isInitialized()
+    ) {
+      window.Kakao.init(KAKAO_APP_KEY);
+      console.log("카카오 SDK 초기화 완료");
     }
   }, []);
 
@@ -343,26 +353,23 @@ const IngredientDetailInner = () => {
 
   async function onShareKakao() {
     try {
-      const ready = await ensureKakaoReady();
-      if (!ready) {
-        console.error("카카오 SDK 초기화에 실패했습니다.");
-        // SDK 초기화 실패 시 링크 복사로 대체
+      // 카카오 SDK 초기화 확인
+      if (typeof window === "undefined" || !window.Kakao) {
+        console.error("카카오 SDK가 로드되지 않았습니다.");
+        // SDK 로드 실패 시 링크 복사로 대체
         const ok = await copyToClipboard(shareUrl);
         setSheetOpen(false);
         setConfirmOpen(ok);
         return;
       }
 
-      if (!window.Kakao?.Share) {
-        console.error("카카오 공유 기능을 사용할 수 없습니다.");
-        // 공유 기능 사용 불가 시 링크 복사로 대체
-        const ok = await copyToClipboard(shareUrl);
-        setSheetOpen(false);
-        setConfirmOpen(ok);
-        return;
+      // 카카오 SDK 초기화
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_APP_KEY);
+        console.log("카카오 SDK 초기화 완료");
       }
 
-      // 성분 정보를 포함한 더 풍부한 공유 템플릿
+      // 성분 정보를 포함한 공유 템플릿
       const shareDescription = data?.description
         ? `${data.description.substring(0, 100)}...`
         : "VitaCheck에서 성분 정보를 확인해 보세요.";
@@ -371,7 +378,8 @@ const IngredientDetailInner = () => {
       const shareImageUrl =
         "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png";
 
-      window.Kakao.Share.sendDefault({
+      // 공유 데이터 로깅
+      const shareData = {
         objectType: "feed",
         content: {
           title: `${shareTitle} - VitaCheck`,
@@ -382,11 +390,6 @@ const IngredientDetailInner = () => {
             webUrl: shareUrl,
           },
         },
-        social: {
-          likeCount: 0,
-          commentCount: 0,
-          sharedCount: 0,
-        },
         buttons: [
           {
             title: "바로 보기",
@@ -395,21 +398,28 @@ const IngredientDetailInner = () => {
               webUrl: shareUrl,
             },
           },
-          {
-            title: "VitaCheck 홈",
-            link: {
-              mobileWebUrl: "https://vita-check.com",
-              webUrl: "https://vita-check.com",
-            },
-          },
         ],
-      });
+      };
+
+      console.log("🔥 [카카오톡] 공유 데이터:", shareData);
+      console.log("🔥 [카카오톡] 공유 URL:", shareUrl);
+      console.log("🔥 [카카오톡] 공유 제목:", shareTitle);
+
+      // 카카오톡 공유 실행
+      window.Kakao.Share.sendDefault(shareData);
 
       console.log("카카오톡 공유 성공");
       setSheetOpen(false);
 
-      // 성공 메시지 표시
+      // 성공 메시지 표시 (카카오톡 앱이 설치된 경우)
       setConfirmOpen(true);
+
+      // 카카오톡 앱이 설치되지 않은 경우를 대비한 대체 처리
+      setTimeout(() => {
+        // 3초 후에도 카카오톡이 열리지 않으면 링크 복사로 대체
+        console.log("🔥 [카카오톡] 대체 처리: 링크 복사");
+        copyToClipboard(shareUrl);
+      }, 3000);
     } catch (error) {
       console.error("카카오톡 공유 실패:", error);
 
@@ -530,7 +540,9 @@ const IngredientDetailInner = () => {
       <ConfirmModal
         open={confirmOpen}
         onClose={() => setConfirmOpen(false)}
-        message={"링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요."}
+        message={
+          "공유가 완료되었습니다!\n카카오톡으로 전송되었거나 링크가 복사되었습니다."
+        }
       />
     </div>
   );

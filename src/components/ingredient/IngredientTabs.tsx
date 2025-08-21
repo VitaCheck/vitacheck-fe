@@ -51,7 +51,7 @@ const IngredientTabs = ({ activeTab, setActiveTab }: Props) => {
   ) : (
     /* PC */
     <div className="mb-8">
-      {/* ▼ 보더를 내부 컨테이너로 이동, 좌우 패딩 제거 → 보더 길이 = 버튼 그룹 폭 */}
+      {/* 보더를 내부 컨테이너로 이동, 좌우 패딩 제거 → 보더 길이 = 버튼 그룹 폭 */}
       <div className="w-full">
         <div className="flex h-13 gap-8 pb-0 border-b border-gray-300">
           {tabList.map((tab, index) => (
