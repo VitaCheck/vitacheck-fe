@@ -51,11 +51,7 @@ const delLS = (k: string) => {
  * - 백엔드 스펙: PUT /api/v1/users/me/fcm-token  { fcmToken: string }
  */
 async function sendTokenToServer(token: string) {
-  await api.put(
-    "/api/v1/users/me/fcm-token",
-    { fcmToken: token },
-    { withCredentials: true }
-  );
+  await api.put("/api/v1/users/me/fcm-token", { fcmToken: token });
 }
 
 /**
