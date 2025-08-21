@@ -1075,15 +1075,12 @@ const cautionCount = cautionCombinations.length;
       {shareOpen && (
   <ShareLinkPopup
     onClose={() => setShareOpen(false)}
-    supplementUrl={shareUrl}
-    supplementImageUrl={shareImage}
+    supplementUrl={shareUrl}                 // 예: window.location.href
+    supplementImageUrl={shareImage}          // 절대 https 이미지 권장
     supplementName={shareTitle}
-    // templateId={KAKAO_TEMPLATE_ID}  // ← 커스텀 템플릿은 잠시 끄세요
-    overCount={overCount}
-    metCount={metCount}
-    cautionCount={cautionCount}
   />
 )}
+
 
 
     </div>
