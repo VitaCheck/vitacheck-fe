@@ -212,15 +212,7 @@ export default function CombinationResultPage() {
           }
 
           // ✅ ‘초과’ 탭 표시 조건
-          const shouldShow =
-            isOverRecommended ||
-            isOverUpper ||
-            Boolean(isOverUpperLimit) ||
-            isOverUpperInGauge ||
-            isOverUpperLine ||
-            exceedsSecondDashed || // ⬅️ 추가된 핵심 조건
-            isOverGeneralLimit;
-
+          const shouldShow = computeFillPercent(i) > UPPER_LINE_POS;
           return shouldShow;
         });
 
@@ -297,6 +289,8 @@ export default function CombinationResultPage() {
   const PAGE_COUNT = 4;
   const GAP_W = 16; // tailwind gap과 맞추기
   const cardWidthCSS = `calc((100% - ${GAP_W * (PAGE_COUNT - 1)}px) / ${PAGE_COUNT})`;
+
+  const alarmEnabled = checkedIndices.length >= 2;
 
   const handleScroll = (direction: 'left' | 'right') => {
     const el = scrollRef.current;
@@ -453,10 +447,19 @@ export default function CombinationResultPage() {
             재조합
           </button>
           <button
-            onClick={() => navigate('/alarm/settings')}
-            className={`h-[55px] w-[280px] font-bold ${
-              checkedIndices.length > 0 ? 'bg-[#FFEB9D]' : 'bg-[#EEEEEE]'
-            } flex items-center justify-center rounded-[62.5px]`}
+            onClick={() => {
+              if (!alarmEnabled) return; // 가드
+              navigate('/alarm/settings');
+            }}
+            disabled={!alarmEnabled}
+            aria-disabled={!alarmEnabled}
+            title={!alarmEnabled ? '두 개 이상 선택 시 등록 가능' : '섭취알림 등록하기'}
+            className={[
+              'flex h-[55px] w-[280px] items-center justify-center rounded-[62.5px] font-bold transition',
+              alarmEnabled
+                ? 'bg-[#FFEB9D] hover:brightness-95'
+                : 'cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]',
+            ].join(' ')}
           >
             섭취알림 등록하기
           </button>
@@ -726,7 +729,7 @@ export default function CombinationResultPage() {
 
               // ✅ 항목별 채움 비율/초과여부 계산
               const fillPct = computeFillPercent(ingredient);
-              const over = isOverUpper(ingredient);
+              const over = computeFillPercent(ingredient) > UPPER_LINE_POS;
 
               return (
                 <div
@@ -842,7 +845,7 @@ export default function CombinationResultPage() {
 
                 // ✅ 항목별 채움 비율/초과여부
                 const fillPct = computeFillPercent(ingredient);
-                const over = isOverUpper(ingredient);
+                const over = computeFillPercent(ingredient) > UPPER_LINE_POS;
 
                 return (
                   <div
@@ -952,21 +955,24 @@ export default function CombinationResultPage() {
           </div>
 
           {/* 💻 PC - 주의 조합 */}
-          <div className="mt-10 hidden px-4 md:block lg:px-[80px] xl:px-[120px] 2xl:px-[550px]">
-            <h2 className="font-Pretendard mt-3 mb-1 h-auto w-full text-left text-[24px] leading-[120%] font-bold tracking-[-0.02em] text-black lg:text-[28px] xl:text-[32px]">
-              주의가 필요한 조합 TOP 5
-            </h2>
-            <span className="font-Pretendard text-left text-[18px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[20px] xl:text-[22px]">
-              카드를 눌러서 확인해 보세요 !
-            </span>
-            <div className="mt-8 mb-15 flex justify-center">
-              <div className="flex w-[1200px] gap-[15px] lg:gap-[25px] xl:gap-[55px]">
+          <section className="mt-10 hidden md:block">
+            {/* 제목과 카드가 같은 컨테이너를 공유 */}
+            <div className="mx-auto w-full max-w-[1050px] px-6 md:px-8">
+              <h2 className="font-Pretendard mt-3 mb-1 w-full text-left text-[24px] leading-[120%] font-bold tracking-[-0.02em] text-black lg:text-[28px] xl:text-[32px]">
+                주의가 필요한 조합 TOP 5
+              </h2>
+              <span className="font-Pretendard block text-left text-[18px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[20px] xl:text-[22px]">
+                카드를 눌러서 확인해 보세요 !
+              </span>
+
+              {/* 카드 래퍼: 제목과 같은 컨테이너 내부 → 시작점 일치 */}
+              <div className="mt-8 mb-15 flex gap-2 lg:gap-4 xl:gap-6">
                 {cautionCombinations.map((combo: Combination) => (
                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
                 ))}
               </div>
             </div>
-          </div>
+          </section>
         </>
       )}
       {/* ===== 궁합이 좋은 조합 ===== */}
@@ -986,21 +992,25 @@ export default function CombinationResultPage() {
           </div>
 
           {/* 💻 PC - 좋은 조합 */}
-          <div className="hidden px-4 md:block lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
-            <h2 className="font-Pretendard mt-3 mb-1 h-auto w-full text-left text-[24px] leading-[120%] font-bold tracking-[-0.02em] text-black lg:text-[28px] xl:text-[32px]">
-              궁합이 좋은 조합 TOP 5
-            </h2>
-            <span className="font-Pretendard text-left text-[18px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[20px] xl:text-[22px]">
-              카드를 눌러서 확인해 보세요 !
-            </span>
-            <div className="mt-8 mb-20 flex justify-center">
-              <div className="flex w-[1200px] gap-[15px] lg:gap-[25px] xl:gap-[55px]">
+          {/* 💻 PC - 좋은 조합 */}
+          <section className="mt-10 hidden md:block">
+            {/* 제목과 카드가 같은 컨테이너를 공유 → 시작점/양옆 여백 동일 */}
+            <div className="mx-auto w-full max-w-[1050px] px-6 md:px-8">
+              <h2 className="font-Pretendard mt-3 mb-1 w-full text-left text-[24px] leading-[120%] font-bold tracking-[-0.02em] text-black lg:text-[28px] xl:text-[32px]">
+                궁합이 좋은 조합 TOP 5
+              </h2>
+              <span className="font-Pretendard block text-left text-[18px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[20px] xl:text-[22px]">
+                카드를 눌러서 확인해 보세요 !
+              </span>
+
+              {/* 카드 래퍼: 제목과 같은 컨테이너 내부 */}
+              <div className="mt-8 mb-20 flex gap-2 lg:gap-4 xl:gap-6">
                 {goodCombinations.map((combo: Combination) => (
                   <FlipCard key={combo.id} name={combo.name} description={combo.description} />
                 ))}
               </div>
             </div>
-          </div>
+          </section>
         </>
       )}
     </div>
