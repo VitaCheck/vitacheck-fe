@@ -9,7 +9,7 @@ importScripts(
   "https://www.gstatic.com/firebasejs/10.12.4/firebase-messaging-compat.js"
 );
 
-// ✅ vitacheck-1ee1d 로 통일 (프로젝트 불일치 금지)
+//  vitacheck-1ee1d 로 통일
 firebase.initializeApp({
   apiKey: "AIzaSyDhCaf3Ockukla3eR3lx4B3m9TsDhvscMY",
   authDomain: "vitacheck-1ee1d.firebaseapp.com",
