@@ -75,17 +75,28 @@ const useLike = () => {
 };
 
 // Kakao SDK 타입 정의
-declare global {
-  interface Window {
-    Kakao: {
-      init: (key: string) => void;
-      isInitialized: () => boolean;
-      Share: {
-        sendDefault: (options: any) => void;
-      };
-    };
-  }
-}
+// declare global {
+//   interface Window {
+//     Kakao: {
+//       init: (key: string) => void;
+//       isInitialized: () => boolean;
+//       Share: {
+//         sendDefault: (options: any) => void;
+//       };
+//     };
+//   }
+// }
+
+// 2) 대신 페이지 내부에서 로컬 타입과 캐스팅만 사용
+type KakaoSDK = {
+  init(key: string): void;
+  isInitialized(): boolean;
+  Share: { sendDefault(options: any): void };
+};
+
+// 사용할 때
+const Kakao = (window as any).Kakao as KakaoSDK;
+// Kakao.init(...); Kakao.Share.sendDefault(...);
 
 const queryClient = new QueryClient();
 
