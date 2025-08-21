@@ -64,6 +64,8 @@ jobs:
           VITE_FB_MESSAGING_SENDER_ID: ${{ secrets.VITE_FB_MESSAGING_SENDER_ID }}
           VITE_FB_APP_ID: ${{ secrets.VITE_FB_APP_ID }}
           VITE_FB_VAPID_KEY: ${{ secrets.VITE_FB_VAPID_KEY }}
+          VITE_CLOVA_OCR_URL: ${{ secrets.VITE_CLOVA_OCR_URL }}
+          VITE_CLOVA_OCR_SECRET: ${{ secrets.VITE_CLOVA_OCR_SECRET }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v4
