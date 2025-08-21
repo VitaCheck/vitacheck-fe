@@ -12,7 +12,7 @@ const MainPage = () => {
   return (
     <div className="bg-white">
       <MainTop />
-      <NavSection />
+        <NavSection />
       <ProductList />
     </div>
   );

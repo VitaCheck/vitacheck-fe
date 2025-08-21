@@ -35,14 +35,22 @@ const NavSection = () => {
           icon={Alarm}
           to="/alarm"
         />
+        <MainCard
+          title="ios"
+          subtitle={"iOS PWA 디버그<br/>체-크"}
+          icon={Alarm}
+          to="/settings"
+        />
       </div>
 
       {/* 모바일에서 MobileMainCard 사용 */}
-      <div className="flex flex-row sm:flex-row gap-4 w-full justify-around px-[9%] sm:px-[10%] py-10 sm:hidden">
-        <MobileMainCard title="목적별" icon={Object} to="/object" />
-        <MobileMainCard title="성분별" icon={Ingredient} to="/ingredient" />
-        <MobileMainCard title="조합" icon={Combination} to="/combination" />
-        <MobileMainCard title="섭취알림" icon={Alarm} to="/alarm" />
+      <div className="py-10 sm:hidden flex justify-center">
+        <div className="flex flex-nowrap gap-4 justify-center">
+          <MobileMainCard title="목적별" icon={Object} to="/object" />
+          <MobileMainCard title="성분별" icon={Ingredient} to="/ingredient" />
+          <MobileMainCard title="조합" icon={Combination} to="/combination" />
+          <MobileMainCard title="섭취알림" icon={Alarm} to="/alarm" />
+        </div>
       </div>
     </div>
   );

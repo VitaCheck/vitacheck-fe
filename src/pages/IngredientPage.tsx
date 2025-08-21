@@ -135,7 +135,6 @@ const IngredientPage = () => {
   };
 
   useEffect(() => {
-    document.title = "성분별";
     const saved = localStorage.getItem("ingredient_search_history");
     if (saved) {
       setSearchHistory(JSON.parse(saved));

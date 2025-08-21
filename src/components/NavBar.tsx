@@ -5,7 +5,7 @@ import Logo from "../assets/logo.svg";
 import Bell from "../assets/Bell.svg";
 import Navfavorite from "../assets/navfavorite.svg";
 import User from "../assets/User.svg";
-import ProfileCat from "../assets/ProfileCat.svg";
+import ProfileCat from "../assets/ProfileCat.png";
 import BackIcon from "../assets/back.svg";
 import HomeIcon from "../assets/Vector.svg";
 import { getMyProfileImageUrl } from "@/apis/user";
@@ -92,7 +92,7 @@ const Navbar = () => {
                 className="w-[24px] h-[24px] cursor-pointer"
               />
             </button>
-            <div className="flex gap-3 items-center">
+            <div className="flex gap-[25px] items-center">
               <Link to="/">
                 <img src={HomeIcon} alt="홈" className="w-[24px] h-[24px]" />
               </Link>
@@ -115,7 +115,7 @@ const Navbar = () => {
                 <img
                   src={avatarSrc}
                   alt="사용자"
-                  className="w-[36px] h-[36px] rounded-full object-cover"
+                  className="w-[36px] h-[36px] rounded-full object-cover border border-gray-200"
                 />
               </Link>
             </div>

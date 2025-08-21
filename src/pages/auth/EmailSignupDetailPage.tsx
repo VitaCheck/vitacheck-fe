@@ -2,7 +2,7 @@ import { useMediaQuery } from "react-responsive";
 import MobileEmailSignupDetailPage from "./MobileEmailSignupDetailPage";
 import DesktopEmailSignupDetailPage from "./DesktopEmailSignupDetailPage";
 
-const EmailSignupPage = () => {
+const EmailSignupDetailPage = () => {
   const isMobile = useMediaQuery({ maxWidth: 639 });
 
   return isMobile ? (
@@ -12,4 +12,4 @@ const EmailSignupPage = () => {
   );
 };
 
-export default EmailSignupPage;
+export default EmailSignupDetailPage;

@@ -1,19 +1,51 @@
-// product/:id
+// src/components/Purpose/P3DMainDetailPage.tsx
 import React from "react";
 import { useNavigate } from "react-router-dom";
-import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
 import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
+import heart from "@/assets/detailpagepng/heart.png";
+import heartfill from "@/assets/detailpagepng/heartfill.png";
+import share from "@/assets/detailpagepng/share.png";
+import i from "@/assets/detailpagepng/i.png";
 
+// Ingredient 타입 정의
+interface Ingredient {
+  name: string;
+  amount: string;
+}
+
+// Product 타입 정의
+interface Product {
+  id: number;
+  brandId: number;
+  brandName: string;
+  brandImageUrl: string | null;
+  supplementName: string;
+  supplementImageUrl: string;
+  liked: boolean;
+  coupangLink: string | null;
+  intakeTime: string;
+  ingredients: Ingredient[];
+}
+
+// BrandProduct 타입 정의
+interface BrandProduct {
+  id: number;
+  name: string;
+  imageUrl: string;
+}
+
+// DesktopProps 수정
 interface DesktopProps {
-  product: any;
+  product: Product;
   liked: boolean;
   toggleLike: () => void;
   activeTab: "ingredient" | "timing";
   setActiveTab: (tab: "ingredient" | "timing") => void;
-  brandProducts: any[];
+  brandProducts: BrandProduct[];
   brandId: number;
+  intakeTime: string;
   onCopyUrl: () => void;
 }
 
@@ -24,13 +56,13 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
   activeTab,
   setActiveTab,
   brandProducts,
-  onCopyUrl, // ✨ prop으로 받아서 사용
+  onCopyUrl,
 }) => {
   const navigate = useNavigate();
 
   // 알람 등록 버튼 클릭 핸들러
   const handleRegisterAlarm = () => {
-    const id = product?.supplementId ?? product?.id;
+    const id = product?.id ?? product?.brandId;
     if (!id) {
       console.error("supplementId 없음");
       return;
@@ -43,9 +75,9 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
     <div className="hidden sm:block w-full bg-[#FAFAFA] px-[50px]">
       <div className="max-w-[766px] mx-auto mb-[3px] pt-[70px] pb-[100px]">
         {/* 제품 이미지 + 브랜드명/제품명 */}
-        <div className="flex justify-between gap-6">
+        <div className="flex justify-between gap-6 flex-nowrap">
           {/* 제품 이미지 */}
-          <div className="w-full max-w-[344px] aspect-square rounded-[25px] shadow-lg overflow-hidden">
+          <div className="w-full max-w-[344px] max-h-[344px] aspect-square rounded-[25px] shadow-lg overflow-hidden">
             <img
               src={product.supplementImageUrl}
               alt={product.supplementName}
@@ -61,44 +93,55 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                   <h2 className="text-[21px] tracking-[-0.4px] text-[#757575] font-medium">
                     {product.brandName || "브랜드"}
                   </h2>
-                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold">
+                  <h1 className="text-[25px] tracking-[-0.5px] mt-[2px] font-bold whitespace-normal break-keep">
                     {product.supplementName}
                   </h1>
                 </div>
 
                 {/* 공유 & 찜 버튼 */}
-                <div className="flex gap-2 ml-auto">
+                <div className="flex gap-3 ml-auto">
                   <button
                     onClick={onCopyUrl}
-                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white border-[#AAA] border-[0.3px]"
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white"
                   >
-                    <GoShareAndroid className="w-[28px] h-[28px]" />
+                    <img src={share} alt="공유" className="w-[48px] h-[48px]" />
                   </button>
                   <button
                     onClick={toggleLike}
-                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] border-[#AAA] border-[0.3px]"
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px]"
                   >
-                    {liked ? (
-                      <GoHeartFill className="w-[30px] h-[30px] text-[#FD657E]" />
-                    ) : (
-                      <GoHeart className="w-[30px] h-[30px] text-[#FD657E]" />
-                    )}
+                    <img
+                      src={liked ? heartfill : heart}
+                      alt="찜"
+                      className="w-[48px] h-[48px]"
+                    />
                   </button>
                 </div>
               </div>
             </div>
 
-            <div>
-              <div className="flex flex-wrap gap-[14px] mb-[26px]">
-                <button className="border-[#9C9A9A] border-[0.6px] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium">
-                  쿠팡 바로가기
-                </button>
+            <div className="mt-8">
+              <div className="flex flex-wrap gap-[14px] mb-[16px]">
+                {product.coupangLink && (
+                  <a
+                    href={product.coupangLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="border-[#9C9A9A] border-[0.6px] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium cursor-pointer flex items-center justify-center"
+                  >
+                    쿠팡 바로가기
+                  </a>
+                )}
                 <button
                   onClick={handleRegisterAlarm}
-                  className="bg-[#FFEB9D] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium"
+                  className="bg-[#FFEB9D] flex-1 min-w-[140px] h-[62px] rounded-[14px] text-[20px] font-medium cursor-pointer"
                 >
-                  섭취알림 등록
+                  섭취 알림 등록
                 </button>
+              </div>
+              <div className="flex justify-start items-center gap-[6px]">
+                <img src={i} alt="i" className="w-[12px] h-[12px]" />
+                <span className="font-medium text-[#353535] text-[9px] tracking-[-0.3px]">위 쿠팡링크는 쿠팡 파트너스 활동의 일환으로 이에 따른 일정액의 수수료를 제공받습니다.</span>
               </div>
             </div>
           </div>
@@ -113,7 +156,7 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
               brandName={product.brandName}
               brandImageUrl={product.brandImageUrl}
               brandProducts={brandProducts}
-              brandId={product.brandId ?? product.supplementId}
+              brandId={product.brandId ?? product.id}
             />
           </div>
         </div>
@@ -126,11 +169,13 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
           <div className="flex justify-between w-[502.7px] relative">
             {[
               { key: "ingredient", label: "성분 함량" },
-              { key: "timing", label: "섭취 시기" },
+              { key: "timing", label: "섭취 방법" },
             ].map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as "ingredient" | "timing")}
+                onClick={() =>
+                  setActiveTab(tab.key as "ingredient" | "timing")
+                }
                 className={`relative text-[22px] tracking-[-0.42px] font-medium transition-colors pb-[10px] duration-300 ${
                   activeTab === tab.key ? "text-black" : "text-[#9C9A9A]"
                 }`}
@@ -146,7 +191,15 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
 
         {/* 탭 내용 */}
         <div className="flex flex-col items-center mx-auto mt-[16px] text-[10px] leading-relaxed">
-          {activeTab === "ingredient" ? <IngredientTab /> : <TimingTab />}
+          {activeTab === "ingredient" ? (
+            <IngredientTab supplementId={product.id} />
+
+          ) : (
+            <TimingTab
+              intakeTime={product.intakeTime}
+              ingredientName={product.ingredients[0]?.name ?? ""}
+            />
+          )}
         </div>
       </div>
     </div>

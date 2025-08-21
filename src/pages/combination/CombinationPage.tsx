@@ -1,14 +1,27 @@
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import Cat from "../../assets/CatWithPointer.png";
-import Chick from "../../assets/chick.png";
-import flipIcon from "../../assets/flip.png";
-import { FiSearch } from "react-icons/fi";
-import axios from "@/lib/axios";
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import Cat from '../../assets/CatWithPointer.png';
+import Chick from '../../assets/chick.png';
+import flipIcon from '../../assets/flip.png';
+import axios from '@/lib/axios';
+import Navbar from '@/components/NavBar';
+
+// 모바일 여부 판단용 훅
+const useIsMobile = () => {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, []);
+  return isMobile;
+};
 
 interface Combination {
   id: number;
-  type: "GOOD" | "CAUTION";
+  type: 'GOOD' | 'CAUTION';
   name: string;
   description: string;
   displayRank: number;
@@ -21,25 +34,26 @@ interface FlipCardProps {
 
 const CombinationPage = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
-  const placeholder = "제품을 입력해주세요.";
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSearching, setIsSearching] = useState(false);
+  const placeholder = '제품을 입력해주세요.';
+  const isMobile = useIsMobile();
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem("searchHistory");
-    if (savedHistory) {
-      setSearchHistory(JSON.parse(savedHistory));
-    }
+    const savedHistory = localStorage.getItem('searchHistory');
+    if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
   }, []);
 
   useEffect(() => {
     const fetchCombinations = async () => {
       try {
-        const response = await axios.get("/api/v1/combinations/recommend");
+        setIsLoading(true);
+        const response = await axios.get('/api/v1/combinations/recommend');
         const result = response.data.result;
-
         if (result) {
           setGoodCombinations(result.goodCombinations || []);
           setRiskyCombinations(result.cautionCombinations || []);
@@ -47,13 +61,14 @@ const CombinationPage = () => {
           setGoodCombinations([]);
           setRiskyCombinations([]);
         }
-      } catch (error) {
-        console.error("조합 추천 데이터를 불러오는 데 실패했습니다.", error);
+      } catch (e) {
+        console.error('조합 추천 데이터를 불러오는 데 실패했습니다.', e);
         setGoodCombinations([]);
         setRiskyCombinations([]);
+      } finally {
+        setIsLoading(false);
       }
     };
-
     fetchCombinations();
   }, []);
 
@@ -61,125 +76,115 @@ const CombinationPage = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
 
-    const updated = [
-      trimmed,
-      ...searchHistory.filter((item) => item !== trimmed),
-    ].slice(0, 3);
-
+    setIsSearching(true);
+    const updated = [trimmed, ...searchHistory.filter((v) => v !== trimmed)].slice(0, 3);
     setSearchHistory(updated);
-    localStorage.setItem("searchHistory", JSON.stringify(updated));
-    navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
+    localStorage.setItem('searchHistory', JSON.stringify(updated));
+
+    // 약간의 지연 후 페이지 이동 (로딩 상태를 보여주기 위해)
+    setTimeout(() => {
+      navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`);
+    }, 500);
   };
 
   const handleDelete = (itemToDelete: string) => {
     const updated = searchHistory.filter((item) => item !== itemToDelete);
     setSearchHistory(updated);
-    localStorage.setItem("searchHistory", JSON.stringify(updated));
+    localStorage.setItem('searchHistory', JSON.stringify(updated));
   };
 
   const formatIngredientNameForPC = (ingredientName: string) => {
     if (ingredientName.includes('+')) {
-      const parts = ingredientName.split('+').map(part => part.trim());
-      if (parts.every(part => part.length < 7)) {
-        return ingredientName;
-      }
-      return parts.map((part, index) => {
-        if (index === 0) {
-          return part;
-        } else {
-          return `\n+\n${part}`;
-        }
-      }).join('');
+      const parts = ingredientName.split('+').map((p) => p.trim());
+      if (parts.every((p) => p.length < 7)) return ingredientName;
+      return parts.map((part, idx) => (idx === 0 ? part : `\n+\n${part}`)).join('');
     }
     return ingredientName;
   };
 
+  const LoadingSkeletonCard = ({ isMobile }: { isMobile: boolean }) => (
+    <div
+      className={`${
+        isMobile ? 'h-[135px] w-[150px]' : 'h-[155px] w-[230px]'
+      } relative animate-pulse overflow-hidden rounded-[14px] bg-gray-200`}
+    >
+      <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+    </div>
+  );
+
   const FlipCard: React.FC<FlipCardProps> = ({ name, description }) => {
     const [flipped, setFlipped] = useState(false);
-
     return (
       <>
-        {/* 모바일용 카드 */}
+        {/* 모바일 카드 */}
         <div
-          className="block md:hidden w-[150px] h-[135px] cursor-pointer"
-          style={{ perspective: "1000px" }}
+          className="block h-[135px] w-[150px] cursor-pointer md:hidden"
+          style={{ perspective: '1000px' }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 ${
-              flipped ? "rotate-y-180" : ""
+            className={`relative h-full w-full transition-transform duration-500 ${
+              flipped ? 'rotate-y-180' : ''
             }`}
-            style={{ transformStyle: "preserve-3d" }}
+            style={{ transformStyle: 'preserve-3d' }}
           >
-            {/* 앞면 */}
             <div
-              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[18px] font-medium flex items-center justify-center text-center text-[#414141]"
-              style={{ backfaceVisibility: "hidden" }}
+              className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
+              style={{ backfaceVisibility: 'hidden' }}
             >
               {name}
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+                className="absolute top-[10px] right-[10px] h-[20px] w-[20px]"
               />
             </div>
-            {/* 뒷면 */}
             <div
-              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[18px] font-medium flex items-center justify-center text-center text-[#414141]"
-              style={{
-                backfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
+              className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
+              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
               {description}
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+                className="absolute top-[10px] right-[10px] h-[20px] w-[20px]"
               />
             </div>
           </div>
         </div>
 
-        {/* PC용 카드 */}
+        {/* PC 카드 */}
         <div
-          className="hidden md:block w-[230px] h-[155px] cursor-pointer"
-          style={{ perspective: "1000px" }}
+          className="hidden h-[165px] w-[235px] cursor-pointer md:block"
+          style={{ perspective: '1000px' }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
-            className={`relative w-full h-full transition-transform duration-500 ${
-              flipped ? "rotate-y-180" : ""
+            className={`relative h-full w-full transition-transform duration-500 ${
+              flipped ? 'rotate-y-180' : ''
             }`}
-            style={{ transformStyle: "preserve-3d" }}
+            style={{ transformStyle: 'preserve-3d' }}
           >
-            {/* 앞면 */}
             <div
-              className="absolute w-full h-full bg-white rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
-              style={{ backfaceVisibility: "hidden" }}
+              className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[2px] py-[2px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
+              style={{ backfaceVisibility: 'hidden' }}
             >
-              <span style={{ whiteSpace: 'pre-line' }}>
-                {formatIngredientNameForPC(name)}
-              </span>
+              <span style={{ whiteSpace: 'pre-line' }}>{formatIngredientNameForPC(name)}</span>
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+                className="absolute top-[10px] right-[10px] h-[20px] w-[20px]"
               />
             </div>
-            {/* 뒷면 */}
             <div
-              className="absolute w-full h-full bg-[#FFFBCC] rounded-[14px] shadow-[2px_2px_12.2px_0px_#00000040] px-[6px] py-[10px] text-[20px] font-medium flex items-center justify-center text-center text-[#414141]"
-              style={{
-                backfaceVisibility: "hidden",
-                transform: "rotateY(180deg)",
-              }}
+              className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
+              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
             >
               {description}
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
-                className="absolute top-[10px] right-[10px] w-[20px] h-[20px]"
+                className="absolute top-[10px] right-[10px] h-[20px] w-[20px]"
               />
             </div>
           </div>
@@ -188,77 +193,116 @@ const CombinationPage = () => {
     );
   };
 
+  // 모바일에서는 전역 헤더 숨김(있으면)
+  useEffect(() => {
+    if (!isMobile) return;
+    const headerEl = document.querySelector('header');
+    if (headerEl instanceof HTMLElement) {
+      headerEl.style.display = 'none';
+    }
+    return () => {
+      if (headerEl instanceof HTMLElement) {
+        headerEl.style.display = '';
+      }
+    };
+  }, [isMobile]);
+
   return (
-    <div className="min-h-screen w-full overflow-x-hidden bg-[#FFFFFF] md:bg-[#FAFAFA] px-0 md:px-4 py-0 font-pretendard flex flex-col">
-      {/* 조합추가 - 모바일 버전 */}
-      <h1 className="block md:hidden font-Pretendard font-bold text-[32px] leading-[100%] tracking-[-0.02em] mb-5 px-10 pt-10">
-        조합 추가
-      </h1>
-      {/* 조합추가 - PC 버전 */}
-      <h1 className="hidden md:block font-pretendard font-bold text-[52px] leading-[120%] tracking-[-0.02em] mb-8 px-[230px] pt-[50px]">
-        조합 추가
-      </h1>
-      {/* 검색창 - 모바일 */}
-      <div className="flex justify-center mb-4 md:hidden">
-        <div className="w-[366px] h-[52px] bg-white border border-[#C7C7C7] rounded-[44px] flex items-center px-[18px] gap-[84px]">
-          <input
-            type="text"
-            className="flex-1 h-full bg-transparent outline-none
-        placeholder:font-Pretendard placeholder:font-small
-        placeholder:text-black placeholder:opacity-40
-        placeholder:leading-[120%] placeholder:tracking-[-0.02em]
-        placeholder:text-[18px]"
-            placeholder={placeholder}
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
-            }}
-          />
-          <button onClick={handleSearch} className="text-gray-400 text-xl">
-            <FiSearch />
-          </button>
-        </div>
+    <div className="mx-auto max-w-screen-xl px-4 pt-2 sm:px-36 sm:pt-10">
+      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
+      <div className="md:hidden">
+        <Navbar />
       </div>
-      {/* 검색창 - PC */}
-      <div className="hidden md:flex justify-center mb-3">
-        <div className="w-[1400px] h-[85px] bg-transparent border border-[#C7C7C7] rounded-[88px] flex items-center px-[35.64px] gap-[165px]">
+
+      {/* 조합추가 - 모바일 */}
+      <h1 className="font-Pretendard mb-5 block pt-6 pl-2 text-[24px] leading-[100%] font-bold tracking-[-0.02em] md:hidden">
+        조합 추가
+      </h1>
+
+      {/* 조합추가 - PC */}
+      <h1 className="mb-6 hidden pl-2 text-2xl font-semibold sm:mb-8 sm:ml-8 sm:text-4xl md:block">
+        조합 추가
+      </h1>
+
+      {/* 검색창 - 모바일 */}
+      <div className="mb-4 flex justify-center md:hidden">
+        <div className="flex w-full max-w-md items-center rounded-full border border-gray-300 bg-white px-4 py-3">
           <input
             type="text"
-            className="flex-1 h-full bg-transparent outline-none
-        placeholder:font-Pretendard placeholder:font-medium
-        placeholder:text-black placeholder:opacity-40
-        placeholder:leading-[30px] placeholder:tracking-[-0.02em]
-        placeholder:text-[30px] 
-        text-[30px] leading-[30px]"
             placeholder={placeholder}
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === "Enter") handleSearch();
+              if (e.key === 'Enter' && !isSearching) handleSearch();
             }}
+            disabled={isSearching}
+            className={`w-full bg-transparent text-lg placeholder-gray-300 ${
+              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-400'
+            }`}
           />
-          <button onClick={handleSearch} className="text-gray-400 text-2xl">
-            <FiSearch />
-          </button>
+          {isSearching ? (
+            <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          ) : (
+            <img
+              src="/images/search.png"
+              alt="검색"
+              onClick={handleSearch}
+              className="ml-2 h-5 w-5 cursor-pointer"
+            />
+          )}
         </div>
       </div>
 
+      {/* 검색창 - PC */}
+      <section className="mb-6 hidden justify-center md:flex">
+        <div className="flex w-full max-w-3xl items-center rounded-full border border-gray-300 bg-white px-6 py-4 shadow-sm">
+          <input
+            type="text"
+            placeholder="제품을 입력해주세요."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !isSearching) handleSearch();
+            }}
+            disabled={isSearching}
+            className={`w-full text-base placeholder-gray-400 outline-none ${
+              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-800'
+            }`}
+          />
+          {searchTerm && (
+            <button onClick={() => setSearchTerm('')} className="ml-2 cursor-pointer">
+              <img src="/images/성분 검색결과/x.png" alt="지우기" className="h-6 w-6" />
+            </button>
+          )}
+          {isSearching ? (
+            <div className="ml-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
+          ) : (
+            <img
+              src="/images/search.png"
+              alt="검색"
+              onClick={handleSearch}
+              className="ml-2 h-6 w-6 cursor-pointer"
+            />
+          )}
+        </div>
+      </section>
+
       {/* 검색 기록 - 모바일 */}
       {searchHistory.length > 0 && (
-        <div className="block md:hidden flex justify-center">
+        <div className="block flex justify-center md:hidden">
           <div
-            className="flex flex-wrap justify-center items-center gap-x-8 gap-y-2 text-[14px]"
-            style={{ width: "300px", height: "auto", opacity: 1 }}
+            className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[14px]"
+            style={{ width: '300px', height: 'auto', opacity: 1 }}
           >
             {searchHistory.map((item, idx) => (
               <div key={idx} className="flex items-center gap-[4px]">
                 <button
                   onClick={() => {
                     setSearchTerm(item);
-                    navigate(
-                      `/add-combination?query=${encodeURIComponent(item)}`
-                    );
+                    setIsSearching(true);
+                    setTimeout(() => {
+                      navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                    }, 500);
                   }}
                   className="text-[13px] font-medium text-gray-700"
                 >
@@ -270,9 +314,9 @@ const CombinationPage = () => {
                   title="삭제"
                 >
                   <img
-                    src="/src/assets/delete.png"
+                    src="/images/PNG/조합 2-1/delete.png"
                     alt="삭제 아이콘"
-                    className="w-[16px] h-[16px] mt-[2px]"
+                    className="mt-[2px] h-[16px] w-[16px]"
                   />
                 </button>
               </div>
@@ -280,250 +324,228 @@ const CombinationPage = () => {
           </div>
         </div>
       )}
+
       {/* 검색 기록 - PC */}
       {searchHistory.length > 0 && (
-        <div className="hidden md:flex justify-center gap-[24px] flex-wrap px-[35.64px] mb-5">
+        <div className="mb-5 hidden flex-wrap justify-center gap-[24px] px-[35.64px] md:flex">
           {searchHistory.map((item, idx) => (
-            <div key={idx} className="flex items-center gap-2 px-8 py-2">
+            <div
+              key={idx}
+              className="flex items-center gap-[8px] rounded-[6px] px-[12px] py-[4px] transition hover:bg-gray-100"
+            >
               <button
                 onClick={() => {
                   setSearchTerm(item);
-                  navigate(
-                    `/add-combination?query=${encodeURIComponent(item)}`
-                  );
+                  setIsSearching(true);
+                  setTimeout(() => {
+                    navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                  }, 500);
                 }}
-                className="text-[20px] font-medium leading-[120%] tracking-[-0.02em] text-[#000000] hover:underline"
+                className="font-Pretendard text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
                 {item}
               </button>
               <button
                 onClick={() => handleDelete(item)}
-                className="text-[16px] text-[#8A8A8A]"
+                className="flex h-[20px] w-[20px] items-center justify-center"
                 title="삭제"
               >
                 <img
-                  src="/src/assets/delete.png"
-                  alt="삭제 아이콘"
-                  className="w-[28px] h-[28px] mt-[2.5px]"
+                  src="/images/PNG/조합 2-1/delete.png"
+                  alt="삭제"
+                  className="h-[16px] w-[16px]"
                 />
               </button>
             </div>
           ))}
         </div>
       )}
+
       {/* 고양이 일러스트 + 설명 - 모바일 */}
-      <div className="relative flex justify-center my-20 md:hidden">
+      <div className="relative my-20 flex justify-center md:hidden">
         <div className="relative w-[200px]">
-          {/* 왼쪽 텍스트 */}
-          <p
-            className="
-      absolute text-start left-[-80px] top-[-30px]
-      font-Pretendard font-medium text-black
-      leading-[120%] tracking-[-0.02em]
-      text-[18px] w-[200px]
-    "
-          >
+          <p className="font-Pretendard absolute top-[-30px] left-[-80px] w-[200px] text-start text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-black">
             성분 과잉 섭취 <br />
             걱정 마세요!
           </p>
-
-          {/* 고양이 이미지 */}
           <img src={Cat} alt="고양이" className="w-full" />
-
-          {/* 병아리 이미지 */}
-          <img
-            src={Chick}
-            alt="병아리"
-            className="absolute bottom-[18px] left-[22px] w-[45px]"
-          />
-
-          {/* 오른쪽 텍스트 */}
-          <p
-            className="
-      absolute text-right right-[-90px] bottom-[-30px]
-      font-Pretendard font-medium text-black
-      leading-[90%] tracking-[-0.02em]
-      text-[18px] w-[200px]
-    "
-          >
+          <img src={Chick} alt="병아리" className="absolute bottom-[18px] left-[22px] w-[45px]" />
+          <p className="font-Pretendard absolute right-[-90px] bottom-[-30px] w-[200px] text-right text-[18px] leading-[90%] font-medium tracking-[-0.02em] text-black">
             성분별 총량을 한눈에!
           </p>
         </div>
       </div>
+
       {/* 고양이 일러스트 + 설명 - PC */}
-      <div className="relative flex justify-center my-14 hidden md:flex">
-        <div className="relative w-[200px]">
-          {/* 왼쪽 텍스트 */}
-          <p
-            className="
-      absolute text-start left-[-380px] top-[20px]
-      font-Pretendard font-medium text-black
-      leading-[120%] tracking-[-0.02em]
-      text-[32px] w-[500px]
-    "
-          >
-            성분 과잉 섭취 걱정 마세요!
-          </p>
+      <div className="relative my-10 flex hidden w-full justify-center md:flex">
+        <div className="relative flex w-full max-w-screen-xl items-center justify-center gap-[40px]">
+          {/* 왼쪽 제목 (위쪽 정렬) */}
+          <div className="flex h-full flex-col justify-start">
+            <p className="font-Pretendard text-center text-[25px] leading-[120%] font-medium tracking-[-0.02em]">
+              성분 과잉 섭취 걱정 마세요!
+            </p>
+          </div>
 
-          {/* 고양이 이미지 */}
-          <img src={Cat} alt="고양이" className="w-full" />
+          {/* 가운데 이미지 */}
+          <div className="relative w-[200px] shrink-0">
+            <img src={Cat} alt="고양이" className="w-full" />
+            <img src={Chick} alt="병아리" className="absolute bottom-[18px] left-[22px] w-[45px]" />
+          </div>
 
-          {/* 병아리 이미지 */}
-          <img
-            src={Chick}
-            alt="병아리"
-            className="absolute bottom-[18px] left-[22px] w-[45px]"
-          />
-
-          {/* 오른쪽 텍스트 */}
-          <p
-            className="
-      absolute text-center right-[-400px] bottom-[30px]
-      font-Pretendard font-medium text-black
-      leading-[120%] tracking-[-0.02em]
-      text-[32px] w-[500px]
-    "
-          >
-            성분별 총량을 한눈에!
-          </p>
-        </div>
-      </div>
-      {/* 구분선 */}
-      <div>
-        {/* 모바일: 고정 너비 */}
-        <div className="block md:hidden w-[390px] h-[0.5px] bg-[#B2B2B2] mx-auto" />
-        {/* PC: 가로 길이 자동 확장 */}
-        <div className="hidden md:block w-[1400px] h-[0.5px] bg-[#B2B2B2] mx-auto my-8" />
-      </div>
-      {/* 주의가 필요한 조합 안내 - 모바일 */}
-      <div className="md:hidden px-7 mt-8">
-        <h2
-          style={{
-            width: "390px",
-            height: "26px",
-            fontFamily: "Pretendard",
-            fontWeight: 600,
-            fontSize: "22px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#000000",
-          }}
-        >
-          주의가 필요한 조합 TOP 5
-        </h2>
-        <p
-          style={{
-            width: "200px",
-            height: "17px",
-            fontFamily: "Pretendard",
-            fontWeight: 600,
-            fontSize: "14px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#6B6B6B",
-            marginTop: "6px",
-          }}
-        >
-          카드를 눌러서 확인해 보세요 !
-        </p>
-      </div>
-      {/* 조합 카드들 - 모바일 */}
-      <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-5 mt-5">
-          {riskyCombinations.map((combo) => (
-            <FlipCard
-              key={combo.id}
-              name={combo.name}
-              description={combo.description}
-            />
-          ))}
-        </div>
-      </div>
-      {/* PC용 제목 및 카드 wrapper - 주의가 필요한 조합 */}
-      <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
-        <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-3 text-left">
-          주의가 필요한 조합 TOP 5
-        </h2>
-        <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
-          카드를 눌러서 확인해 보세요 !
-        </span>
-
-        {/* 카드 목록 */}
-        <div className="flex justify-center mt-8">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px]">
-            {riskyCombinations.map((combo) => (
-              <FlipCard
-                key={combo.id}
-                name={combo.name}
-                description={combo.description}
-              />
-            ))}
+          {/* 오른쪽 제목 (아래쪽 정렬) */}
+          <div className="flex h-full flex-col justify-end">
+            <p className="font-Pretendard text-center text-[25px] leading-[120%] font-medium tracking-[-0.02em]">
+              성분별 총량을 한눈에!
+            </p>
           </div>
         </div>
       </div>
-      {/* ===== 모바일 - 궁합이 좋은 조합 안내 ===== */}
-      <div className="md:hidden px-7 mt-10">
+
+      {/* 구분선 (모바일) */}
+      <div>
+        <div className="mx-auto block h-[0.5px] w-[390px] bg-[#B2B2B2] md:hidden" />
+      </div>
+
+      {/* 주의가 필요한 조합 - 모바일 */}
+      <div className="mt-8 px-7 md:hidden">
         <h2
           style={{
-            width: "390px",
-            height: "26px",
-            fontFamily: "Pretendard",
+            width: '390px',
+            height: '26px',
+            fontFamily: 'Pretendard',
             fontWeight: 600,
-            fontSize: "22px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#000000",
+            fontSize: '22px',
+            lineHeight: '120%',
+            letterSpacing: '-0.02em',
+            color: '#000000',
+          }}
+        >
+          주의가 필요한 조합 TOP 5
+        </h2>
+        <p
+          style={{
+            width: '200px',
+            height: '17px',
+            fontFamily: 'Pretendard',
+            fontWeight: 600,
+            fontSize: '14px',
+            lineHeight: '120%',
+            letterSpacing: '-0.02em',
+            color: '#6B6B6B',
+            marginTop: '6px',
+          }}
+        >
+          카드를 눌러서 확인해 보세요 !
+        </p>
+      </div>
+
+      {/* 조합 카드들 - 모바일 (주의) */}
+      <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
+        <div className="mt-5 mr-4 mb-5 ml-4 flex w-max gap-[16px]">
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, i) => <LoadingSkeletonCard key={i} isMobile />)
+            : riskyCombinations.map((combo) => (
+                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+              ))}
+        </div>
+      </div>
+
+      {/* 주의가 필요한 조합 - PC (풀블리드 배경) */}
+      <div className="hidden md:block">
+        {/* 배경을 좌우 패딩까지 확장 */}
+        <div className="-mx-4 lg:-mx-[80px] xl:-mx-[120px] 2xl:-mx-[250px]">
+          {/* 안쪽은 다시 동일한 패딩으로 정렬 복구 */}
+          <div className="mx-auto max-w-screen-xl px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
+            <h2 className="text-lg font-semibold whitespace-nowrap md:text-2xl">
+              주의가 필요한 조합 TOP 5
+            </h2>
+            <span className="font-Pretendard text-[16px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[16px] xl:text-[18px]">
+              카드를 눌러서 확인해 보세요 !
+            </span>
+
+            <div className="mt-8 mb-15 flex justify-center">
+              <div className="flex w-full gap-[15px] lg:gap-[25px] xl:gap-[25px]">
+                {isLoading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <LoadingSkeletonCard key={i} isMobile={false} />
+                    ))
+                  : riskyCombinations.map((combo) => (
+                      <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                    ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* 궁합이 좋은 조합 - 모바일 */}
+      <div className="mt-10 px-7 md:hidden">
+        <h2
+          style={{
+            width: '390px',
+            height: '26px',
+            fontFamily: 'Pretendard',
+            fontWeight: 600,
+            fontSize: '22px',
+            lineHeight: '120%',
+            letterSpacing: '-0.02em',
+            color: '#000000',
           }}
         >
           궁합이 좋은 조합 TOP 5
         </h2>
         <p
           style={{
-            width: "300px",
-            height: "17px",
-            fontFamily: "Pretendard",
+            width: '300px',
+            height: '17px',
+            fontFamily: 'Pretendard',
             fontWeight: 600,
-            fontSize: "14px",
-            lineHeight: "120%",
-            letterSpacing: "-0.02em",
-            color: "#6B6B6B",
-            marginTop: "6px",
+            fontSize: '14px',
+            lineHeight: '120%',
+            letterSpacing: '-0.02em',
+            color: '#6B6B6B',
+            marginTop: '6px',
           }}
         >
           카드를 눌러서 확인해 보세요 !
         </p>
       </div>
-      {/* 조합 카드들 - 모바일 */}
-      <div className="md:hidden px-3 hide-scrollbar overflow-x-auto">
-        <div className="w-max flex gap-[16px] ml-4 mr-4 mb-15 mt-5">
-          {goodCombinations.map((combo) => (
-            <FlipCard
-              key={combo.id}
-              name={combo.name}
-              description={combo.description}
-            />
-          ))}
+
+      {/* 조합 카드들 - 모바일 (좋음) */}
+      <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
+        <div className="mt-5 mr-4 mb-15 ml-4 flex w-max gap-[16px]">
+          {isLoading
+            ? Array.from({ length: 5 }).map((_, i) => <LoadingSkeletonCard key={i} isMobile />)
+            : goodCombinations.map((combo) => (
+                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+              ))}
         </div>
       </div>
-      {/* PC용 제목 및 카드 wrapper - 궁합이 좋은 조합 */}
-      <div className="hidden md:block px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
-        <h2 className="w-full h-auto text-[24px] lg:text-[28px] xl:text-[32px] font-bold font-Pretendard leading-[120%] tracking-[-0.02em] text-black mb-1 mt-20 text-left">
-          궁합이 좋은 조합 TOP 5
-        </h2>
-        <span className="text-[18px] lg:text-[20px] xl:text-[22px] font-semibold font-Pretendard leading-[120%] tracking-[-0.02em] text-[#6B6B6B] text-left">
-          카드를 눌러서 확인해 보세요 !
-        </span>
 
-        {/* 카드 목록 */}
-        <div className="flex justify-center">
-          <div className="flex gap-[15px] lg:gap-[25px] xl:gap-[55px] mt-8 mb-20">
-            {goodCombinations.map((combo) => (
-              <FlipCard
-                key={combo.id}
-                name={combo.name}
-                description={combo.description}
-              />
-            ))}
+      {/* 궁합이 좋은 조합 - PC (풀블리드 배경) */}
+      <div className="hidden md:block">
+        {/* 배경을 좌우 패딩까지 확장 */}
+        <div className="-mx-4 lg:-mx-[80px] xl:-mx-[120px] 2xl:-mx-[250px]">
+          {/* 안쪽은 다시 동일한 패딩으로 정렬 복구 */}
+          <div className="mx-auto max-w-screen-xl px-4 lg:px-[80px] xl:px-[120px] 2xl:px-[250px]">
+            <h2 className="text-lg font-semibold whitespace-nowrap md:text-2xl">
+              궁합이 좋은 조합 TOP 5
+            </h2>
+            <span className="font-Pretendard text-[16px] leading-[120%] font-semibold tracking-[-0.02em] text-[#6B6B6B] lg:text-[16px] xl:text-[18px]">
+              카드를 눌러서 확인해 보세요 !
+            </span>
+
+            <div className="mt-8 mb-20 flex justify-center">
+              <div className="flex w-full gap-[15px] lg:gap-[25px] xl:gap-[25px]">
+                {isLoading
+                  ? Array.from({ length: 5 }).map((_, i) => (
+                      <LoadingSkeletonCard key={i} isMobile={false} />
+                    ))
+                  : goodCombinations.map((combo) => (
+                      <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                    ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

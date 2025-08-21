@@ -4,7 +4,6 @@ import { useMediaQuery } from "react-responsive";
 import axios from "@/lib/axios";
 import { uploadImageToCloudinary } from "@/utils/cloudinary";
 
-// ---- 타입/헬퍼 ----
 type DayOfWeek = "SUN" | "MON" | "TUE" | "WED" | "THU" | "FRI" | "SAT";
 type Schedule = { dayOfWeek: DayOfWeek; time: string };
 
@@ -173,7 +172,6 @@ const DesktopAlarmEditPage = () => {
           .map((t) => ({ dayOfWeek: d as DayOfWeek, time: fixTime(t) }))
       );
 
-      // 🚩 두 가지 중 하나만 활성화하세요.
       // 1) 커스텀 업서트(권장): POST /api/v1/notifications/routines/custom
       const upsertPayload = clean({
         notificationRoutineId: Number(id), // 수정이므로 포함
@@ -184,17 +182,7 @@ const DesktopAlarmEditPage = () => {
 
       await axios.post("/api/v1/notifications/routines/custom", upsertPayload);
 
-      // 2) (구) 스펙 사용 시:
-      // const legacyPayload = {
-      //   supplementId,
-      //   supplementName: supplementName.trim(),
-      //   supplementImageUrl: imageUrl ?? undefined,
-      //   daysOfWeek: selectedDays,
-      //   times: times.map(fixTime),
-      // };
-      // await axios.post("/api/v1/notifications/routines", legacyPayload);
-
-      alert("알림이 저장되었습니다!");
+      alert("알림이 수정되었습니다!");
       navigate("/alarm/settings");
     } catch (err: any) {
       console.error("알림 저장 실패:", err?.response ?? err);

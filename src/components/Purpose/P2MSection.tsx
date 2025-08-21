@@ -27,10 +27,35 @@ const RecommendedProductSectionMobile = ({
   goToAllIngredientPage,
   navigate,
 }: RecommendedProductSectionMobileProps) => {
+  
+  // ⭐️ 단어 경계까지 고려하도록 함수를 업데이트했습니다.
+  const formatIngredientName = (name: string, maxLength: number = 12): string => {
+    // 1. 이름이 이미 짧다면 그대로 반환
+    if (name.length <= maxLength) {
+      return name;
+    }
+    
+    // 2. (1순위) 이름에 괄호 '(' 가 있는지 확인
+    const parenIndex = name.indexOf('(');
+    if (parenIndex > 0) { // 0보다 큰 경우에만 (괄호가 맨 앞에 오는 경우 제외)
+      return name.substring(0, parenIndex) + "...";
+    }
+    
+    // 3. (2순위) 괄호가 없을 경우, 단어 경계(띄어쓰기)를 찾음
+    // maxLength까지의 문자열에서 마지막 띄어쓰기 위치를 찾음
+    const lastSpaceIndex = name.substring(0, maxLength).lastIndexOf(' ');
+    if (lastSpaceIndex > 0) {
+      return name.substring(0, lastSpaceIndex) + "...";
+    }
+    
+    // 4. (3순위) 괄호도, 띄어쓰기도 없으면 글자 수로 자름
+    return name.substring(0, maxLength) + "...";
+  };
+
 
   // 스켈레톤 카드 렌더링 함수
   const renderSkeletonCard = () => (
-    <div className="flex-shrink-0 flex flex-col items-center animate-pulse w-[154px] h-[178px]">
+    <div className="flex-shrink-0 flex-col items-center animate-pulse w-[154px] h-[178px]">
       <div className="bg-gray-200 rounded-xl shadow-lg w-[154px] h-[140px]"></div>
       <div className="bg-gray-200 rounded-full mt-[16px] w-2/3 h-[20px]"></div>
     </div>
@@ -48,28 +73,36 @@ const RecommendedProductSectionMobile = ({
   return (
     <>
       {/* 성분/태그 */}
-      <div className="flex items-center gap-[18px] ml-[38px]">
+      <div className="flex items-start gap-[18px] ml-[38px] pr-[38px]">
         {isLoading ? (
           <div className="w-[120px] h-[34px] bg-gray-200 rounded-[10px] animate-pulse"></div>
         ) : (
           <button
             onClick={goToIngredientPage}
-            className="px-[13px] py-[5px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-medium flex justify-center items-center cursor-pointer"
+            className="px-[13px] py-[5px] bg-[#FFEB9D] rounded-[10px] text-[18px] font-medium flex-shrink-0 flex justify-center items-center cursor-pointer"
           >
-            {ingredientName || "성분 없음"}
+            {formatIngredientName(ingredientName) || "성분 없음"}
             <MdOutlineArrowForwardIos className="h-[12px] ml-[12px]" />
           </button>
         )}
-        {isLoading ? (
-          <div className="w-[100px] h-[18px] bg-gray-200 rounded-full animate-pulse"></div>
-        ) : (
-          <span className="text-[15px] flex items-center font-medium h-[18px]">#{purposes.join(", #")}</span>
-        )}
+
+        <div className="flex justify-start items-center flex-wrap gap-x-1 leading-tight h-[40px]">
+          {isLoading ? (
+            <div className="w-[100px] h-[18px] bg-gray-200 rounded-full animate-pulse"></div>
+          ) : (
+            purposes.map((purpose, index) => (
+              <span key={purpose} className="text-[15px] font-medium">
+                #{purpose}
+                {index < purposes.length - 1 && ","}
+              </span>
+            ))
+          )}
+        </div>
       </div>
 
       {/* 카드 리스트 */}
-      <div className="w-full overflow-x-scroll hide-scrollbar mx-auto ml-[6px]">
-        <div className="flex gap-[24px] px-[38px] mt-[24px] mb-[22px]">
+      <div className="w-full overflow-x-auto hide-scrollbar">
+        <div className="inline-flex gap-[24px] px-6 ml-4 mt-6 mb-5">
           {isLoading ? (
             renderSkeletons(4)
           ) : paginatedProducts.length === 0 ? (
@@ -77,7 +110,7 @@ const RecommendedProductSectionMobile = ({
           ) : (
             paginatedProducts.map((product) => (
               <div
-                key={product.id}
+                key={`recommendM-${product.id}`}
                 onClick={() => navigate(`/product/${product.id}`, { state: product })}
                 className="w-[154px] flex-shrink-0 flex flex-col items-center cursor-pointer"
               >
@@ -88,7 +121,7 @@ const RecommendedProductSectionMobile = ({
                     className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                   />
                 </div>
-                <p className="mt-[18px] text-[17px] font-medium text-center">
+                <p className="mt-[12px] text-[17px] font-medium text-center whitespace-normal break-keep line-clamp-2">
                   {product.title}
                 </p>
               </div>

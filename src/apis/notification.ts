@@ -22,7 +22,7 @@ export const getMyNotificationSettings = async (): Promise<
 export const updateMyNotificationSetting = async (
   setting: NotificationSetting
 ) => {
-  const res = await api.put("/api/v1/notification-settings/me", {
+  const res = await api.patch("/api/v1/notification-settings/me", {
     type: setting.type,
     channel: setting.channel,
     isEnabled: setting.enabled,
