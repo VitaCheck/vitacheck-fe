@@ -135,7 +135,7 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                       <div className="h-full bg-[#FFE178] rounded-full" style={{ width: `${nutrient.barWidthPercent}%` }} />
                       <span
                         className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 text-[10px] font-medium text-black"
-                        style={{ left: `${nutrient.barWidthPercent}%` }}
+                        style={{ left: `33.33%` }}
                       >
                         {`${Math.round(nutrient.originalIntake)}%`}
                       </span>
@@ -144,11 +144,14 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                   </div>
                 ))}
               </div>
-              {hiddenNutrients.length > 0 && (
-                <div className="mt-[20px] text-[12px] max-w-[351px] text-left truncate">
+              <div className="w-full max-w-[351px] flex justify-start">
+                {hiddenNutrients.length > 0 && (
+                <div className="mt-[40px] text-[12px] max-w-[351px] text-left truncate">
                   추가 함유 성분: {hiddenNutrients.join(", ")}
                 </div>
               )}
+              </div>
+              
             </>
           )}
         </div>
@@ -191,7 +194,7 @@ const IngredientTab: React.FC<IngredientTabProps> = ({ supplementId, onFirstNutr
                       <div className="absolute top-0 bottom-0 w-[1.5px] border-l border-black border-dotted" style={{ left: `${STANDARD_UPPER_LIMIT_LINE_PERCENT}%` }} />
                       <span
                         className="absolute top-1/2 left-[50%] -translate-x-1/2 -translate-y-1/2 text-[14px] font-medium text-black"
-                        style={{ left: `${nutrient.barWidthPercent}%` }}
+                        style={{ left: `33.33%` }}
                       >
                         {`${Math.round(nutrient.originalIntake)}%`}
                       </span>
