@@ -92,7 +92,6 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
     }
   };
 
-  /** ──────────────── 공통 텍스트 후처리 및 후보 선택 ──────────────── */
   function normalizeText(input: string) {
     const cleaned = input.replace(/[^가-힣A-Za-z0-9\s]/g, " ");
     return cleaned.replace(/\s+/g, " ").trim();
