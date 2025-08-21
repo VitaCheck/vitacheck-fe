@@ -45,8 +45,24 @@ const IngredientPage = () => {
   const isMobile = useIsMobile();
   const navigate = useNavigate();
 
+  // 로그인 상태 확인 (NavBar와 동일한 방식)
+  const token = localStorage.getItem("accessToken");
+  const isLoggedIn = Boolean(token);
+
+  // 디버깅을 위한 로그 추가
+  console.log("🔥 [DEBUG] localStorage accessToken:", token);
+  console.log("🔥 [DEBUG] isLoggedIn:", isLoggedIn);
+
   // 인기성분 데이터 로드
   const loadPopularIngredients = async (ageGroup: string) => {
+    // 토큰이 없거나 유효하지 않은 경우 API 호출하지 않음
+    if (!token) {
+      console.log("🔥 [UI] 토큰이 없음 - 인기성분 로드 중단");
+      setPopularIngredients([]);
+      setIsLoadingPopular(false);
+      return;
+    }
+
     setIsLoadingPopular(true);
     try {
       console.log("🔥 [UI] loadPopularIngredients 호출:", ageGroup);
@@ -85,9 +101,19 @@ const IngredientPage = () => {
         console.log("🔥 [UI] 응답에 result가 없음");
         setPopularIngredients([]);
       }
-    } catch (error) {
+    } catch (error: any) {
       console.error("🔥 [UI] 인기성분 로드 실패:", error);
-      setPopularIngredients([]);
+
+      // 401 에러가 발생하면 토큰이 유효하지 않다고 판단
+      if (error?.response?.status === 401) {
+        console.log("🔥 [UI] 401 에러 발생 - 토큰이 유효하지 않음");
+        // 토큰을 제거하고 로그인 상태를 false로 설정
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
+        setPopularIngredients([]);
+      } else {
+        setPopularIngredients([]);
+      }
     } finally {
       setIsLoadingPopular(false);
     }
@@ -102,12 +128,21 @@ const IngredientPage = () => {
 
     // 초기 인기성분 로드
     loadPopularIngredients(selected);
-  }, []);
+  }, [isLoggedIn]); // isLoggedIn 의존성 추가
 
   // popularIngredients 상태 변화 추적
   useEffect(() => {
     console.log("🔥 [UI] popularIngredients 상태 변화:", popularIngredients);
   }, [popularIngredients]);
+
+  // 로그인 상태가 변경될 때마다 인기성분 다시 로드
+  useEffect(() => {
+    if (isLoggedIn) {
+      loadPopularIngredients(selected);
+    } else {
+      setPopularIngredients([]);
+    }
+  }, [isLoggedIn, selected]);
 
   const saveSearchHistory = (keyword: string) => {
     const trimmed = keyword.trim();
@@ -141,8 +176,10 @@ const IngredientPage = () => {
   const handleChange = (age: string) => {
     setSelected(age);
     setShowAgeModal(false);
-    // 연령대 변경 시 새로운 인기성분 로드
-    loadPopularIngredients(age);
+    // 연령대 변경 시 새로운 인기성분 로드 (토큰이 있는 경우에만)
+    if (token) {
+      loadPopularIngredients(age);
+    }
   };
 
   const toggleAgeModal = () => {
@@ -492,6 +529,19 @@ const IngredientPage = () => {
               <span className="ml-3 text-gray-500">
                 인기성분을 불러오는 중...
               </span>
+            </div>
+          ) : !isLoggedIn ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500 mb-2">로그인 후 이용할 수 있습니다</p>
+              <p className="text-sm text-gray-400 mb-4">
+                연령대별 인기성분을 확인하려면 로그인해주세요
+              </p>
+              <Link
+                to="/login"
+                className="inline-block px-4 py-2 bg-gray-300 text-white rounded-lg hover:bg-gray-500 transition-colors"
+              >
+                로그인하기
+              </Link>
             </div>
           ) : popularIngredients.length === 0 ? (
             <div className="text-center py-8">

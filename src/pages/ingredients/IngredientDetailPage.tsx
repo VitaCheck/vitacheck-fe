@@ -25,7 +25,10 @@ declare global {
 const queryClient = new QueryClient();
 
 const BREAKPOINT = 640;
-const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY;
+// 카카오 JavaScript 키를 코드에서 직접 설정 (빠른 테스트용)
+// 실제 운영 환경에서는 환경 변수로 관리하는 것을 권장합니다
+const KAKAO_APP_KEY =
+  import.meta.env.VITE_KAKAO_JS_KEY || "c089c8172def97eb00c07217cae17495";
 
 /* 공통 훅 */
 const useIsMobile = () => {
@@ -67,28 +70,44 @@ async function copyToClipboard(text: string) {
 
 /* Kakao 로더 */
 async function ensureKakaoReady(): Promise<boolean> {
-  if (!KAKAO_APP_KEY) return false;
+  if (!KAKAO_APP_KEY) {
+    console.warn("카카오 JavaScript 키가 설정되지 않았습니다.");
+    return false;
+  }
+
   if (window.Kakao) {
     try {
-      if (!window.Kakao.isInitialized()) window.Kakao.init(KAKAO_APP_KEY);
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_APP_KEY);
+        console.log("카카오 SDK 초기화 완료");
+      }
       return true;
-    } catch {
+    } catch (error) {
+      console.error("카카오 SDK 초기화 실패:", error);
       return false;
     }
   }
-  await new Promise<void>((resolve, reject) => {
-    const s = document.createElement("script");
-    s.src = "https://developers.kakao.com/sdk/js/kakao.js";
-    s.async = true;
-    s.onload = () => resolve();
-    s.onerror = () => reject();
-    document.head.appendChild(s);
-  }).catch(() => {});
-  if (!window.Kakao) return false;
+
   try {
+    await new Promise<void>((resolve, reject) => {
+      const s = document.createElement("script");
+      s.src = "https://developers.kakao.com/sdk/js/kakao.js";
+      s.async = true;
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("카카오 SDK 로드 실패"));
+      document.head.appendChild(s);
+    });
+
+    if (!window.Kakao) {
+      console.error("카카오 SDK가 로드되지 않았습니다.");
+      return false;
+    }
+
     window.Kakao.init(KAKAO_APP_KEY);
+    console.log("카카오 SDK 로드 및 초기화 완료");
     return true;
-  } catch {
+  } catch (error) {
+    console.error("카카오 SDK 설정 실패:", error);
     return false;
   }
 }
@@ -323,32 +342,82 @@ const IngredientDetailInner = () => {
   }
 
   async function onShareKakao() {
-    const ready = await ensureKakaoReady();
-    if (ready && window.Kakao?.Share) {
-      try {
-        window.Kakao.Share.sendDefault({
-          objectType: "feed",
-          content: {
-            title: shareTitle,
-            description: "VitaCheck에서 성분 정보를 확인해 보세요.",
-            imageUrl:
-              "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
-            link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
-          },
-          buttons: [
-            {
-              title: "바로 보기",
-              link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
-            },
-          ],
-        });
+    try {
+      const ready = await ensureKakaoReady();
+      if (!ready) {
+        console.error("카카오 SDK 초기화에 실패했습니다.");
+        // SDK 초기화 실패 시 링크 복사로 대체
+        const ok = await copyToClipboard(shareUrl);
         setSheetOpen(false);
+        setConfirmOpen(ok);
         return;
-      } catch {}
+      }
+
+      if (!window.Kakao?.Share) {
+        console.error("카카오 공유 기능을 사용할 수 없습니다.");
+        // 공유 기능 사용 불가 시 링크 복사로 대체
+        const ok = await copyToClipboard(shareUrl);
+        setSheetOpen(false);
+        setConfirmOpen(ok);
+        return;
+      }
+
+      // 성분 정보를 포함한 더 풍부한 공유 템플릿
+      const shareDescription = data?.description
+        ? `${data.description.substring(0, 100)}...`
+        : "VitaCheck에서 성분 정보를 확인해 보세요.";
+
+      // 기본 이미지 사용 (성분별 이미지가 없는 경우)
+      const shareImageUrl =
+        "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png";
+
+      window.Kakao.Share.sendDefault({
+        objectType: "feed",
+        content: {
+          title: `${shareTitle} - VitaCheck`,
+          description: shareDescription,
+          imageUrl: shareImageUrl,
+          link: {
+            mobileWebUrl: shareUrl,
+            webUrl: shareUrl,
+          },
+        },
+        social: {
+          likeCount: 0,
+          commentCount: 0,
+          sharedCount: 0,
+        },
+        buttons: [
+          {
+            title: "바로 보기",
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+          {
+            title: "VitaCheck 홈",
+            link: {
+              mobileWebUrl: "https://vita-check.com",
+              webUrl: "https://vita-check.com",
+            },
+          },
+        ],
+      });
+
+      console.log("카카오톡 공유 성공");
+      setSheetOpen(false);
+
+      // 성공 메시지 표시
+      setConfirmOpen(true);
+    } catch (error) {
+      console.error("카카오톡 공유 실패:", error);
+
+      // 공유 실패 시 링크 복사로 대체
+      const ok = await copyToClipboard(shareUrl);
+      setSheetOpen(false);
+      setConfirmOpen(ok);
     }
-    const ok = await copyToClipboard(shareUrl);
-    setSheetOpen(false);
-    setConfirmOpen(ok);
   }
 
   async function onShareCopy() {
