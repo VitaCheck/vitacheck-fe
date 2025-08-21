@@ -58,21 +58,21 @@ const AddCombinationPage = () => {
   const fetchSupplements = async (search: string, signal?: AbortSignal) => {
     const keyword = (search ?? '').trim();
     if (!keyword) return [];
-  
+
     const res = await axios.get('/api/v1/supplements/search', {
       params: { keyword, size: 20 }, // ← search API는 cursor 기반, page 파라미터 제거
       signal,
     });
-  
+
     const raw = res.data?.result?.supplements;
     const list = Array.isArray(raw) ? raw : (raw?.content ?? []);
-  
+
     // ★ Product로 정규화 (supplementId가 없으면 cursorId에서 복원)
     return list.map((x: any) => {
       const c = Number(x.cursorId);
       // cursorId = popularity * 1_000_000 + supplementId → mod 연산으로 복원
       const restoredId = Number.isFinite(c) ? c % 1_000_000 : undefined;
-  
+
       return {
         cursorId: c,
         supplementId: x.supplementId ?? restoredId, // 없으면 복원값 사용
@@ -87,7 +87,6 @@ const AddCombinationPage = () => {
       } as Product;
     });
   };
-  
 
   useEffect(() => {
     // 입력창 표시 동기화
@@ -139,7 +138,7 @@ const AddCombinationPage = () => {
     if (preSearchTerms.length > 0) {
       const firstSearchTerm = preSearchTerms[0]; // 첫 번째 검색어 사용
       setSearchTerm(firstSearchTerm);
-      
+
       // 검색 실행
       setIsLoading(true);
       fetchSupplements(firstSearchTerm)
@@ -186,53 +185,53 @@ const AddCombinationPage = () => {
   };
 
   // AddCombinationPage.tsx
-const handleAnalyze = () => {
-  const missing = selectedItems.filter(i => !i.supplementId);
-  if (missing.length) {
-    alert('분석 ID가 비어 있는 항목이 있어요. 다시 선택해 주세요.');
-    return;
-  }
-  localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
-  navigate('/combination-result', { state: { selectedItems } });
-};
+  const handleAnalyze = () => {
+    const missing = selectedItems.filter((i) => !i.supplementId);
+    if (missing.length) {
+      alert('분석 ID가 비어 있는 항목이 있어요. 다시 선택해 주세요.');
+      return;
+    }
+    localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
+    navigate('/combination-result', { state: { selectedItems } });
+  };
 
-
-const handleToggle = (item: Product) => {
-  setSelectedItems((prev) => {
-    const exists = prev.some((i) =>
-      (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
-      (i.supplementId && item.supplementId && i.supplementId === item.supplementId)
-    );
-
-    if (exists) {
-      return prev.filter((i) =>
-        !(
+  const handleToggle = (item: Product) => {
+    setSelectedItems((prev) => {
+      const exists = prev.some(
+        (i) =>
           (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
-          (i.supplementId && item.supplementId && i.supplementId === item.supplementId)
-        )
+          (i.supplementId && item.supplementId && i.supplementId === item.supplementId),
       );
-    }
 
-    if (prev.length >= 10) {
-      alert('최대 10개까지 선택할 수 있습니다.');
-      return prev;
-    }
-    return [...prev, item];
-  });
-};
+      if (exists) {
+        return prev.filter(
+          (i) =>
+            !(
+              (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
+              (i.supplementId && item.supplementId && i.supplementId === item.supplementId)
+            ),
+        );
+      }
 
+      if (prev.length >= 10) {
+        alert('최대 10개까지 선택할 수 있습니다.');
+        return prev;
+      }
+      return [...prev, item];
+    });
+  };
 
-const handleRemove = (item: { cursorId?: number; supplementId?: number }) => {
-  setSelectedItems((prev) =>
-    prev.filter((i) =>
-      !(
-        (item.cursorId && i.cursorId === item.cursorId) ||
-        (item.supplementId && i.supplementId && i.supplementId === item.supplementId)
-      )
-    )
-  );
-};
-
+  const handleRemove = (item: { cursorId?: number; supplementId?: number }) => {
+    setSelectedItems((prev) =>
+      prev.filter(
+        (i) =>
+          !(
+            (item.cursorId && i.cursorId === item.cursorId) ||
+            (item.supplementId && i.supplementId && i.supplementId === item.supplementId)
+          ),
+      ),
+    );
+  };
 
   const handleDelete = (itemToDelete: string) => {
     const updated = searchHistory.filter((item) => item !== itemToDelete);
@@ -400,13 +399,13 @@ const handleRemove = (item: { cursorId?: number; supplementId?: number }) => {
             : 'lg:mx-auto lg:max-w-5xl'
         }`}
       >
-<div
-  className={
-    hasAside
-      ? 'min-w-0 flex-1 lg:col-start-1 lg:col-end-2 overflow-hidden pr-4'
-      : 'w-full min-w-0'
-  }
->
+        <div
+          className={
+            hasAside
+              ? 'min-w-0 flex-1 overflow-hidden pr-4 lg:col-start-1 lg:col-end-2'
+              : 'w-full min-w-0'
+          }
+        >
           {query && (
             <>
               {/* 검색어 제목 - 모바일 */}
@@ -446,20 +445,29 @@ const handleRemove = (item: { cursorId?: number; supplementId?: number }) => {
                     <CombinationProductCard
                       key={item.cursorId} // ★ 변경
                       item={item as any}
-                      isSelected={selectedItems.some((i) =>
-                        (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
-                        (i.supplementId && item.supplementId && i.supplementId === item.supplementId)
+                      isSelected={selectedItems.some(
+                        (i) =>
+                          (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
+                          (i.supplementId &&
+                            item.supplementId &&
+                            i.supplementId === item.supplementId),
                       )}
-                                            onToggle={() => handleToggle(item)}
+                      onToggle={() => handleToggle(item)}
                     />
                   ))}
                 </div>
 
                 {/* PC 카드 리스트 */}
                 <div className="mt-12 hidden md:block">
-                  <div className={hasAside ? 'w-full px-6 lg:pr-8 pb-10' : 'mx-auto max-w-5xl px-[35.64px] pb-10'}>
+                  <div
+                    className={
+                      hasAside
+                        ? 'w-full px-6 pb-10 lg:pr-8'
+                        : 'mx-auto max-w-5xl px-[35.64px] pb-10'
+                    }
+                  >
                     <div
-                      className="grid w-full md:grid-cols-3 grid-cols-2 items-start justify-items-center gap-8"
+                      className="grid w-full grid-cols-2 items-start justify-items-center gap-8 md:grid-cols-3"
                       style={{ gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: '220px' }}
                     >
                       {results.map((item) => (
@@ -497,127 +505,122 @@ const handleRemove = (item: { cursorId?: number; supplementId?: number }) => {
 
         {/* 분석 목록 (검색 결과 있을 때만) */}
         {hasAside && (
-  <aside
-    className="
-      sticky top-8 hidden lg:block
-      lg:col-start-2 lg:col-end-3
-      w-[240px] max-w-[240px] flex-shrink-0 z-10
-    "
-  >
-              <div className="w-full">
-                <button
-                  onClick={handleAnalyze}
-                  className="font-pretendard h-[55px] w-full rounded-[59px] bg-[#FFEB9D] text-[18px] font-semibold"
-                >
-                  분석 시작
-                </button>
-
-                {selectedItems.length > 0 && (
-                  <div className="mt-6 flex flex-col gap-6 rounded-[24px] border border-[#9C9A9A] bg-[#F2F2F2] px-5 py-5">
-                    {selectedItems.map((item, idx) => (
-                      <div
-                        key={idx}
-                        className="relative flex h-[180px] w-full flex-col items-center justify-center rounded-[24px] border border-gray-200 bg-white px-4 py-6 shadow"
-                      >
-                        <button
-onClick={() => handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })}
-className="absolute top-3 right-4"
-                        >
-                          <img
-                            src="/images/PNG/조합 2-1/delete.png"
-                            alt="삭제"
-                            className="h-[35px] w-[30px]"
-                          />
-                        </button>
-
-                        <img
-                          src={item.imageUrl}
-                          className="mt-4 h-[75px] w-[100px] object-contain"
-                        />
-                        <p className="mt-3 text-center text-[15px] leading-tight font-medium">
-                          {item.supplementName}
-                        </p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </aside>
-        )}
-
-            {/* 모바일 분석 목록 */}
-            {selectedItems.length > 0 && (
-              <div
-                className="fixed bottom-0 left-0 z-50 w-full bg-white lg:hidden"
-                style={{
-                  boxShadow: '0px -22px 40px 0px #C1C1C140',
-                  paddingTop: '18px',
-                  paddingRight: '10px',
-                  paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
-                  paddingLeft: '10px',
-                  maxHeight: '280px',
-                  boxSizing: 'border-box',
-                }}
+          <aside className="sticky top-8 z-10 hidden w-[240px] max-w-[240px] flex-shrink-0 lg:col-start-2 lg:col-end-3 lg:block">
+            <div className="w-full">
+              <button
+                onClick={handleAnalyze}
+                className="font-pretendard h-[55px] w-full rounded-[59px] bg-[#FFEB9D] text-[18px] font-semibold"
               >
-              <div className="mb-1 flex items-center justify-between">
-                <h3 className="font-pretendard px-3 text-[22px] font-bold">분석 목록</h3>
-                <button onClick={handleAnalyze} className="border-none bg-transparent p-0">
-                  <img
-                    src="/images/PNG/조합 2-1/시작.png"
-                    alt="분석 시작"
-                    className="mr-1.5 h-[40px] w-[80px] object-contain"
-                  />
-                </button>
-              </div>
+                분석 시작
+              </button>
 
-              <p className="font-pretendard mb-5 px-3 text-[14px] text-[#808080]">최대 10개 선택</p>
-
-              <div
-                className="hide-scrollbar mx-auto w-full max-w-[600px] overflow-x-auto rounded-[25px] border border-[#B2B2B2] bg-white"
-                style={{ height: '160px' }}
-              >
-                <div className="flex w-max gap-[10px] px-3">
+              {selectedItems.length > 0 && (
+                <div className="mt-6 flex flex-col gap-6 rounded-[24px] border border-[#9C9A9A] bg-[#F2F2F2] px-5 py-5">
                   {selectedItems.map((item, idx) => (
                     <div
                       key={idx}
-                      className="relative flex h-[130px] w-[130px] flex-shrink-0 flex-col items-center rounded-[10px] bg-white"
-                      style={{ paddingTop: '22px', paddingBottom: '12px' }}
+                      className="relative flex h-[180px] w-full flex-col items-center justify-center rounded-[24px] border border-gray-200 bg-white px-4 py-6 shadow"
                     >
-                      <img
-                        src={item.imageUrl}
-                        className="mt-3 mb-2 h-[70px] w-[90px] object-contain"
-                      />
-                      <div className="mt-[-4px] flex h-[34px] items-center justify-center px-4">
-                        <p
-                          title={item.supplementName}
-                          className={[
-                            'font-pretendard text-center font-medium tracking-[-0.02em] text-black',
-                            'leading-[120%]',
-                            'line-clamp-2 overflow-hidden break-words break-keep',
-                            'text-[13px]',
-                          ].join(' ')}
-                        >
-                          {item.supplementName}
-                        </p>
-                      </div>
                       <button
-onClick={() => handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })}
-className="absolute right-1 bottom-23"
+                        onClick={() =>
+                          handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })
+                        }
+                        className="absolute top-3 right-4"
                       >
                         <img
                           src="/images/PNG/조합 2-1/delete.png"
                           alt="삭제"
-                          className="right-2 h-[27px] w-[27px]"
+                          className="h-[35px] w-[30px]"
                         />
                       </button>
+
+                      <img src={item.imageUrl} className="mt-4 h-[75px] w-[100px] object-contain" />
+                      <p className="mt-3 text-center text-[15px] leading-tight font-medium">
+                        {item.supplementName}
+                      </p>
                     </div>
                   ))}
                 </div>
+              )}
+            </div>
+          </aside>
+        )}
+
+        {/* 모바일 분석 목록 */}
+        {selectedItems.length > 0 && (
+          <div
+            className="fixed bottom-0 left-0 z-50 w-full bg-white lg:hidden"
+            style={{
+              boxShadow: '0px -22px 40px 0px #C1C1C140',
+              paddingTop: '18px',
+              paddingRight: '10px',
+              paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
+              paddingLeft: '10px',
+              maxHeight: '280px',
+              boxSizing: 'border-box',
+            }}
+          >
+            <div className="mb-1 flex items-center justify-between">
+              <h3 className="font-pretendard px-3 text-[22px] font-bold">분석 목록</h3>
+              <button onClick={handleAnalyze} className="border-none bg-transparent p-0">
+                <img
+                  src="/images/PNG/조합 2-1/시작.png"
+                  alt="분석 시작"
+                  className="mr-1.5 h-[40px] w-[80px] object-contain"
+                />
+              </button>
+            </div>
+
+            <p className="font-pretendard mb-5 px-3 text-[14px] text-[#808080]">최대 10개 선택</p>
+
+            <div
+              className="hide-scrollbar mx-auto w-full max-w-[600px] overflow-x-auto rounded-[25px] border border-[#B2B2B2] bg-white"
+              style={{ height: '160px' }}
+            >
+              <div className="flex w-max gap-[10px] px-3">
+                {selectedItems.map((item, idx) => (
+                  <div
+                    key={idx}
+                    className="relative flex h-[130px] w-[130px] flex-shrink-0 flex-col items-center rounded-[10px] bg-white"
+                    style={{ paddingTop: '22px', paddingBottom: '12px' }}
+                  >
+                    <img
+                      src={item.imageUrl}
+                      className="mt-3 mb-2 h-[70px] w-[90px] object-contain"
+                    />
+                    <div className="mt-[-4px] flex h-[34px] items-center justify-center px-4">
+                      <p
+                        title={item.supplementName}
+                        className={[
+                          'font-pretendard text-center font-medium tracking-[-0.02em] text-black',
+                          'leading-[120%]',
+                          'line-clamp-2 overflow-hidden break-words break-keep',
+                          'text-[13px]',
+                        ].join(' ')}
+                      >
+                        {item.supplementName}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() =>
+                        handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })
+                      }
+                      className="absolute right-1 bottom-23"
+                    >
+                      <img
+                        src="/images/PNG/조합 2-1/delete.png"
+                        alt="삭제"
+                        className="right-2 h-[27px] w-[27px]"
+                      />
+                    </button>
+                  </div>
+                ))}
               </div>
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
+    </div>
   );
 };
 
