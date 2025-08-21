@@ -2,6 +2,7 @@ import { useState } from "react";
 import axios from "@/lib/axios";
 import { useNavigate } from "react-router-dom";
 import { saveTokens } from "@/lib/auth";
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // ✅ 추가
 
 type Props = { onLoginSuccess?: () => Promise<void> | void };
 
@@ -44,6 +45,7 @@ const DesktopEmailLoginPage = ({ onLoginSuccess }: Props) => {
         if (fallbackAT) {
           console.warn("[LOGIN] using fallback token fields");
           saveTokens(fallbackAT, fallbackRT);
+          await syncFcmTokenAfterLoginSilently();
         } else {
           setErrorMessage("로그인에 실패했습니다. 다시 시도해주세요.");
           return;
