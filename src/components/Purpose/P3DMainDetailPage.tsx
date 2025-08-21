@@ -5,6 +5,10 @@ import { GoShareAndroid, GoHeart, GoHeartFill } from "react-icons/go";
 import MainDetailPageBrandSection from "./P3BrandSection";
 import IngredientTab from "./P3IngredientTab";
 import TimingTab from "./P3TimingTab";
+import heart from "@/assets/detailpagepng/heart.png";
+import heartfill from "@/assets/detailpagepng/heartfill.png";
+import share from "@/assets/detailpagepng/share.png";
+import i from "@/assets/detailpagepng/i.png";
 
 // Ingredient 타입 정의
 interface Ingredient {
@@ -99,26 +103,26 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                 <div className="flex gap-3 ml-auto">
                   <button
                     onClick={onCopyUrl}
-                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white border-[#AAA] border-[0.3px]"
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] bg-white"
                   >
-                    <GoShareAndroid className="w-[28px] h-[28px]" />
+                    <img src={share} alt="공유" className="w-[48px] h-[48px]" />
                   </button>
                   <button
                     onClick={toggleLike}
-                    className="rounded-full flex justify-center items-center w-[48px] h-[48px] border-[#AAA] border-[0.3px]"
+                    className="rounded-full flex justify-center items-center w-[48px] h-[48px]"
                   >
-                    {liked ? (
-                      <GoHeartFill className="w-[30px] h-[30px] text-[#FD657E]" />
-                    ) : (
-                      <GoHeart className="w-[30px] h-[30px] text-[#FD657E]" />
-                    )}
+                    <img
+                      src={liked ? heartfill : heart}
+                      alt="찜"
+                      className="w-[48px] h-[48px]"
+                    />
                   </button>
                 </div>
               </div>
             </div>
 
             <div className="mt-8">
-              <div className="flex flex-wrap gap-[14px] mb-[26px]">
+              <div className="flex flex-wrap gap-[14px] mb-[16px]">
                 {product.coupangLink && (
                   <a
                     href={product.coupangLink}
@@ -135,6 +139,10 @@ const MainDetailPageDesktop: React.FC<DesktopProps> = ({
                 >
                   섭취 알림 등록
                 </button>
+              </div>
+              <div className="flex justify-start items-center gap-[6px]">
+                <img src={i} alt="i" className="w-[12px] h-[12px]" />
+                <span className="font-medium text-[#353535] text-[9px] tracking-[-0.3px]">위 쿠팡링크는 쿠팡 파트너스 활동의 일환으로 이에 따른 일정액의 수수료를 제공받습니다.</span>
               </div>
             </div>
           </div>

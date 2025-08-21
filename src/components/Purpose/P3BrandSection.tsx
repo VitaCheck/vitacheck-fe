@@ -92,7 +92,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                       className="w-[110px] h-[110px] mx-auto mt-[15px] object-cover"
                     />
                   </div>
-                  <p className="mt-[17px] text-[17px] font-medium text-center h-[50px] line-clamp-2">
+                  <p className="mt-[17px] text-[17px] font-medium text-center w-full line-clamp-2 break-words break-keep">
                     {product.name}
                   </p>
                 </div>
@@ -151,7 +151,7 @@ const MainDetailPageBrandSection = ({ brandName, brandImageUrl, brandProducts, b
                       className="w-full h-full object-contain p-4"
                     />
                   </div>
-                  <p className="mt-[16px] text-[22px] font-medium text-center line-clamp-2">
+                  <p className="mt-[16px] text-[22px] font-medium text-center w-full line-clamp-2 break-words break-keep">
                     {product.name}
                   </p>
                 </div>

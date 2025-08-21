@@ -124,7 +124,7 @@ const RecommendedProductSectionDesktop = ({
                     className="w-full h-full object-contain p-4"
                   />
                 </div>
-                <p className="mt-[16px] text-[22px] font-medium text-center line-clamp-2">
+                <p className="mt-[16px] text-[22px] font-medium text-center whitespace-normal break-keep line-clamp-2">
                   {product.title}
                 </p>
               </div>

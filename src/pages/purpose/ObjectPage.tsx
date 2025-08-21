@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios"; 
 import myAxiosInstance from "@/lib/axios";
 
 // 목적 카드 타입 정의
