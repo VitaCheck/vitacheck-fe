@@ -1,5 +1,8 @@
+// src/pages/auth/SocialCallback.tsx
 import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { saveTokens } from "@/lib/auth";
+import { syncFcmTokenForce /* or: syncFcmTokenAfterLoginSilently */ } from "@/lib/push";
 
 function parseHashParams(hash: string) {
   const h = hash.startsWith("#") ? hash.slice(1) : hash;
@@ -32,40 +35,16 @@ export default function SocialCallback() {
     const rt = params.get("refreshToken") ?? "";
     const next = params.get("next") ?? "/";
 
-    return {
-      isNew,
-      provider,
-      providerId,
-      email,
-      fullName,
-      signupToken,
-      at,
-      rt,
-      next,
-    };
+    return { isNew, provider, providerId, email, fullName, signupToken, at, rt, next };
   }, [params]);
 
   useEffect(() => {
-    const {
-      isNew,
-      provider,
-      providerId,
-      email,
-      fullName,
-      signupToken,
-      at,
-      rt,
-      next,
-    } = query;
+    const { isNew, provider, providerId, email, fullName, signupToken, at, rt, next } = query;
 
     // URL에서 토큰 흔적 제거 (hash / query)
     let cleaned = false;
     if (window.location.hash) {
-      history.replaceState(
-        null,
-        "",
-        window.location.pathname + window.location.search
-      );
+      history.replaceState(null, "", window.location.pathname + window.location.search);
       cleaned = true;
     }
     if (
@@ -85,32 +64,37 @@ export default function SocialCallback() {
       );
     }
 
-    // 기존 유저: access/refresh 둘 다 있으면 바로 로그인
+    // 1) 기존 유저: access/refresh 둘 다 있으면 바로 로그인 처리
     if (!isNew && at && rt) {
-      localStorage.setItem("accessToken", at);
-      localStorage.setItem("refreshToken", rt);
-      const safeNext = next?.startsWith("/") ? next : "/";
-      navigate(safeNext, { replace: true });
+      saveTokens(at, rt);
+
+      // 디버깅/초기안정화: 강제 동기화 (권한 팝업 가능)
+      // 운영 안정화 후에는 syncFcmTokenAfterLoginSilently()로 교체 권장
+      (async () => {
+        try {
+          await syncFcmTokenForce();
+          // await syncFcmTokenAfterLoginSilently();
+        } catch {
+          // FCM 실패는 로그인 흐름을 막지 않음
+        } finally {
+          const safeNext = next?.startsWith("/") ? next : "/";
+          navigate(safeNext, { replace: true });
+        }
+      })();
+
       return;
     }
 
-    // 신규 유저: isNew 이거나 accessToken이 없고 임시 토큰이 있으면 가입 플로우
+    // 2) 신규 유저: 임시 토큰으로 가입 폼 이동
     if ((isNew || !at) && signupToken) {
       navigate("/social-signup", {
         replace: true,
-        state: {
-          socialTempToken: signupToken,
-          provider,
-          providerId,
-          email,
-          fullName,
-          next,
-        },
+        state: { socialTempToken: signupToken, provider, providerId, email, fullName, next },
       });
       return;
     }
 
-    // 값 전달 방식 B: isNew + 핵심 식별자만 온 경우
+    // 3) 백업 경로: isNew + 핵심 식별자만 존재
     if (isNew && provider && providerId && email) {
       navigate("/social-signup", {
         replace: true,
@@ -119,9 +103,7 @@ export default function SocialCallback() {
       return;
     }
 
-    // 실패 시 로그인으로 회수 (토큰 비우기)
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    // 실패 시 로그인으로 회수
     navigate("/login?error=callback_mismatch", { replace: true });
   }, [navigate, query, params]);
 
