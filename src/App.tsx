@@ -39,11 +39,10 @@ import SearchPage from "./pages/SearchPage";
 import SearchResultPage from "./pages/SearchResultPage";
 import OauthRedirect from "./pages/auth/OauthRedirect";
 import TermsViewPage from "./pages/terms/TermsViewPage";
+import SocialCallback from "./pages/auth/SocialCallback";
 
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-
-
 
 import axios from "@/lib/axios";
 import { registerServiceWorker, onForegroundMessage } from "@/lib/firebase";
@@ -116,6 +115,7 @@ const router = createBrowserRouter([
       { path: "login", element: <SocialLogin /> },
       { path: "/oauth-redirect", element: <OauthRedirect /> },
       { path: "/social-signup", element: <SocialSignupForm /> },
+      { path: "/oauth/callback", element: <SocialCallback /> },
 
       // 기타
       {
@@ -123,9 +123,8 @@ const router = createBrowserRouter([
         element: <IngredientDetailPage />,
       },
       { path: "/terms/:slug", element: <TermsViewPage /> }, // privacy | service | marketing
-      { path: "/settings", element: <SettingsPage /> }, 
+      { path: "/settings", element: <SettingsPage /> },
     ],
-
   },
 ]);
 
@@ -158,7 +157,9 @@ function App() {
       }
     })();
 
-    return () => { mounted = false; };
+    return () => {
+      mounted = false;
+    };
   }, []);
 
   return (

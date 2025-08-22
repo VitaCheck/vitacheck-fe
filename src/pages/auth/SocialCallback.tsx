@@ -1,5 +1,8 @@
+// src/pages/auth/SocialCallback.tsx
 import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { saveTokens } from "@/lib/auth";
+import * as Push from "@/lib/push"; // ★ 정적 import로 번들 포함
 
 function parseHashParams(hash: string) {
   const h = hash.startsWith("#") ? hash.slice(1) : hash;
@@ -17,7 +20,6 @@ export default function SocialCallback() {
     const email = params.get("email") ?? "";
     const fullName = params.get("fullName") ?? "";
 
-    // 임시 토큰: 쿼리 > 해시(fragment) 우선순위
     const hashParams = parseHashParams(window.location.hash);
     const signupToken =
       params.get("signupToken") ??
@@ -57,8 +59,13 @@ export default function SocialCallback() {
       rt,
       next,
     } = query;
+    console.debug("[CB] SocialCallback useEffect", {
+      isNew,
+      hasAT: !!at,
+      hasRT: !!rt,
+    });
 
-    // URL에서 토큰 흔적 제거 (hash / query)
+    // URL 정리(토큰 흔적 제거)
     let cleaned = false;
     if (window.location.hash) {
       history.replaceState(
@@ -85,16 +92,20 @@ export default function SocialCallback() {
       );
     }
 
-    // 기존 유저: access/refresh 둘 다 있으면 바로 로그인
+    // 1) 기존 유저: AT/RT 있으면 로그인 완료 + FCM 업서트 + 리다이렉트
     if (!isNew && at && rt) {
-      localStorage.setItem("accessToken", at);
-      localStorage.setItem("refreshToken", rt);
-      const safeNext = next?.startsWith("/") ? next : "/";
-      navigate(safeNext, { replace: true });
+      saveTokens(at, rt);
+      console.debug("[CB] saved tokens, calling Push.syncFcmTokenForce...");
+      Push.syncFcmTokenForce()
+        .then((ok) => console.debug("[CB] force result =", ok))
+        .finally(() => {
+          const safeNext = next?.startsWith("/") ? next : "/";
+          navigate(safeNext, { replace: true });
+        });
       return;
     }
 
-    // 신규 유저: isNew 이거나 accessToken이 없고 임시 토큰이 있으면 가입 플로우
+    // 2) 신규 유저: 임시 토큰으로 가입 폼 이동
     if ((isNew || !at) && signupToken) {
       navigate("/social-signup", {
         replace: true,
@@ -110,7 +121,7 @@ export default function SocialCallback() {
       return;
     }
 
-    // 값 전달 방식 B: isNew + 핵심 식별자만 온 경우
+    // 3) 백업: isNew + 기본 식별자만 있을 때
     if (isNew && provider && providerId && email) {
       navigate("/social-signup", {
         replace: true,
@@ -119,9 +130,7 @@ export default function SocialCallback() {
       return;
     }
 
-    // 실패 시 로그인으로 회수 (토큰 비우기)
-    localStorage.removeItem("accessToken");
-    localStorage.removeItem("refreshToken");
+    // 실패 시 로그인으로 회수
     navigate("/login?error=callback_mismatch", { replace: true });
   }, [navigate, query, params]);
 

@@ -4,6 +4,7 @@ import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
 import TermsAgreement from "@/components/terms/TermsAgreement";
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // ← 경로 확인
 
 /* ---------- 유틸 (이하 동일) ---------- */
 type JwtPayload = Record<string, any>;
@@ -336,8 +337,12 @@ export default function SocialSignupForm() {
 
       const at = result?.result?.accessToken ?? result?.accessToken ?? "";
       const rt = result?.result?.refreshToken ?? result?.refreshToken ?? "";
-      if (at) saveTokens(at, rt);
+      if (at) {
+        saveTokens(at, rt);
+        await syncFcmTokenAfterLoginSilently().catch(() => {});
+      }
 
+      // ⬇️ 그 다음에 라우팅
       const next = (preset as any).next;
       navigate(typeof next === "string" && next.startsWith("/") ? next : "/", {
         replace: true,
