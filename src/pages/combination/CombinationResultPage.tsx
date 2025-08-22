@@ -398,8 +398,8 @@ async function onShareKakao() {
       title: `${shareTitle} - VitaCheck`,
       description: 'VitaCheck에서 성분 정보를 확인해 보세요.',
       imageUrl: getShareImageUrl(),         // ✅ 절대 URL
-      imageWidth: 300,                      // ✅ 가능하면 명시 (권장)
-      imageHeight: 500,                     // ✅ 가능하면 명시 (권장)
+      imageWidth: 400,                      // ✅ 가능하면 명시 (권장)
+      imageHeight: 400,                     // ✅ 가능하면 명시 (권장)
       link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
     },
     buttons: [
