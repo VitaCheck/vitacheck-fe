@@ -217,15 +217,18 @@ export default function SocialCallback() {
     }
 
     // ✅ 기존 유저: AT/RT 있으면 로그인 처리 + FCM 업서트
-    if (!isNew && at && rt) {
-      saveTokens(at, rt);
-      // 액세스 토큰이 생겼으니 조용히 FCM 동기화
-      syncFcmTokenAfterLoginSilently().finally(() => {
-        const safeNext = next?.startsWith("/") ? next : "/";
-        navigate(safeNext, { replace: true });
-      });
-      return;
-    }
+    // if (!isNew && at && rt) {
+    //   saveTokens(at, rt);
+
+    //   // 액세스 토큰이 생겼으니 조용히 FCM 동기화
+    //   syncFcmTokenAfterLoginSilently().finally(() => {
+    //     const safeNext = next?.startsWith("/") ? next : "/";
+    //     navigate(safeNext, { replace: true });
+    //   });
+    //   return;
+    // }
+    saveTokens(at, rt);
+    await syncFcmTokenForce(); // ← 무조건 토큰 재발급 + PUT 시도
 
     // ✅ 신규 유저: 가입 폼으로 이동 (임시 토큰 전달)
     if ((isNew || !at) && signupToken) {
