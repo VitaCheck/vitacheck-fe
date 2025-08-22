@@ -473,47 +473,25 @@ const cautionCount = cautionCombinations.length;
 
   const fetchCombinationResult = async () => {
     try {
-      // supplementId가 있는 경우에만 필터링하여 사용
-      const validItems = selectedItems.filter((item: SupplementItem) => item.supplementId);
-      const supplementIds = validItems.map((item: SupplementItem) => item.supplementId!);
-      console.log('API 호출 시작 - supplementIds:', supplementIds);
-      console.log('selectedItems 전체:', selectedItems);
-
-      if (supplementIds.length === 0) {
-        console.warn('분석 가능한 supplementId가 없습니다.');
-        setIngredientResults([]);
-        return;
-      }
+ if (effectiveIds.length === 0) {
+      setIngredientResults([]);
+      return;
+    }
 
       const res = await axios.post('/api/v1/combinations/analyze', {
-        supplementIds: effectiveIds, 
-      });
-      console.log('API 응답 전체:', res.data);
-      console.log('API 응답 result:', res.data.result);
-      console.log('API 응답 ingredientResults:', res.data.result?.ingredientResults);
+      supplementIds: effectiveIds,
+    });
 
-      if (res.data.result?.ingredientResults) {
-        console.log(
-          '성분 결과 상세:',
-          res.data.result.ingredientResults.map((i: any) => ({
-            name: i.ingredientName,
-            total: i.totalAmount,
-            recommended: i.recommendedAmount,
-            upper: i.upperAmount,
-            ratio: i.dosageRatio,
-            overRecommended: i.overRecommended,
-          })),
-        );
-        setIngredientResults(res.data.result.ingredientResults);
-      } else {
-        console.warn('ingredientResults가 없습니다:', res.data);
-        setIngredientResults([]);
-      }
-    } catch (error) {
-      console.error('조합 결과 조회 실패:', error);
+    if (res.data.result?.ingredientResults) {
+      setIngredientResults(res.data.result.ingredientResults);
+    } else {
       setIngredientResults([]);
     }
-  };
+  } catch (error) {
+    console.error('조합 결과 조회 실패:', error);
+    setIngredientResults([]);
+  }
+};
 
   const fetchCombinationRecommendations = async () => {
     try {
@@ -526,11 +504,12 @@ const cautionCount = cautionCombinations.length;
   };
 
   useEffect(() => {
-    if (selectedItems.length > 0) {
-      fetchCombinationResult();
-      fetchCombinationRecommendations();
-    }
-  }, [selectedItems]);
+  if (effectiveIds.length > 0) {
+    fetchCombinationResult();
+    fetchCombinationRecommendations();
+  }
+  // 배열을 의존성에 직접 넣으면 참조가 바뀔 때만 동작하니, 문자열로 안정화
+}, [JSON.stringify(effectiveIds)]);
 
   // 모바일에서는 전역 헤더 숨김(있으면)
   useEffect(() => {
