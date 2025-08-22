@@ -797,7 +797,7 @@ const cautionCount = cautionCombinations.length;
       </div>
 
       {/* 모바일 슬라이더 */}
-      <div className="/* 부모 컨텐츠 폭 100% */ /* iPhone 12 Pro 안전치 */ scrollbar-hide /* ← → 로 축소 */ mx-auto mt-3 w-full max-w-[358px] overflow-x-auto overflow-y-hidden rounded-[20px] border border-[#B2B2B2] bg-white px-3 py-2 py-3 md:hidden">
+      <div className="/* 부모 컨텐츠 폭 100% */ /* iPhone 12 Pro 안전치 */ scrollbar-hide /* ← → 로 축소 */ mx-auto mt-3 w-full max-w-[358px] overflow-x-auto overflow-y-hidden rounded-[20px] border border-[#B2B2B2] bg-white px-3 py-3 md:hidden">
         <div className="flex w-max gap-3">
           {selectedItems.map((item: SupplementItem) => (
             <div
