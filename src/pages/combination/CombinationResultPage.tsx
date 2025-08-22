@@ -24,7 +24,7 @@ const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '4b2032ace7d33963b0fb
 const SHARE_IMAGE_PATH = '/images/PNG/조합 3-1/인스타 분할 포스터-08.png';
 const getShareImageUrl = () =>
   typeof window !== 'undefined'
-    ? `${window.location.origin}${encodeURI(SHARE_IMAGE_PATH)}`
+    ? `https://www.vitachecking.com${encodeURI(SHARE_IMAGE_PATH)}`
     : encodeURI(SHARE_IMAGE_PATH);
 
 // ✅ SSR 안전한 모바일 훅 교체
@@ -353,19 +353,16 @@ const [confirmMessage, setConfirmMessage] = useState('');
 const [shareOpen, setShareOpen] = useState(false);
 
 const shareUrl = useMemo(() => {
-  const base =
-    window.location.origin.includes('vitachecking.com')
-      ? `${window.location.origin}/combination-result`
-      : 'https://www.vitachecking.com/combination-result';
-
+  const BASE = "https://www.vitachecking.com/combination-result";
   const ids = effectiveIds;
   if (ids.length) {
-    const u = new URL(base);
+    const u = new URL(BASE);
     u.searchParams.set('ids', ids.join(','));
     return u.toString();
   }
-  return base;
+  return BASE;
 }, [effectiveIds]);
+
 
 const shareImage = selectedItems?.[0]?.imageUrl ?? "https://vitachecking.com/static/share-default.png";
 const shareTitle = "내 영양제 조합 결과";
