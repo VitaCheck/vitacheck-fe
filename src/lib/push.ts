@@ -43,6 +43,8 @@ async function preconditions(forceRequest: boolean) {
   return { ok: true as const };
 }
 
+console.debug("[FCM] push module loaded"); // 파일 최상단
+
 export async function syncFcmToken(options?: { forceRequest?: boolean }) {
   const force = options?.forceRequest ?? false;
   if (fcmSyncInFlight) return false;
