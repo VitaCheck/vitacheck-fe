@@ -8,22 +8,140 @@ import flipIcon from '../../assets/flip.png';
 import axios from '@/lib/axios';
 import Navbar from '@/components/NavBar';
 import line from '/images/PNG/조합 2-1/background line.png';
-import ShareLinkPopup from '@/components/combination/ShareLinkPopup' 
+ 
+// 🔽 import들 아래에 추가
+type KakaoSDK = {
+  init(key: string): void;
+  isInitialized(): boolean;
+  Share: { sendDefault(options: any): void };
+};
+const Kakao = (window as any).Kakao as KakaoSDK;
 
-const KAKAO_TEMPLATE_ID = 123624; // 콘솔의 템플릿 ID
+const BREAKPOINT = 640;
+const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '4b2032ace7d33963b0fb79993ff3c951';
 
-// 모바일 여부 판단용 훅
+// 컴포넌트 밖(파일 상단)
+const SHARE_IMAGE_PATH = '/images/PNG/조합 3-1/인스타 분할 포스터-08.png';
+const getShareImageUrl = () =>
+  typeof window !== 'undefined'
+    ? `${window.location.origin}${encodeURI(SHARE_IMAGE_PATH)}`
+    : encodeURI(SHARE_IMAGE_PATH);
+
+// ✅ SSR 안전한 모바일 훅 교체
 const useIsMobile = () => {
-  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
+  const [isMobile, setIsMobile] = useState<boolean>(() =>
+    typeof window !== 'undefined' ? window.innerWidth <= BREAKPOINT : true,
+  );
   useEffect(() => {
-    const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
+    const onResize = () => setIsMobile(window.innerWidth <= BREAKPOINT);
+    window.addEventListener('resize', onResize);
+    onResize();
+    return () => window.removeEventListener('resize', onResize);
   }, []);
   return isMobile;
 };
+
+// ✅ 클립보드 유틸
+async function copyToClipboard(text: string) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    const el = document.createElement('textarea');
+    el.value = text;
+    el.style.position = 'fixed';
+    el.style.opacity = '0';
+    document.body.appendChild(el);
+    el.focus();
+    el.select();
+    try {
+      document.execCommand('copy');
+      return true;
+    } catch {
+      return false;
+    } finally {
+      document.body.removeChild(el);
+    }
+  }
+}
+
+// ✅ 카카오 로더
+async function ensureKakaoReady(): Promise<boolean> {
+  if (!KAKAO_APP_KEY) {
+    console.warn('카카오 JavaScript 키가 설정되지 않았습니다.');
+    return false;
+  }
+  if (typeof window !== 'undefined' && window.Kakao) {
+    try {
+      if (!window.Kakao.isInitialized()) {
+        window.Kakao.init(KAKAO_APP_KEY);
+        console.log('카카오 SDK 초기화 완료');
+      }
+      return true;
+    } catch (e) {
+      console.error('카카오 SDK 초기화 실패:', e);
+      return false;
+    }
+  }
+  console.error('카카오 SDK가 로드되지 않았습니다.');
+  return false;
+}
+
+function ShareSheet({
+  open, onClose, onKakao, onCopy,
+}: { open: boolean; onClose: () => void; onKakao: () => void; onCopy: () => void }) {
+  if (!open) return null;
+  const KAKAO_ICON = '/images/PNG/성분 2-1/kakao.png';
+  const LINK_ICON = '/images/PNG/성분 2-1/link.png';
+  return (
+    <div className="fixed inset-0 z-50">
+      <button aria-label="닫기" className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <div className="absolute right-0 bottom-0 left-0 w-full" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+        <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
+          <div className="px-5 pt-6 pb-4">
+            <h3 className="text-center text-[15px] font-semibold">공유하기</h3>
+          </div>
+          <button onClick={onKakao} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
+              <img src={KAKAO_ICON} alt="카카오톡" className="h-9 w-9 object-contain" loading="lazy" />
+            </span>
+            <span className="text-[15px]">카카오톡으로 공유하기</span>
+          </button>
+          <div className="h-px w-full bg-gray-200" />
+          <button onClick={onCopy} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
+              <img src="/images/PNG/성분 2-1/link.png" alt="링크" className="h-9 w-9 object-contain" loading="lazy" />
+            </span>
+            <span className="text-[15px]">링크 복사하기</span>
+          </button>
+          <div className="h-4" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ConfirmModal({
+  open, onClose, message,
+}: { open: boolean; onClose: () => void; message: string }) {
+  if (!open) return null;
+  return (
+    <div className="fixed inset-0 z-50">
+      <button className="absolute inset-0 bg-black/40" aria-label="닫기" onClick={onClose} />
+      <div className="absolute top-1/2 left-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
+        <p className="mb-5 text-center whitespace-pre-line text-gray-700">{message}</p>
+        <div className="flex justify-center">
+          <button
+            onClick={onClose}
+            className="h-10 min-w-[120px] rounded-xl bg-[#FFE17E] font-semibold text-black hover:brightness-95"
+          >
+            확인
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 // AddCombinationPage.tsx와 동일한 Product 인터페이스 사용
 interface SupplementItem {
@@ -63,6 +181,13 @@ interface Combination {
 
 export default function CombinationResultPage() {
   const isMobile = useIsMobile();
+
+  useEffect(() => {
+    if (typeof window !== 'undefined' && window.Kakao && !window.Kakao.isInitialized()) {
+      window.Kakao.init(KAKAO_APP_KEY);
+      console.log('카카오 SDK 초기화 완료');
+    }
+  }, []);
 
   // 선택: 더 촘촘한 올림 (1250 -> 1300)
   function niceRoundUp(n: number) {
@@ -222,11 +347,11 @@ export default function CombinationResultPage() {
 
   
   // 공유 바텀시트/확인 모달
-const [setSheetOpen] = useState(false);
-const [setConfirmOpen] = useState(false);
-
+  const [sheetOpen, setSheetOpen] = useState(false);
+const [confirmOpen, setConfirmOpen] = useState(false);
+const [confirmMessage, setConfirmMessage] = useState('');
 const [shareOpen, setShareOpen] = useState(false);
-// 공유 URL (배포 도메인 기준으로 만들고 ids 쿼리 넣기)
+
 const shareUrl = useMemo(() => {
   const base =
     window.location.origin.includes('vitachecking.com')
@@ -244,6 +369,56 @@ const shareUrl = useMemo(() => {
 
 const shareImage = selectedItems?.[0]?.imageUrl ?? "https://vitachecking.com/static/share-default.png";
 const shareTitle = "내 영양제 조합 결과";
+
+async function onClickShare() {
+  if (isMobile) {
+    setSheetOpen(true);
+    return;
+  }
+  // PC: 링크 복사(혹은 기존 ShareLinkPopup을 계속 쓰고 싶다면 setShareOpen(true) 호출해도 됨)
+  const ok = await copyToClipboard(shareUrl);
+  setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+  setConfirmOpen(ok);
+}
+
+async function onShareKakao() {
+  // 카카오 공유
+  const ready = await ensureKakaoReady();
+  if (!ready) {
+    const ok = await copyToClipboard(shareUrl);
+    setSheetOpen(false);
+    setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+    setConfirmOpen(ok);
+    return;
+  }
+
+  const shareData = {
+    objectType: 'feed',
+    content: {
+      title: `${shareTitle} - VitaCheck`,
+      description: 'VitaCheck에서 성분 정보를 확인해 보세요.',
+      imageUrl: getShareImageUrl(),         // ✅ 절대 URL
+      imageWidth: 400,                      // ✅ 가능하면 명시 (권장)
+      imageHeight: 400,                     // ✅ 가능하면 명시 (권장)
+      link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+    },
+    buttons: [
+      { title: '자세히 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
+    ],
+  };
+
+  window.Kakao.Share.sendDefault(shareData);
+  setSheetOpen(false);
+  setConfirmMessage('카카오톡 공유하기 완료!');
+  setConfirmOpen(true);
+}
+
+async function onShareCopy() {
+  const ok = await copyToClipboard(shareUrl);
+  setSheetOpen(false);
+  setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+  setConfirmOpen(ok);
+}
 
 // 템플릿 숫자: 초과/권장충족/주의조합
 const overCount = ingredientResults.filter(i => computeFillPercent(i) > UPPER_LINE_POS).length;
@@ -513,7 +688,12 @@ const cautionCount = cautionCombinations.length;
 
         <div className="flex items-center gap-3">
           {/* 공유 */}
-          <button type="button" aria-label="공유" className="active:scale-95" onClick={() => setShareOpen(true)}>
+          <button
+  type="button"
+  aria-label="공유"
+  className="active:scale-95"
+  onClick={onClickShare}  // ✅ 모바일이면 바텀시트, PC면 복사(또는 ShareLinkPopup로 바꿔도 됨)
+>
           <img
               src="/images/PNG/조합 3-1/공유.png"
               alt="공유"
@@ -1104,17 +1284,21 @@ const cautionCount = cautionCombinations.length;
           </section>
         </>
       )}
-      {/* ===== 공유 팝업 ===== */}
-      // 하단 공유 팝업 호출부만 수정
-      {shareOpen && (
-  <ShareLinkPopup
-    onClose={() => setShareOpen(false)}
-    supplementUrl={shareUrl}               // ← 위에서 만든 공유 URL
-    supplementImageUrl={shareImage}        // 공개 HTTPS 이미지
-    supplementName={shareTitle}
-    // templateId 제거! (sendDefault로만 보냄)
-  />
-)}
+
+ {/* 📱 모바일 공유 바텀시트 */}
+ <ShareSheet
+        open={sheetOpen}
+        onClose={() => setSheetOpen(false)}
+        onKakao={onShareKakao}
+        onCopy={onShareCopy}
+      />
+
+      {/* ✅ 확인 모달 */}
+      <ConfirmModal
+        open={confirmOpen}
+        onClose={() => setConfirmOpen(false)}
+        message={confirmMessage}
+      />
     </div>
   );
 }
