@@ -10,6 +10,7 @@ import {
 const PUBLIC_PATH_PREFIXES: string[] = [
   "/api/v1/combinations/recommend",
   "/api/v1/supplements/search",
+  "/api/v1/combinations/analyze",
 ];
 
 const BASE_URL = import.meta.env.VITE_SERVER_API_URL;
