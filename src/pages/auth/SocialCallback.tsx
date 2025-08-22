@@ -216,48 +216,39 @@ export default function SocialCallback() {
       );
     }
 
-    // ✅ 기존 유저: AT/RT 있으면 로그인 처리 + FCM 업서트
-    // if (!isNew && at && rt) {
-    //   saveTokens(at, rt);
+    // 1) 기존 유저: at/rt 있으면 로그인 완료 처리 + FCM 동기화 + 리다이렉트
+if (!isNew && at && rt) {
+  saveTokens(at, rt);
 
-    //   // 액세스 토큰이 생겼으니 조용히 FCM 동기화
-    //   syncFcmTokenAfterLoginSilently().finally(() => {
-    //     const safeNext = next?.startsWith("/") ? next : "/";
-    //     navigate(safeNext, { replace: true });
-    //   });
-    //   return;
-    // }
-    saveTokens(at, rt);
-    await syncFcmTokenForce(); // ← 무조건 토큰 재발급 + PUT 시도
+  // ⚠️ 디버깅 중엔 Force, 운영에선 AfterLoginSilently 권장
+  await syncFcmTokenForce(); 
+  // await syncFcmTokenAfterLoginSilently().catch(() => {});
 
-    // ✅ 신규 유저: 가입 폼으로 이동 (임시 토큰 전달)
-    if ((isNew || !at) && signupToken) {
-      navigate("/social-signup", {
-        replace: true,
-        state: {
-          socialTempToken: signupToken,
-          provider,
-          providerId,
-          email,
-          fullName,
-          next,
-        },
-      });
-      return;
-    }
+  const safeNext = next?.startsWith("/") ? next : "/";
+  navigate(safeNext, { replace: true });
+  return;
+}
 
-    if (isNew && provider && providerId && email) {
-      navigate("/social-signup", {
-        replace: true,
-        state: { provider, providerId, email, fullName, next },
-      });
-      return;
-    }
+// 2) 신규 유저: 임시 토큰으로 가입 폼 이동
+if ((isNew || !at) && signupToken) {
+  navigate("/social-signup", {
+    replace: true,
+    state: { socialTempToken: signupToken, provider, providerId, email, fullName, next },
+  });
+  return;
+}
 
-    // // 실패 시 로그인으로 회수 (토큰 비우기)
-    // localStorage.removeItem("accessToken");
-    // localStorage.removeItem("refreshToken");
-    navigate("/login?error=callback_mismatch", { replace: true });
+// 3) (백업) isNew 플래그만 있고 토큰은 없는 경우
+if (isNew && provider && providerId && email) {
+  navigate("/social-signup", {
+    replace: true,
+    state: { provider, providerId, email, fullName, next },
+  });
+  return;
+}
+
+// 실패 시 회수
+navigate("/login?error=callback_mismatch", { replace: true });
   }, [navigate, query, params]);
 
   return <div className="p-6 text-center text-gray-600">로그인 처리 중...</div>;
