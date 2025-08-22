@@ -24,7 +24,7 @@ const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '4b2032ace7d33963b0fb
 const SHARE_IMAGE_PATH = '/images/PNG/조합 3-1/인스타 분할 포스터-08.png';
 const getShareImageUrl = () =>
   typeof window !== 'undefined'
-    ? `https://www.vitachecking.com${encodeURI(SHARE_IMAGE_PATH)}`
+    ? `${window.location.origin}${encodeURI(SHARE_IMAGE_PATH)}`
     : encodeURI(SHARE_IMAGE_PATH);
 
 // ✅ SSR 안전한 모바일 훅 교체
@@ -353,16 +353,19 @@ const [confirmMessage, setConfirmMessage] = useState('');
 const [shareOpen, setShareOpen] = useState(false);
 
 const shareUrl = useMemo(() => {
-  const BASE = "https://www.vitachecking.com/combination-result";
+  const base =
+    window.location.origin.includes('vitachecking.com')
+      ? `${window.location.origin}/combination-result`
+      : 'https://www.vitachecking.com/combination-result';
+
   const ids = effectiveIds;
   if (ids.length) {
-    const u = new URL(BASE);
+    const u = new URL(base);
     u.searchParams.set('ids', ids.join(','));
     return u.toString();
   }
-  return BASE;
+  return base;
 }, [effectiveIds]);
-
 
 const shareImage = selectedItems?.[0]?.imageUrl ?? "https://vitachecking.com/static/share-default.png";
 const shareTitle = "내 영양제 조합 결과";
@@ -794,7 +797,7 @@ const cautionCount = cautionCombinations.length;
       </div>
 
       {/* 모바일 슬라이더 */}
-      <div className="/* 부모 컨텐츠 폭 100% */ /* iPhone 12 Pro 안전치 */ scrollbar-hide /* ← → 로 축소 */ mx-auto mt-3 w-full max-w-[358px] overflow-x-auto overflow-y-hidden rounded-[20px] border border-[#B2B2B2] bg-white px-3 py-3 md:hidden">
+      <div className="/* 부모 컨텐츠 폭 100% */ /* iPhone 12 Pro 안전치 */ scrollbar-hide /* ← → 로 축소 */ mx-auto mt-3 w-full max-w-[358px] overflow-x-auto overflow-y-hidden rounded-[20px] border border-[#B2B2B2] bg-white px-3 py-2 py-3 md:hidden">
         <div className="flex w-max gap-3">
           {selectedItems.map((item: SupplementItem) => (
             <div
