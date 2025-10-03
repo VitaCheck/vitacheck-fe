@@ -10,7 +10,7 @@ const NavSection = () => {
   return (
     <div>
       {/* 데스크탑에서 MainCard 사용 */}
-      <div className="flex-row gap-4 w-full justify-around px-[9%] sm:px-[10%] py-13 hidden sm:flex">
+      <div className="flex-row gap-4 w-full justify-around px-[5%] lg:px-[16%] py-25 hidden sm:flex">
         <MainCard
           title="목적별 검색"
           subtitle={"건강 고민에 맞는 영양제<br/>체-크"}

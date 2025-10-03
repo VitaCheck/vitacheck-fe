@@ -49,7 +49,7 @@ const RootLayout = () => {
     <div className="font-[Pretendard] h-full flex flex-col">
       {!hideNavbar && (
         <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
-          <div className="w-[90%] lg:w-[80%] mx-auto">
+          <div className="w-[90%] lg:w-[67%] mx-auto">
             <Navbar />
           </div>
         </header>
