@@ -8,7 +8,7 @@ const MainTop = () => {
         relative z-0
         bg-[linear-gradient(90deg,_#FFEA8C_0%,_#FFE88D_65%,_#FEF3B4_92%)]
         sm:bg-[linear-gradient(90deg,_#FFEA8C_0%,_#FFE88D_55%,_#FCFFEA_100%)]
-        px-[9%] sm:px-[15%]
+        px-[9%] sm:px-[15%] sm:py-[3%]
         flex flex-row sm:flex-row justify-between sm:items-center py-5
         [background-repeat:no-repeat]
       "

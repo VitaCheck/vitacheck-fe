@@ -15,7 +15,7 @@ const Footer = () => {
         </Link>
 
         {/* 링크 목록 */}
-        <div className="relative w-full flex justify-center">
+        <div className="relative w-full flex justify-center pb-15">
           {/* 가운데 개인정보처리방침 */}
           <a
             href="https://vitachecking.com/terms/privacy"
@@ -41,8 +41,6 @@ const Footer = () => {
           >
             공식인스타그램
           </a>
-
-          
         </div>
       </div>
     </footer>
