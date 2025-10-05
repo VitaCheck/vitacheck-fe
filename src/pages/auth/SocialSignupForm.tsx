@@ -3,9 +3,8 @@ import { useMemo, useState, useEffect } from "react";
 import { postSocialSignup } from "@/apis/auth";
 import { saveTokens } from "@/lib/auth";
 import TermsAgreement from "@/components/terms/TermsAgreement";
-import { syncFcmTokenForce } from "@/lib/push"; // ★★★ syncFcmTokenForce로 변경
+import { syncFcmTokenForce } from "@/lib/push";
 
-/* ---------- 유틸 (이하 동일) ---------- */
 type JwtPayload = Record<string, any>;
 function decodeJwt(token: string): JwtPayload | null {
   try {
