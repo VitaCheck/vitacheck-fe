@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 
-type Provider = "naver";
+type Provider = "naver" | "google";
 
 export default function SocialLogin() {
   const rawBase = import.meta.env.VITE_SERVER_API_URL as string | undefined;
@@ -65,6 +65,25 @@ export default function SocialLogin() {
             />
             <span className="text-[14px] sm:text-[15px] font-semibold">
               {loading === "naver" ? "이동 중..." : "네이버로 시작하기"}
+            </span>
+          </button>
+
+          {/* 구글 로그인 */}
+          <button
+            type="button"
+            onClick={() => handleSocialLogin("google")}
+            disabled={disabled}
+            aria-busy={loading === "google"}
+            aria-disabled={disabled}
+            className="w-full h-[52px] sm:h-[60px] rounded-full bg-white text-black border border-gray-300 hover:brightness-95 disabled:opacity-60 transition flex items-center justify-center gap-2 mb-5"
+          >
+            <img
+              src="/images/PNG/소셜로그인/google.png"
+              alt="google"
+              className="w-[18px] h-[18px]"
+            />
+            <span className="text-[14px] sm:text-[15px] font-semibold">
+              {loading === "google" ? "이동 중..." : "Google로 시작하기"}
             </span>
           </button>
 
