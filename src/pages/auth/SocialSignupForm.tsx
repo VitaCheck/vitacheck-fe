@@ -305,6 +305,12 @@ export default function SocialSignupForm() {
       return;
     }
 
+    if (!hiddenInfo.fullName || !hiddenInfo.fullName.trim()) {
+      alert("이름 정보가 누락되었습니다. 다시 로그인해주세요.");
+      navigate("/login");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const socialTempToken =

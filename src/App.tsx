@@ -117,6 +117,9 @@ const router = createBrowserRouter([
       { path: "/social-signup", element: <SocialSignupForm /> },
       { path: "/oauth/callback", element: <SocialCallback /> },
 
+      // ✅ Spring Boot OAuth2 기본 콜백 경로 추가
+      { path: "/login/oauth2/code/:provider", element: <SocialCallback /> },
+
       // 기타
       {
         path: "/ingredients/:ingredientName",
