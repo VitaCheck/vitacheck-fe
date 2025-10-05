@@ -305,7 +305,8 @@ interface SupplementPagingResponse {
   code: string;
   message: string;
   result: {
-    supplements: IngredientSupplement[];
+    supplements?: IngredientSupplement[];
+    supplementInfos?: IngredientSupplement[];
     nextCursor: string | null;
   };
 }
@@ -348,36 +349,34 @@ export const fetchIngredientSupplementsPaging = async (
 
     console.log("💊 [API] 찾은 성분 ID:", ingredientId);
 
-    // 2단계: 분리된 영양제 API 호출
+    // 영양제 API 호출
     const params: any = {};
-    if (cursor) {
-      params.cursor = cursor;
-    }
+    if (cursor) params.cursor = cursor;
+    params.size = params.size ?? 40;
 
     const supplementsResponse = await axios.get<SupplementPagingResponse>(
       `/api/v1/ingredients/${ingredientId}/supplements`,
       { params }
     );
 
-    console.log("💊 [API] 영양제 페이징 응답:", supplementsResponse.data);
+    const res = supplementsResponse.data;
+    const result = res?.result ?? {};
+    const rawList = Array.isArray(result.supplements)
+      ? result.supplements
+      : Array.isArray(result.supplementInfos)
+        ? result.supplementInfos
+        : [];
 
-    if (!supplementsResponse.data || !supplementsResponse.data.result) {
-      console.warn(
-        "💊 [API] 응답 데이터 구조가 예상과 다름:",
-        supplementsResponse.data
-      );
-      return { supplements: [], nextCursor: null };
-    }
-
-    const result = supplementsResponse.data.result;
-    console.log("💊 [API] 파싱된 결과:", {
-      supplementsCount: result.supplements?.length || 0,
-      nextCursor: result.nextCursor,
-    });
+    const mapped = rawList.map((s: any) => ({
+      id: s.id ?? s.supplementId,
+      name: s.name ?? s.supplementName,
+      imageUrl: s.imageUrl ?? "",
+      coupangUrl: s.coupangUrl ?? "",
+    }));
 
     return {
-      supplements: result.supplements || [],
-      nextCursor: result.nextCursor,
+      supplements: mapped,
+      nextCursor: result.nextCursor ?? null,
     };
   } catch (error: any) {
     console.error("💊 [API] 영양제 페이징 API 호출 실패:", error);
