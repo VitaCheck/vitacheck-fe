@@ -36,29 +36,52 @@ const PurposeProductList = () => {
   const isMobile = useIsMobile();
 
   const selectedCodes = location.state?.selectedCodes || [];
-  
+
   const purposeCodeMap: Record<string, string> = {
-    EYE: "눈건강", BONE: "뼈건강", SLEEP_STRESS: "수면/스트레스", CHOLESTEROL: "혈중 콜레스테롤",
-    FAT: "체지방", SKIN: "피부 건강", TIRED: "피로감", IMMUNE: "면역력", DIGEST: "소화/위 건강",
-    ATHELETIC: "운동 능력", CLIMACTERIC: "여성 갱년기", TEETH: "치아/잇몸", HAIR_NAIL: "탈모/손톱 건강",
-    BLOOD_PRESS: "혈압", NEUTRAL_FAT: "혈중 중성지방", ANEMIA: "빈혈", ANTIAGING: "노화/항산화",
-    BRAIN: "두뇌활동", LIVER: "간 건강", BLOOD_CIRCULATION: "혈관/혈액순환", GUT_HEALTH: "장 건강",
-    RESPIRATORY_HEALTH: "호흡기 건강", JOINT_HEALTH: "관절 건강", PREGNANT_HEALTH: "임산부/태아 건강",
-    BLOOD_SUGAR: "혈당", THYROID_HEALTH: "갑상선 건강", WOMAN_HEALTH: "여성 건강", MAN_HEALTH: "남성 건강",
+    EYE: "눈건강",
+    BONE: "뼈건강",
+    SLEEP_STRESS: "수면/스트레스",
+    CHOLESTEROL: "혈중 콜레스테롤",
+    FAT: "체지방",
+    SKIN: "피부 건강",
+    TIRED: "피로감",
+    IMMUNE: "면역력",
+    DIGEST: "소화/위 건강",
+    ATHELETIC: "운동 능력",
+    CLIMACTERIC: "여성 갱년기",
+    TEETH: "치아/잇몸",
+    HAIR_NAIL: "탈모/손톱 건강",
+    BLOOD_PRESS: "혈압",
+    NEUTRAL_FAT: "혈중 중성지방",
+    ANEMIA: "빈혈",
+    ANTIAGING: "노화/항산화",
+    BRAIN: "두뇌활동",
+    LIVER: "간 건강",
+    BLOOD_CIRCULATION: "혈관/혈액순환",
+    GUT_HEALTH: "장 건강",
+    RESPIRATORY_HEALTH: "호흡기 건강",
+    JOINT_HEALTH: "관절 건강",
+    PREGNANT_HEALTH: "임산부/태아 건강",
+    BLOOD_SUGAR: "혈당",
+    THYROID_HEALTH: "갑상선 건강",
+    WOMAN_HEALTH: "여성 건강",
+    MAN_HEALTH: "남성 건강",
   };
 
-  
   const purposeOrder = Object.keys(purposeCodeMap);
-  
-  const codePurposeMap = Object.entries(purposeCodeMap).reduce((acc, [key, value]) => {
-    acc[value] = key;
-    return acc;
-  }, {} as Record<string, string>);
+
+  const codePurposeMap = Object.entries(purposeCodeMap).reduce(
+    (acc, [key, value]) => {
+      acc[value] = key;
+      return acc;
+    },
+    {} as Record<string, string>
+  );
 
   const selectedPurposes = selectedCodes
     .map((code) => purposeCodeMap[code])
     .filter(Boolean);
-  
+
   const sortedSelectedPurposes = [...selectedPurposes].sort((a, b) => {
     const keyA = codePurposeMap[a];
     const keyB = codePurposeMap[b];
@@ -96,9 +119,13 @@ const PurposeProductList = () => {
     handleClosePopup();
   };
 
-// ---------------- API 호출 ----------------
+  // ---------------- API 호출 ----------------
   useEffect(() => {
-    if (!selectedCodes || selectedCodes.length === 0 || Object.keys(data).length > 0) {
+    if (
+      !selectedCodes ||
+      selectedCodes.length === 0 ||
+      Object.keys(data).length > 0
+    ) {
       setIsLoading(false);
       return;
     }
@@ -111,24 +138,47 @@ const PurposeProductList = () => {
 
         const response = await axios.get("/api/v1/purposes/filter", { params });
 
+        const normalize = (s: string) => (s || "").replace(/\s/g, "");
+
+        const codeToKo: Record<string, string> = purposeCodeMap;
+        const koToCode: Record<string, string> = Object.fromEntries(
+          Object.entries(codeToKo).map(([code, ko]) => [ko, code])
+        );
 
         const mappedData: ResultData = {};
 
-        response.data.result.forEach((purposeItem: any) => {
-          const purposeName = purposeItem.name;
-          const translatedPurpose = purposeCodeMap[purposeName] || purposeName;
+        (response.data.result || []).forEach((purposeItem: any) => {
+          const serverKo = normalize(purposeItem.name);
+          const code = koToCode[serverKo];
 
           purposeItem.ingredients.forEach((ing: any) => {
-            const ingredientName = ing.ingredientName;
-            if (mappedData[ingredientName]) {
-              // 이미 있다면, 기존 purposes 배열에 새로운 목적을 추가합니다.
-              mappedData[ingredientName].purposes.push(translatedPurpose);
-              mappedData[ingredientName].purposes = [...new Set(mappedData[ingredientName].purposes)];
+            const ingredientName: string = ing.ingredientName;
 
+            const supplements = Array.isArray(ing.supplementInfos)
+              ? ing.supplementInfos.map((s: any) => ({
+                  id: s.id,
+                  name: s.name,
+                  imageUrl: s.imageUrl,
+                  coupangUrl: s.coupangUrl,
+                }))
+              : [];
+
+            if (mappedData[ingredientName]) {
+              mappedData[ingredientName].purposes.push(serverKo);
+              mappedData[ingredientName].purposes = [
+                ...new Set(mappedData[ingredientName].purposes),
+              ];
+              // 새 제품도 합치고 싶다면 아래처럼 머지 (중복 제거 포함)
+              mappedData[ingredientName].supplements = [
+                ...mappedData[ingredientName].supplements,
+                ...supplements,
+              ].filter(
+                (v, i, arr) => arr.findIndex((x) => x.id === v.id) === i
+              );
             } else {
               mappedData[ingredientName] = {
-                purposes: [translatedPurpose],
-                supplements: ing.supplements || [],
+                purposes: [serverKo],
+                supplements,
                 ingredientId: ing.ingredientId,
               };
             }
@@ -173,7 +223,6 @@ const PurposeProductList = () => {
     return sortedData;
   }, [data, selectedCodes, activePurpose]);
 
-
   // ---------------- 무한 스크롤 ----------------
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -184,7 +233,9 @@ const PurposeProductList = () => {
           if (visibleCount < sortedLength) {
             setIsFetchingMore(true);
             setTimeout(() => {
-              setVisibleCount((prev) => Math.min(prev + ITEMS_PER_PAGE, sortedLength));
+              setVisibleCount((prev) =>
+                Math.min(prev + ITEMS_PER_PAGE, sortedLength)
+              );
               setIsFetchingMore(false);
             }, 500);
           }
@@ -195,7 +246,7 @@ const PurposeProductList = () => {
 
     const mobileRef = mobileLoaderRef.current;
     if (mobileRef) observer.observe(mobileRef);
-    
+
     const pcRef = pcLoaderRef.current;
     if (pcRef) observer.observe(pcRef);
 
@@ -204,7 +255,6 @@ const PurposeProductList = () => {
       if (pcRef) observer.unobserve(pcRef);
     };
   }, [getSortedData, isFetchingMore, visibleCount]);
-
 
   // ---------------- 렌더링 ----------------
   const renderSections = () => {
@@ -239,9 +289,9 @@ const PurposeProductList = () => {
                 )}`,
                 {
                   state: {
-                    ingredientId: info.ingredientId, 
+                    ingredientId: info.ingredientId,
                     ingredientName: ingredientName,
-                    initialSupplements: info.supplements, 
+                    initialSupplements: info.supplements,
                   },
                 }
               )
@@ -263,7 +313,8 @@ const PurposeProductList = () => {
         ? sortedSelectedPurposes[0]
         : `${sortedSelectedPurposes[0]} 외 ${sortedSelectedPurposes.length - 1}`;
   } else {
-    if (sortedSelectedPurposes.length === 1) titleText = sortedSelectedPurposes[0];
+    if (sortedSelectedPurposes.length === 1)
+      titleText = sortedSelectedPurposes[0];
     else if (sortedSelectedPurposes.length === 2)
       titleText = (
         <>
@@ -305,8 +356,18 @@ const PurposeProductList = () => {
             <div className="w-full h-full pl-[15px] pr-[24px] text-[14px] font-medium rounded-[26px] border-[0.8px] border-[#AAA] text-black flex items-center justify-between">
               <span>{activePurpose}</span>
               <div className="pointer-events-none absolute top-1/2 right-[8px] transform -translate-y-1/2">
-                <svg className="w-[12px] h-[12px] text-black" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                <svg
+                  className="w-[12px] h-[12px] text-black"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </div>
             </div>
