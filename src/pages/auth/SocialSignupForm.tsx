@@ -181,6 +181,11 @@ export default function SocialSignupForm() {
       phoneNumber: (claims?.phoneNumber as string) || "",
     };
 
+    console.log("=== Token Parsing ===");
+    console.log("claims:", claims);
+    console.log("fromToken:", fromToken);
+    console.log("fromToken.fullName:", fromToken.fullName);
+
     if (state && "socialTempToken" in state) {
       return {
         mode: "token" as const,
