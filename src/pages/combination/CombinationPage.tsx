@@ -1,19 +1,19 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Cat from '../../assets/CatWithPointer.png';
-import Chick from '../../assets/chick.png';
-import flipIcon from '../../assets/flip.png';
-import axios from '@/lib/axios';
-import Navbar from '@/components/NavBar';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Cat from "../../assets/CatWithPointer.png";
+import Chick from "../../assets/chick.png";
+import flipIcon from "../../assets/flip.png";
+import axios from "@/lib/axios";
+import Navbar from "@/components/NavBar";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
   return isMobile;
@@ -21,7 +21,7 @@ const useIsMobile = () => {
 
 interface Combination {
   id: number;
-  type: 'GOOD' | 'CAUTION';
+  type: "GOOD" | "CAUTION";
   name: string;
   description: string;
   displayRank: number;
@@ -34,17 +34,17 @@ interface FlipCardProps {
 
 const CombinationPage = () => {
   const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [searchHistory, setSearchHistory] = useState<string[]>([]);
   const [riskyCombinations, setRiskyCombinations] = useState<Combination[]>([]);
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
-  const placeholder = '제품을 입력해주세요.';
+  const placeholder = "제품을 입력해주세요.";
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    const savedHistory = localStorage.getItem('searchHistory');
+    const savedHistory = localStorage.getItem("searchHistory");
     if (savedHistory) setSearchHistory(JSON.parse(savedHistory));
   }, []);
 
@@ -52,7 +52,7 @@ const CombinationPage = () => {
     const fetchCombinations = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get('/api/v1/combinations/recommend');
+        const response = await axios.get("/api/v1/combinations/recommend");
         const result = response.data.result;
         if (result) {
           setGoodCombinations(result.goodCombinations || []);
@@ -62,7 +62,7 @@ const CombinationPage = () => {
           setRiskyCombinations([]);
         }
       } catch (e) {
-        console.error('조합 추천 데이터를 불러오는 데 실패했습니다.', e);
+        console.error("조합 추천 데이터를 불러오는 데 실패했습니다.", e);
         setGoodCombinations([]);
         setRiskyCombinations([]);
       } finally {
@@ -77,9 +77,12 @@ const CombinationPage = () => {
     if (!trimmed) return;
 
     setIsSearching(true);
-    const updated = [trimmed, ...searchHistory.filter((v) => v !== trimmed)].slice(0, 3);
+    const updated = [
+      trimmed,
+      ...searchHistory.filter((v) => v !== trimmed),
+    ].slice(0, 3);
     setSearchHistory(updated);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    localStorage.setItem("searchHistory", JSON.stringify(updated));
 
     // 약간의 지연 후 페이지 이동 (로딩 상태를 보여주기 위해)
     setTimeout(() => {
@@ -90,14 +93,16 @@ const CombinationPage = () => {
   const handleDelete = (itemToDelete: string) => {
     const updated = searchHistory.filter((item) => item !== itemToDelete);
     setSearchHistory(updated);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
   const formatIngredientNameForPC = (ingredientName: string) => {
-    if (ingredientName.includes('+')) {
-      const parts = ingredientName.split('+').map((p) => p.trim());
+    if (ingredientName.includes("+")) {
+      const parts = ingredientName.split("+").map((p) => p.trim());
       if (parts.every((p) => p.length < 7)) return ingredientName;
-      return parts.map((part, idx) => (idx === 0 ? part : `\n+\n${part}`)).join('');
+      return parts
+        .map((part, idx) => (idx === 0 ? part : `\n+\n${part}`))
+        .join("");
     }
     return ingredientName;
   };
@@ -105,7 +110,7 @@ const CombinationPage = () => {
   const LoadingSkeletonCard = ({ isMobile }: { isMobile: boolean }) => (
     <div
       className={`${
-        isMobile ? 'h-[135px] w-[150px]' : 'h-[155px] w-[230px]'
+        isMobile ? "h-[135px] w-[150px]" : "h-[155px] w-[230px]"
       } relative animate-pulse overflow-hidden rounded-[14px] bg-gray-200`}
     >
       <div className="animate-shimmer absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent" />
@@ -119,18 +124,18 @@ const CombinationPage = () => {
         {/* 모바일 카드 */}
         <div
           className="block h-[135px] w-[150px] cursor-pointer md:hidden"
-          style={{ perspective: '1000px' }}
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
             className={`relative h-full w-full transition-transform duration-500 ${
-              flipped ? 'rotate-y-180' : ''
+              flipped ? "rotate-y-180" : ""
             }`}
-            style={{ transformStyle: 'preserve-3d' }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden' }}
+              style={{ backfaceVisibility: "hidden" }}
             >
               {name}
               <img
@@ -141,7 +146,10 @@ const CombinationPage = () => {
             </div>
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
             >
               {description}
               <img
@@ -156,20 +164,22 @@ const CombinationPage = () => {
         {/* PC 카드 */}
         <div
           className="hidden h-[165px] w-[235px] cursor-pointer md:block"
-          style={{ perspective: '1000px' }}
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
             className={`relative h-full w-full transition-transform duration-500 ${
-              flipped ? 'rotate-y-180' : ''
+              flipped ? "rotate-y-180" : ""
             }`}
-            style={{ transformStyle: 'preserve-3d' }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[2px] py-[2px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden' }}
+              style={{ backfaceVisibility: "hidden" }}
             >
-              <span style={{ whiteSpace: 'pre-line' }}>{formatIngredientNameForPC(name)}</span>
+              <span style={{ whiteSpace: "pre-line" }}>
+                {formatIngredientNameForPC(name)}
+              </span>
               <img
                 src={flipIcon}
                 alt="회전 아이콘"
@@ -178,7 +188,10 @@ const CombinationPage = () => {
             </div>
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
             >
               {description}
               <img
@@ -196,13 +209,13 @@ const CombinationPage = () => {
   // 모바일에서는 전역 헤더 숨김(있으면)
   useEffect(() => {
     if (!isMobile) return;
-    const headerEl = document.querySelector('header');
+    const headerEl = document.querySelector("header");
     if (headerEl instanceof HTMLElement) {
-      headerEl.style.display = 'none';
+      headerEl.style.display = "none";
     }
     return () => {
       if (headerEl instanceof HTMLElement) {
-        headerEl.style.display = '';
+        headerEl.style.display = "";
       }
     };
   }, [isMobile]);
@@ -210,9 +223,11 @@ const CombinationPage = () => {
   return (
     <div className="mx-auto max-w-screen-xl px-4 pt-2 sm:px-36 sm:pt-10">
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
-      <div className="md:hidden">
-        <Navbar />
-      </div>
+      <header className="fixed top-0 left-0 w-full z-50 bg-white shadow-sm">
+        <div className="w-[90%] lg:w-[67%] mx-auto">
+          <Navbar />
+        </div>
+      </header>
 
       {/* 조합추가 - 모바일 */}
       <h1 className="font-Pretendard mb-5 block pt-6 pl-2 text-[24px] leading-[100%] font-bold tracking-[-0.02em] md:hidden">
@@ -233,11 +248,11 @@ const CombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !isSearching) handleSearch();
+              if (e.key === "Enter" && !isSearching) handleSearch();
             }}
             disabled={isSearching}
             className={`w-full bg-transparent text-lg placeholder-gray-300 ${
-              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-400'
+              isSearching ? "cursor-not-allowed text-gray-300" : "text-gray-400"
             }`}
           />
           {isSearching ? (
@@ -262,16 +277,23 @@ const CombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter' && !isSearching) handleSearch();
+              if (e.key === "Enter" && !isSearching) handleSearch();
             }}
             disabled={isSearching}
             className={`w-full text-base placeholder-gray-400 outline-none ${
-              isSearching ? 'cursor-not-allowed text-gray-300' : 'text-gray-800'
+              isSearching ? "cursor-not-allowed text-gray-300" : "text-gray-800"
             }`}
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="ml-2 cursor-pointer">
-              <img src="/images/성분 검색결과/x.png" alt="지우기" className="h-6 w-6" />
+            <button
+              onClick={() => setSearchTerm("")}
+              className="ml-2 cursor-pointer"
+            >
+              <img
+                src="/images/성분 검색결과/x.png"
+                alt="지우기"
+                className="h-6 w-6"
+              />
             </button>
           )}
           {isSearching ? (
@@ -292,7 +314,7 @@ const CombinationPage = () => {
         <div className="block flex justify-center md:hidden">
           <div
             className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[14px]"
-            style={{ width: '300px', height: 'auto', opacity: 1 }}
+            style={{ width: "300px", height: "auto", opacity: 1 }}
           >
             {searchHistory.map((item, idx) => (
               <div key={idx} className="flex items-center gap-[4px]">
@@ -301,7 +323,9 @@ const CombinationPage = () => {
                     setSearchTerm(item);
                     setIsSearching(true);
                     setTimeout(() => {
-                      navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                      navigate(
+                        `/add-combination?query=${encodeURIComponent(item)}`
+                      );
                     }, 500);
                   }}
                   className="text-[13px] font-medium text-gray-700"
@@ -338,7 +362,9 @@ const CombinationPage = () => {
                   setSearchTerm(item);
                   setIsSearching(true);
                   setTimeout(() => {
-                    navigate(`/add-combination?query=${encodeURIComponent(item)}`);
+                    navigate(
+                      `/add-combination?query=${encodeURIComponent(item)}`
+                    );
                   }, 500);
                 }}
                 className="font-Pretendard text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
@@ -369,7 +395,11 @@ const CombinationPage = () => {
             걱정 마세요!
           </p>
           <img src={Cat} alt="고양이" className="w-full" />
-          <img src={Chick} alt="병아리" className="absolute bottom-[18px] left-[22px] w-[45px]" />
+          <img
+            src={Chick}
+            alt="병아리"
+            className="absolute bottom-[18px] left-[22px] w-[45px]"
+          />
           <p className="font-Pretendard absolute right-[-90px] bottom-[-30px] w-[200px] text-right text-[18px] leading-[90%] font-medium tracking-[-0.02em] text-black">
             성분별 총량을 한눈에!
           </p>
@@ -389,7 +419,11 @@ const CombinationPage = () => {
           {/* 가운데 이미지 */}
           <div className="relative w-[200px] shrink-0">
             <img src={Cat} alt="고양이" className="w-full" />
-            <img src={Chick} alt="병아리" className="absolute bottom-[18px] left-[22px] w-[45px]" />
+            <img
+              src={Chick}
+              alt="병아리"
+              className="absolute bottom-[18px] left-[22px] w-[45px]"
+            />
           </div>
 
           {/* 오른쪽 제목 (아래쪽 정렬) */}
@@ -410,29 +444,29 @@ const CombinationPage = () => {
       <div className="mt-8 px-7 md:hidden">
         <h2
           style={{
-            width: '390px',
-            height: '26px',
-            fontFamily: 'Pretendard',
+            width: "390px",
+            height: "26px",
+            fontFamily: "Pretendard",
             fontWeight: 600,
-            fontSize: '22px',
-            lineHeight: '120%',
-            letterSpacing: '-0.02em',
-            color: '#000000',
+            fontSize: "22px",
+            lineHeight: "120%",
+            letterSpacing: "-0.02em",
+            color: "#000000",
           }}
         >
           주의가 필요한 조합 TOP 5
         </h2>
         <p
           style={{
-            width: '200px',
-            height: '17px',
-            fontFamily: 'Pretendard',
+            width: "200px",
+            height: "17px",
+            fontFamily: "Pretendard",
             fontWeight: 600,
-            fontSize: '14px',
-            lineHeight: '120%',
-            letterSpacing: '-0.02em',
-            color: '#6B6B6B',
-            marginTop: '6px',
+            fontSize: "14px",
+            lineHeight: "120%",
+            letterSpacing: "-0.02em",
+            color: "#6B6B6B",
+            marginTop: "6px",
           }}
         >
           카드를 눌러서 확인해 보세요 !
@@ -443,9 +477,15 @@ const CombinationPage = () => {
       <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
         <div className="mt-5 mr-4 mb-5 ml-4 flex w-max gap-[16px]">
           {isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <LoadingSkeletonCard key={i} isMobile />)
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <LoadingSkeletonCard key={i} isMobile />
+              ))
             : riskyCombinations.map((combo) => (
-                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
               ))}
         </div>
       </div>
@@ -470,7 +510,11 @@ const CombinationPage = () => {
                       <LoadingSkeletonCard key={i} isMobile={false} />
                     ))
                   : riskyCombinations.map((combo) => (
-                      <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                      <FlipCard
+                        key={combo.id}
+                        name={combo.name}
+                        description={combo.description}
+                      />
                     ))}
               </div>
             </div>
@@ -482,29 +526,29 @@ const CombinationPage = () => {
       <div className="mt-10 px-7 md:hidden">
         <h2
           style={{
-            width: '390px',
-            height: '26px',
-            fontFamily: 'Pretendard',
+            width: "390px",
+            height: "26px",
+            fontFamily: "Pretendard",
             fontWeight: 600,
-            fontSize: '22px',
-            lineHeight: '120%',
-            letterSpacing: '-0.02em',
-            color: '#000000',
+            fontSize: "22px",
+            lineHeight: "120%",
+            letterSpacing: "-0.02em",
+            color: "#000000",
           }}
         >
           궁합이 좋은 조합 TOP 5
         </h2>
         <p
           style={{
-            width: '300px',
-            height: '17px',
-            fontFamily: 'Pretendard',
+            width: "300px",
+            height: "17px",
+            fontFamily: "Pretendard",
             fontWeight: 600,
-            fontSize: '14px',
-            lineHeight: '120%',
-            letterSpacing: '-0.02em',
-            color: '#6B6B6B',
-            marginTop: '6px',
+            fontSize: "14px",
+            lineHeight: "120%",
+            letterSpacing: "-0.02em",
+            color: "#6B6B6B",
+            marginTop: "6px",
           }}
         >
           카드를 눌러서 확인해 보세요 !
@@ -515,9 +559,15 @@ const CombinationPage = () => {
       <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
         <div className="mt-5 mr-4 mb-15 ml-4 flex w-max gap-[16px]">
           {isLoading
-            ? Array.from({ length: 5 }).map((_, i) => <LoadingSkeletonCard key={i} isMobile />)
+            ? Array.from({ length: 5 }).map((_, i) => (
+                <LoadingSkeletonCard key={i} isMobile />
+              ))
             : goodCombinations.map((combo) => (
-                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
               ))}
         </div>
       </div>
@@ -542,7 +592,11 @@ const CombinationPage = () => {
                       <LoadingSkeletonCard key={i} isMobile={false} />
                     ))
                   : goodCombinations.map((combo) => (
-                      <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                      <FlipCard
+                        key={combo.id}
+                        name={combo.name}
+                        description={combo.description}
+                      />
                     ))}
               </div>
             </div>
