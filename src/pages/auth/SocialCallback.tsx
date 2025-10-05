@@ -2,7 +2,7 @@
 import { useEffect, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { saveTokens } from "@/lib/auth";
-import * as Push from "@/lib/push";
+import * as Push from "@/lib/push"; // ★ 정적 import로 번들 포함
 
 function parseHashParams(hash: string) {
   const h = hash.startsWith("#") ? hash.slice(1) : hash;
