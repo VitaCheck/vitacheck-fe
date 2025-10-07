@@ -817,7 +817,6 @@ export default function SocialSignupForm() {
       socialTempToken,
       email: form.email,
       nickname: form.nickname.trim(),
-      phoneNumber: form.phoneNumber.trim(),
       fullName: hiddenInfo.fullName,
       provider: hiddenInfo.provider,
       providerId: hiddenInfo.providerId,
@@ -874,23 +873,6 @@ export default function SocialSignupForm() {
             value={form.nickname}
             onChange={onChange}
             placeholder="예: 유저1234"
-            required
-            className="ml-[12px] w-full border-0 border-b border-[#D9D9D9] bg-transparent py-3 text-[16px] text-[#6B6B6B] placeholder-[#AAAAAA] outline-none focus:border-[#202020]"
-          />
-        </div>
-
-        {/* 전화번호 */}
-        <div className="space-y-2">
-          <label className="block mb-2 text-[18px] font-semibold">
-            전화번호
-          </label>
-          <input
-            name="phoneNumber"
-            value={form.phoneNumber}
-            onChange={onChange}
-            inputMode="tel"
-            maxLength={13}
-            placeholder="010-0000-0000"
             required
             className="ml-[12px] w-full border-0 border-b border-[#D9D9D9] bg-transparent py-3 text-[16px] text-[#6B6B6B] placeholder-[#AAAAAA] outline-none focus:border-[#202020]"
           />
