@@ -830,7 +830,7 @@ export default function SocialSignupForm() {
     sessionStorage.setItem("signupData", JSON.stringify(signupData));
 
     // ✅ 소셜 상세 입력 페이지로 이동 (모바일 이메일 페이지와 분리)
-    navigate("/signup/social/details", { replace: true });
+    navigate("/social-signup/details", { replace: true });
   };
 
   const regenNickname = () =>
