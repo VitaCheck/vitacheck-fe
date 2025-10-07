@@ -840,7 +840,7 @@ export default function SocialSignupForm() {
       sessionStorage.setItem("signupData", JSON.stringify(signupData));
 
       // ✅ 2단계(성별/생년월일) 페이지로 이동
-      navigate("/signup/email/details", { replace: true });
+      navigate("/signup/email/detail", { replace: true });
     } catch (err: any) {
       console.error("[SocialSignupForm] persist error:", err);
       setErrorMessage("진행 중 오류가 발생했습니다. 다시 시도해 주세요.");
