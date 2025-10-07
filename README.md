@@ -108,9 +108,3 @@ docs: 문서 수정
 style: 코드 포맷팅
 refactor: 리팩토링
 ```
-
----
-
-## 📄 라이선스
-
-MIT License
