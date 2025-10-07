@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "@/lib/axios";
+import { postSocialSignup } from "@/apis/auth";
+import { saveTokens } from "@/lib/auth";
+import { syncFcmTokenForce } from "@/lib/push";
 
-const MobileSignupDetailPage = () => {
-  const [gender, setGender] = useState<"FEMALE" | "MALE" | null>(null);
+type Gender = "FEMALE" | "MALE" | "OTHER";
+
+export default function SocialSignupDetailPage() {
+  const [gender, setGender] = useState<Gender | null>(null);
   const [birth, setBirth] = useState("");
   const [phone, setPhone] = useState("");
   const [error, setError] = useState("");
@@ -20,9 +24,22 @@ const MobileSignupDetailPage = () => {
   }, []);
 
   useEffect(() => {
-    if (!base?.email || !base?.password || !base?.nickname) {
-      navigate("/signup/email", { replace: true });
+    if (
+      !base?.socialTempToken ||
+      !base?.email ||
+      !base?.nickname ||
+      !base?.fullName ||
+      !base?.provider ||
+      !base?.providerId
+    ) {
+      alert("필수 정보가 누락되었습니다. 다시 로그인해주세요.");
+      navigate("/login", { replace: true });
+      return;
     }
+    if (base?.presetGender) setGender(base.presetGender as Gender);
+    if (base?.presetBirthDate)
+      setBirth(base.presetBirthDate.replace(/-/g, "."));
+    if (base?.phoneNumber) setPhone(base.phoneNumber);
   }, [base, navigate]);
 
   const genderCardStyle = (selected: boolean) =>
@@ -35,13 +52,14 @@ const MobileSignupDetailPage = () => {
     let formatted = onlyNums;
     if (onlyNums.length > 4)
       formatted = onlyNums.slice(0, 4) + "." + onlyNums.slice(4);
-    if (onlyNums.length > 6)
+    if (onlyNums.length > 6) {
       formatted =
         onlyNums.slice(0, 4) +
         "." +
         onlyNums.slice(4, 6) +
         "." +
         onlyNums.slice(6);
+    }
     setBirth(formatted);
   };
 
@@ -73,28 +91,41 @@ const MobileSignupDetailPage = () => {
     const birthDate = birth.replace(/\./g, "-");
     const phoneNumber = phone;
 
-    const body = {
-      email: base.email,
-      password: base.password,
-      fullName: base.nickname,
-      nickname: base.nickname,
-      gender,
-      birthDate,
-      phoneNumber,
-      agreeToMarketing: !!base.agreeToMarketing,
-    };
-
     try {
       setIsSubmitting(true);
-      await axios.post("/api/v1/auth/signup", body);
+
+      const body = {
+        email: base.email,
+        fullName: base.fullName,
+        provider: base.provider,
+        providerId: base.providerId,
+        nickname: base.nickname,
+        gender,
+        birthDate,
+        phoneNumber,
+        agreeToMarketing: !!base.agreeToMarketing,
+      };
+
+      const result = await postSocialSignup(body as any, base.socialTempToken);
+      const at = result?.result?.accessToken ?? result?.accessToken ?? "";
+      const rt = result?.result?.refreshToken ?? result?.refreshToken ?? "";
+
+      if (at) {
+        saveTokens(at, rt);
+        await syncFcmTokenForce().catch((err) => {
+          console.error("[SocialSignupDetail] syncFcmTokenForce failed", err);
+        });
+      }
+
+      const next = typeof base?.next === "string" ? base.next : "/";
       sessionStorage.removeItem("signupData");
-      navigate("/login/email");
+      navigate(next.startsWith("/") ? next : "/", { replace: true });
     } catch (err: any) {
       const msg =
         err?.response?.data?.message ||
         "회원가입에 실패했습니다. 잠시 후 다시 시도해주세요.";
       setError(msg);
-      console.error("Signup error:", err);
+      console.error("Social signup error:", err);
     } finally {
       setIsSubmitting(false);
     }
@@ -130,7 +161,6 @@ const MobileSignupDetailPage = () => {
               </div>
               <p className="text-[18px] font-semibold">여성</p>
             </div>
-
             <div className="flex flex-col items-center gap-2">
               <div
                 onClick={() => setGender("MALE")}
@@ -139,6 +169,15 @@ const MobileSignupDetailPage = () => {
                 <img src="/images/male.png" alt="남성" className="w-[120px]" />
               </div>
               <p className="text-[18px] font-semibold">남성</p>
+            </div>
+            <div className="flex flex-col items-center gap-2">
+              <div
+                onClick={() => setGender("OTHER")}
+                className={genderCardStyle(gender === "OTHER")}
+              >
+                <img src="/images/male.png" alt="기타" className="w-[120px]" />
+              </div>
+              <p className="text-[18px] font-semibold">기타</p>
             </div>
           </div>
 
@@ -188,6 +227,4 @@ const MobileSignupDetailPage = () => {
       </div>
     </div>
   );
-};
-
-export default MobileSignupDetailPage;
+}

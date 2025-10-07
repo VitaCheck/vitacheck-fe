@@ -785,8 +785,6 @@ export default function SocialSignupForm() {
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (submitting) return;
-
     if (!form.nickname.trim()) {
       alert("닉네임을 입력해주세요.");
       return;
@@ -801,7 +799,6 @@ export default function SocialSignupForm() {
       return;
     }
 
-    // 소셜 임시 토큰 필수 확인
     const socialTempToken =
       (preset as any).mode === "token"
         ? (preset as any).socialTempToken
@@ -814,39 +811,26 @@ export default function SocialSignupForm() {
       return;
     }
 
-    setSubmitting(true);
-    try {
-      // 2단계 페이지에서 사용할 데이터 세션 저장
-      const next = (preset as any).next;
-      const signupData = {
-        flow: "social",
-        socialTempToken,
-        // 1단계 확정 값
-        email: form.email,
-        nickname: form.nickname.trim(),
-        phoneNumber: form.phoneNumber.trim(),
-        // 토큰/프리셋 값
-        fullName: hiddenInfo.fullName,
-        provider: hiddenInfo.provider,
-        providerId: hiddenInfo.providerId,
-        presetGender: hiddenInfo.gender || "",
-        presetBirthDate: hiddenInfo.birthDate || "",
-        // 약관
-        agreeToMarketing: !!agrees.marketing,
-        // 가입 후 이동
-        next: typeof next === "string" ? next : "/",
-      };
+    const next = (preset as any).next;
+    const signupData = {
+      flow: "social",
+      socialTempToken,
+      email: form.email,
+      nickname: form.nickname.trim(),
+      phoneNumber: form.phoneNumber.trim(),
+      fullName: hiddenInfo.fullName,
+      provider: hiddenInfo.provider,
+      providerId: hiddenInfo.providerId,
+      presetGender: hiddenInfo.gender || "",
+      presetBirthDate: hiddenInfo.birthDate || "",
+      agreeToMarketing: !!agrees.marketing,
+      next: typeof next === "string" ? next : "/",
+    };
 
-      sessionStorage.setItem("signupData", JSON.stringify(signupData));
+    sessionStorage.setItem("signupData", JSON.stringify(signupData));
 
-      // ✅ 2단계(성별/생년월일) 페이지로 이동
-      navigate("/signup/email/detail", { replace: true });
-    } catch (err: any) {
-      console.error("[SocialSignupForm] persist error:", err);
-      setErrorMessage("진행 중 오류가 발생했습니다. 다시 시도해 주세요.");
-    } finally {
-      setSubmitting(false);
-    }
+    // ✅ 소셜 상세 입력 페이지로 이동 (모바일 이메일 페이지와 분리)
+    navigate("/signup/social/details", { replace: true });
   };
 
   const regenNickname = () =>

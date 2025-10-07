@@ -25,6 +25,7 @@ import NoSearchResult from "./components/ingredient/NoSearchResult";
 import IngredientSearchSection from "./components/ingredient/IngredientSearchSection";
 import SocialLogin from "./components/Auth/SocialLogin";
 import SocialSignupForm from "./pages/auth/SocialSignupForm";
+import SocialSignupDetailPage from "@/pages/auth/SocialSignupDetailPage";
 import EmailLoginPage from "./pages/auth/EmailLoginPage";
 import EmailSignupPage from "./pages/auth/EmailSignupPage";
 import EmailSignupDetailPage from "./pages/auth/EmailSignupDetailPage";
@@ -115,6 +116,7 @@ const router = createBrowserRouter([
       { path: "login", element: <SocialLogin /> },
       { path: "/oauth-redirect", element: <OauthRedirect /> },
       { path: "/social-signup", element: <SocialSignupForm /> },
+      { path: "/social-signup/details", element: <SocialSignupDetailPage /> },
       { path: "/oauth/callback", element: <SocialCallback /> },
 
       // ✅ Spring Boot OAuth2 기본 콜백 경로 추가
