@@ -170,15 +170,6 @@ export default function SocialSignupDetailPage() {
               </div>
               <p className="text-[18px] font-semibold">남성</p>
             </div>
-            <div className="flex flex-col items-center gap-2">
-              <div
-                onClick={() => setGender("OTHER")}
-                className={genderCardStyle(gender === "OTHER")}
-              >
-                <img src="/images/male.png" alt="기타" className="w-[120px]" />
-              </div>
-              <p className="text-[18px] font-semibold">기타</p>
-            </div>
           </div>
 
           {/* 생년월일 */}
