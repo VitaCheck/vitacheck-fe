@@ -106,13 +106,9 @@
 //   return [];
 // }
 
-
-
-
 // src/apis/search.ts
 import api from "@/lib/axios";
 import axios from "axios";
-
 
 export interface IngredientSearchItem {
   id: number;
@@ -129,7 +125,6 @@ export interface PopularKeyword {
   score: number;
   keyword: string;
 }
-
 
 export async function searchIngredients(
   keyword: string
@@ -149,7 +144,6 @@ export async function searchIngredients(
     return [];
   }
 }
-
 
 export interface SearchedSupplement {
   cursorId: number;
@@ -201,7 +195,7 @@ export async function getRecentKeywords(limit = 10): Promise<string[]> {
     localStorage.getItem("accessToken") ||
     sessionStorage.getItem("accessToken");
 
-  const res = await api.get("/recent", {
+  const res = await api.get("/api/v1/recent", {
     params: { limit },
     headers: token ? { Authorization: `Bearer ${token}` } : undefined,
   });
@@ -219,11 +213,10 @@ export async function getRecentProducts(limit = 5): Promise<RecentProduct[]> {
     code: string;
     message: string;
     result: RecentProduct[];
-  }>("/me/recent-products", { params: { limit } });
+  }>("/api/v1/me/recent-products", { params: { limit } });
 
   if (res.data?.isSuccess && Array.isArray(res.data.result)) {
     return res.data.result;
   }
   return [];
 }
-
