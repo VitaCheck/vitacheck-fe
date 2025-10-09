@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Search from "../assets/search.svg";
+import Search from "../assets/searchbar.png";
 import X from "../assets/X.svg";
-import SearchOptionsModal from "./SearchOptionsModal";
+// import SearchOptionsModal from "./SearchOptionsModal";
 
 declare global {
   interface WindowEventMap {
@@ -12,7 +12,7 @@ declare global {
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
-  const [showModal, setShowModal] = useState(false);
+  // const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,25 +25,39 @@ const SearchBar = () => {
   };
 
   const handleClear = () => setQuery("");
-  const toggleModal = () => setShowModal((prev) => !prev);
+  // const toggleModal = () => setShowModal((prev) => !prev);
+
+  const handleSearch = () => {
+    const q = query.trim();
+    if (!q) return; // 비어 있으면 실행하지 않음
+
+    navigate(`/searchresult?query=${encodeURIComponent(q)}`);
+
+    // 데스크탑에서는 입력창 초기화 및 포커스 해제
+    if (window.matchMedia("(min-width: 640px)").matches) {
+      setQuery("");
+      inputRef.current?.blur();
+    }
+  };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && query.trim()) {
-      const q = query.trim();
-      navigate(`/searchresult?query=${encodeURIComponent(q)}`);
-      if (window.matchMedia("(min-width: 640px)").matches) {
-        setQuery("");
-        setShowModal(false);
-        inputRef.current?.blur();
-      }
-    }
+    // if (e.key === "Enter" && query.trim()) {
+    //   const q = query.trim();
+    //   navigate(`/searchresult?query=${encodeURIComponent(q)}`);
+    //   if (window.matchMedia("(min-width: 640px)").matches) {
+    //     setQuery("");
+    //     // setShowModal(false);
+    //     inputRef.current?.blur();
+    //   }
+    // }
+    if (e.key === "Enter") handleSearch();
   };
 
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 640px)").matches;
     if (isDesktop) {
       setQuery("");
-      setShowModal(false);
+      // setShowModal(false);
       inputRef.current?.blur();
     }
   }, [location.pathname, location.search]);
@@ -58,6 +72,8 @@ const SearchBar = () => {
       window.removeEventListener("focus-global-search", focusHandler);
   }, []);
 
+  const queryEmpty = query.trim().length === 0;
+
   return (
     <>
       <div className="flex items-center w-full p-2 rounded-[44px] bg-[#FFFFFF] border border-[#F8BD00]">
@@ -69,7 +85,7 @@ const SearchBar = () => {
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onFocus={handleFocus}
-          onKeyDown={handleKeyDown}
+          onKeyUp={handleKeyDown}
         />
 
         {query && (
@@ -81,15 +97,26 @@ const SearchBar = () => {
           />
         )}
 
-        <img
+        {/* <img
           src={Search}
           alt="검색"
-          className="w-[24px] h-[27px] mr-2 cursor-pointer"
-          onClick={toggleModal}
-        />
+          className="w-[19px] h-[19px] mr-2 cursor-pointer"
+          // onClick={toggleModal}
+        /> */}
+        <button
+          type="button"
+          onClick={handleSearch}
+          disabled={queryEmpty}
+          aria-label="검색"
+          className={`mr-2 ${
+            queryEmpty ? "cursor-not-allowed" : "cursor-pointer"
+          }`}
+        >
+          <img src={Search} alt="검색" className="w-[24px] h-[20px]" />
+        </button>
       </div>
 
-      {showModal && <SearchOptionsModal onClose={toggleModal} />}
+      {/* {showModal && <SearchOptionsModal onClose={toggleModal} />} */}
     </>
   );
 };

@@ -94,7 +94,7 @@ export async function getPopularSupplementsByAge({
   // ✅ 로그인: Authorization 포함해서 axios 인스턴스로 호출
   if (token) {
     const res = await api.get<PagedResponse<SupplementSummary>>(
-      "/api/v1/supplements/popular-supplements",
+      "/api/v1/popular-supplements",
       {
         params,
         headers: { Authorization: `Bearer ${token}` },

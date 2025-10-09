@@ -40,7 +40,7 @@ const RootLayout = () => {
   const paddingTopClass = hideNavbar
     ? ""
     : isMain
-      ? "pt-48 sm:pt-20"
+      ? "pt-46 sm:pt-20"
       : isOnlyIngredient
         ? "sm:pt-20" // pt-17 제거
         : "pt-17 sm:pt-20";

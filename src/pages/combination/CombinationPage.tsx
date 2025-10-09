@@ -5,6 +5,7 @@ import Chick from "../../assets/chick.png";
 import flipIcon from "../../assets/flip.png";
 import axios from "@/lib/axios";
 import Navbar from "@/components/NavBar";
+import Search from "../../assets/search.png";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -259,7 +260,7 @@ const CombinationPage = () => {
             <div className="ml-2 h-5 w-5 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
           ) : (
             <img
-              src="/images/search.png"
+              src={Search}
               alt="검색"
               onClick={handleSearch}
               className="ml-2 h-5 w-5 cursor-pointer"
@@ -300,7 +301,7 @@ const CombinationPage = () => {
             <div className="ml-2 h-6 w-6 animate-spin rounded-full border-2 border-gray-300 border-t-blue-600" />
           ) : (
             <img
-              src="/images/search.png"
+              src={Search}
               alt="검색"
               onClick={handleSearch}
               className="ml-2 h-6 w-6 cursor-pointer"
