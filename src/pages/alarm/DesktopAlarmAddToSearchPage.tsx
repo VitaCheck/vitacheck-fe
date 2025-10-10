@@ -111,6 +111,12 @@ export default function DesktopAlarmAddToSearchPage() {
     [supplementId, selectedDays.length, times]
   );
 
+  const handleTimeChange = (index: number, value: string) => {
+    const updated = [...times];
+    updated[index] = value;
+    setTimes(updated);
+  };
+
   const handleSubmit = async () => {
     if (!canSubmit) return alert("요일과 시간을 입력해주세요.");
     try {
@@ -229,23 +235,40 @@ export default function DesktopAlarmAddToSearchPage() {
           복용 시간 선택
         </label>
         <div className="mt-3 space-y-2">
-          {times.map((t, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <input
-                type="time"
-                value={t}
-                onChange={(e) => setTimeAt(i, e.target.value)}
-                className="bg-white w-full h-[73px] border border-[#AAAAAA] rounded-xl px-4 py-2 text-base"
-              />
-              {times.length > 1 && (
-                <button
-                  type="button"
-                  onClick={() => removeTime(i)}
-                  className="text-sm text-gray-500 underline"
-                >
-                  삭제
-                </button>
-              )}
+          {(times ?? []).map((time, index) => (
+            <div
+              key={index}
+              className="flex items-center justify-between mb-4 w-full h-[73px] bg-white border border-[#AAAAAA] rounded-xl px-4"
+            >
+              {/* 복용 시간 n */}
+              <span className="text-[#9C9C9C] text-[22px] font-medium">
+                복용 시간 {index + 1}
+              </span>
+
+              {/* 시간 input */}
+              <div className="flex items-center gap-3">
+                <input
+                  type="time"
+                  className="w-[150px] h-[48px] text-[22px] font-medium text-[#202020] bg-transparent focus:outline-none"
+                  value={time}
+                  onChange={(e) => handleTimeChange(index, e.target.value)}
+                />
+
+                {/* 삭제 버튼 (2개 이상일 때만 표시) */}
+                {times.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setTimes((prev) => prev.filter((_, i) => i !== index))
+                    }
+                    className="w-[24px] h-[24px] rounded-full bg-[#C7C7C7] flex items-center justify-center hover:bg-[#B5B5B5] active:scale-95 transition"
+                  >
+                    <span className="text-white text-[22px] leading-none pb-[2px]">
+                      ×
+                    </span>
+                  </button>
+                )}
+              </div>
             </div>
           ))}
         </div>

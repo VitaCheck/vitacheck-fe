@@ -220,7 +220,6 @@ const AlarmAddToSearchModal = ({
           onChange={(e) => setName(e.target.value)}
         />
 
-        {/* 복용 요일 선택 */}
         <label className="block text-[#808080] font-semibold text-[20px] mb-1 mt-[38px]">
           복용 요일 선택
         </label>
@@ -260,18 +259,20 @@ const AlarmAddToSearchModal = ({
                     {formatTime(t)}
                   </span>
 
-                  {/* 삭제 버튼 (버블링 방지) */}
-                  <span
-                    role="button"
-                    aria-label="시간 삭제"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeTime(idx);
-                    }}
-                    className="text-[#666666] text-[18px] leading-none px-2"
-                  >
-                    &times;
-                  </span>
+                  {/* 시간 2개 이상일 때만 삭제 버튼 표시 */}
+                  {times.length > 1 && (
+                    <span
+                      role="button"
+                      aria-label="시간 삭제"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTime(idx);
+                      }}
+                      className="text-[#AAAAAA] text-[18px] leading-none px-2 hover:text-[#777] transition"
+                    >
+                      ×
+                    </span>
+                  )}
                 </div>
               </button>
             ))}

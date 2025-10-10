@@ -320,7 +320,7 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
               <button
                 key={en}
                 className={`w-[47.5px] h-[47.5px] rounded-[9.5px] border border-[#AAAAAA] ${
-                  active ? "bg-[#808080] text-white" : "bg-white text-black"
+                  active ? "bg-[#AAAAAA] text-white" : "bg-white text-black"
                 }`}
                 onClick={() => toggleDay(ko)}
               >
@@ -348,17 +348,20 @@ const AlarmEditModal = ({ id, onClose, onSaved }: Props) => {
                   <span className="text-[16px] font-semibold text-[#4D4D4D]">
                     {formatTime(t)}
                   </span>
-                  <span
-                    role="button"
-                    aria-label="시간 삭제"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      removeTime(idx);
-                    }}
-                    className="text-[#AAAAAA] text-[18px] leading-none px-2"
-                  >
-                    ×
-                  </span>
+                  {/* 시간 2개 이상일 때만 삭제 버튼 표시 */}
+                  {times.length > 1 && (
+                    <span
+                      role="button"
+                      aria-label="시간 삭제"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        removeTime(idx);
+                      }}
+                      className="text-[#AAAAAA] text-[18px] leading-none px-2 hover:text-[#777] transition"
+                    >
+                      ×
+                    </span>
+                  )}
                 </div>
               </button>
             ))}

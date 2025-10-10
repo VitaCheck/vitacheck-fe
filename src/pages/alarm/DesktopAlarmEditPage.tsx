@@ -311,14 +311,42 @@ const DesktopAlarmEditPage = () => {
           복용 시간 선택
         </label>
         {(times ?? []).map((time, index) => (
-          <input
+          <div
             key={index}
-            type="time"
-            className="w-full h-[73px] border border-[#AAAAAA] bg-white rounded-xl px-4 py-2 text-base mb-2"
-            value={time}
-            onChange={(e) => handleTimeChange(index, e.target.value)}
-          />
+            className="flex items-center justify-between mb-4 w-full h-[73px] bg-white border border-[#AAAAAA] rounded-xl px-4"
+          >
+            {/* 복용 시간 n */}
+            <span className="text-[#9C9C9C] text-[22px] font-medium">
+              복용 시간 {index + 1}
+            </span>
+
+            {/* 시간 input */}
+            <div className="flex items-center gap-3">
+              <input
+                type="time"
+                className="w-[150px] h-[48px] text-[22px] font-medium text-[#202020] bg-transparent focus:outline-none"
+                value={time}
+                onChange={(e) => handleTimeChange(index, e.target.value)}
+              />
+
+              {/* 삭제 버튼 (2개 이상일 때만 표시) */}
+              {times.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() =>
+                    setTimes((prev) => prev.filter((_, i) => i !== index))
+                  }
+                  className="w-[24px] h-[24px] rounded-full bg-[#C7C7C7] flex items-center justify-center hover:bg-[#B5B5B5] active:scale-95 transition"
+                >
+                  <span className="text-white text-[22px] leading-none pb-[2px]">
+                    ×
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
         ))}
+
         <button
           onClick={addTime}
           className="w-full h-[73px] border border-[#AAAAAA] bg-white text-[22px] py-2 rounded-xl text-gray-700"
