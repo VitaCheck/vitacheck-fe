@@ -7,6 +7,7 @@ import {
   type SupplementSummary,
   type Gender,
 } from "@/apis/mainsupplements";
+import { isAxiosError } from "axios";
 
 const ageOptions = ["10대", "20대", "30대", "40대", "50대", "60대 이상"];
 
@@ -94,7 +95,11 @@ const ProductList = () => {
       } catch (err) {
         console.log(err);
         if (!ignore) {
-          setLoadError("인기 영양제 목록을 불러오지 못했습니다.");
+          if (isAxiosError(err) && err.response?.status === 401) {
+            setLoadError("로그인 후 확인이 가능합니다.");
+          } else {
+            setLoadError("인기 영양제 목록을 불러오지 못했습니다.");
+          }
           setItems([]);
           setCurrentPage(0);
         }
