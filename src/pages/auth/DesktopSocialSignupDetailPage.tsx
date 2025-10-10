@@ -6,7 +6,7 @@ import { syncFcmTokenForce } from "@/lib/push";
 
 type Gender = "FEMALE" | "MALE" | "OTHER";
 
-export default function MobileSocialSignupDetailPage() {
+export default function DesktopSocialSignupDetailPage() {
   const [gender, setGender] = useState<Gender | null>(null);
   const [birth, setBirth] = useState("");
   const [phone, setPhone] = useState("");
@@ -43,7 +43,7 @@ export default function MobileSocialSignupDetailPage() {
   }, [base, navigate]);
 
   const genderCardStyle = (selected: boolean) =>
-    `w-[120px] h-[140px] rounded-2xl border border-gray-200 flex items-center justify-center cursor-pointer shadow-sm transition ${
+    `w-[150px] h-[170px] rounded-2xl border border-gray-200 flex items-center justify-center cursor-pointer shadow-sm transition ${
       selected ? "bg-[#FFF8DC] border-none" : "bg-white"
     }`;
 
@@ -132,93 +132,75 @@ export default function MobileSocialSignupDetailPage() {
   };
 
   return (
-    <div className="relative mx-auto min-h-dvh max-w-[480px] bg-white">
-      <header className="sticky top-0 z-10 flex items-center gap-3 bg-white px-[20px] py-[20px]">
-        <button onClick={() => navigate(-1)} aria-label="뒤로가기">
-          <img
-            src="/images/PNG/네비게이션 바/Go back.png"
-            alt="뒤로가기"
-            className="w-[26.15px] object-contain"
+    <div className="flex flex-col items-center min-h-[90vh] bg-[#FAFAFA] py-10">
+      <h1 className="text-[34px] font-medium mb-10">회원가입</h1>
+
+      <form onSubmit={handleSubmit} className="w-full max-w-md space-y-8">
+        {/* 성별 선택 */}
+        <div className="flex justify-between gap-4">
+          <div className="flex flex-col items-center gap-2">
+            <div
+              onClick={() => setGender("FEMALE")}
+              className={genderCardStyle(gender === "FEMALE")}
+            >
+              <img src="/images/female.png" alt="여성" className="w-[151px]" />
+            </div>
+            <p className="text-[22px] font-semibold">여성</p>
+          </div>
+
+          <div className="flex flex-col items-center gap-2">
+            <div
+              onClick={() => setGender("MALE")}
+              className={genderCardStyle(gender === "MALE")}
+            >
+              <img src="/images/male.png" alt="남성" className="w-[151px]" />
+            </div>
+            <span className="text-[22px] font-semibold">남성</span>
+          </div>
+        </div>
+
+        {/* 생년월일 */}
+        <div>
+          <label className="block text-[18px] font-semibold mb-2">
+            생년월일
+          </label>
+          <input
+            type="text"
+            placeholder="YYYY.MM.DD"
+            value={birth}
+            onChange={(e) => handleBirthChange(e.target.value)}
+            className="w-full border-b border-gray-300 py-2 px-1 text-[18px] focus:outline-none"
+            required
+            inputMode="numeric"
           />
-        </button>
-        <h1 className="text-[24px] font-semibold">회원가입</h1>
-      </header>
+        </div>
 
-      <main className="px-5 pb-36 pt-6">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          {/* 성별 선택 */}
-          <div className="flex items-center justify-between">
-            <div className="flex flex-col items-center gap-2">
-              <div
-                onClick={() => setGender("FEMALE")}
-                className={genderCardStyle(gender === "FEMALE")}
-              >
-                <img
-                  src="/images/female.png"
-                  alt="여성"
-                  className="w-[120px]"
-                />
-              </div>
-              <p className="text-[18px] font-semibold">여성</p>
-            </div>
+        {/* 휴대폰 번호 */}
+        <div>
+          <label className="block text-[18px] font-semibold mb-2">
+            휴대폰 번호
+          </label>
+          <input
+            type="text"
+            placeholder="010-1234-5678"
+            value={phone}
+            onChange={(e) => handlePhoneChange(e.target.value)}
+            className="w-full border-b border-gray-300 py-2 px-1 text-[18px] focus:outline-none"
+            required
+            inputMode="numeric"
+          />
+        </div>
 
-            <div className="flex flex-col items-center gap-2">
-              <div
-                onClick={() => setGender("MALE")}
-                className={genderCardStyle(gender === "MALE")}
-              >
-                <img src="/images/male.png" alt="남성" className="w-[120px]" />
-              </div>
-              <p className="text-[18px] font-semibold">남성</p>
-            </div>
-          </div>
+        {error && <p className="text-red-500 text-sm">{error}</p>}
 
-          {/* 생년월일 */}
-          <div>
-            <label className="block text-[16px] font-semibold mb-2">
-              생년월일
-            </label>
-            <input
-              type="text"
-              placeholder="YYYY.MM.DD"
-              value={birth}
-              onChange={(e) => handleBirthChange(e.target.value)}
-              className="w-full border-b border-gray-300 py-3 text-[16px] outline-none"
-              required
-              inputMode="numeric"
-            />
-          </div>
-
-          {/* 휴대폰 번호 */}
-          <div>
-            <label className="block text-[16px] font-semibold mb-2">
-              휴대폰 번호
-            </label>
-            <input
-              type="text"
-              placeholder="010-1234-1234"
-              value={phone}
-              onChange={(e) => handlePhoneChange(e.target.value)}
-              className="w-full border-b border-gray-300 py-3 text-[16px] outline-none"
-              required
-              inputMode="numeric"
-            />
-          </div>
-
-          {error && <p className="text-red-500 text-sm">{error}</p>}
-        </form>
-      </main>
-
-      {/* 하단 고정 버튼 */}
-      <div className="pointer-events-none fixed inset-x-0 bottom-0 z-10 mx-auto w-full max-w-[480px] bg-white/70 px-4 pb-6 pt-2 backdrop-blur">
         <button
-          onClick={handleSubmit}
+          type="submit"
           disabled={isSubmitting}
-          className="pointer-events-auto inline-flex h-[68px] w-full items-center justify-center rounded-2xl bg-[#FFEB9D] text-[18px] font-bold text-black disabled:opacity-60"
+          className="w-full h-[82px] bg-[#FFEB9D] text-black text-[20px] font-bold rounded-lg disabled:opacity-60"
         >
           {isSubmitting ? "처리 중..." : "회원가입 완료하기"}
         </button>
-      </div>
+      </form>
     </div>
   );
 }
