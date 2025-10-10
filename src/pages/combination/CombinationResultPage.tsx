@@ -1,14 +1,15 @@
-import { useState, useEffect, useRef } from 'react';
-import { useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
-import checkedBoxIcon from '../../assets/check box.png';
-import vitaminArrow from '../../assets/비타민 C_arrow.png';
-import boxIcon from '../../assets/box.png';
-import flipIcon from '../../assets/flip.png';
-import axios from '@/lib/axios';
-import Navbar from '@/components/NavBar';
-import line from '/images/PNG/조합 2-1/background line.png';
- 
+import { useState, useEffect, useRef } from "react";
+import { useMemo } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import checkedBoxIcon from "../../assets/check box.png";
+import vitaminArrow from "../../assets/비타민 C_arrow.png";
+import boxIcon from "../../assets/box.png";
+import flipIcon from "../../assets/flip.png";
+import axios from "@/lib/axios";
+import Navbar from "@/components/NavBar";
+import line from "/images/PNG/조합 2-1/background line.png";
+import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
+
 // 🔽 import들 아래에 추가
 type KakaoSDK = {
   init(key: string): void;
@@ -18,25 +19,26 @@ type KakaoSDK = {
 const Kakao = (window as any).Kakao as KakaoSDK;
 
 const BREAKPOINT = 640;
-const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '4b2032ace7d33963b0fb79993ff3c951';
+const KAKAO_APP_KEY =
+  import.meta.env.VITE_KAKAO_JS_KEY || "4b2032ace7d33963b0fb79993ff3c951";
 
 // 컴포넌트 밖(파일 상단)
-const SHARE_IMAGE_PATH = '/images/PNG/조합 3-1/인스타 분할 포스터-08.png';
+const SHARE_IMAGE_PATH = "/images/PNG/조합 3-1/인스타 분할 포스터-08.png";
 const getShareImageUrl = () =>
-  typeof window !== 'undefined'
+  typeof window !== "undefined"
     ? `${window.location.origin}${encodeURI(SHARE_IMAGE_PATH)}`
     : encodeURI(SHARE_IMAGE_PATH);
 
 // ✅ SSR 안전한 모바일 훅 교체
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.innerWidth <= BREAKPOINT : true,
+    typeof window !== "undefined" ? window.innerWidth <= BREAKPOINT : true
   );
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= BREAKPOINT);
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
     onResize();
-    return () => window.removeEventListener('resize', onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
   return isMobile;
 };
@@ -47,15 +49,15 @@ async function copyToClipboard(text: string) {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    const el = document.createElement('textarea');
+    const el = document.createElement("textarea");
     el.value = text;
-    el.style.position = 'fixed';
-    el.style.opacity = '0';
+    el.style.position = "fixed";
+    el.style.opacity = "0";
     document.body.appendChild(el);
     el.focus();
     el.select();
     try {
-      document.execCommand('copy');
+      document.execCommand("copy");
       return true;
     } catch {
       return false;
@@ -68,49 +70,80 @@ async function copyToClipboard(text: string) {
 // ✅ 카카오 로더
 async function ensureKakaoReady(): Promise<boolean> {
   if (!KAKAO_APP_KEY) {
-    console.warn('카카오 JavaScript 키가 설정되지 않았습니다.');
+    console.warn("카카오 JavaScript 키가 설정되지 않았습니다.");
     return false;
   }
-  if (typeof window !== 'undefined' && window.Kakao) {
+  if (typeof window !== "undefined" && window.Kakao) {
     try {
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init(KAKAO_APP_KEY);
-        console.log('카카오 SDK 초기화 완료');
+        console.log("카카오 SDK 초기화 완료");
       }
       return true;
     } catch (e) {
-      console.error('카카오 SDK 초기화 실패:', e);
+      console.error("카카오 SDK 초기화 실패:", e);
       return false;
     }
   }
-  console.error('카카오 SDK가 로드되지 않았습니다.');
+  console.error("카카오 SDK가 로드되지 않았습니다.");
   return false;
 }
 
 function ShareSheet({
-  open, onClose, onKakao, onCopy,
-}: { open: boolean; onClose: () => void; onKakao: () => void; onCopy: () => void }) {
+  open,
+  onClose,
+  onKakao,
+  onCopy,
+}: {
+  open: boolean;
+  onClose: () => void;
+  onKakao: () => void;
+  onCopy: () => void;
+}) {
   if (!open) return null;
-  const KAKAO_ICON = '/images/PNG/성분 2-1/kakao.png';
-  const LINK_ICON = '/images/PNG/성분 2-1/link.png';
+  const KAKAO_ICON = "/images/PNG/성분 2-1/kakao.png";
+  const LINK_ICON = "/images/PNG/성분 2-1/link.png";
   return (
     <div className="fixed inset-0 z-50">
-      <button aria-label="닫기" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div className="absolute right-0 bottom-0 left-0 w-full" style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}>
+      <button
+        aria-label="닫기"
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+      <div
+        className="absolute right-0 bottom-0 left-0 w-full"
+        style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
           <div className="px-5 pt-6 pb-4">
             <h3 className="text-center text-[15px] font-semibold">공유하기</h3>
           </div>
-          <button onClick={onKakao} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+          <button
+            onClick={onKakao}
+            className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
+          >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
-              <img src={KAKAO_ICON} alt="카카오톡" className="h-9 w-9 object-contain" loading="lazy" />
+              <img
+                src={KAKAO_ICON}
+                alt="카카오톡"
+                className="h-9 w-9 object-contain"
+                loading="lazy"
+              />
             </span>
             <span className="text-[15px]">카카오톡으로 공유하기</span>
           </button>
           <div className="h-px w-full bg-gray-200" />
-          <button onClick={onCopy} className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50">
+          <button
+            onClick={onCopy}
+            className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
+          >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
-              <img src="/images/PNG/성분 2-1/link.png" alt="링크" className="h-9 w-9 object-contain" loading="lazy" />
+              <img
+                src="/images/PNG/성분 2-1/link.png"
+                alt="링크"
+                className="h-9 w-9 object-contain"
+                loading="lazy"
+              />
             </span>
             <span className="text-[15px]">링크 복사하기</span>
           </button>
@@ -122,14 +155,26 @@ function ShareSheet({
 }
 
 function ConfirmModal({
-  open, onClose, message,
-}: { open: boolean; onClose: () => void; message: string }) {
+  open,
+  onClose,
+  message,
+}: {
+  open: boolean;
+  onClose: () => void;
+  message: string;
+}) {
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50">
-      <button className="absolute inset-0 bg-black/40" aria-label="닫기" onClick={onClose} />
+      <button
+        className="absolute inset-0 bg-black/40"
+        aria-label="닫기"
+        onClick={onClose}
+      />
       <div className="absolute top-1/2 left-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
-        <p className="mb-5 text-center whitespace-pre-line text-gray-700">{message}</p>
+        <p className="mb-5 text-center whitespace-pre-line text-gray-700">
+          {message}
+        </p>
         <div className="flex justify-center">
           <button
             onClick={onClose}
@@ -173,7 +218,7 @@ interface IngredientResult {
 
 interface Combination {
   id: number;
-  type: 'GOOD' | 'CAUTION';
+  type: "GOOD" | "CAUTION";
   name: string;
   description: string;
   displayRank: number;
@@ -183,9 +228,13 @@ export default function CombinationResultPage() {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Kakao && !window.Kakao.isInitialized()) {
+    if (
+      typeof window !== "undefined" &&
+      window.Kakao &&
+      !window.Kakao.isInitialized()
+    ) {
       window.Kakao.init(KAKAO_APP_KEY);
-      console.log('카카오 SDK 초기화 완료');
+      console.log("카카오 SDK 초기화 완료");
     }
   }, []);
 
@@ -204,7 +253,7 @@ export default function CombinationResultPage() {
 
   function calcGauge(ing: IngredientResult) {
     const total = ing.totalAmount ?? 0;
-    const unit = ing.unit ?? '';
+    const unit = ing.unit ?? "";
     const rec = ing.recommendedAmount;
     const upper = ing.upperAmount;
 
@@ -228,9 +277,11 @@ export default function CombinationResultPage() {
     const yellowWidth = hasRealRec ? Math.min(widthPct, recPct) : widthPct;
     const orangeLeft = hasRealRec ? recPct : null;
     const orangeRight = hasRealUpper ? Math.min(widthPct, upperPct) : widthPct;
-    const orangeWidth = orangeLeft != null ? Math.max(0, orangeRight - orangeLeft) : 0;
+    const orangeWidth =
+      orangeLeft != null ? Math.max(0, orangeRight - orangeLeft) : 0;
     const redLeft = hasRealUpper ? upperPct : null;
-    const redWidth = redLeft != null && widthPct > redLeft ? widthPct - redLeft : 0;
+    const redWidth =
+      redLeft != null && widthPct > redLeft ? widthPct - redLeft : 0;
 
     // 상한 초과 여부를 명확하게 계산
     // 상한선(66.67% 또는 실제 upper 값) 이상인 경우를 초과로 판단
@@ -264,7 +315,11 @@ export default function CombinationResultPage() {
 
     // 상한을 초과했을 때, 66.67%~100% 구간을 "초과량"에 비례해서 채우는 도우미
     // capMultiplier: 상한의 몇 배까지를 100%로 볼지 (예: 1.5배면 150%에서 막음)
-    const overMap = (totalVal: number, upperVal: number, capMultiplier = 1.5) => {
+    const overMap = (
+      totalVal: number,
+      upperVal: number,
+      capMultiplier = 1.5
+    ) => {
       const extra = Math.max(0, totalVal - upperVal); // 초과량
       const maxExtra = Math.max(upperVal * (capMultiplier - 1), 1e-6); // cap까지 초과량
       const t = Math.min(extra / maxExtra, 1); // 0..1
@@ -279,7 +334,10 @@ export default function CombinationResultPage() {
         }
         if (total <= upper) {
           const r = (total - rec) / Math.max(upper - rec, 1e-6);
-          return Math.max(0, Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS)));
+          return Math.max(
+            0,
+            Math.min(100, REC_LINE_POS + r * (UPPER_LINE_POS - REC_LINE_POS))
+          );
         }
         // ✅ 상한 초과: 66.67%~100% 구간으로 매핑
         return overMap(total, upper, 1.5); // cap 150% (원하면 1.3, 2.0 등으로 조절)
@@ -315,128 +373,142 @@ export default function CombinationResultPage() {
 
   const idsFromQuery = useMemo(() => {
     const sp = new URLSearchParams(location.search);
-    const raw = sp.get('ids');
+    const raw = sp.get("ids");
     if (!raw) return [];
-    return raw.split(',').map(n => Number(n)).filter(Boolean);
+    return raw
+      .split(",")
+      .map((n) => Number(n))
+      .filter(Boolean);
   }, [location.search]);
-  
 
   const selectedItems = location.state?.selectedItems || [];
-  console.log('selectedItems:', selectedItems);
-  console.log('location.state:', location.state);
+  console.log("selectedItems:", selectedItems);
+  console.log("location.state:", location.state);
   const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
 
-  const [activeTab, setActiveTab] = useState<'전체' | '초과'>('전체');
+  const [activeTab, setActiveTab] = useState<"전체" | "초과">("전체");
   const [allOverUpper, setAllOverUpper] = useState(false);
   const [showAllIngredients, setShowAllIngredients] = useState(false);
 
-  const [ingredientResults, setIngredientResults] = useState<IngredientResult[]>([]);
+  const [ingredientResults, setIngredientResults] = useState<
+    IngredientResult[]
+  >([]);
 
   const [goodCombinations, setGoodCombinations] = useState<Combination[]>([]);
-  const [cautionCombinations, setCautionCombinations] = useState<Combination[]>([]);
+  const [cautionCombinations, setCautionCombinations] = useState<Combination[]>(
+    []
+  );
 
   const selectedIds = useMemo(
     () =>
       (selectedItems as SupplementItem[])
-        .map(i => i.supplementId)
+        .map((i) => i.supplementId)
         .filter((v): v is number => !!v),
     [selectedItems]
   );
 
   const effectiveIds = selectedIds.length ? selectedIds : idsFromQuery;
 
-  
   // 공유 바텀시트/확인 모달
   const [sheetOpen, setSheetOpen] = useState(false);
-const [confirmOpen, setConfirmOpen] = useState(false);
-const [confirmMessage, setConfirmMessage] = useState('');
-const [shareOpen, setShareOpen] = useState(false);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [confirmMessage, setConfirmMessage] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
 
-const shareUrl = useMemo(() => {
-  const base =
-    window.location.origin.includes('vitachecking.com')
+  const shareUrl = useMemo(() => {
+    const base = window.location.origin.includes("vitachecking.com")
       ? `${window.location.origin}/combination-result`
-      : 'https://www.vitachecking.com/combination-result';
+      : "https://www.vitachecking.com/combination-result";
 
-  const ids = effectiveIds;
-  if (ids.length) {
-    const u = new URL(base);
-    u.searchParams.set('ids', ids.join(','));
-    return u.toString();
+    const ids = effectiveIds;
+    if (ids.length) {
+      const u = new URL(base);
+      u.searchParams.set("ids", ids.join(","));
+      return u.toString();
+    }
+    return base;
+  }, [effectiveIds]);
+
+  const shareImage =
+    selectedItems?.[0]?.imageUrl ??
+    "https://vitachecking.com/static/share-default.png";
+  const shareTitle = "내 영양제 조합 결과";
+
+  async function onClickShare() {
+    if (isMobile) {
+      setSheetOpen(true);
+      return;
+    }
+    // PC: 링크 복사(혹은 기존 ShareLinkPopup을 계속 쓰고 싶다면 setShareOpen(true) 호출해도 됨)
+    const ok = await copyToClipboard(shareUrl);
+    setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
+    setConfirmOpen(ok);
   }
-  return base;
-}, [effectiveIds]);
 
-const shareImage = selectedItems?.[0]?.imageUrl ?? "https://vitachecking.com/static/share-default.png";
-const shareTitle = "내 영양제 조합 결과";
+  async function onShareKakao() {
+    // 카카오 공유
+    const ready = await ensureKakaoReady();
+    if (!ready) {
+      const ok = await copyToClipboard(shareUrl);
+      setSheetOpen(false);
+      setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
+      setConfirmOpen(ok);
+      return;
+    }
 
-async function onClickShare() {
-  if (isMobile) {
-    setSheetOpen(true);
-    return;
+    const shareData = {
+      objectType: "feed",
+      content: {
+        title: `${shareTitle} - VitaCheck`,
+        description: "VitaCheck에서 성분 정보를 확인해 보세요.",
+        imageUrl: getShareImageUrl(), // ✅ 절대 URL
+        imageWidth: 400, // ✅ 가능하면 명시 (권장)
+        imageHeight: 400, // ✅ 가능하면 명시 (권장)
+        link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+      },
+      buttons: [
+        {
+          title: "자세히 보기",
+          link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+        },
+      ],
+    };
+
+    window.Kakao.Share.sendDefault(shareData);
+    setSheetOpen(false);
+    setConfirmMessage("카카오톡 공유하기 완료!");
+    setConfirmOpen(true);
   }
-  // PC: 링크 복사(혹은 기존 ShareLinkPopup을 계속 쓰고 싶다면 setShareOpen(true) 호출해도 됨)
-  const ok = await copyToClipboard(shareUrl);
-  setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
-  setConfirmOpen(ok);
-}
 
-async function onShareKakao() {
-  // 카카오 공유
-  const ready = await ensureKakaoReady();
-  if (!ready) {
+  async function onShareCopy() {
     const ok = await copyToClipboard(shareUrl);
     setSheetOpen(false);
-    setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+    setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
     setConfirmOpen(ok);
-    return;
   }
 
-  const shareData = {
-    objectType: 'feed',
-    content: {
-      title: `${shareTitle} - VitaCheck`,
-      description: 'VitaCheck에서 성분 정보를 확인해 보세요.',
-      imageUrl: getShareImageUrl(),         // ✅ 절대 URL
-      imageWidth: 400,                      // ✅ 가능하면 명시 (권장)
-      imageHeight: 400,                     // ✅ 가능하면 명시 (권장)
-      link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
-    },
-    buttons: [
-      { title: '자세히 보기', link: { mobileWebUrl: shareUrl, webUrl: shareUrl } },
-    ],
-  };
+  // 템플릿 숫자: 초과/권장충족/주의조합
+  const overCount = ingredientResults.filter(
+    (i) => computeFillPercent(i) > UPPER_LINE_POS
+  ).length;
 
-  window.Kakao.Share.sendDefault(shareData);
-  setSheetOpen(false);
-  setConfirmMessage('카카오톡 공유하기 완료!');
-  setConfirmOpen(true);
-}
+  const metCount = ingredientResults.filter(
+    (i) =>
+      (i.recommendedAmount ?? 0) > 0 &&
+      i.totalAmount >= (i.recommendedAmount ?? 0)
+  ).length;
 
-async function onShareCopy() {
-  const ok = await copyToClipboard(shareUrl);
-  setSheetOpen(false);
-  setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
-  setConfirmOpen(ok);
-}
-
-// 템플릿 숫자: 초과/권장충족/주의조합
-const overCount = ingredientResults.filter(i => computeFillPercent(i) > UPPER_LINE_POS).length;
-
-const metCount = ingredientResults.filter(i =>
-  (i.recommendedAmount ?? 0) > 0 && i.totalAmount >= (i.recommendedAmount ?? 0)
-).length;
-
-const cautionCount = cautionCombinations.length;
+  const cautionCount = cautionCombinations.length;
 
   const filteredIngredients: IngredientResult[] =
-    activeTab === '전체'
+    activeTab === "전체"
       ? ingredientResults
       : ingredientResults.filter((i) => {
           // 기존 계산
           const isOverRecommended = i.dosageRatio > 1;
           const isOverUpper = i.overRecommended;
-          const isOverUpperLimit = i.upperAmount && i.totalAmount > i.upperAmount;
+          const isOverUpperLimit =
+            i.upperAmount && i.totalAmount > i.upperAmount;
 
           // 게이지 기준(상한선 라인) 초과 체크
           const gauge = calcGauge(i);
@@ -450,14 +522,23 @@ const cautionCount = cautionCombinations.length;
           // (선택) 일반 기준치 예외 처리 유지
           let isOverGeneralLimit = false;
           if (i.recommendedAmount === null && i.upperAmount === null) {
-            if (i.unit === 'IU') {
-              if (i.ingredientName.includes('비타민 D') && i.totalAmount > 4000) {
+            if (i.unit === "IU") {
+              if (
+                i.ingredientName.includes("비타민 D") &&
+                i.totalAmount > 4000
+              ) {
                 isOverGeneralLimit = true;
-              } else if (i.ingredientName.includes('비타민 A') && i.totalAmount > 10000) {
+              } else if (
+                i.ingredientName.includes("비타민 A") &&
+                i.totalAmount > 10000
+              ) {
                 isOverGeneralLimit = true;
               }
-            } else if (i.unit === 'mg') {
-              if (i.ingredientName.includes('비타민 C') && i.totalAmount > 2000) {
+            } else if (i.unit === "mg") {
+              if (
+                i.ingredientName.includes("비타민 C") &&
+                i.totalAmount > 2000
+              ) {
                 isOverGeneralLimit = true;
               } else if (i.totalAmount > 1000) {
                 isOverGeneralLimit = true;
@@ -470,57 +551,56 @@ const cautionCount = cautionCombinations.length;
           return shouldShow;
         });
 
-
   const fetchCombinationResult = async () => {
     try {
- if (effectiveIds.length === 0) {
-      setIngredientResults([]);
-      return;
-    }
+      if (effectiveIds.length === 0) {
+        setIngredientResults([]);
+        return;
+      }
 
-      const res = await axios.post('/api/v1/combinations/analyze', {
-      supplementIds: effectiveIds,
-    });
+      const res = await axios.post("/api/v1/combinations/analyze", {
+        supplementIds: effectiveIds,
+      });
 
-    if (res.data.result?.ingredientResults) {
-      setIngredientResults(res.data.result.ingredientResults);
-    } else {
+      if (res.data.result?.ingredientResults) {
+        setIngredientResults(res.data.result.ingredientResults);
+      } else {
+        setIngredientResults([]);
+      }
+    } catch (error) {
+      console.error("조합 결과 조회 실패:", error);
       setIngredientResults([]);
     }
-  } catch (error) {
-    console.error('조합 결과 조회 실패:', error);
-    setIngredientResults([]);
-  }
-};
+  };
 
   const fetchCombinationRecommendations = async () => {
     try {
-      const res = await axios.get('/api/v1/combinations/recommend');
+      const res = await axios.get("/api/v1/combinations/recommend");
       setGoodCombinations(res.data.result.goodCombinations);
       setCautionCombinations(res.data.result.cautionCombinations);
     } catch (error) {
-      console.error('추천 조합 조회 실패:', error);
+      console.error("추천 조합 조회 실패:", error);
     }
   };
 
   useEffect(() => {
-  if (effectiveIds.length > 0) {
-    fetchCombinationResult();
-    fetchCombinationRecommendations();
-  }
-  // 배열을 의존성에 직접 넣으면 참조가 바뀔 때만 동작하니, 문자열로 안정화
-}, [JSON.stringify(effectiveIds)]);
+    if (effectiveIds.length > 0) {
+      fetchCombinationResult();
+      fetchCombinationRecommendations();
+    }
+    // 배열을 의존성에 직접 넣으면 참조가 바뀔 때만 동작하니, 문자열로 안정화
+  }, [JSON.stringify(effectiveIds)]);
 
   // 모바일에서는 전역 헤더 숨김(있으면)
   useEffect(() => {
     if (!isMobile) return;
-    const headerEl = document.querySelector('header');
+    const headerEl = document.querySelector("header");
     if (headerEl instanceof HTMLElement) {
-      headerEl.style.display = 'none';
+      headerEl.style.display = "none";
     }
     return () => {
       if (headerEl instanceof HTMLElement) {
-        headerEl.style.display = '';
+        headerEl.style.display = "";
       }
     };
   }, [isMobile]);
@@ -532,37 +612,68 @@ const cautionCount = cautionCombinations.length;
 
   const alarmEnabled = checkedIndices.length === 1;
 
-  const handleScroll = (direction: 'left' | 'right') => {
+  // 모바일에서 섭취 알림 모달 열기
+  const [openAlarmModal, setOpenAlarmModal] = useState(false);
+
+  // 1개만 선택된 제품(버튼 활성 조건과 동일)
+  const selectedItem = selectedItems.find((it: SupplementItem) =>
+    checkedIndices.includes(it.cursorId)
+  );
+
+  // 버튼 핸들러들 근처에 추가
+  const handleAlarmClick = () => {
+    if (!alarmEnabled || !selectedItem) return;
+
+    if (isMobile) {
+      // 모바일: 모달 오픈
+      setOpenAlarmModal(true);
+    } else {
+      // 데스크탑: 페이지 이동 (supplementId 쿼리로 전달)
+      const id = selectedItem.supplementId ?? selectedItem.cursorId;
+      const q = new URLSearchParams({ supplementId: String(id) });
+      navigate(`/alarm/settings/add/search?${q.toString()}`);
+    }
+  };
+
+  const handleScroll = (direction: "left" | "right") => {
     const el = scrollRef.current;
     if (!el) return;
     const page = el.clientWidth; // 현재 보이는 영역 너비
-    const delta = direction === 'right' ? page : -page;
+    const delta = direction === "right" ? page : -page;
     let target = el.scrollLeft + delta;
     // 경계 보정
     target = Math.max(0, Math.min(target, el.scrollWidth - el.clientWidth));
-    el.scrollTo({ left: target, behavior: 'smooth' });
+    el.scrollTo({ left: target, behavior: "smooth" });
   };
 
   const handleToggleCheckbox = (cursorId: number) => {
     setCheckedIndices((prev) =>
-      prev.includes(cursorId) ? prev.filter((i) => i !== cursorId) : [...prev, cursorId],
+      prev.includes(cursorId)
+        ? prev.filter((i) => i !== cursorId)
+        : [...prev, cursorId]
     );
   };
 
   const handleRecombination = () => {
     const selectedFiltered = selectedItems.filter((item: SupplementItem) =>
-      checkedIndices.includes(item.cursorId),
+      checkedIndices.includes(item.cursorId)
     );
 
     // 선택된 아이템들의 이름을 검색어로 사용하여 검색 결과를 미리 보여주기
-    const searchTerms = selectedFiltered.map((item: SupplementItem) => item.supplementName);
+    const searchTerms = selectedFiltered.map(
+      (item: SupplementItem) => item.supplementName
+    );
 
     // 검색기록에 선택된 제품들의 이름을 추가
-    const currentHistory = JSON.parse(localStorage.getItem('searchHistory') || '[]');
-    const updatedHistory = [...new Set([...searchTerms, ...currentHistory])].slice(0, 10); // 중복 제거하고 최대 10개 유지
-    localStorage.setItem('searchHistory', JSON.stringify(updatedHistory));
+    const currentHistory = JSON.parse(
+      localStorage.getItem("searchHistory") || "[]"
+    );
+    const updatedHistory = [
+      ...new Set([...searchTerms, ...currentHistory]),
+    ].slice(0, 10); // 중복 제거하고 최대 10개 유지
+    localStorage.setItem("searchHistory", JSON.stringify(updatedHistory));
 
-    navigate('/add-combination', {
+    navigate("/add-combination", {
       state: {
         selectedItems: selectedFiltered,
         preSearchTerms: searchTerms, // 검색어들을 미리 전달
@@ -571,25 +682,28 @@ const cautionCount = cautionCombinations.length;
     });
   };
 
-  const FlipCard: React.FC<{ name: string; description: string }> = ({ name, description }) => {
+  const FlipCard: React.FC<{ name: string; description: string }> = ({
+    name,
+    description,
+  }) => {
     const [flipped, setFlipped] = useState(false);
     return (
       <>
         {/* 모바일 카드 */}
         <div
           className="block h-[135px] w-[150px] cursor-pointer md:hidden"
-          style={{ perspective: '1000px' }}
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
             className={`relative h-full w-full transition-transform duration-500 ${
-              flipped ? 'rotate-y-180' : ''
+              flipped ? "rotate-y-180" : ""
             }`}
-            style={{ transformStyle: 'preserve-3d' }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden' }}
+              style={{ backfaceVisibility: "hidden" }}
             >
               {name}
               <img
@@ -600,7 +714,10 @@ const cautionCount = cautionCombinations.length;
             </div>
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[18px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
             >
               {description}
               <img
@@ -615,18 +732,18 @@ const cautionCount = cautionCombinations.length;
         {/* PC용 카드 */}
         <div
           className="hidden h-[165px] w-[235px] cursor-pointer md:block"
-          style={{ perspective: '1000px' }}
+          style={{ perspective: "1000px" }}
           onClick={() => setFlipped(!flipped)}
         >
           <div
             className={`relative h-full w-full transition-transform duration-500 ${
-              flipped ? 'rotate-y-180' : ''
+              flipped ? "rotate-y-180" : ""
             }`}
-            style={{ transformStyle: 'preserve-3d' }}
+            style={{ transformStyle: "preserve-3d" }}
           >
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-white px-[2px] py-[2px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden' }}
+              style={{ backfaceVisibility: "hidden" }}
             >
               {name}
               <img
@@ -637,7 +754,10 @@ const cautionCount = cautionCombinations.length;
             </div>
             <div
               className="absolute flex h-full w-full items-center justify-center rounded-[14px] bg-[#FFFBCC] px-[6px] py-[10px] text-center text-[20px] font-medium text-[#414141] shadow-[2px_2px_12.2px_0px_#00000040]"
-              style={{ backfaceVisibility: 'hidden', transform: 'rotateY(180deg)' }}
+              style={{
+                backfaceVisibility: "hidden",
+                transform: "rotateY(180deg)",
+              }}
             >
               {description}
               <img
@@ -668,12 +788,12 @@ const cautionCount = cautionCombinations.length;
         <div className="flex items-center gap-3">
           {/* 공유 */}
           <button
-  type="button"
-  aria-label="공유"
-  className="active:scale-95"
-  onClick={onClickShare}  // ✅ 모바일이면 바텀시트, PC면 복사(또는 ShareLinkPopup로 바꿔도 됨)
->
-          <img
+            type="button"
+            aria-label="공유"
+            className="active:scale-95"
+            onClick={onClickShare} // ✅ 모바일이면 바텀시트, PC면 복사(또는 ShareLinkPopup로 바꿔도 됨)
+          >
+            <img
               src="/images/PNG/조합 3-1/공유.png"
               alt="공유"
               className="h-[35px] w-[35px] object-contain"
@@ -681,7 +801,11 @@ const cautionCount = cautionCombinations.length;
           </button>
 
           {/* 재조합 */}
-          <button type="button" className="m-0 p-0 leading-none" onClick={handleRecombination}>
+          <button
+            type="button"
+            className="m-0 p-0 leading-none"
+            onClick={handleRecombination}
+          >
             <img
               src="/images/PNG/조합 3-1/재조합.png"
               alt="재조합"
@@ -702,19 +826,18 @@ const cautionCount = cautionCombinations.length;
             재조합
           </button>
           <button
-            onClick={() => {
-              if (!alarmEnabled) return; // 가드
-              navigate('/alarm/settings');
-            }}
+            onClick={handleAlarmClick}
             disabled={!alarmEnabled}
             aria-disabled={!alarmEnabled}
-            title={!alarmEnabled ? '제품을 1개만 선택해주세요' : '섭취알림 등록하기'}
+            title={
+              !alarmEnabled ? "제품을 1개만 선택해주세요" : "섭취알림 등록하기"
+            }
             className={[
-              'flex h-[55px] w-[280px] items-center justify-center rounded-[62.5px] font-bold transition',
+              "flex h-[55px] w-[280px] items-center justify-center rounded-[62.5px] font-bold transition",
               alarmEnabled
-                ? 'bg-[#FFEB9D] hover:brightness-95'
-                : 'cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]',
-            ].join(' ')}
+                ? "bg-[#FFEB9D] hover:brightness-95"
+                : "cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]",
+            ].join(" ")}
           >
             섭취알림 등록하기
           </button>
@@ -736,11 +859,15 @@ const cautionCount = cautionCombinations.length;
                 {selectedItems.map((item: SupplementItem) => (
                   <div
                     key={item.cursorId}
-                    className={`relative flex h-[250px] flex-shrink-0 snap-start flex-col items-center rounded-[22.76px] pt-[80px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
+                    className={`relative flex h-[250px] flex-shrink-0 snap-start flex-col items-center rounded-[22.76px] pt-[80px] ${checkedIndices.includes(item.cursorId) ? "bg-[#EEEEEE]" : "bg-white"}`}
                     style={{ width: cardWidthCSS, minWidth: cardWidthCSS }} // ⭐ 핵심: 4등분 고정
                   >
                     <img
-                      src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
+                      src={
+                        checkedIndices.includes(item.cursorId)
+                          ? checkedBoxIcon
+                          : boxIcon
+                      }
                       alt="checkbox"
                       onClick={() => handleToggleCheckbox(item.cursorId)}
                       className="absolute top-[10px] left-[18px] h-[50px] w-[50px] cursor-pointer"
@@ -752,10 +879,10 @@ const cautionCount = cautionCombinations.length;
                     <p
                       className="font-pretendard mt-1 text-center font-medium"
                       style={{
-                        fontSize: '18px',
-                        lineHeight: '100%',
-                        letterSpacing: '-0.02em',
-                        color: '#000000',
+                        fontSize: "18px",
+                        lineHeight: "100%",
+                        letterSpacing: "-0.02em",
+                        color: "#000000",
                       }}
                     >
                       {item.supplementName}
@@ -770,7 +897,7 @@ const cautionCount = cautionCombinations.length;
           {selectedItems.length > 4 && (
             <>
               <button
-                onClick={() => handleScroll('left')}
+                onClick={() => handleScroll("left")}
                 aria-label="왼쪽으로 스크롤"
                 className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2"
               >
@@ -781,7 +908,7 @@ const cautionCount = cautionCombinations.length;
                 />
               </button>
               <button
-                onClick={() => handleScroll('right')}
+                onClick={() => handleScroll("right")}
                 aria-label="오른쪽으로 스크롤"
                 className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2"
               >
@@ -802,11 +929,15 @@ const cautionCount = cautionCombinations.length;
           {selectedItems.map((item: SupplementItem) => (
             <div
               key={item.cursorId}
-              className={`relative flex h-[135px] w-[135px] flex-shrink-0 flex-col items-center rounded-[22.76px] pt-[35px] ${checkedIndices.includes(item.cursorId) ? 'bg-[#EEEEEE]' : 'bg-white'}`}
+              className={`relative flex h-[135px] w-[135px] flex-shrink-0 flex-col items-center rounded-[22.76px] pt-[35px] ${checkedIndices.includes(item.cursorId) ? "bg-[#EEEEEE]" : "bg-white"}`}
             >
               {/* 체크박스 */}
               <img
-                src={checkedIndices.includes(item.cursorId) ? checkedBoxIcon : boxIcon}
+                src={
+                  checkedIndices.includes(item.cursorId)
+                    ? checkedBoxIcon
+                    : boxIcon
+                }
                 alt="checkbox"
                 onClick={() => handleToggleCheckbox(item.cursorId)}
                 className="absolute top-[1px] left-[110px] h-[30px] w-[30px] cursor-pointer"
@@ -828,19 +959,18 @@ const cautionCount = cautionCombinations.length;
       {/* 모바일 섭취알림 버튼 */}
       <div className="mt-4 flex justify-center md:hidden">
         <button
-          onClick={() => {
-            if (!alarmEnabled) return; // 가드
-            navigate('/alarm/settings');
-          }}
+          onClick={handleAlarmClick}
           disabled={!alarmEnabled}
           aria-disabled={!alarmEnabled}
-          title={!alarmEnabled ? '제품을 1개만 선택해주세요' : '섭취알림 등록하기'}
+          title={
+            !alarmEnabled ? "제품을 1개만 선택해주세요" : "섭취알림 등록하기"
+          }
           className={[
-            'mt-2 flex h-[54px] w-[370px] items-center justify-center rounded-[14px] font-medium transition',
+            "mt-2 flex h-[54px] w-[370px] items-center justify-center rounded-[14px] font-medium transition",
             alarmEnabled
-              ? 'bg-[#FFEB9D] hover:brightness-95'
-              : 'cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]',
-          ].join(' ')}
+              ? "bg-[#FFEB9D] hover:brightness-95"
+              : "cursor-not-allowed bg-[#EEEEEE] text-[#9C9A9A]",
+          ].join(" ")}
         >
           <span className="text-[20px]">섭취알림 등록하기 →</span>
         </button>
@@ -854,19 +984,19 @@ const cautionCount = cautionCombinations.length;
           {/* 탭 버튼들 */}
           <div className="relative z-10 flex justify-center">
             <div className="flex gap-80">
-              {['전체', '초과'].map((tab) => (
+              {["전체", "초과"].map((tab) => (
                 <button
                   key={tab}
-                  onClick={() => setActiveTab(tab as '전체' | '초과')}
+                  onClick={() => setActiveTab(tab as "전체" | "초과")}
                   className="font-pretendard relative mb-5 py-2 text-[30px] leading-[120%] font-semibold tracking-[-0.02em]"
                 >
                   <span
                     className={
                       activeTab === tab
-                        ? tab === '초과'
-                          ? 'text-[#E70000]'
-                          : 'text-black'
-                        : 'text-[#9C9A9A]'
+                        ? tab === "초과"
+                          ? "text-[#E70000]"
+                          : "text-black"
+                        : "text-[#9C9A9A]"
                     }
                   >
                     {tab}
@@ -895,19 +1025,19 @@ const cautionCount = cautionCombinations.length;
 
           {/* 탭 */}
           <div className="relative z-10 flex justify-center gap-x-30 text-center">
-            {['전체', '초과'].map((tab) => (
+            {["전체", "초과"].map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab as '전체' | '초과')}
+                onClick={() => setActiveTab(tab as "전체" | "초과")}
                 className="relative py-2"
               >
                 <span
                   className={`font-pretendard text-[20px] font-medium ${
                     activeTab === tab
-                      ? tab === '초과'
-                        ? 'text-[#E70000]'
-                        : 'text-black'
-                      : 'text-[#9C9A9A]'
+                      ? tab === "초과"
+                        ? "text-[#E70000]"
+                        : "text-black"
+                      : "text-[#9C9A9A]"
                   }`}
                 >
                   {tab}
@@ -923,13 +1053,15 @@ const cautionCount = cautionCombinations.length;
         </div>
       </div>
 
-      {activeTab === '초과' && (
+      {activeTab === "초과" && (
         <>
           {/* PC 버전 */}
           <div className="mt-8 hidden md:block">
             <div className="relative z-20 mx-auto w-full max-w-[1100px] px-6">
               <div className="flex h-[102px] w-full items-center justify-center rounded-[22px] bg-[#E5E5E5]">
-                <p className="font-pretendard text-center text-[32px]">적정 섭취량을 준수하세요!</p>
+                <p className="font-pretendard text-center text-[32px]">
+                  적정 섭취량을 준수하세요!
+                </p>
               </div>
             </div>
           </div>
@@ -939,9 +1071,9 @@ const cautionCount = cautionCombinations.length;
             <div
               className="flex items-center justify-center rounded-[15px]"
               style={{
-                width: '350px',
-                height: '68px',
-                background: '#F4F4F4', // ← 더 진한 색상으로 변경
+                width: "350px",
+                height: "68px",
+                background: "#F4F4F4", // ← 더 진한 색상으로 변경
               }}
             >
               <p className="font-inter text-[20px] font-medium text-black">
@@ -991,12 +1123,14 @@ const cautionCount = cautionCombinations.length;
                   <div
                     className="flex w-[120px] cursor-pointer items-center px-2"
                     onClick={() =>
-                      navigate(`/ingredients/${encodeURIComponent(ingredientName)}`)
+                      navigate(
+                        `/ingredients/${encodeURIComponent(ingredientName)}`
+                      )
                     }
                   >
                     <span
                       className="font-pretendard inline-block text-[15px] font-medium"
-                      style={{ lineHeight: '100%', letterSpacing: '-2%' }}
+                      style={{ lineHeight: "100%", letterSpacing: "-2%" }}
                     >
                       {ingredientName}
                     </span>
@@ -1012,16 +1146,25 @@ const cautionCount = cautionCombinations.length;
                   <div className="relative h-[40px] w-[200px] overflow-hidden rounded-full bg-[#EFEFEF]">
                     <div
                       className="absolute top-0 left-0 h-full rounded-full"
-                      style={{ width: `${fillPct}%`, background: over ? '#FF7E7E' : '#FFE17E' }}
+                      style={{
+                        width: `${fillPct}%`,
+                        background: over ? "#FF7E7E" : "#FFE17E",
+                      }}
                     />
                     {/* 점선(라벨과 같은 퍼센트 기준) */}
                     <div
                       className="absolute top-0 z-10 h-full border-l-2 border-dashed"
-                      style={{ left: `${REC_LINE_POS}%`, borderColor: '#000000' }}
+                      style={{
+                        left: `${REC_LINE_POS}%`,
+                        borderColor: "#000000",
+                      }}
                     />
                     <div
                       className="absolute top-0 z-10 h-full border-l-2 border-dashed"
-                      style={{ left: `${UPPER_LINE_POS}%`, borderColor: '#000000' }}
+                      style={{
+                        left: `${UPPER_LINE_POS}%`,
+                        borderColor: "#000000",
+                      }}
                     />
                   </div>
                 </div>
@@ -1058,10 +1201,10 @@ const cautionCount = cautionCombinations.length;
       ) : (
         <div className="mt-6 px-4 text-center text-gray-500 md:hidden">
           {ingredientResults.length === 0
-            ? '영양제를 선택해주세요.'
-            : activeTab === '초과'
-              ? '초과된 성분이 없습니다.'
-              : '데이터를 불러오는 중입니다...'}
+            ? "영양제를 선택해주세요."
+            : activeTab === "초과"
+              ? "초과된 성분이 없습니다."
+              : "데이터를 불러오는 중입니다..."}
         </div>
       )}
 
@@ -1107,7 +1250,9 @@ const cautionCount = cautionCombinations.length;
                     <div
                       className="flex h-[48px] cursor-pointer items-center"
                       onClick={() =>
-                        navigate(`/ingredients/${encodeURIComponent(ingredientName)}`)
+                        navigate(
+                          `/ingredients/${encodeURIComponent(ingredientName)}`
+                        )
                       }
                     >
                       <span className="text-[20px] font-medium lg:text-[24px]">
@@ -1128,21 +1273,21 @@ const cautionCount = cautionCombinations.length;
                           className="absolute top-0 left-0 h-full rounded-full"
                           style={{
                             width: `${fillPct}%`,
-                            background: over ? '#FF7E7E' : '#FFE17E',
+                            background: over ? "#FF7E7E" : "#FFE17E",
                           }}
                         />
                         <div
                           className="absolute top-0 z-10 h-full border-l-2 border-dashed"
                           style={{
                             left: `${REC_LINE_POS}%`,
-                            borderColor: '#000000',
+                            borderColor: "#000000",
                           }}
                         />
                         <div
                           className="absolute top-0 z-10 h-full border-l-2 border-dashed"
                           style={{
                             left: `${UPPER_LINE_POS}%`,
-                            borderColor: '#000000',
+                            borderColor: "#000000",
                           }}
                         />
                       </div>
@@ -1182,10 +1327,10 @@ const cautionCount = cautionCombinations.length;
       ) : (
         <div className="mt-20 hidden flex-col items-center px-[60px] text-center text-gray-500 md:flex">
           {ingredientResults.length === 0
-            ? '영양제를 선택해주세요.'
-            : activeTab === '초과'
-              ? '초과된 성분이 없습니다.'
-              : '데이터를 불러오는 중입니다...'}
+            ? "영양제를 선택해주세요."
+            : activeTab === "초과"
+              ? "초과된 성분이 없습니다."
+              : "데이터를 불러오는 중입니다..."}
         </div>
       )}
 
@@ -1194,13 +1339,21 @@ const cautionCount = cautionCombinations.length;
         <>
           {/* 📱 모바일 - 주의 조합 */}
           <div className="mt-10 px-7 md:hidden">
-            <h2 className="text-[22px] font-semibold text-black">주의가 필요한 조합 TOP 5</h2>
-            <p className="mt-1 text-[14px] text-[#6B6B6B]">카드를 눌러서 확인해 보세요 !</p>
+            <h2 className="text-[22px] font-semibold text-black">
+              주의가 필요한 조합 TOP 5
+            </h2>
+            <p className="mt-1 text-[14px] text-[#6B6B6B]">
+              카드를 눌러서 확인해 보세요 !
+            </p>
           </div>
           <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
             <div className="mt-5 mr-4 mb-5 ml-4 flex w-max gap-[16px]">
               {cautionCombinations.map((combo: Combination) => (
-                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
               ))}
             </div>
           </div>
@@ -1219,7 +1372,11 @@ const cautionCount = cautionCombinations.length;
               {/* 카드 래퍼: 제목과 같은 컨테이너 내부 → 시작점 일치 */}
               <div className="mt-8 mb-15 flex gap-2 lg:gap-4 xl:gap-6">
                 {cautionCombinations.map((combo: Combination) => (
-                  <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
                 ))}
               </div>
             </div>
@@ -1231,13 +1388,21 @@ const cautionCount = cautionCombinations.length;
         <>
           {/* 📱 모바일 - 좋은 조합 */}
           <div className="mt-10 px-7 md:hidden">
-            <h2 className="text-[22px] font-semibold text-black">궁합이 좋은 조합 TOP 5</h2>
-            <p className="mt-1 text-[14px] text-[#6B6B6B]">카드를 눌러서 확인해 보세요 !</p>
+            <h2 className="text-[22px] font-semibold text-black">
+              궁합이 좋은 조합 TOP 5
+            </h2>
+            <p className="mt-1 text-[14px] text-[#6B6B6B]">
+              카드를 눌러서 확인해 보세요 !
+            </p>
           </div>
           <div className="hide-scrollbar overflow-x-auto px-3 md:hidden">
             <div className="mt-5 mr-4 mb-15 ml-4 flex w-max gap-[16px]">
               {goodCombinations.map((combo: Combination) => (
-                <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                <FlipCard
+                  key={combo.id}
+                  name={combo.name}
+                  description={combo.description}
+                />
               ))}
             </div>
           </div>
@@ -1256,7 +1421,11 @@ const cautionCount = cautionCombinations.length;
               {/* 카드 래퍼: 제목과 같은 컨테이너 내부 */}
               <div className="mt-8 mb-20 flex gap-2 lg:gap-4 xl:gap-6">
                 {goodCombinations.map((combo: Combination) => (
-                  <FlipCard key={combo.id} name={combo.name} description={combo.description} />
+                  <FlipCard
+                    key={combo.id}
+                    name={combo.name}
+                    description={combo.description}
+                  />
                 ))}
               </div>
             </div>
@@ -1264,13 +1433,24 @@ const cautionCount = cautionCombinations.length;
         </>
       )}
 
- {/* 📱 모바일 공유 바텀시트 */}
- <ShareSheet
+      {/* 📱 모바일 공유 바텀시트 */}
+      <ShareSheet
         open={sheetOpen}
         onClose={() => setSheetOpen(false)}
         onKakao={onShareKakao}
         onCopy={onShareCopy}
       />
+
+      {/* 알람 추가 모달  */}
+      {selectedItem && (
+        <AlarmAddToSearchModal
+          open={openAlarmModal}
+          onClose={() => setOpenAlarmModal(false)}
+          supplementId={selectedItem.supplementId ?? selectedItem.cursorId}
+          supplementName={selectedItem.supplementName}
+          supplementImageUrl={selectedItem.imageUrl}
+        />
+      )}
 
       {/* ✅ 확인 모달 */}
       <ConfirmModal
