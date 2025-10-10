@@ -147,7 +147,7 @@ export default function MobileSocialSignupDetailPage() {
       <main className="px-5 pb-36 pt-6">
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* 성별 선택 */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-center gap-[50px]">
             <div className="flex flex-col items-center gap-2">
               <div
                 onClick={() => setGender("FEMALE")}

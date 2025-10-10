@@ -29,6 +29,7 @@ const RootLayout = () => {
     "/login/email",
     "/signup/email",
     "/signup/email/detail",
+    "/social-signup/details",
   ];
 
   const isMain = location.pathname === "/";
