@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
+// import axios from "axios";
+import axios from "../lib/axios";
+
 import BSMDropdownPopup from "@/components/BestSupplement/BSMDropdownPopup";
 
 // ---------------------- 타입 정의 ----------------------
@@ -93,7 +95,7 @@ export default function BestSupplement() {
       setError(null);
       try {
         const response = await axios.get<ApiResponse>(
-          "https://vita-check.com/api/v1/supplements/popular-supplements",
+          "/api/v1/popular-supplements",
           {
             params: {
               ageGroup: apiAgeGroup,

@@ -38,7 +38,6 @@
 //   return res.data;
 // }
 
-
 import api from "@/lib/axios";
 
 export type Gender = "MALE" | "FEMALE" | "ALL";
@@ -91,7 +90,7 @@ export async function getPopularSupplementsByAge({
 
   const token = localStorage.getItem("accessToken");
 
-  // ✅ 로그인: Authorization 포함해서 axios 인스턴스로 호출
+  // 로그인: Authorization 포함해서 axios 인스턴스로 호출
   if (token) {
     const res = await api.get<PagedResponse<SupplementSummary>>(
       "/api/v1/popular-supplements",
@@ -103,7 +102,7 @@ export async function getPopularSupplementsByAge({
     return res.data;
   }
 
-  // ✅ 비로그인: 인터셉터 영향 없는 fetch로 호출
+  //비로그인: 인터셉터 영향 없는 fetch로 호출
   const base = import.meta.env.VITE_SERVER_API_URL;
   const qs = new URLSearchParams(
     Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
@@ -112,13 +111,18 @@ export async function getPopularSupplementsByAge({
     }, {})
   ).toString();
 
-  const resp = await fetch(
-    `${base}/api/v1/supplements/popular-supplements?${qs}`,
-    { method: "GET" }
-  );
+  const resp = await fetch(`${base}/api/v1/popular-supplements?${qs}`, {
+    method: "GET",
+  });
   if (!resp.ok) {
     const text = await resp.text();
-    throw new Error(`popular-supplements fetch failed: ${resp.status} ${text}`);
+    const err: any = new Error("popular-supplements fetch failed");
+    err.isAxiosError = true;
+    err.response = {
+      status: resp.status,
+      data: text,
+    };
+    throw err;
   }
   return (await resp.json()) as PagedResponse<SupplementSummary>;
 }
