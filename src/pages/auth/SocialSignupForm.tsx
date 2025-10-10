@@ -309,7 +309,7 @@ export default function SocialSignupForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="w-full max-w-[420px] mx-auto px-5 py-6"
+      className="w-full max-w-[420px] mx-auto px-5 py-6 min-h-[90vh]"
     >
       <h1 className="text-[24px] font-semibold">회원가입</h1>
       <div className="mt-8 space-y-8">
