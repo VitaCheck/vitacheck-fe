@@ -35,7 +35,7 @@ const SearchBar = () => {
 
     // 데스크탑에서는 입력창 초기화 및 포커스 해제
     if (window.matchMedia("(min-width: 640px)").matches) {
-      setQuery("");
+      // setQuery("");
       inputRef.current?.blur();
     }
   };
@@ -56,7 +56,7 @@ const SearchBar = () => {
   useEffect(() => {
     const isDesktop = window.matchMedia("(min-width: 640px)").matches;
     if (isDesktop) {
-      setQuery("");
+      // setQuery("");
       // setShowModal(false);
       inputRef.current?.blur();
     }
