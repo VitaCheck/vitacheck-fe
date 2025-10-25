@@ -473,7 +473,7 @@ export const recordSearchLog = async (keyword: string) => {
   console.log("📝 [API] 검색 키워드:", keyword);
 
   try {
-    const url = "/api/v1/search/logs";
+    const url = "/api/v1/logs/search";
     const params = { keyword };
 
     console.log("📝 [API] 요청 URL:", url);

@@ -27,31 +27,31 @@ export default function SearchResultPage() {
 
   /** 최초 로드 */
   useEffect(() => {
-  const fetchAll = async () => {
-    if (!keyword) return;
-    setLoading(true);
-    try {
-      const [ingRes, supRes] = await Promise.allSettled([
-        searchIngredients(keyword),
-        searchSupplements(keyword, undefined, 40),
-      ]);
+    const fetchAll = async () => {
+      if (!keyword) return;
+      setLoading(true);
+      try {
+        const [ingRes, supRes] = await Promise.allSettled([
+          searchIngredients(keyword),
+          searchSupplements(keyword, undefined, 40),
+        ]);
 
-      if (ingRes.status === "fulfilled") setIngredients(ingRes.value);
-      else setIngredients([]);
+        if (ingRes.status === "fulfilled") setIngredients(ingRes.value);
+        else setIngredients([]);
 
-      if (supRes.status === "fulfilled") {
-        setItems(supRes.value.items);
-        setNextCursor(supRes.value.nextCursor);
-      } else {
-        setItems([]);
-        setNextCursor(null);
+        if (supRes.status === "fulfilled") {
+          setItems(supRes.value.items);
+          setNextCursor(supRes.value.nextCursor);
+        } else {
+          setItems([]);
+          setNextCursor(null);
+        }
+      } finally {
+        setLoading(false);
       }
-    } finally {
-      setLoading(false);
-    }
-  };
-  fetchAll();
-}, [keyword]);
+    };
+    fetchAll();
+  }, [keyword]);
 
   /** 더보기 (cursor 페이징) */
   const handleLoadMore = async () => {
@@ -71,7 +71,7 @@ export default function SearchResultPage() {
   return (
     <div className="min-h-screen bg-white">
       <div className="sm:w-[80%] w-[95%] mx-auto p-4">
-        <div className="sm:mt-5">
+        <div className="sm:hidden mt-2">
           <SearchBar initialQuery={keyword} />
         </div>
 
@@ -103,7 +103,9 @@ export default function SearchResultPage() {
                   alt="검색 결과 없음"
                   className="w-[144px] h-[144px] object-contain mb-4"
                 />
-                <p className="text-[#808080] text-lg">일치하는 검색 결과가 없습니다.</p>
+                <p className="text-[#808080] text-lg">
+                  일치하는 검색 결과가 없습니다.
+                </p>
               </div>
             ) : (
               <>
@@ -129,7 +131,7 @@ export default function SearchResultPage() {
                     return (
                       <ProductCard
                         key={p.cursorId}
-                        id={detailId}                         
+                        id={detailId}
                         imageSrc={p.imageUrl}
                         name={p.supplementName}
                         widthClass="w-full"
