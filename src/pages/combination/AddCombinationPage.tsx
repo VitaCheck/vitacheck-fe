@@ -2,8 +2,9 @@ import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import CombinationProductCard from "../../components/combination/CombinationProductCard";
 import SadCat from "../../../public/images/rate1.png";
+import Search from "../../assets/search.png";
 import axios from "@/lib/axios";
-import Navbar from "@/components/NavBar";
+// import Navbar from "@/components/NavBar";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -278,7 +279,7 @@ const AddCombinationPage = () => {
             className="w-full bg-transparent text-lg text-gray-400 placeholder-gray-300"
           />
           <img
-            src="/images/search.png"
+            src={Search}
             alt="검색"
             onClick={handleSearch}
             className="ml-2 h-5 w-5 cursor-pointer"

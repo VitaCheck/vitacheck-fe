@@ -6,7 +6,7 @@ import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import boxIcon from "../../assets/box.png";
 import flipIcon from "../../assets/flip.png";
 import axios from "@/lib/axios";
-import Navbar from "@/components/NavBar";
+// import Navbar from "@/components/NavBar";
 import line from "/images/PNG/조합 2-1/background line.png";
 import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
 
