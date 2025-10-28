@@ -1,15 +1,20 @@
 // src/pages/ingredients/IngredientDetailPage.tsx
-import { useState, useEffect, useMemo, createContext, useContext } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery, useMutation, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fetchIngredientDetail, toggleIngredientLike } from '@/apis/ingredient';
-import type { IngredientDetail } from '@/types/ingredient';
+import { useState, useEffect, useMemo, createContext, useContext } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import {
+  useQuery,
+  useMutation,
+  QueryClient,
+  QueryClientProvider,
+} from "@tanstack/react-query";
+import { fetchIngredientDetail, toggleIngredientLike } from "@/apis/ingredient";
+import type { IngredientDetail } from "@/types/ingredient";
 
-import IngredientTabs from '@/components/ingredient/IngredientTabs';
-import IngredientInfo from '@/components/ingredient/IngredientInfo';
-import IngredientAlternatives from '@/components/ingredient/IngredientAlternatives';
-import IngredientSupplements from '@/components/ingredient/IngredientSupplements';
-import { FiShare2, FiHeart } from 'react-icons/fi';
+import IngredientTabs from "@/components/ingredient/IngredientTabs";
+import IngredientInfo from "@/components/ingredient/IngredientInfo";
+import IngredientAlternatives from "@/components/ingredient/IngredientAlternatives";
+import IngredientSupplements from "@/components/ingredient/IngredientSupplements";
+import { FiShare2, FiHeart } from "react-icons/fi";
 
 // 찜하기 상태를 관리하는 Context
 interface LikeContextType {
@@ -21,18 +26,22 @@ interface LikeContextType {
 const LikeContext = createContext<LikeContextType | undefined>(undefined);
 
 // 찜하기 상태를 관리하는 Provider 컴포넌트
-const LikeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [likedIngredients, setLikedIngredients] = useState<Set<string>>(new Set());
+const LikeProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const [likedIngredients, setLikedIngredients] = useState<Set<string>>(
+    new Set()
+  );
 
   // localStorage에서 찜하기 상태 불러오기
   useEffect(() => {
-    const savedLikes = localStorage.getItem('likedIngredients');
+    const savedLikes = localStorage.getItem("likedIngredients");
     if (savedLikes) {
       try {
         const parsed = JSON.parse(savedLikes);
         setLikedIngredients(new Set(parsed));
       } catch (error) {
-        console.error('찜하기 상태 로드 실패:', error);
+        console.error("찜하기 상태 로드 실패:", error);
       }
     }
   }, []);
@@ -48,7 +57,10 @@ const LikeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
       }
 
       // localStorage에 저장
-      localStorage.setItem('likedIngredients', JSON.stringify(Array.from(newSet)));
+      localStorage.setItem(
+        "likedIngredients",
+        JSON.stringify(Array.from(newSet))
+      );
       return newSet;
     });
   };
@@ -69,7 +81,7 @@ const LikeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => 
 const useLike = () => {
   const context = useContext(LikeContext);
   if (!context) {
-    throw new Error('useLike must be used within a LikeProvider');
+    throw new Error("useLike must be used within a LikeProvider");
   }
   return context;
 };
@@ -101,18 +113,19 @@ const Kakao = (window as any).Kakao as KakaoSDK;
 const queryClient = new QueryClient();
 
 const BREAKPOINT = 640;
-const KAKAO_APP_KEY = import.meta.env.VITE_KAKAO_JS_KEY || '16b75c5d816c501dec98d03ee4340883';
+const KAKAO_APP_KEY =
+  import.meta.env.VITE_KAKAO_JS_KEY || "16b75c5d816c501dec98d03ee4340883";
 
 /* 공통 훅 */
 const useIsMobile = () => {
   const [isMobile, setIsMobile] = useState<boolean>(() =>
-    typeof window !== 'undefined' ? window.innerWidth <= BREAKPOINT : true,
+    typeof window !== "undefined" ? window.innerWidth <= BREAKPOINT : true
   );
   useEffect(() => {
     const onResize = () => setIsMobile(window.innerWidth <= BREAKPOINT);
-    window.addEventListener('resize', onResize);
+    window.addEventListener("resize", onResize);
     onResize();
-    return () => window.removeEventListener('resize', onResize);
+    return () => window.removeEventListener("resize", onResize);
   }, []);
   return isMobile;
 };
@@ -123,15 +136,15 @@ async function copyToClipboard(text: string) {
     await navigator.clipboard.writeText(text);
     return true;
   } catch {
-    const el = document.createElement('textarea');
+    const el = document.createElement("textarea");
     el.value = text;
-    el.style.position = 'fixed';
-    el.style.opacity = '0';
+    el.style.position = "fixed";
+    el.style.opacity = "0";
     document.body.appendChild(el);
     el.focus();
     el.select();
     try {
-      document.execCommand('copy');
+      document.execCommand("copy");
       return true;
     } catch {
       return false;
@@ -144,20 +157,20 @@ async function copyToClipboard(text: string) {
 /* Kakao 로더 */
 async function ensureKakaoReady(): Promise<boolean> {
   if (!KAKAO_APP_KEY) {
-    console.warn('카카오 JavaScript 키가 설정되지 않았습니다.');
+    console.warn("카카오 JavaScript 키가 설정되지 않았습니다.");
     return false;
   }
 
   // 카카오 SDK가 이미 로드되어 있는지 확인
-  if (typeof window !== 'undefined' && window.Kakao) {
+  if (typeof window !== "undefined" && window.Kakao) {
     try {
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init(KAKAO_APP_KEY);
-        console.log('카카오 SDK 초기화 완료');
+        console.log("카카오 SDK 초기화 완료");
       }
       return true;
     } catch (error) {
-      console.error('카카오 SDK 초기화 실패:', error);
+      console.error("카카오 SDK 초기화 실패:", error);
       return false;
     }
   }
@@ -165,16 +178,16 @@ async function ensureKakaoReady(): Promise<boolean> {
   // 카카오 SDK가 로드되지 않은 경우 (index.html에서 이미 로드됨)
   try {
     // index.html에서 이미 로드했으므로 바로 초기화 시도
-    if (typeof window !== 'undefined' && window.Kakao) {
+    if (typeof window !== "undefined" && window.Kakao) {
       window.Kakao.init(KAKAO_APP_KEY);
-      console.log('카카오 SDK 초기화 완료');
+      console.log("카카오 SDK 초기화 완료");
       return true;
     }
 
-    console.error('카카오 SDK가 로드되지 않았습니다.');
+    console.error("카카오 SDK가 로드되지 않았습니다.");
     return false;
   } catch (error) {
-    console.error('카카오 SDK 설정 실패:', error);
+    console.error("카카오 SDK 설정 실패:", error);
     return false;
   }
 }
@@ -192,16 +205,17 @@ function ShareSheet({
   onCopy: () => void;
 }) {
   if (!open) return null;
-  const KAKAO_ICON = '/images/PNG/성분 2-1/kakao.png';
-  const LINK_ICON = '/images/PNG/성분 2-1/link.png';
+  const KAKAO_ICON = "/images/PNG/성분 2-1/kakao.png";
+  const LINK_ICON = "/images/PNG/성분 2-1/link.png";
   return (
     <div className="fixed inset-0 z-50">
-      <button aria-label="닫기" className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <div
-        className="absolute right-0 bottom-0 left-0 w-full"
-        style={{ paddingBottom: 'max(16px, env(safe-area-inset-bottom))' }}
-      >
-        <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
+      <button
+        aria-label="닫기"
+        className="absolute inset-0 bg-black/40"
+        onClick={onClose}
+      />
+      <div className="absolute right-0 bottom-0 left-0 w-[100%]">
+        <div className="mx-auto rounded-t-3xl bg-white shadow-xl">
           <div className="px-5 pt-6 pb-4">
             <h3 className="text-center text-[15px] font-semibold">공유하기</h3>
           </div>
@@ -225,7 +239,12 @@ function ShareSheet({
             className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
           >
             <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
-              <img src={LINK_ICON} alt="링크" className="h-9 w-9 object-contain" loading="lazy" />
+              <img
+                src={LINK_ICON}
+                alt="링크"
+                className="h-9 w-9 object-contain"
+                loading="lazy"
+              />
             </span>
             <span className="text-[15px]">링크 복사하기</span>
           </button>
@@ -249,9 +268,15 @@ function ConfirmModal({
   if (!open) return null;
   return (
     <div className="fixed inset-0 z-50">
-      <button className="absolute inset-0 bg-black/40" aria-label="닫기" onClick={onClose} />
+      <button
+        className="absolute inset-0 bg-black/40"
+        aria-label="닫기"
+        onClick={onClose}
+      />
       <div className="absolute top-1/2 left-1/2 w-[90%] max-w-md -translate-x-1/2 -translate-y-1/2 rounded-2xl bg-white p-6 shadow-xl">
-        <p className="mb-5 text-center whitespace-pre-line text-gray-700">{message}</p>
+        <p className="mb-5 text-center whitespace-pre-line text-gray-700">
+          {message}
+        </p>
         <div className="flex justify-center">
           <button
             onClick={onClose}
@@ -266,21 +291,23 @@ function ConfirmModal({
 }
 
 const IngredientDetailInner = () => {
-  const [activeTab, setActiveTab] = useState<'info' | 'alternatives' | 'supplements'>('info');
-  const [tabHistory, setTabHistory] = useState<Array<'info' | 'alternatives' | 'supplements'>>([
-    'info',
-  ]);
+  const [activeTab, setActiveTab] = useState<
+    "info" | "alternatives" | "supplements"
+  >("info");
+  const [tabHistory, setTabHistory] = useState<
+    Array<"info" | "alternatives" | "supplements">
+  >(["info"]);
   const isMobile = useIsMobile();
   const { ingredientName } = useParams<{ ingredientName: string }>();
   const navigate = useNavigate();
   const { isLiked, toggleLike } = useLike();
 
   // 제목/탭/액션 공통 래퍼(네비 안쪽 그리드와 좌우 정렬 맞춤)
-  const WRAP = 'mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8';
+  const WRAP = "mx-auto w-full max-w-[1120px] px-4 sm:px-6 lg:px-8";
 
   // 로그인 상태 확인
   const isLoggedIn = () => {
-    return !!localStorage.getItem('accessToken');
+    return !!localStorage.getItem("accessToken");
   };
 
   // 로그인 상태가 변경될 때마다 찜하기 상태 확인
@@ -292,19 +319,23 @@ const IngredientDetailInner = () => {
 
   // 카카오 SDK 초기화
   useEffect(() => {
-    if (typeof window !== 'undefined' && window.Kakao && !window.Kakao.isInitialized()) {
+    if (
+      typeof window !== "undefined" &&
+      window.Kakao &&
+      !window.Kakao.isInitialized()
+    ) {
       window.Kakao.init(KAKAO_APP_KEY);
-      console.log('카카오 SDK 초기화 완료');
+      console.log("카카오 SDK 초기화 완료");
     }
   }, []);
 
-  const handleTabChange = (newTab: 'info' | 'alternatives' | 'supplements') => {
+  const handleTabChange = (newTab: "info" | "alternatives" | "supplements") => {
     setTabHistory((p) => [...p, newTab]);
     setActiveTab(newTab);
     window.history.pushState(
       { tab: newTab, history: [...tabHistory, newTab] },
-      '',
-      window.location.href,
+      "",
+      window.location.href
     );
   };
 
@@ -314,10 +345,14 @@ const IngredientDetailInner = () => {
       const prev = h[h.length - 1];
       setTabHistory(h);
       setActiveTab(prev);
-      window.history.replaceState({ tab: prev, history: h }, '', window.location.href);
+      window.history.replaceState(
+        { tab: prev, history: h },
+        "",
+        window.location.href
+      );
     } else {
-      setActiveTab('info');
-      setTabHistory(['info']);
+      setActiveTab("info");
+      setTabHistory(["info"]);
     }
   };
 
@@ -330,15 +365,19 @@ const IngredientDetailInner = () => {
         handleBackClick();
       }
     };
-    window.history.replaceState({ tab: 'info', history: ['info'] }, '', window.location.href);
-    window.addEventListener('popstate', onPop);
-    return () => window.removeEventListener('popstate', onPop);
+    window.history.replaceState(
+      { tab: "info", history: ["info"] },
+      "",
+      window.location.href
+    );
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
   }, [tabHistory]);
 
   const { data, isLoading, isError } = useQuery<IngredientDetail>({
-    queryKey: ['ingredientDetail', ingredientName],
+    queryKey: ["ingredientDetail", ingredientName],
     queryFn: async () => {
-      if (!ingredientName) throw new Error('Ingredient name is required');
+      if (!ingredientName) throw new Error("Ingredient name is required");
       return await fetchIngredientDetail(ingredientName);
     },
     enabled: !!ingredientName,
@@ -349,13 +388,13 @@ const IngredientDetailInner = () => {
     mutationFn: toggleIngredientLike,
     onSuccess: (res) => {
       if (res?.result?.isLiked !== undefined) {
-        toggleLike(data?.id?.toString() || '', res.result.isLiked);
+        toggleLike(data?.id?.toString() || "", res.result.isLiked);
       }
     },
     onError: (error: any) => {
       // 401 에러인 경우 로그인 페이지로 이동
       if (error?.response?.status === 401) {
-        navigate('/login');
+        navigate("/login");
         // 에러 시 찜하기 상태를 false로 설정
         if (data?.id) {
           toggleLike(data.id.toString(), false);
@@ -373,7 +412,7 @@ const IngredientDetailInner = () => {
   const handleLikeClick = () => {
     // 로그인 상태 확인
     if (!isLoggedIn()) {
-      navigate('/login');
+      navigate("/login");
       return;
     }
 
@@ -387,9 +426,9 @@ const IngredientDetailInner = () => {
 
   const [sheetOpen, setSheetOpen] = useState(false);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [confirmMessage, setConfirmMessage] = useState('');
+  const [confirmMessage, setConfirmMessage] = useState("");
   const shareUrl = useMemo(() => window.location.href, []);
-  const shareTitle = useMemo(() => data?.name ?? 'VitaCheck', [data]);
+  const shareTitle = useMemo(() => data?.name ?? "VitaCheck", [data]);
 
   async function onClickShare() {
     if (isMobile) {
@@ -398,19 +437,21 @@ const IngredientDetailInner = () => {
     }
     // PC 버전에서는 링크 복사
     const ok = await copyToClipboard(shareUrl);
-    setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+    setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
     setConfirmOpen(ok);
   }
 
   async function onShareKakao() {
     try {
       // 카카오 SDK 초기화 확인
-      if (typeof window === 'undefined' || !window.Kakao) {
-        console.error('카카오 SDK가 로드되지 않았습니다.');
+      if (typeof window === "undefined" || !window.Kakao) {
+        console.error("카카오 SDK가 로드되지 않았습니다.");
         // SDK 로드 실패 시 링크 복사로 대체
         const ok = await copyToClipboard(shareUrl);
         setSheetOpen(false);
-        setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+        setConfirmMessage(
+          "링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요."
+        );
         setConfirmOpen(ok);
         return;
       }
@@ -418,20 +459,20 @@ const IngredientDetailInner = () => {
       // 카카오 SDK 초기화
       if (!window.Kakao.isInitialized()) {
         window.Kakao.init(KAKAO_APP_KEY);
-        console.log('카카오 SDK 초기화 완료');
+        console.log("카카오 SDK 초기화 완료");
       }
 
       // 성분 정보를 포함한 공유 템플릿
       const shareDescription = data?.description
         ? `${data.description.substring(0, 100)}...`
-        : 'VitaCheck에서 성분 정보를 확인해 보세요.';
+        : "VitaCheck에서 성분 정보를 확인해 보세요.";
 
       // VitaCheck 로고 이미지 사용 (절대 경로)
       const shareImageUrl = `${window.location.origin}/images/PNG/성분 2-1/share.png`;
 
       // 공유 데이터 로깅
       const shareData = {
-        objectType: 'feed',
+        objectType: "feed",
         content: {
           title: `${shareTitle} - VitaCheck`,
           description: shareDescription,
@@ -443,7 +484,7 @@ const IngredientDetailInner = () => {
         },
         buttons: [
           {
-            title: '바로 보기',
+            title: "바로 보기",
             link: {
               mobileWebUrl: shareUrl,
               webUrl: shareUrl,
@@ -452,34 +493,34 @@ const IngredientDetailInner = () => {
         ],
       };
 
-      console.log('🔥 [카카오톡] 공유 데이터:', shareData);
-      console.log('🔥 [카카오톡] 공유 URL:', shareUrl);
-      console.log('🔥 [카카오톡] 공유 제목:', shareTitle);
-      console.log('🔥 [카카오톡] 이미지 URL:', shareImageUrl);
+      console.log("🔥 [카카오톡] 공유 데이터:", shareData);
+      console.log("🔥 [카카오톡] 공유 URL:", shareUrl);
+      console.log("🔥 [카카오톡] 공유 제목:", shareTitle);
+      console.log("🔥 [카카오톡] 이미지 URL:", shareImageUrl);
 
       // 카카오톡 공유 실행
       window.Kakao.Share.sendDefault(shareData);
 
-      console.log('카카오톡 공유 성공');
+      console.log("카카오톡 공유 성공");
       setSheetOpen(false);
 
       // 성공 메시지 표시 (카카오톡 앱이 설치된 경우)
-      setConfirmMessage('카카오톡 공유하기 완료!');
+      setConfirmMessage("카카오톡 공유하기 완료!");
       setConfirmOpen(true);
 
       // 카카오톡 앱이 설치되지 않은 경우를 대비한 대체 처리
       setTimeout(() => {
         // 3초 후에도 카카오톡이 열리지 않으면 링크 복사로 대체
-        console.log('🔥 [카카오톡] 대체 처리: 링크 복사');
+        console.log("🔥 [카카오톡] 대체 처리: 링크 복사");
         copyToClipboard(shareUrl);
       }, 3000);
     } catch (error) {
-      console.error('카카오톡 공유 실패:', error);
+      console.error("카카오톡 공유 실패:", error);
 
       // 공유 실패 시 링크 복사로 대체
       const ok = await copyToClipboard(shareUrl);
       setSheetOpen(false);
-      setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+      setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
       setConfirmOpen(ok);
     }
   }
@@ -488,12 +529,14 @@ const IngredientDetailInner = () => {
     const ok = await copyToClipboard(shareUrl);
     setSheetOpen(false);
     // 모바일 링크 복사 메시지
-    setConfirmMessage('링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.');
+    setConfirmMessage("링크가 복사되었습니다.\n원하는 곳에 붙여넣기 하세요.");
     setConfirmOpen(ok);
   }
 
   if (!ingredientName)
-    return <div className="px-5 py-10">잘못된 접근입니다. 성분명이 없습니다.</div>;
+    return (
+      <div className="px-5 py-10">잘못된 접근입니다. 성분명이 없습니다.</div>
+    );
   if (isLoading)
     return (
       <div className="px-5 py-10">
@@ -507,7 +550,9 @@ const IngredientDetailInner = () => {
     return (
       <div className="px-5 py-10">
         <div className="text-center">
-          <p className="mb-2 text-lg text-red-500">성분 정보를 불러올 수 없습니다.</p>
+          <p className="mb-2 text-lg text-red-500">
+            성분 정보를 불러올 수 없습니다.
+          </p>
           <p className="text-sm text-gray-500">잠시 후 다시 시도해주세요.</p>
         </div>
       </div>
@@ -516,7 +561,9 @@ const IngredientDetailInner = () => {
     return (
       <div className="px-5 py-10">
         <div className="text-center">
-          <p className="mb-2 text-lg text-gray-500">성분 정보를 찾을 수 없습니다.</p>
+          <p className="mb-2 text-lg text-gray-500">
+            성분 정보를 찾을 수 없습니다.
+          </p>
           <p className="text-sm text-gray-500">검색어를 다시 확인해주세요.</p>
         </div>
       </div>
@@ -525,7 +572,7 @@ const IngredientDetailInner = () => {
   const result = data;
 
   return (
-    <div className={`${isMobile ? 'pt-3 pb-5' : 'py-10'}`}>
+    <div className={`${isMobile ? "pt-3 pb-5" : "py-10"}`}>
       {/* 제목 + 액션: 네비와 같은 내부 폭/인셋 */}
       <div className={`${WRAP} mb-4 flex items-center sm:mb-6`}>
         <h1 className="pl-4 text-2xl font-bold sm:text-2xl">{result.name}</h1>
@@ -542,8 +589,8 @@ const IngredientDetailInner = () => {
             disabled={likeMutation.isPending}
             className={`flex h-9 w-9 items-center justify-center rounded-full border border-gray-200 transition-all duration-200 ${
               likeMutation.isPending
-                ? 'cursor-not-allowed opacity-50'
-                : 'hover:border-pink-300 hover:shadow-sm'
+                ? "cursor-not-allowed opacity-50"
+                : "hover:border-pink-300 hover:shadow-sm"
             }`}
             aria-label="좋아요"
           >
@@ -553,8 +600,8 @@ const IngredientDetailInner = () => {
               <FiHeart
                 className={
                   data?.id && isLiked(data.id.toString())
-                    ? 'fill-red-500 text-red-500'
-                    : 'text-pink-500'
+                    ? "fill-red-500 text-red-500"
+                    : "text-pink-500"
                 }
                 size={18}
               />
@@ -570,15 +617,17 @@ const IngredientDetailInner = () => {
 
       {/* 본문: 탭과 같은 시작점으로 정렬 */}
       <div className={`${WRAP}`}>
-        {activeTab === 'info' && <IngredientInfo id={ingredientName!} data={result} />}
-        {activeTab === 'alternatives' && (
+        {activeTab === "info" && (
+          <IngredientInfo id={ingredientName!} data={result} />
+        )}
+        {activeTab === "alternatives" && (
           <IngredientAlternatives
             name={result.name}
             subIngredients={result.subIngredients}
             alternatives={result.alternatives}
           />
         )}
-        {activeTab === 'supplements' && <IngredientSupplements data={result} />}
+        {activeTab === "supplements" && <IngredientSupplements data={result} />}
       </div>
 
       <ShareSheet

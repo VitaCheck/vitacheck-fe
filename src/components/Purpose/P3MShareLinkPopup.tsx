@@ -1,5 +1,153 @@
-import React, { useState, useEffect } from 'react';
-import ShareModal from './P3DShareModal';
+// import React, { useState, useEffect } from "react";
+// import ShareModal from "./P3DShareModal";
+// import link from "@/assets/link/link.png";
+// import kakaolink from "@/assets/link/kakaolink.png";
+
+// interface ShareLinkPopupProps {
+//   onClose: () => void;
+//   supplementUrl: string;
+//   supplementImageUrl?: string;
+//   supplementName?: string;
+// }
+
+// const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
+//   onClose,
+//   supplementUrl,
+//   supplementImageUrl,
+//   supplementName,
+// }) => {
+//   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+//   const [kakaoLoaded, setKakaoLoaded] = useState(false);
+
+//   // Kakao SDK 초기화
+//   useEffect(() => {
+//     const script = document.createElement("script");
+//     script.src = "https://developers.kakao.com/sdk/js/kakao.js";
+//     script.async = true;
+//     script.onload = () => {
+//       if (window.Kakao && !window.Kakao.isInitialized()) {
+//         window.Kakao.init("2d08e54fea8b27677dfe77d5719f8d23");
+//         console.log("Kakao SDK initialized:", window.Kakao.isInitialized());
+//         setKakaoLoaded(true);
+//       }
+//     };
+//     document.body.appendChild(script);
+//   }, []);
+
+//   const handleCopyLink = () => {
+//     navigator.clipboard
+//       .writeText(supplementUrl)
+//       .then(() => setIsShareModalOpen(true))
+//       .catch((err) => alert("링크 복사에 실패했습니다."));
+//   };
+
+//   const handleCloseShareModal = () => {
+//     setIsShareModalOpen(false);
+//     onClose();
+//   };
+
+//   // 카카오톡 공유
+//   const handleKakaoShare = () => {
+//     if (!window.Kakao || !window.Kakao.isInitialized()) {
+//       alert("카카오 SDK가 준비되지 않았습니다.");
+//       return;
+//     }
+
+//     try {
+//       window.Kakao.Share.sendDefault({
+//         objectType: "feed",
+//         content: {
+//           title: supplementName || "추천 영양제",
+//           description: "이 영양제를 VitaCheck에서 확인해보세요!",
+//           imageUrl:
+//             supplementImageUrl ||
+//             "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
+//           link: {
+//             mobileWebUrl: supplementUrl,
+//             webUrl: supplementUrl,
+//           },
+//         },
+//         buttons: [
+//           {
+//             title: "자세히 보기",
+//             link: {
+//               mobileWebUrl: supplementUrl,
+//               webUrl: supplementUrl,
+//             },
+//           },
+//         ],
+//       });
+//     } catch (err) {
+//       console.error(err);
+//       alert("공유 실패: 데스크탑 브라우저에서는 카카오톡 앱을 열 수 없습니다.");
+//     }
+//   };
+
+//   const handleBackgroundClick = () => onClose();
+//   const handlePopupClick = (e: React.MouseEvent) => e.stopPropagation();
+
+//   return (
+//     <>
+//       <div
+//         className="fixed inset-0 flex items-end justify-center z-50 bg-gray-800/50"
+//         onClick={handleBackgroundClick}
+//       >
+//         <div
+//           className="bg-white rounded-t-4xl shadow-lg relative w-full text-center"
+//           onClick={handlePopupClick}
+//         >
+//           <div className="flex flex-col">
+//             <div className="ml-[32px]">
+//               <h2 className="text-[15px] mt-[20px] font-semibold mb-[4px] text-center  w-[100%]">
+//                 공유하기
+//               </h2>
+//             </div>
+
+//             {/* 카카오톡 공유 */}
+//             <div className="ml-[32px]">
+//               <button
+//                 onClick={handleKakaoShare}
+//                 className="w-full flex items-center px-5 py-4 gap-[22px] text-black cursor-pointer"
+//               >
+//                 <img
+//                   src={kakaolink}
+//                   alt="카카오톡"
+//                   className="rounded-full w-[36px] h-[36px]"
+//                 />
+//                 <span className="text-[15px] font-medium">
+//                   카카오톡으로 공유하기
+//                 </span>
+//               </button>
+//             </div>
+
+//             <div className="border-[#C7C7C7] w-full border-[0.3px]" />
+
+//             {/* 링크 복사 */}
+//             <div className="ml-[32px]">
+//               <button
+//                 onClick={handleCopyLink}
+//                 className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
+//               >
+//                 <img
+//                   src={link}
+//                   alt="링크 복사"
+//                   className="rounded-full w-[36px] h-[36px]"
+//                 />
+//                 <span className="text-[15px] font-medium">링크 복사하기</span>
+//               </button>
+//             </div>
+//           </div>
+//         </div>
+//       </div>
+//       <ShareModal isOpen={isShareModalOpen} onClose={handleCloseShareModal} />
+//     </>
+//   );
+// };
+
+// export default ShareLinkPopup;
+
+import { useState, useEffect } from "react";
+import ShareModal from "./P3DShareModal";
 import link from "@/assets/link/link.png";
 import kakaolink from "@/assets/link/kakaolink.png";
 
@@ -14,20 +162,20 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
   onClose,
   supplementUrl,
   supplementImageUrl,
-  supplementName
+  supplementName,
 }) => {
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [kakaoLoaded, setKakaoLoaded] = useState(false);
 
-  // Kakao SDK 초기화
+  // Kakao SDK 초기화 (기능 유지)
   useEffect(() => {
-    const script = document.createElement('script');
+    const script = document.createElement("script");
     script.src = "https://developers.kakao.com/sdk/js/kakao.js";
     script.async = true;
     script.onload = () => {
       if (window.Kakao && !window.Kakao.isInitialized()) {
         window.Kakao.init("2d08e54fea8b27677dfe77d5719f8d23");
-        console.log("Kakao SDK initialized:", window.Kakao.isInitialized());
+        // console.log("Kakao SDK initialized:", window.Kakao.isInitialized());
         setKakaoLoaded(true);
       }
     };
@@ -35,9 +183,10 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
   }, []);
 
   const handleCopyLink = () => {
-    navigator.clipboard.writeText(supplementUrl)
+    navigator.clipboard
+      .writeText(supplementUrl)
       .then(() => setIsShareModalOpen(true))
-      .catch(err => alert("링크 복사에 실패했습니다."));
+      .catch(() => alert("링크 복사에 실패했습니다."));
   };
 
   const handleCloseShareModal = () => {
@@ -45,7 +194,7 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
     onClose();
   };
 
-  // 카카오톡 공유
+  // 카카오톡 공유 (기능 유지)
   const handleKakaoShare = () => {
     if (!window.Kakao || !window.Kakao.isInitialized()) {
       alert("카카오 SDK가 준비되지 않았습니다.");
@@ -58,7 +207,9 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
         content: {
           title: supplementName || "추천 영양제",
           description: "이 영양제를 VitaCheck에서 확인해보세요!",
-          imageUrl: supplementImageUrl || "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
+          imageUrl:
+            supplementImageUrl ||
+            "https://developers.kakao.com/assets/img/about/logos/kakaolink/kakaolink_btn_medium.png",
           link: {
             mobileWebUrl: supplementUrl,
             webUrl: supplementUrl,
@@ -85,45 +236,68 @@ const ShareLinkPopup: React.FC<ShareLinkPopupProps> = ({
 
   return (
     <>
-      <div
-        className="fixed inset-0 flex items-end justify-center z-50 bg-gray-800/50"
-        onClick={handleBackgroundClick}
-      >
-        <div
-          className="bg-white rounded-t-4xl shadow-lg relative w-full text-center"
-          onClick={handlePopupClick}
-        >
-          <div className="flex flex-col items-start">
-            <div className="ml-[32px]">
-              <h2 className="text-[22px] mt-[20px] font-semibold mb-[4px]">공유하기</h2>
+      {/* 배경 오버레이 */}
+      <div className="fixed inset-0 z-50" onClick={handleBackgroundClick}>
+        <button
+          aria-label="닫기"
+          className="absolute inset-0 bg-black/40"
+          onClick={handleBackgroundClick}
+        />
+
+        {/* 바텀시트 컨테이너 (같은 UI) */}
+        <div className="absolute bottom-0 left-0 right-0 w-full">
+          <div
+            className="mx-auto rounded-t-3xl bg-white shadow-xl"
+            onClick={handlePopupClick}
+          >
+            {/* 헤더 */}
+            <div className="px-5 pt-6 pb-4">
+              <h3 className="text-center text-[15px] font-semibold">
+                공유하기
+              </h3>
             </div>
 
-            {/* 카카오톡 공유 */}
-            <div className="ml-[32px]">
-              <button
-                onClick={handleKakaoShare}
-                className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
-              >
-                <img src={kakaolink} alt="카카오톡" className="rounded-full w-[50px] h-[50px]" />
-                <span className="text-[18px] font-medium">카카오톡으로 공유하기</span>
-              </button>
-            </div>
+            {/* 카카오톡 공유 버튼 */}
+            <button
+              onClick={handleKakaoShare}
+              className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
+            >
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
+                <img
+                  src={kakaolink}
+                  alt="카카오톡"
+                  className="h-9 w-9 object-contain"
+                  loading="lazy"
+                />
+              </span>
+              <span className="text-[15px]">카카오톡으로 공유하기</span>
+            </button>
 
-            <div className="border-[#C7C7C7] w-full border-[0.3px]" />
+            {/* 구분선 */}
+            <div className="h-px w-full bg-gray-200" />
 
-            {/* 링크 복사 */}
-            <div className="ml-[32px]">
-              <button
-                onClick={handleCopyLink}
-                className="w-full py-2 flex items-center h-[90px] gap-[22px] text-black cursor-pointer"
-              >
-                <img src={link} alt="링크 복사" className="rounded-full w-[50px] h-[50px]" />
-                <span className="text-[18px] font-medium">링크 복사하기</span>
-              </button>
-            </div>
+            {/* 링크 복사 버튼 */}
+            <button
+              onClick={handleCopyLink}
+              className="flex w-full items-center gap-3 px-5 py-4 active:bg-gray-50"
+            >
+              <span className="inline-flex h-9 w-9 items-center justify-center rounded-full">
+                <img
+                  src={link}
+                  alt="링크"
+                  className="h-9 w-9 object-contain"
+                  loading="lazy"
+                />
+              </span>
+              <span className="text-[15px]">링크 복사하기</span>
+            </button>
+
+            <div className="h-4" />
           </div>
         </div>
       </div>
+
+      {/* 기존 확인 모달(기능 유지) */}
       <ShareModal isOpen={isShareModalOpen} onClose={handleCloseShareModal} />
     </>
   );

@@ -95,7 +95,7 @@ export default function BestSupplement() {
       setError(null);
       try {
         const response = await axios.get<ApiResponse>(
-          "/api/v1/popular-supplements",
+          "/api/v1/supplements/popular",
           {
             params: {
               ageGroup: apiAgeGroup,

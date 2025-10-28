@@ -6,7 +6,7 @@ import vitaminArrow from "../../assets/비타민 C_arrow.png";
 import boxIcon from "../../assets/box.png";
 import flipIcon from "../../assets/flip.png";
 import axios from "@/lib/axios";
-import Navbar from "@/components/NavBar";
+// import Navbar from "@/components/NavBar";
 import line from "/images/PNG/조합 2-1/background line.png";
 import AlarmAddToSearchModal from "@/pages/alarm/AlarmAddToSearchModal";
 
@@ -112,9 +112,9 @@ function ShareSheet({
       />
       <div
         className="absolute right-0 bottom-0 left-0 w-full"
-        style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
+        // style={{ paddingBottom: "max(16px, env(safe-area-inset-bottom))" }}
       >
-        <div className="mx-auto max-w-[440px] rounded-t-3xl bg-white shadow-xl">
+        <div className="mx-auto rounded-t-3xl bg-white shadow-xl">
           <div className="px-5 pt-6 pb-4">
             <h3 className="text-center text-[15px] font-semibold">공유하기</h3>
           </div>
@@ -596,7 +596,7 @@ export default function CombinationResultPage() {
     if (!isMobile) return;
     const headerEl = document.querySelector("header");
     if (headerEl instanceof HTMLElement) {
-      headerEl.style.display = "none";
+      // headerEl.style.display = "none";
     }
     return () => {
       if (headerEl instanceof HTMLElement) {
@@ -775,9 +775,9 @@ export default function CombinationResultPage() {
   return (
     <div className="mx-auto max-w-screen-xl px-4 pt-2 sm:px-36 sm:pt-10">
       {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
-      <div className="md:hidden">
+      {/* <div className="md:hidden">
         <Navbar />
-      </div>
+      </div> */}
 
       {/* 조합분석 - 모바일 (제목 + 아이콘들) */}
       <div className="mb-5 flex items-center justify-between pt-6 pr-2 pl-2 md:hidden">

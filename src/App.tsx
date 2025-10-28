@@ -45,7 +45,7 @@ import SocialCallback from "./pages/auth/SocialCallback";
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-import axios from "@/lib/axios";
+// import axios from "@/lib/axios";
 import { registerServiceWorker, onForegroundMessage } from "@/lib/firebase";
 import { getAccessToken } from "@/lib/auth";
 import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // 앞서 준 가드 포함 버전

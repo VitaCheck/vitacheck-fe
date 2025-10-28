@@ -1,9 +1,10 @@
-import { useEffect, useState } from 'react';
-import { useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import CombinationProductCard from '../../components/combination/CombinationProductCard';
-import SadCat from '../../../public/images/rate1.png';
-import axios from '@/lib/axios';
-import Navbar from '@/components/NavBar';
+import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
+import CombinationProductCard from "../../components/combination/CombinationProductCard";
+import SadCat from "../../../public/images/rate1.png";
+import Search from "../../assets/search.png";
+import axios from "@/lib/axios";
+// import Navbar from "@/components/NavBar";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {
@@ -11,9 +12,9 @@ const useIsMobile = () => {
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 768);
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
     };
   }, []);
 
@@ -43,7 +44,7 @@ const AddCombinationPage = () => {
   const location = useLocation();
   const isMobile = useIsMobile();
 
-  const query = searchParams.get('query') || '';
+  const query = searchParams.get("query") || "";
   const preSelectedItems = location.state?.selectedItems || [];
   const preSearchTerms = location.state?.preSearchTerms || [];
 
@@ -53,13 +54,13 @@ const AddCombinationPage = () => {
   const [results, setResults] = useState<Product[] | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [checkedIndices, setCheckedIndices] = useState<number[]>([]);
-  const placeholder = '제품을 입력해주세요.';
+  const placeholder = "제품을 입력해주세요.";
 
   const fetchSupplements = async (search: string, signal?: AbortSignal) => {
-    const keyword = (search ?? '').trim();
+    const keyword = (search ?? "").trim();
     if (!keyword) return [];
 
-    const res = await axios.get('/api/v1/supplements/search', {
+    const res = await axios.get("/api/v1/supplements/search", {
       params: { keyword, size: 20 }, // ← search API는 cursor 기반, page 파라미터 제거
       signal,
     });
@@ -79,10 +80,10 @@ const AddCombinationPage = () => {
         supplementName: x.supplementName,
         imageUrl: x.imageUrl,
         price: x.price ?? 0,
-        description: x.description ?? '',
-        method: x.method ?? '',
-        caution: x.caution ?? '',
-        brandName: x.brandName ?? '',
+        description: x.description ?? "",
+        method: x.method ?? "",
+        caution: x.caution ?? "",
+        brandName: x.brandName ?? "",
         ingredients: x.ingredients ?? [],
       } as Product;
     });
@@ -110,8 +111,8 @@ const AddCombinationPage = () => {
     fetchSupplements(query, controller.signal)
       .then((list) => setResults(list))
       .catch((err) => {
-        if (err?.name !== 'AbortError' && err?.name !== 'CanceledError') {
-          console.error('검색 실패:', err);
+        if (err?.name !== "AbortError" && err?.name !== "CanceledError") {
+          console.error("검색 실패:", err);
         }
       })
       .finally(() => setIsLoading(false));
@@ -120,7 +121,7 @@ const AddCombinationPage = () => {
   }, [query]);
 
   useEffect(() => {
-    const stored = localStorage.getItem('searchHistory');
+    const stored = localStorage.getItem("searchHistory");
     if (stored) {
       const parsed = JSON.parse(stored);
       setSearchHistory(parsed);
@@ -144,7 +145,7 @@ const AddCombinationPage = () => {
       fetchSupplements(firstSearchTerm)
         .then((list) => setResults(list))
         .catch((err) => {
-          console.error('재조합 검색 실패:', err);
+          console.error("재조합 검색 실패:", err);
         })
         .finally(() => setIsLoading(false));
     }
@@ -153,20 +154,20 @@ const AddCombinationPage = () => {
   // 모바일에서는 전역 헤더 숨김(있으면)
   useEffect(() => {
     if (!isMobile) return;
-    const headerEl = document.querySelector('header');
+    const headerEl = document.querySelector("header");
     if (headerEl instanceof HTMLElement) {
-      headerEl.style.display = 'none';
+      // headerEl.style.display = "none";
     }
     return () => {
       if (headerEl instanceof HTMLElement) {
-        headerEl.style.display = '';
+        headerEl.style.display = "";
       }
     };
   }, [isMobile]);
 
   const handleToggleCheckbox = (idx: number) => {
     setCheckedIndices((prev) =>
-      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx],
+      prev.includes(idx) ? prev.filter((i) => i !== idx) : [...prev, idx]
     );
   };
 
@@ -174,8 +175,11 @@ const AddCombinationPage = () => {
     const trimmed = searchTerm.trim();
     if (!trimmed) return;
 
-    const updated = [trimmed, ...searchHistory.filter((item) => item !== trimmed)].slice(0, 3);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    const updated = [
+      trimmed,
+      ...searchHistory.filter((item) => item !== trimmed),
+    ].slice(0, 3);
+    localStorage.setItem("searchHistory", JSON.stringify(updated));
     setSearchHistory(updated);
 
     navigate(`/add-combination?query=${encodeURIComponent(trimmed)}`, {
@@ -188,11 +192,11 @@ const AddCombinationPage = () => {
   const handleAnalyze = () => {
     const missing = selectedItems.filter((i) => !i.supplementId);
     if (missing.length) {
-      alert('분석 ID가 비어 있는 항목이 있어요. 다시 선택해 주세요.');
+      alert("분석 ID가 비어 있는 항목이 있어요. 다시 선택해 주세요.");
       return;
     }
-    localStorage.setItem('selectedItems', JSON.stringify(selectedItems));
-    navigate('/combination-result', { state: { selectedItems } });
+    localStorage.setItem("selectedItems", JSON.stringify(selectedItems));
+    navigate("/combination-result", { state: { selectedItems } });
   };
 
   const handleToggle = (item: Product) => {
@@ -200,7 +204,9 @@ const AddCombinationPage = () => {
       const exists = prev.some(
         (i) =>
           (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
-          (i.supplementId && item.supplementId && i.supplementId === item.supplementId),
+          (i.supplementId &&
+            item.supplementId &&
+            i.supplementId === item.supplementId)
       );
 
       if (exists) {
@@ -208,13 +214,15 @@ const AddCombinationPage = () => {
           (i) =>
             !(
               (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
-              (i.supplementId && item.supplementId && i.supplementId === item.supplementId)
-            ),
+              (i.supplementId &&
+                item.supplementId &&
+                i.supplementId === item.supplementId)
+            )
         );
       }
 
       if (prev.length >= 10) {
-        alert('최대 10개까지 선택할 수 있습니다.');
+        alert("최대 10개까지 선택할 수 있습니다.");
         return prev;
       }
       return [...prev, item];
@@ -227,37 +235,36 @@ const AddCombinationPage = () => {
         (i) =>
           !(
             (item.cursorId && i.cursorId === item.cursorId) ||
-            (item.supplementId && i.supplementId && i.supplementId === item.supplementId)
-          ),
-      ),
+            (item.supplementId &&
+              i.supplementId &&
+              i.supplementId === item.supplementId)
+          )
+      )
     );
   };
 
   const handleDelete = (itemToDelete: string) => {
     const updated = searchHistory.filter((item) => item !== itemToDelete);
     setSearchHistory(updated);
-    localStorage.setItem('searchHistory', JSON.stringify(updated));
+    localStorage.setItem("searchHistory", JSON.stringify(updated));
   };
 
   const hasAside = (results?.length ?? 0) > 0 || selectedItems.length > 0;
 
   return (
     <div className="mx-auto max-w-screen-xl px-4 pt-2 pb-24 sm:px-36 sm:pt-10 lg:pb-16">
-      {/* ✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만) */}
-      <div className="md:hidden">
+      {/*✅ 모바일에서만 이 페이지의 Navbar 표시 (PC에서는 전역 Navbar만)*/}
+      {/* <div className="md:hidden shadow-sm ">
         <Navbar />
-      </div>
-
+      </div> */}
       {/* 조합추가 - 모바일 */}
       <h1 className="font-Pretendard mb-5 block pt-6 pl-2 text-[24px] font-bold md:hidden">
         조합 추가
       </h1>
-
       {/* 조합추가 - PC */}
       <h1 className="mb-6 hidden pl-2 text-2xl font-semibold sm:mb-8 sm:ml-8 sm:text-4xl md:block">
         조합 추가
       </h1>
-
       {/* 검색창 - 모바일 */}
       <div className="mb-4 flex justify-center md:hidden">
         <div className="flex w-full max-w-md items-center rounded-full border border-gray-300 bg-white px-4 py-3">
@@ -267,19 +274,18 @@ const AddCombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === "Enter") handleSearch();
             }}
             className="w-full bg-transparent text-lg text-gray-400 placeholder-gray-300"
           />
           <img
-            src="/images/search.png"
+            src={Search}
             alt="검색"
             onClick={handleSearch}
             className="ml-2 h-5 w-5 cursor-pointer"
           />
         </div>
       </div>
-
       {/* 검색창 - PC */}
       <section className="mb-6 hidden justify-center md:flex">
         <div className="flex w-full max-w-3xl items-center rounded-full border border-gray-300 bg-white px-6 py-4 shadow-sm">
@@ -289,13 +295,20 @@ const AddCombinationPage = () => {
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             onKeyDown={(e) => {
-              if (e.key === 'Enter') handleSearch();
+              if (e.key === "Enter") handleSearch();
             }}
             className="w-full text-base text-gray-800 placeholder-gray-400 outline-none"
           />
           {searchTerm && (
-            <button onClick={() => setSearchTerm('')} className="ml-2 cursor-pointer">
-              <img src="/images/성분 검색결과/x.png" alt="지우기" className="h-6 w-6" />
+            <button
+              onClick={() => setSearchTerm("")}
+              className="ml-2 cursor-pointer"
+            >
+              <img
+                src="/images/성분 검색결과/x.png"
+                alt="지우기"
+                className="h-6 w-6"
+              />
             </button>
           )}
           <img
@@ -306,13 +319,12 @@ const AddCombinationPage = () => {
           />
         </div>
       </section>
-
       {/* 검색 기록 - 모바일 */}
       {searchHistory.length > 0 && (
         <div className="mb-12 block flex justify-center md:hidden">
           <div
             className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-[14px]"
-            style={{ width: '300px', height: 'auto', opacity: 1 }}
+            style={{ width: "300px", height: "auto", opacity: 1 }}
           >
             {searchHistory.map((item, idx) => (
               <div key={idx} className="flex items-center gap-[4px]">
@@ -326,12 +338,18 @@ const AddCombinationPage = () => {
                       ...searchHistory.filter((v) => v.trim() !== clean),
                     ].slice(0, 3);
                     setSearchHistory(updated);
-                    localStorage.setItem('searchHistory', JSON.stringify(updated));
+                    localStorage.setItem(
+                      "searchHistory",
+                      JSON.stringify(updated)
+                    );
 
-                    navigate(`/add-combination?query=${encodeURIComponent(clean)}`, {
-                      replace: false,
-                      state: { selectedItems },
-                    });
+                    navigate(
+                      `/add-combination?query=${encodeURIComponent(clean)}`,
+                      {
+                        replace: false,
+                        state: { selectedItems },
+                      }
+                    );
                   }}
                   className="text-[13px] font-medium text-gray-700"
                 >
@@ -353,7 +371,6 @@ const AddCombinationPage = () => {
           </div>
         </div>
       )}
-
       {/* 검색 기록 - PC */}
       {searchHistory.length > 0 && (
         <div className="mb-5 hidden flex-wrap justify-center gap-[24px] px-[35.64px] md:flex">
@@ -366,10 +383,13 @@ const AddCombinationPage = () => {
                 onClick={() => {
                   const clean = item.trim();
                   setSearchTerm(clean);
-                  navigate(`/add-combination?query=${encodeURIComponent(clean)}`, {
-                    replace: false,
-                    state: { selectedItems },
-                  });
+                  navigate(
+                    `/add-combination?query=${encodeURIComponent(clean)}`,
+                    {
+                      replace: false,
+                      state: { selectedItems },
+                    }
+                  );
                 }}
                 className="font-Pretendard text-[18px] leading-[120%] font-medium tracking-[-0.02em] text-[#6B6B6B] hover:text-black"
               >
@@ -390,20 +410,19 @@ const AddCombinationPage = () => {
           ))}
         </div>
       )}
-
       {/* 본문 */}
       <div
         className={`relative ${
           hasAside
-            ? 'lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start'
-            : 'lg:mx-auto lg:max-w-5xl'
+            ? "lg:grid lg:grid-cols-[minmax(0,1fr)_280px] lg:items-start"
+            : "lg:mx-auto lg:max-w-5xl"
         }`}
       >
         <div
           className={
             hasAside
-              ? 'min-w-0 flex-1 overflow-hidden pr-4 lg:col-start-1 lg:col-end-2'
-              : 'w-full min-w-0'
+              ? "min-w-0 flex-1 overflow-hidden pr-4 lg:col-start-1 lg:col-end-2"
+              : "w-full min-w-0"
           }
         >
           {query && (
@@ -433,7 +452,9 @@ const AddCombinationPage = () => {
                 {/* PC */}
                 <div className="mt-20 mb-50 hidden flex-col items-center justify-center md:flex">
                   <div className="h-20 w-20 animate-spin rounded-full border-b-10 border-[#FFEB9D]" />
-                  <p className="font-pretendard mt-4 text-[36px] text-[#808080]">검색 중...</p>
+                  <p className="font-pretendard mt-4 text-[36px] text-[#808080]">
+                    검색 중...
+                  </p>
                 </div>
               </>
             ) : results && Array.isArray(results) && results.length > 0 ? (
@@ -447,10 +468,12 @@ const AddCombinationPage = () => {
                       item={item as any}
                       isSelected={selectedItems.some(
                         (i) =>
-                          (i.cursorId && item.cursorId && i.cursorId === item.cursorId) ||
+                          (i.cursorId &&
+                            item.cursorId &&
+                            i.cursorId === item.cursorId) ||
                           (i.supplementId &&
                             item.supplementId &&
-                            i.supplementId === item.supplementId),
+                            i.supplementId === item.supplementId)
                       )}
                       onToggle={() => handleToggle(item)}
                     />
@@ -462,19 +485,24 @@ const AddCombinationPage = () => {
                   <div
                     className={
                       hasAside
-                        ? 'w-full px-6 pb-10 lg:pr-8'
-                        : 'mx-auto max-w-5xl px-[35.64px] pb-10'
+                        ? "w-full px-6 pb-10 lg:pr-8"
+                        : "mx-auto max-w-5xl px-[35.64px] pb-10"
                     }
                   >
                     <div
                       className="grid w-full grid-cols-2 items-start justify-items-center gap-8 md:grid-cols-3"
-                      style={{ gridTemplateColumns: 'repeat(3, 1fr)', gridAutoRows: '220px' }}
+                      style={{
+                        gridTemplateColumns: "repeat(3, 1fr)",
+                        gridAutoRows: "220px",
+                      }}
                     >
                       {results.map((item) => (
                         <CombinationProductCard
                           key={item.cursorId} // ★ 변경
                           item={item as any}
-                          isSelected={selectedItems.some((i) => i.cursorId === item.cursorId)} // ★ 변경
+                          isSelected={selectedItems.some(
+                            (i) => i.cursorId === item.cursorId
+                          )} // ★ 변경
                           onToggle={() => handleToggle(item)}
                         />
                       ))}
@@ -487,14 +515,22 @@ const AddCombinationPage = () => {
               <>
                 {/* 모바일 */}
                 <div className="mt-20 block flex flex-col items-center justify-center md:hidden">
-                  <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[160px]" />
+                  <img
+                    src={SadCat}
+                    alt="검색 결과 없음"
+                    className="mt-5 mb-2 w-[160px]"
+                  />
                   <p className="font-pretendard text-center text-[24px] text-[#808080]">
                     일치하는 검색 결과가 없습니다.
                   </p>
                 </div>
                 {/* PC */}
                 <div className="mt-20 hidden flex-col items-center justify-center md:flex">
-                  <img src={SadCat} alt="검색 결과 없음" className="mt-5 mb-2 w-[150px]" />
+                  <img
+                    src={SadCat}
+                    alt="검색 결과 없음"
+                    className="mt-5 mb-2 w-[150px]"
+                  />
                   <p className="font-pretendard mb-[120px] text-[30px] text-[#808080]">
                     일치하는 검색 결과가 없습니다.
                   </p>
@@ -523,7 +559,10 @@ const AddCombinationPage = () => {
                     >
                       <button
                         onClick={() =>
-                          handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })
+                          handleRemove({
+                            cursorId: item.cursorId,
+                            supplementId: item.supplementId,
+                          })
                         }
                         className="absolute top-3 right-4"
                       >
@@ -534,7 +573,10 @@ const AddCombinationPage = () => {
                         />
                       </button>
 
-                      <img src={item.imageUrl} className="mt-4 h-[75px] w-[100px] object-contain" />
+                      <img
+                        src={item.imageUrl}
+                        className="mt-4 h-[75px] w-[100px] object-contain"
+                      />
                       <p className="mt-3 text-center text-[15px] leading-tight font-medium">
                         {item.supplementName}
                       </p>
@@ -551,18 +593,23 @@ const AddCombinationPage = () => {
           <div
             className="fixed bottom-0 left-0 z-50 w-full bg-white lg:hidden"
             style={{
-              boxShadow: '0px -22px 40px 0px #C1C1C140',
-              paddingTop: '18px',
-              paddingRight: '10px',
-              paddingBottom: 'max(20px, env(safe-area-inset-bottom))',
-              paddingLeft: '10px',
-              maxHeight: '280px',
-              boxSizing: 'border-box',
+              boxShadow: "0px -22px 40px 0px #C1C1C140",
+              paddingTop: "18px",
+              paddingRight: "10px",
+              paddingBottom: "max(20px, env(safe-area-inset-bottom))",
+              paddingLeft: "10px",
+              maxHeight: "280px",
+              boxSizing: "border-box",
             }}
           >
             <div className="mb-1 flex items-center justify-between">
-              <h3 className="font-pretendard px-3 text-[22px] font-bold">분석 목록</h3>
-              <button onClick={handleAnalyze} className="border-none bg-transparent p-0">
+              <h3 className="font-pretendard px-3 text-[22px] font-bold">
+                분석 목록
+              </h3>
+              <button
+                onClick={handleAnalyze}
+                className="border-none bg-transparent p-0"
+              >
                 <img
                   src="/images/PNG/조합 2-1/시작.png"
                   alt="분석 시작"
@@ -571,18 +618,20 @@ const AddCombinationPage = () => {
               </button>
             </div>
 
-            <p className="font-pretendard mb-5 px-3 text-[14px] text-[#808080]">최대 10개 선택</p>
+            <p className="font-pretendard mb-5 px-3 text-[14px] text-[#808080]">
+              최대 10개 선택
+            </p>
 
             <div
               className="hide-scrollbar mx-auto w-full max-w-[600px] overflow-x-auto rounded-[25px] border border-[#B2B2B2] bg-white"
-              style={{ height: '160px' }}
+              style={{ height: "160px" }}
             >
               <div className="flex w-max gap-[10px] px-3">
                 {selectedItems.map((item, idx) => (
                   <div
                     key={idx}
                     className="relative flex h-[130px] w-[130px] flex-shrink-0 flex-col items-center rounded-[10px] bg-white"
-                    style={{ paddingTop: '22px', paddingBottom: '12px' }}
+                    style={{ paddingTop: "22px", paddingBottom: "12px" }}
                   >
                     <img
                       src={item.imageUrl}
@@ -592,18 +641,21 @@ const AddCombinationPage = () => {
                       <p
                         title={item.supplementName}
                         className={[
-                          'font-pretendard text-center font-medium tracking-[-0.02em] text-black',
-                          'leading-[120%]',
-                          'line-clamp-2 overflow-hidden break-words break-keep',
-                          'text-[13px]',
-                        ].join(' ')}
+                          "font-pretendard text-center font-medium tracking-[-0.02em] text-black",
+                          "leading-[120%]",
+                          "line-clamp-2 overflow-hidden break-words break-keep",
+                          "text-[13px]",
+                        ].join(" ")}
                       >
                         {item.supplementName}
                       </p>
                     </div>
                     <button
                       onClick={() =>
-                        handleRemove({ cursorId: item.cursorId, supplementId: item.supplementId })
+                        handleRemove({
+                          cursorId: item.cursorId,
+                          supplementId: item.supplementId,
+                        })
                       }
                       className="absolute right-1 bottom-23"
                     >
