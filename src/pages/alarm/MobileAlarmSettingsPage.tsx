@@ -5,7 +5,7 @@ import AlarmEditModal from "./AlarmEditModal";
 import AddOptionsModal from "./AddOptionsModal";
 import axios from "@/lib/axios";
 
-// ✅ 공용 타입/유틸
+// 공용 타입/유틸
 import type { DayOfWeek, Schedule, Supplement } from "@/types/alarm";
 import { normalizeSupplement, EN_TO_KO, formatTimes } from "@/utils/alarm";
 

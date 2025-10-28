@@ -106,5 +106,33 @@ export async function removeFcmToken() {
     return false;
   }
 }
+
+// src/lib/firebase.ts에 추가
+
+/** 디버깅: 현재 상태 확인 */
+export async function debugFcmStatus() {
+  console.log("=== FCM Debug Info ===");
+  console.log("1. Notification permission:", Notification.permission);
+  console.log("2. SW support:", "serviceWorker" in navigator);
+
+  if ("serviceWorker" in navigator) {
+    const registration = await navigator.serviceWorker.getRegistration();
+    console.log("3. SW registration:", registration);
+    console.log("4. SW active:", registration?.active?.state);
+  }
+
+  const m = await ensureMessaging();
+  console.log("5. Messaging instance:", m ? "OK" : "null");
+
+  const token = await getFcmToken();
+  console.log("6. Current FCM token:", token);
+  console.log("=====================");
+
+  return { permission: Notification.permission, token };
+}
+
+// 전역에서 호출 가능하게
+// @ts-ignore
+window.__fcmDebug = debugFcmStatus;
 // @ts-ignore
 window.__fcm = { registerServiceWorker, getFcmToken };
