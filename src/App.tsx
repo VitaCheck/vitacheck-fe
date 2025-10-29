@@ -147,7 +147,7 @@ function App() {
   // 온보딩 체크
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
+    const hasSeenOnboarding = sessionStorage.getItem(ONBOARDING_KEY);
 
     if (isMobile && !hasSeenOnboarding) {
       setShowOnboarding(true);
@@ -185,7 +185,7 @@ function App() {
 
   // 온보딩 완료 핸들러
   const handleOnboardingComplete = () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
+    sessionStorage.setItem(ONBOARDING_KEY, "true");
     setShowOnboarding(false);
   };
 
