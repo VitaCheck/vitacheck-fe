@@ -1,7 +1,10 @@
 // src/App.tsx
-import "./index.css"; // 전역 스타일
-import { useEffect } from "react";
+import "./index.css";
+import { useEffect, useState } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+
+// 온보딩 컴포넌트
+import OnboardingScreen from "./components/OnBoarding";
 
 // 페이지 컴포넌트들 ...
 import NotFoundPage from "./pages/NotFoundPage";
@@ -48,13 +51,14 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 // import axios from "@/lib/axios";
 import { registerServiceWorker, onForegroundMessage } from "@/lib/firebase";
 import { getAccessToken } from "@/lib/auth";
-import { syncFcmTokenAfterLoginSilently } from "@/lib/push"; // 앞서 준 가드 포함 버전
+import { syncFcmTokenAfterLoginSilently } from "@/lib/push";
 
 import { fcmTokenStore } from "@/lib/fcmTokenStore";
 
 import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
+const ONBOARDING_KEY = "hasSeenOnboarding";
 
 const router = createBrowserRouter([
   {
@@ -127,35 +131,47 @@ const router = createBrowserRouter([
         path: "/ingredients/:ingredientName",
         element: <IngredientDetailPage />,
       },
-      { path: "/terms/:slug", element: <TermsViewPage /> }, // privacy | service | marketing
+      { path: "/terms/:slug", element: <TermsViewPage /> },
       { path: "/settings", element: <SettingsPage /> },
     ],
   },
 ]);
 
 function App() {
-  // (선택) 기존 마이그레이션 유지
+  // 온보딩 상태 관리
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+
   fcmTokenStore.migrateFromLocalStorage();
 
+  // 온보딩 체크
+  useEffect(() => {
+    const isMobile = window.innerWidth <= 768;
+    const hasSeenOnboarding = localStorage.getItem(ONBOARDING_KEY);
+
+    if (isMobile && !hasSeenOnboarding) {
+      setShowOnboarding(true);
+    }
+
+    setIsCheckingOnboarding(false);
+  }, []);
+
+  // FCM 초기화
   useEffect(() => {
     let mounted = true;
 
     (async () => {
       try {
-        // ① SW만 등록 (권한 요청/토큰 발급 X)
         await registerServiceWorker();
 
-        // ② 로그인 상태에서만 조용히 동기화(권한 팝업 없이)
         if (mounted && getAccessToken()) {
           await syncFcmTokenAfterLoginSilently().catch(() => {});
         }
 
-        // ③ 포그라운드 수신 핸들러(선택)
         onForegroundMessage((p) => {
           const title = p?.notification?.title ?? p?.data?.title ?? "VitaCheck";
           const body = p?.notification?.body ?? p?.data?.body ?? "";
           console.log("[FCM] foreground:", title, body);
-          // TODO: 토스트/배지 UI 연결
         });
       } catch (e) {
         console.warn("[FCM] init error:", e);
@@ -167,6 +183,23 @@ function App() {
     };
   }, []);
 
+  // 온보딩 완료 핸들러
+  const handleOnboardingComplete = () => {
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    setShowOnboarding(false);
+  };
+
+  // 온보딩 체크 중
+  if (isCheckingOnboarding) {
+    return null; // 또는 로딩 스피너
+  }
+
+  // 온보딩 표시
+  if (showOnboarding) {
+    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  }
+
+  // 메인 앱
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
