@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import SearchBar from "./MainSearchBar";
-import Logo from "../assets/logo.svg";
+import Logo from "../assets/mainvita.png";
 import Bell from "../assets/Bell.svg";
 import Navfavorite from "../assets/navfavorite.svg";
 import User from "../assets/User.svg";
@@ -107,7 +107,7 @@ const Navbar = () => {
           </div>
         ) : (
           <>
-            <div className="flex justify-between items-center mb-5 mt-5 px-4">
+            <div className="flex justify-between items-center mt-5 px-4">
               <Link to="/notificationCenter">
                 <img src={Bell} alt="알림" className="w-[24px] h-[27px]" />
               </Link>
@@ -120,7 +120,7 @@ const Navbar = () => {
               </Link>
             </div>
 
-            <div className="flex justify-center mb-6">
+            <div className="flex justify-center mb-4">
               <Link to="/" className="w-[170px]">
                 <img src={Logo} alt="VitaCheck로고" className="w-full h-auto" />
               </Link>

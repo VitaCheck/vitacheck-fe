@@ -145,7 +145,10 @@
 //   async function recognizeFromImage(imageSrc: string): Promise<string> {
 //     const { data } = await Tesseract.recognize(imageSrc, "kor+eng", {
 //       logger: (m: LogMessage) => console.log(m),
-//     } as { logger?: (m: LogMessage) => void } & Record<string, string | number | boolean>);
+//     } as { logger?: (m: LogMessage) => void } & Record<
+//       string,
+//       string | number | boolean
+//     >);
 
 //     const ocr = data as unknown as OcrData;
 
@@ -207,7 +210,9 @@
 //       const finalText = await recognizeFromImage(imageDataUrl);
 //       if (!finalText) {
 //         setRecognizedText(null);
-//         alert("큰 글씨를 찾지 못했습니다. 빛 반사/흔들림을 줄여 다시 시도해 주세요.");
+//         alert(
+//           "큰 글씨를 찾지 못했습니다. 빛 반사/흔들림을 줄여 다시 시도해 주세요."
+//         );
 //         return;
 //       }
 
@@ -232,7 +237,9 @@
 //     albumInputRef.current?.click();
 //   };
 
-//   const handleAlbumChange: React.ChangeEventHandler<HTMLInputElement> = async (e) => {
+//   const handleAlbumChange: React.ChangeEventHandler<HTMLInputElement> = async (
+//     e
+//   ) => {
 //     const file = e.target.files?.[0];
 //     // 같은 파일 재선택 가능하도록 즉시 초기화
 //     e.currentTarget.value = "";
@@ -247,7 +254,9 @@
 //     try {
 //       const finalText = await recognizeFromImage(objectUrl);
 //       if (!finalText) {
-//         alert("문자 인식 결과가 비어 있습니다. 글자가 뚜렷한 사진으로 다시 시도해 주세요.");
+//         alert(
+//           "문자 인식 결과가 비어 있습니다. 글자가 뚜렷한 사진으로 다시 시도해 주세요."
+//         );
 //         return;
 //       }
 //       setRecognizedText(finalText);
@@ -340,7 +349,9 @@
 //             onClick={openAlbumPicker}
 //           >
 //             <img src={mainalbum} alt="앨범" className="w-[35px] h-[35px]" />
-//             <span className="text-[15px] text-black">사진 앨범에서 선택하기</span>
+//             <span className="text-[15px] text-black">
+//               사진 앨범에서 선택하기
+//             </span>
 //           </div>
 
 //           <div
@@ -598,3 +609,366 @@
 // // };
 
 // // export default SearchOptionsModal;
+
+import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import Tesseract from "tesseract.js";
+import mainalbum from "../assets/mainalbum.svg";
+import maincamera from "../assets/maincamera.svg";
+import mainwrite from "../assets/mainwrite.svg";
+import camerabutton from "../assets/camerabutton.svg";
+
+interface SearchOptionsModalProps {
+  onClose: () => void;
+}
+
+/** ==== OCR API 응답 타입 ==== */
+interface OcrApiResponse {
+  isSuccess: boolean;
+  code: string; // "COMMON200" 등
+  message: string;
+  result?: { name?: string; brand?: string };
+}
+
+/** ==== 기존 Tesseract 보조 타입(그대로 둬도 됨) ==== */
+interface BBox {
+  x0: number;
+  y0: number;
+  x1: number;
+  y1: number;
+}
+interface Word {
+  text: string;
+  bbox?: BBox;
+}
+interface Line {
+  words?: Word[];
+  bbox?: BBox;
+}
+interface Paragraph {
+  lines?: Line[];
+}
+interface Block {
+  paragraphs?: Paragraph[];
+}
+interface OcrData {
+  text: string;
+  blocks?: Block[];
+}
+interface LogMessage {
+  status: string;
+  progress: number;
+}
+
+const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
+  const navigate = useNavigate();
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const albumInputRef = useRef<HTMLInputElement>(null);
+
+  const [showCameraFullScreen, setShowCameraFullScreen] = useState(false);
+  const [stream, setStream] = useState<MediaStream | null>(null);
+  const [recognizedText, setRecognizedText] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const BASE_URL = import.meta.env.VITE_SERVER_API_URL;
+
+  /** ==== 환경변수 우선, 없으면 기본 URL ==== */
+  const OCR_API_URL = `${BASE_URL}/api/v1/ai/ocr`;
+
+  // 스크롤 잠금
+  useEffect(() => {
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev || "auto";
+    };
+  }, []);
+
+  // 비디오에 스트림 주입
+  useEffect(() => {
+    if (showCameraFullScreen && videoRef.current && stream) {
+      videoRef.current.srcObject = stream;
+    }
+  }, [showCameraFullScreen, stream]);
+
+  // 언마운트 시 스트림 정리
+  useEffect(() => {
+    return () => {
+      stream?.getTracks().forEach((t) => t.stop());
+    };
+  }, [stream]);
+
+  const handleDirectInput = () => {
+    navigate("/search");
+    onClose();
+  };
+
+  const handleCameraClick = async () => {
+    try {
+      const mediaStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: "environment" },
+      });
+      setStream(mediaStream);
+      setShowCameraFullScreen(true);
+    } catch (err) {
+      console.error("카메라 접근 오류:", err);
+      alert("카메라에 접근할 수 없습니다.");
+    }
+  };
+
+  function normalizeText(input: string) {
+    const cleaned = input.replace(/[^가-힣A-Za-z0-9\s]/g, " ");
+    return cleaned.replace(/\s+/g, " ").trim();
+  }
+
+  /** ==== OCR API ==== **/
+  async function requestOcr(fileOrBlob: File | Blob): Promise<string> {
+    const form = new FormData();
+    form.append("file", fileOrBlob);
+
+    const res = await fetch(OCR_API_URL, { method: "POST", body: form });
+    if (!res.ok) throw new Error(`OCR API HTTP ${res.status}`);
+
+    const json = (await res.json()) as OcrApiResponse;
+    if (!json.isSuccess) throw new Error(json.message || "OCR API 실패");
+
+    const name = normalizeText(json.result?.name ?? "");
+    const brand = normalizeText(json.result?.brand ?? "");
+
+    // 규칙: name이 있으면 name만, 없으면 brand만
+    if (name) return name;
+    if (brand) return brand;
+    return ""; // 둘 다 없으면 빈 문자열 반환 -> 호출부에서 백업 로직(Tesseract) 동작
+  }
+
+  /** ==== Tesseract  ==== */
+  async function recognizeFromImageWithTesseract(
+    imageSrc: string
+  ): Promise<string> {
+    const { data } = await Tesseract.recognize(imageSrc, "kor+eng", {
+      logger: (m: LogMessage) => console.log(m),
+    } as { logger?: (m: LogMessage) => void } & Record<
+      string,
+      string | number | boolean
+    >);
+
+    const ocr = data as unknown as OcrData;
+    const lines =
+      ocr?.text?.split(/\r?\n/).map(normalizeText).filter(Boolean) ?? [];
+    return lines.reduce((a, b) => (b.length > a.length ? b : a), "") || "";
+  }
+
+  /** ==== 카메라 촬영 → (API 호출) ==== */
+  const handleCaptureAndRecognize = async () => {
+    if (!videoRef.current || !canvasRef.current) return;
+
+    const video = videoRef.current;
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const scale = 2.0;
+    const width = video.videoWidth;
+    const height = video.videoHeight;
+    canvas.width = width * scale;
+    canvas.height = height * scale;
+
+    (ctx as CanvasRenderingContext2D).imageSmoothingEnabled = false;
+    ctx.scale(scale, scale);
+    ctx.drawImage(video, 0, 0, width, height);
+
+    setIsLoading(true);
+    setRecognizedText(null);
+
+    try {
+      // 캔버스 -> Blob
+      const blob: Blob = await new Promise((resolve, reject) => {
+        canvas.toBlob(
+          (b) => (b ? resolve(b) : reject(new Error("toBlob 실패"))),
+          "image/jpeg",
+          0.92
+        );
+      });
+
+      // 1) API로 시도
+      let finalText = await requestOcr(blob);
+
+      // 2) 결과가 너무 짧으면(혹시 모를 실패) Tesseract 백업 시도
+      if (!finalText || finalText.length < 2) {
+        const dataUrl = canvas.toDataURL("image/png");
+        finalText = await recognizeFromImageWithTesseract(dataUrl);
+      }
+
+      finalText = normalizeText(finalText);
+      if (!finalText) {
+        alert(
+          "문자를 인식하지 못했습니다. 조명/초점을 조정해 다시 시도해 주세요."
+        );
+        return;
+      }
+
+      setRecognizedText(finalText);
+      navigate(`/searchresult?query=${encodeURIComponent(finalText)}`);
+
+      // 닫기 + 스트림 정리
+      onClose();
+      stream?.getTracks().forEach((t) => t.stop());
+      setShowCameraFullScreen(false);
+      setStream(null);
+    } catch (err) {
+      console.error("OCR 실패:", err);
+      alert("문자 인식에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /** ==== 앨범 선택 → (API 호출) ==== */
+  const openAlbumPicker = () => {
+    albumInputRef.current?.click();
+  };
+
+  const handleAlbumChange: React.ChangeEventHandler<HTMLInputElement> = async (
+    e
+  ) => {
+    const file = e.target.files?.[0];
+    e.currentTarget.value = ""; // 같은 파일 재선택 가능하게 초기화
+    if (!file) return;
+
+    setIsLoading(true);
+    setRecognizedText(null);
+
+    try {
+      // 1) API 호출
+      let finalText = await requestOcr(file);
+
+      // 2) 실패 대비 백업(Tesseract) — 필요 없으면 이 부분 삭제 가능
+      if (!finalText || finalText.length < 2) {
+        const objectUrl = URL.createObjectURL(file);
+        finalText = await recognizeFromImageWithTesseract(objectUrl);
+        URL.revokeObjectURL(objectUrl);
+      }
+
+      finalText = normalizeText(finalText);
+      if (!finalText) {
+        alert(
+          "문자 인식 결과가 비어 있습니다. 글자가 뚜렷한 사진으로 다시 시도해 주세요."
+        );
+        return;
+      }
+
+      setRecognizedText(finalText);
+      navigate(`/searchresult?query=${encodeURIComponent(finalText)}`);
+      onClose();
+    } catch (err) {
+      console.error("앨범 OCR 실패:", err);
+      alert("앨범 이미지에서 문자 인식에 실패했습니다.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  /** ──────────────── 카메라 전체 화면 뷰 ──────────────── */
+  const renderCameraView = () => (
+    <div className="fixed inset-0 bg-black z-50 flex flex-col">
+      <div className="flex justify-between items-center px-4 py-3 text-white text-sm">
+        <span>카메라</span>
+        <button
+          onClick={() => {
+            setShowCameraFullScreen(false);
+            setRecognizedText(null);
+            stream?.getTracks().forEach((track) => track.stop());
+            setStream(null);
+          }}
+          className="text-2xl"
+        >
+          ✕
+        </button>
+      </div>
+
+      <div className="relative flex-1">
+        <video
+          ref={videoRef}
+          autoPlay
+          playsInline
+          className="absolute inset-0 w-full h-full object-cover"
+        />
+        <canvas ref={canvasRef} className="hidden" />
+      </div>
+
+      <div className="flex flex-col items-center gap-3 py-4 bg-black">
+        <img
+          src={camerabutton}
+          alt="촬영"
+          className="w-[70px] h-[70px] cursor-pointer"
+          onClick={handleCaptureAndRecognize}
+        />
+        {isLoading && (
+          <p className="text-white text-sm animate-pulse">문자 인식 중...</p>
+        )}
+        {recognizedText && (
+          <p className="text-white text-sm text-center px-4 whitespace-pre-wrap">
+            {recognizedText}
+          </p>
+        )}
+      </div>
+    </div>
+  );
+
+  if (showCameraFullScreen) return renderCameraView();
+
+  return (
+    <div className="fixed inset-0 bg-black/40 z-50 flex items-end">
+      {/* 숨겨진 파일 입력 (앨범용) */}
+      <input
+        ref={albumInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleAlbumChange}
+      />
+
+      <div className="bg-white w-full rounded-t-2xl px-6 pt-6 pb-6 animate-slide-up">
+        <h2 className="text-[20px] font-semibold mb-6">제품 검색하기</h2>
+
+        <div className="space-y-4">
+          <div
+            className="flex items-center space-x-4 cursor-pointer"
+            onClick={handleCameraClick}
+          >
+            <img src={maincamera} alt="카메라" className="w-[35px] h-[35px]" />
+            <span className="text-[15px] text-black">카메라로 촬영하기</span>
+          </div>
+
+          {/* 앨범에서 선택 → 파일 업로드 → OCR */}
+          <div
+            className="flex items-center space-x-4 cursor-pointer"
+            onClick={openAlbumPicker}
+          >
+            <img src={mainalbum} alt="앨범" className="w-[35px] h-[35px]" />
+            <span className="text-[15px] text-black">
+              사진 앨범에서 선택하기
+            </span>
+          </div>
+
+          <div
+            className="flex items-center space-x-4 cursor-pointer sm:hidden"
+            onClick={handleDirectInput}
+          >
+            <img src={mainwrite} alt="직접입력" className="w-[35px] h-[35px]" />
+            <span className="text-[15px] text-black">직접 입력하기</span>
+          </div>
+        </div>
+
+        {isLoading && (
+          <p className="text-sm text-gray-500 mt-4">문자 인식 중...</p>
+        )}
+      </div>
+
+      <div className="absolute inset-0 z-[-1]" onClick={onClose}></div>
+    </div>
+  );
+};
+
+export default SearchOptionsModal;

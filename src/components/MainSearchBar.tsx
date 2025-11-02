@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import Search from "../assets/searchbar.png";
+import Search from "../assets/search.svg";
 import X from "../assets/X.svg";
-// import SearchOptionsModal from "./SearchOptionsModal";
+import SearchOptionsModal from "./SearchOptionsModal";
 
 declare global {
   interface WindowEventMap {
@@ -12,7 +12,7 @@ declare global {
 
 const SearchBar = () => {
   const [query, setQuery] = useState("");
-  // const [showModal, setShowModal] = useState(false);
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement>(null);
@@ -25,7 +25,7 @@ const SearchBar = () => {
   };
 
   const handleClear = () => setQuery("");
-  // const toggleModal = () => setShowModal((prev) => !prev);
+  const toggleModal = () => setShowModal((prev) => !prev);
 
   const handleSearch = () => {
     const q = query.trim();
@@ -41,15 +41,15 @@ const SearchBar = () => {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // if (e.key === "Enter" && query.trim()) {
-    //   const q = query.trim();
-    //   navigate(`/searchresult?query=${encodeURIComponent(q)}`);
-    //   if (window.matchMedia("(min-width: 640px)").matches) {
-    //     setQuery("");
-    //     // setShowModal(false);
-    //     inputRef.current?.blur();
-    //   }
-    // }
+    if (e.key === "Enter" && query.trim()) {
+      const q = query.trim();
+      navigate(`/searchresult?query=${encodeURIComponent(q)}`);
+      if (window.matchMedia("(min-width: 640px)").matches) {
+        setQuery("");
+        // setShowModal(false);
+        inputRef.current?.blur();
+      }
+    }
     if (e.key === "Enter") handleSearch();
   };
 
@@ -72,7 +72,7 @@ const SearchBar = () => {
       window.removeEventListener("focus-global-search", focusHandler);
   }, []);
 
-  const queryEmpty = query.trim().length === 0;
+  // const queryEmpty = query.trim().length === 0;
 
   return (
     <>
@@ -97,13 +97,13 @@ const SearchBar = () => {
           />
         )}
 
-        {/* <img
+        <img
           src={Search}
           alt="검색"
           className="w-[19px] h-[19px] mr-2 cursor-pointer"
-          // onClick={toggleModal}
-        /> */}
-        <button
+          onClick={toggleModal}
+        />
+        {/* <button
           type="button"
           onClick={handleSearch}
           disabled={queryEmpty}
@@ -113,10 +113,10 @@ const SearchBar = () => {
           }`}
         >
           <img src={Search} alt="검색" className="w-[24px] h-[20px]" />
-        </button>
+        </button> */}
       </div>
 
-      {/* {showModal && <SearchOptionsModal onClose={toggleModal} />} */}
+      {showModal && <SearchOptionsModal onClose={toggleModal} />}
     </>
   );
 };
