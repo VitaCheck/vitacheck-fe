@@ -381,15 +381,15 @@ const PurposeProductList = () => {
         {/* AI 추천 섹션 */}
         <div
           className="
-    relative mt-[25px] mx-[24px]
-    flex flex-col items-start
-    p-[20px] gap-[16px]
+    relative mt-[25px] mx-8
+    flex flex-col items-start 
+    p-[20px] sm:p-[24px] gap-[16px] sm:gap-[20px]
     cursor-pointer
     border-[2px] border-[#FFF9D4]
     shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]
     rounded-[22px]
-    box-border
     bg-[#FCFDE7]
+    overflow-hidden
   "
           onClick={() =>
             navigate("/ai-recommend", {
@@ -397,22 +397,24 @@ const PurposeProductList = () => {
             })
           }
         >
-          {/* 상단 영역 (텍스트 + 화살표) */}
           <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-[8px]">
-              <img src={AI} alt="AI" className="w-[20px] h-[20px]" />
-              <span className="text-[16px] font-semibold text-[#222]">
+              <img
+                src={AI}
+                alt="AI"
+                className="w-[20px] sm:w-[24px] h-[20px] sm:h-[24px]"
+              />
+              <span className="text-[16px] sm:text-[18px] font-semibold text-[#222]">
                 AI 추천 영양제 조합 살펴보기
               </span>
             </div>
-
             <svg
               xmlns="http://www.w3.org/2000/svg"
               fill="none"
               viewBox="0 0 24 24"
               strokeWidth="2"
               stroke="currentColor"
-              className="w-[16px] h-[16px] text-[#222]"
+              className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px] text-[#222]"
             >
               <path
                 strokeLinecap="round"
@@ -421,26 +423,37 @@ const PurposeProductList = () => {
               />
             </svg>
           </div>
-          <p
-            className="
-      text-[13px] text-[#737373] leading-[1.4]
-      bg-white rounded-[8px] px-[10px] py-[6px]
-      shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]
-    "
-          >
+
+          <p className="text-[13px] sm:text-[14px] text-[#737373] leading-[1.4] bg-white rounded-[8px] px-[10px] sm:px-[12px] py-[6px] sm:py-[8px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
             비타체크 AI가 사용자 선택 목적을 종합하여 영양제를 추천해드립니다.
           </p>
 
-          {/* 예시 미니 카드 3개 */}
-          <div className="flex gap-[13px] overflow-x-auto mt-[8px]">
-            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
-              <img src={AI1} alt="영양제1" className="w-[108px] h-[107px]" />
+          <div
+            className="
+      grid grid-cols-3 gap-[10px] sm:gap-[20px] 
+      w-full mt-[8px]
+    "
+          >
+            <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img
+                src={AI1}
+                alt="영양제1"
+                className="max-w-[80%] max-h-[80%] object-contain"
+              />
             </div>
-            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
-              <img src={AI2} alt="영양제2" className="w-[57px] h-[60.84px]" />
+            <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img
+                src={AI2}
+                alt="영양제2"
+                className="max-w-[50%] max-h-[50%] object-contain"
+              />
             </div>
-            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
-              <img src={AI3} alt="영양제3" className="w-[100.24px] h-[100px]" />
+            <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img
+                src={AI3}
+                alt="영양제3"
+                className="max-w-[80%] max-h-[80%] object-contain"
+              />
             </div>
           </div>
         </div>
@@ -477,6 +490,84 @@ const PurposeProductList = () => {
             <h1 className="text-[30px] tracking-[-1px] font-semibold">
               {titleText}
             </h1>
+          </div>
+          <div
+            className="
+    relative mt-[25px]
+    flex flex-col items-start 
+    p-[20px] sm:p-[24px] gap-[16px] sm:gap-[20px]
+    cursor-pointer
+    border-[2px] border-[#FFF9D4]
+    shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]
+    rounded-[22px]
+    bg-[#FCFDE7]
+    overflow-hidden
+  "
+            onClick={() =>
+              navigate("/ai-recommend", {
+                state: { selectedPurposes: sortedSelectedPurposes },
+              })
+            }
+          >
+            <div className="flex items-center justify-between w-full">
+              <div className="flex items-center gap-[8px]">
+                <img
+                  src={AI}
+                  alt="AI"
+                  className="w-[20px] sm:w-[24px] h-[20px] sm:h-[24px]"
+                />
+                <span className="text-[16px] sm:text-[18px] font-semibold text-[#222]">
+                  AI 추천 영양제 조합 살펴보기
+                </span>
+              </div>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                strokeWidth="2"
+                stroke="currentColor"
+                className="w-[16px] sm:w-[18px] h-[16px] sm:h-[18px] text-[#222]"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M9 5l7 7-7 7"
+                />
+              </svg>
+            </div>
+
+            <p className="text-[13px] sm:text-[14px] text-[#737373] leading-[1.4] bg-white rounded-[8px] px-[10px] sm:px-[12px] py-[6px] sm:py-[8px] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]">
+              비타체크 AI가 사용자 선택 목적을 종합하여 영양제를 추천해드립니다.
+            </p>
+
+            <div
+              className="
+      grid grid-cols-3 gap-[10px] sm:gap-[100px] 
+      w-full mt-[8px]
+    "
+            >
+              <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+                <img
+                  src={AI1}
+                  alt="영양제1"
+                  className="max-w-[80%] max-h-[80%] object-contain"
+                />
+              </div>
+              <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+                <img
+                  src={AI2}
+                  alt="영양제2"
+                  className="max-w-[50%] max-h-[50%] object-contain"
+                />
+              </div>
+              <div className="aspect-[1/1] w-full rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+                <img
+                  src={AI3}
+                  alt="영양제3"
+                  className="max-w-[80%] max-h-[80%] object-contain"
+                />
+              </div>
+            </div>
           </div>
           {isLoading ? (
             <>
