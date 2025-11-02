@@ -707,7 +707,11 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
   const handleCameraClick = async () => {
     try {
       const mediaStream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
+        video: {
+          facingMode: "environment",
+          width: { ideal: 1920 },
+          height: { ideal: 1080 },
+        },
       });
       setStream(mediaStream);
       setShowCameraFullScreen(true);
