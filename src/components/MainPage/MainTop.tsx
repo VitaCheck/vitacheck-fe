@@ -59,7 +59,7 @@ const MainTop = () => {
               /* 모바일: 겹쳐서 페이드, 가운데 정렬 + 좌우 크롭 강화 */
               absolute transition-opacity duration-700
               top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-              h-full w-auto scale-x-125 origin-center
+              h-full w-auto scale-x-130 origin-center
               ${i === index ? "opacity-100" : "opacity-0"}
 
               /* 데스크톱(sm↑): 활성 것만 흐름에 표시(너비 100%, 높이 자동) */

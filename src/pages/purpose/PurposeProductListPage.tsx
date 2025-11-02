@@ -5,6 +5,10 @@ import P2MDropdownPopup from "@/components/Purpose/P2MDropdownPopup";
 import useIsMobile from "@/hooks/useIsMobile";
 import axios from "@/lib/axios";
 import React from "react";
+import AI from "../../assets/aiicon.png";
+import AI1 from "../../assets/ai1.png";
+import AI2 from "../../assets/ai2.png";
+import AI3 from "../../assets/ai3.png";
 
 // API 응답 result 타입 정의
 interface Supplement {
@@ -370,6 +374,73 @@ const PurposeProductList = () => {
                   />
                 </svg>
               </div>
+            </div>
+          </div>
+        </div>
+
+        {/* AI 추천 섹션 */}
+        <div
+          className="
+    relative mt-[25px] mx-[24px]
+    flex flex-col items-start
+    p-[20px] gap-[16px]
+    cursor-pointer
+    border-[2px] border-[#FFF9D4]
+    shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]
+    rounded-[22px]
+    box-border
+    bg-[#FCFDE7]
+  "
+          onClick={() =>
+            navigate("/ai-recommend", {
+              state: { selectedPurposes: sortedSelectedPurposes },
+            })
+          }
+        >
+          {/* 상단 영역 (텍스트 + 화살표) */}
+          <div className="flex items-center justify-between w-full">
+            <div className="flex items-center gap-[8px]">
+              <img src={AI} alt="AI" className="w-[20px] h-[20px]" />
+              <span className="text-[16px] font-semibold text-[#222]">
+                AI 추천 영양제 조합 살펴보기
+              </span>
+            </div>
+
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              strokeWidth="2"
+              stroke="currentColor"
+              className="w-[16px] h-[16px] text-[#222]"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                d="M9 5l7 7-7 7"
+              />
+            </svg>
+          </div>
+          <p
+            className="
+      text-[13px] text-[#737373] leading-[1.4]
+      bg-white rounded-[8px] px-[10px] py-[6px]
+      shadow-[inset_0_0_0_1px_rgba(0,0,0,0.04)]
+    "
+          >
+            비타체크 AI가 사용자 선택 목적을 종합하여 영양제를 추천해드립니다.
+          </p>
+
+          {/* 예시 미니 카드 3개 */}
+          <div className="flex gap-[13px] overflow-x-auto mt-[8px]">
+            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img src={AI1} alt="영양제1" className="w-[108px] h-[107px]" />
+            </div>
+            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img src={AI2} alt="영양제2" className="w-[57px] h-[60.84px]" />
+            </div>
+            <div className="min-w-[120px] h-[109px] rounded-[12px] bg-white flex items-center justify-center shadow-[2px_2px_7.8px_rgba(163,148,182,0.25)]">
+              <img src={AI3} alt="영양제3" className="w-[100.24px] h-[100px]" />
             </div>
           </div>
         </div>

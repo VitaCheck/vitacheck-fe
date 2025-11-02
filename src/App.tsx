@@ -44,6 +44,7 @@ import SearchResultPage from "./pages/SearchResultPage";
 import OauthRedirect from "./pages/auth/OauthRedirect";
 import TermsViewPage from "./pages/terms/TermsViewPage";
 import SocialCallback from "./pages/auth/SocialCallback";
+import AIPage from "./pages/AiRecommendPage";
 
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -72,6 +73,7 @@ const router = createBrowserRouter([
       { path: "login/email", element: <EmailLoginPage /> },
       { path: "signup/email", element: <EmailSignupPage /> },
       { path: "signup/email/detail", element: <EmailSignupDetailPage /> },
+      { path: "ai-recommend", element: <AIPage /> },
 
       // 목적/원료
       { path: "object", element: <ObjectPage /> },
