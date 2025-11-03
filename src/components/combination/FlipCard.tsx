@@ -1,5 +1,5 @@
 import { useState } from "react";
-import flipIcon from "../../assets/flip.png"; // TODO: 경로 확인
+import flipIcon from "../../assets/flip.png";
 
 interface FlipCardProps {
   name: string;
