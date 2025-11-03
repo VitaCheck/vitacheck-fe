@@ -1,17 +1,25 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 
-// 태블릿 세로 모드 기준점 1023px
-const useIsMobile = (breakpoint = 1023) => {
-  const [isMobile, setIsMobile] = useState<boolean>(
-    window.innerWidth < breakpoint
-  );
+const useIsMobile = (breakpoint = 768) => {
+  const [isMobile, setIsMobile] = useState<boolean>(() => {
+    //
+    if (typeof window === "undefined") return false;
+    return window.innerWidth < breakpoint;
+  });
 
   useEffect(() => {
-    const handleResize = () => {
-      setIsMobile(window.innerWidth < breakpoint);
-    };
+    //
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => setIsMobile(window.innerWidth < breakpoint);
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+
+    // 컴포넌트 마운트 시점에 한 번 더 체크
+    handleResize();
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
   }, [breakpoint]);
 
   return isMobile;
