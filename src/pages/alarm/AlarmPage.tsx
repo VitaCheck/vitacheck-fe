@@ -101,7 +101,7 @@ const AlarmPage = () => {
     }
     // 성공 시: Notification.permission이 'granted'가 됨
     // -> needPermission이 false가 됨
-    // -> 모달이 자동으로 닫힘 (open 조건이 false가 되므로)
+    // -> 모달이 자동으로 닫힘 (open 조건이 false가 되니까)
   }, []);
 
   return (
