@@ -4,7 +4,6 @@ import CombinationProductCard from "../../components/combination/CombinationProd
 import SadCat from "../../../public/images/rate1.png";
 import Search from "../../assets/search.png";
 import axios from "@/lib/axios";
-// import Navbar from "@/components/NavBar";
 
 // 모바일 여부 판단용 훅
 const useIsMobile = () => {

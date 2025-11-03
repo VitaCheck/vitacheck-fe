@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-const useIsMobile = (breakpoint = 640) => {
+// 태블릿 세로 모드 기준점 1023px
+const useIsMobile = (breakpoint = 1023) => {
   const [isMobile, setIsMobile] = useState<boolean>(
     window.innerWidth < breakpoint
   );
