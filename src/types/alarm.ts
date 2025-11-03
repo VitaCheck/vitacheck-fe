@@ -12,7 +12,6 @@ export interface Supplement {
   supplementId?: number;
   supplementName: string;
   supplementImageUrl?: string;
-  // ✅ 더 안전하게: DayOfWeek로 명확히 타이핑
   daysOfWeek: DayOfWeek[];
   times: string[];
   isTaken: boolean;
