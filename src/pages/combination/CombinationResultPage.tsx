@@ -299,7 +299,9 @@ export default function CombinationResultPage() {
       {/* 3. 조합 카드 리스트 컴포넌트 */}
       <CombinationCardList
         goodCombinations={goodCombinations}
-        cautionCombinations={cautionCombinations}
+        riskyCombinations={cautionCombinations}
+        isLoading={false}
+        isMobile={isMobile}
       />
 
       {/* --- 모달 --- */}
