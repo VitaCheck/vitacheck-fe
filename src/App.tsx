@@ -55,7 +55,6 @@ import { getAccessToken } from "@/lib/auth";
 import { syncFcmTokenAfterLoginSilently } from "@/lib/push";
 
 import { fcmTokenStore } from "@/lib/fcmTokenStore";
-
 import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
@@ -125,7 +124,7 @@ const router = createBrowserRouter([
       { path: "/social-signup/details", element: <SocialSignupDetailPage /> },
       { path: "/oauth/callback", element: <SocialCallback /> },
 
-      // ✅ Spring Boot OAuth2 기본 콜백 경로 추가
+      // Spring Boot OAuth2 기본 콜백 경로 추가
       { path: "/login/oauth2/code/:provider", element: <SocialCallback /> },
 
       // 기타

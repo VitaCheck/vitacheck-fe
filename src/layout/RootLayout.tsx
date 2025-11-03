@@ -2,9 +2,20 @@ import { useEffect, useState } from "react";
 import { Outlet, useLocation } from "react-router-dom";
 import Navbar from "../components/NavBar";
 import Footer from "@/components/Footer";
+import ReactGA from "react-ga4";
 
 const RootLayout = () => {
   const location = useLocation();
+
+  useEffect(() => {
+    // 운영 환경에서만 실행하도록 분기 처리하는 것을 권장
+    if (process.env.NODE_ENV === "production") {
+      ReactGA.send({
+        hitType: "pageview",
+        page: location.pathname + location.search,
+      });
+    }
+  }, [location]); // location이 바뀔 때마다 실행
 
   // 현재 화면 너비 상태
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
