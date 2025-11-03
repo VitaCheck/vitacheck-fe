@@ -20,7 +20,6 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// ✅ 지연 초기화(한 번만 생성)
 let _messagingReady: Promise<Messaging | null> | null = null;
 function ensureMessaging(): Promise<Messaging | null> {
   if (!_messagingReady) {

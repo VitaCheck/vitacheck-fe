@@ -20,7 +20,6 @@ try {
   console.debug("[FCM] localStorage read fail (private mode?)");
 }
 
-/** ✅ 서버에 정확히 { fcmToken, deviceType: "WEB" } 형태로 업서트 */
 async function upsertFcmToken(token: string) {
   console.debug("[FCM] upsertFcmToken START", token?.slice(0, 8), "...");
   try {

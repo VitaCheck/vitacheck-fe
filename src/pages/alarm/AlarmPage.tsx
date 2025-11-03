@@ -84,11 +84,8 @@ const AlarmPage = () => {
 
   const onEnablePush = useCallback(async () => {
     setEnabling(true);
-    const res = await enableWebPush({
-      onMessage: (p) => {
-        console.log("[PUSH][FG] payload:", p);
-      },
-    });
+
+    const res = await enableWebPush();
     setEnabling(false);
 
     if (!res.ok) {
