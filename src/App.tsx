@@ -161,6 +161,9 @@ function App() {
   useEffect(() => {
     let mounted = true;
 
+    // 1. 리스너 해제 함수를 저장할 변수
+    let unsubscribe: (() => void) | undefined;
+
     (async () => {
       try {
         await registerServiceWorker();
@@ -169,10 +172,13 @@ function App() {
           await syncFcmTokenAfterLoginSilently().catch(() => {});
         }
 
-        onForegroundMessage((p) => {
+        // 2. onForegroundMessage가 Promise를 반환하므로 await
+        // Promise가 반환한 '해제 함수'를 변수에 저장
+        unsubscribe = await onForegroundMessage((p) => {
           const title = p?.notification?.title ?? p?.data?.title ?? "VitaCheck";
           const body = p?.notification?.body ?? p?.data?.body ?? "";
           console.log("[FCM] foreground:", title, body);
+          // (알림 띄우는 로직...)
         });
       } catch (e) {
         console.warn("[FCM] init error:", e);
@@ -180,7 +186,13 @@ function App() {
     })();
 
     return () => {
+      // 3. Cleanup 함수
       mounted = false;
+
+      // 4. 컴포넌트가 언마운트될 때 리스너를 명시적으로 해제
+      if (unsubscribe) {
+        unsubscribe();
+      }
     };
   }, []);
 

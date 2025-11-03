@@ -7,6 +7,7 @@ import {
   isSupported,
   deleteToken,
   type Messaging,
+  type Unsubscribe,
 } from "firebase/messaging";
 
 const firebaseConfig = {
@@ -84,10 +85,24 @@ export async function getFcmToken(): Promise<string | null> {
 }
 
 /** 포그라운드 수신 */
+// export function onForegroundMessage(cb: (p: any) => void) {
+//   ensureMessaging().then((m) => {
+//     if (!m) return;
+//     onMessage(m, (payload) => {
+//       console.log("[FCM] onMessage payload", payload);
+//       cb(payload);
+//     });
+//   });
+// }
+
+/** 포그라운드 수신 */
 export function onForegroundMessage(cb: (p: any) => void) {
-  ensureMessaging().then((m) => {
+  // 🔽 2. 이 함수가 Promise<Unsubscribe | void>를 반환하도록 수정합니다.
+  return ensureMessaging().then((m) => {
     if (!m) return;
-    onMessage(m, (payload) => {
+
+    // 🔽 3. onMessage가 반환하는 unsubscribe 함수를 여기서 return합니다.
+    return onMessage(m, (payload) => {
       console.log("[FCM] onMessage payload", payload);
       cb(payload);
     });
