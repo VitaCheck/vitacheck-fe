@@ -87,7 +87,7 @@ const GlobalReducedMotion = styled.div`
   }
 `;
 
-const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
+const SplashScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   const [animationState, setAnimationState] = useState(0);
 
   useEffect(() => {
@@ -124,4 +124,4 @@ const OnboardingScreen: React.FC<OnboardingScreenProps> = ({ onComplete }) => {
   );
 };
 
-export default OnboardingScreen;
+export default SplashScreen;

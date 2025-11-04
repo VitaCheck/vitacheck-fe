@@ -1,4 +1,4 @@
-// src/lib/push.ts
+// src/lib/push.ts - 완전 수정 버전
 import axios from "@/lib/axios";
 import { registerServiceWorker, getFcmToken } from "@/lib/firebase";
 import { isSupported } from "firebase/messaging";
@@ -16,7 +16,6 @@ try {
   const cached = localStorage.getItem(LS_KEY);
   if (cached) lastSyncedToken = cached;
 } catch {
-  // safari 프라이버시 모드 대비
   console.debug("[FCM] localStorage read fail (private mode?)");
 }
 
@@ -57,7 +56,6 @@ async function preconditions(forceRequest: boolean) {
     console.debug("[FCM] pre: service worker registered");
   } catch (e) {
     console.error("[FCM] pre: service worker register fail", e);
-    // SW 등록 실패는 명시적인 reason이 없으므로 force 호출 쪽에서 잡힘
   }
 
   if (
@@ -80,7 +78,6 @@ async function preconditions(forceRequest: boolean) {
 }
 
 console.debug("[FCM] push module loaded");
-// axios 인스턴스 확인(도메인 혼선 디버그용)
 try {
   // @ts-ignore
   console.debug("[FCM] axios baseURL =", axios?.defaults?.baseURL || "(none)");
@@ -132,7 +129,8 @@ export async function syncFcmToken(options?: { forceRequest?: boolean }) {
   }
 }
 
-// --- 고수준 함수 (버튼/수동) ---
+// push.ts의 enableWebPush 함수 수정
+
 export async function enableWebPush(opts?: {
   onMessage?: (p: any) => void;
 }): Promise<
@@ -185,7 +183,6 @@ export async function enableWebPush(opts?: {
   try {
     await upsertFcmToken(token);
   } catch (e) {
-    // upsert 내부에서 이미 로깅함
     throw e;
   }
 
@@ -196,13 +193,21 @@ export async function enableWebPush(opts?: {
     console.debug("[FCM] enableWebPush: localStorage write fail");
   }
 
-  if (opts?.onMessage) onForegroundMessage(opts.onMessage);
+  // 🔥 중요: onMessage 리스너는 등록하되,
+  // 콜백 내부에서 알림을 표시하지 않도록 주의!
+  // 서비스 워커가 자동으로 알림을 표시함
+  if (opts?.onMessage) {
+    onForegroundMessage((payload) => {
+      console.debug("[FCM] Foreground message (no notification shown here)");
+      opts.onMessage!(payload);
+    });
+  }
 
   console.debug("[FCM] enableWebPush: done");
   return { ok: true, token };
 }
 
-/** 로그인 직후(AT 저장 후) 조용히 동기화 */
+/** 로그인 직후 조용히 동기화 */
 export async function syncFcmTokenAfterLoginSilently() {
   console.debug("[FCM] silent sync after login");
   return syncFcmToken({ forceRequest: false }).catch((e) => {
@@ -220,7 +225,7 @@ export async function syncFcmTokenForce() {
   });
 }
 
-/** 현재 브라우저의 FCM 토큰 읽기(없으면 null) */
+/** 현재 브라우저의 FCM 토큰 읽기 */
 export async function getCurrentFcmToken(): Promise<string | null> {
   console.debug("[FCM] getCurrentFcmToken: start");
   const ok = await isSupported().catch(() => false);
@@ -237,7 +242,7 @@ export async function getCurrentFcmToken(): Promise<string | null> {
   return t;
 }
 
-/** (호환용) fcmToken 키를 쓰던 기존 호출부도 동일 포맷으로 전송 */
+/** 호환용 동기화 */
 export async function syncFcmTokenAsFcmTokenKey(options?: {
   forceRequest?: boolean;
 }) {

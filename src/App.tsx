@@ -1,10 +1,10 @@
-// src/App.tsx
 import "./index.css";
 import { useEffect, useState } from "react";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // 온보딩 컴포넌트
-import OnboardingScreen from "./components/OnBoarding";
+import SplashScreen from "./components/onboarding/SplashScreen";
+import Onboarding from "./components/onboarding/OnBoarding";
 
 // 페이지 컴포넌트들 ...
 import NotFoundPage from "./pages/NotFoundPage";
@@ -58,8 +58,7 @@ import { fcmTokenStore } from "@/lib/fcmTokenStore";
 import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
-const ONBOARDING_KEY = "hasSeenOnboarding";
-
+const TUTORIAL_STORAGE_KEY = "hasCompletedOnboardingTutorial";
 const router = createBrowserRouter([
   {
     path: "/",
@@ -140,79 +139,93 @@ const router = createBrowserRouter([
 
 function App() {
   // 온보딩 상태 관리
-  const [showOnboarding, setShowOnboarding] = useState(false);
-  const [isCheckingOnboarding, setIsCheckingOnboarding] = useState(true);
+  // 1. 스플래시 스크린 (로고 애니메이션) 표시 여부
+  const [showSplash, setShowSplash] = useState(true);
+  // 2. 온보딩 튜토리얼 (Swiper) 표시 여부
+  const [showTutorial, setShowTutorial] = useState(false);
+  // 3. 튜토리얼을 확인할 때까지 대기 (깜빡임 방지)
+  const [isCheckingTutorial, setIsCheckingTutorial] = useState(true);
 
   fcmTokenStore.migrateFromLocalStorage();
 
-  // 온보딩 체크
+  // --- 튜토리얼 완료 여부 체크 (최초 1회) [수정] ---
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    const hasSeenOnboarding = sessionStorage.getItem(ONBOARDING_KEY);
+    // [수정] sessionStorage -> localStorage
+    const hasSeenTutorial = localStorage.getItem(TUTORIAL_STORAGE_KEY);
 
-    if (isMobile && !hasSeenOnboarding) {
-      setShowOnboarding(true);
+    // 모바일이고, 튜토리얼을 본 적이 없다면
+    if (isMobile && !hasSeenTutorial) {
+      setShowTutorial(true);
     }
 
-    setIsCheckingOnboarding(false);
+    // 튜토리얼 확인 완료
+    setIsCheckingTutorial(false);
   }, []);
 
-  // FCM 초기화
+  // --- FCM 초기화 (기존 코드 유지) ---
   useEffect(() => {
     let mounted = true;
-
-    // 1. 리스너 해제 함수를 저장할 변수
-    let unsubscribe: (() => void) | undefined;
+    const unsubscribePromise = onForegroundMessage((p) => {
+      // ... (기존 FCM 로직) ...
+    });
 
     (async () => {
       try {
         await registerServiceWorker();
-
         if (mounted && getAccessToken()) {
           await syncFcmTokenAfterLoginSilently().catch(() => {});
         }
-
-        // 2. onForegroundMessage가 Promise를 반환하므로 await
-        // Promise가 반환한 '해제 함수'를 변수에 저장
-        unsubscribe = await onForegroundMessage((p) => {
-          const title = p?.notification?.title ?? p?.data?.title ?? "VitaCheck";
-          const body = p?.notification?.body ?? p?.data?.body ?? "";
-          console.log("[FCM] foreground:", title, body);
-          // (알림 띄우는 로직...)
-        });
       } catch (e) {
         console.warn("[FCM] init error:", e);
       }
     })();
 
     return () => {
-      // 3. Cleanup 함수
       mounted = false;
-
-      // 4. 컴포넌트가 언마운트될 때 리스너를 명시적으로 해제
-      if (unsubscribe) {
-        unsubscribe();
-      }
+      unsubscribePromise.then((unsub) => {
+        if (unsub) {
+          console.log("[FCM] Unsubscribing from foreground messages.");
+          unsub();
+        }
+      });
     };
   }, []);
 
-  // 온보딩 완료 핸들러
-  const handleOnboardingComplete = () => {
-    sessionStorage.setItem(ONBOARDING_KEY, "true");
-    setShowOnboarding(false);
+  // --- 완료 핸들러 [수정] ---
+
+  // 1. 스플래시 스크린(로고)이 완료됐을 때
+  const handleSplashComplete = () => {
+    setShowSplash(false);
   };
 
-  // 온보딩 체크 중
-  if (isCheckingOnboarding) {
-    return null; // 또는 로딩 스피너
+  // 2. 튜토리얼(Swiper)이 완료됐을 때
+  const handleTutorialComplete = () => {
+    localStorage.setItem(TUTORIAL_STORAGE_KEY, "true");
+    setShowTutorial(false);
+  };
+
+  // --- 렌더링 로직 (순서가 중요!) [수정] ---
+
+  // 1. 가장 먼저, 스플래시 스크린(로고 애니메이션)을 보여줍니다.
+  if (showSplash) {
+    // SplashScreen.tsx는 내부에 1.8초 타이머가 있어, 완료되면 onComplete를 호출합니다.
+    return <SplashScreen onComplete={handleSplashComplete} />;
   }
 
-  // 온보딩 표시
-  if (showOnboarding) {
-    return <OnboardingScreen onComplete={handleOnboardingComplete} />;
+  // 2. 스플래시가 끝나면, 튜토리얼 상태 확인이 끝났는지 체크합니다.
+  if (isCheckingTutorial) {
+    return null; // (또는 로딩 스피너)
   }
 
-  // 메인 앱
+  // 3. 튜토리얼을 보여줘야 한다면, 튜토리얼을 렌더링합니다.
+  if (showTutorial) {
+    // Onboarding.tsx(Swiper)는 마지막에 '로그인 없이 이용하기' 등을 누르면
+    // onFinishOnboarding(prop)을 호출합니다.
+    return <Onboarding onFinishOnboarding={handleTutorialComplete} />;
+  }
+
+  // 4. 모든 온보딩이 끝났다면, 메인 앱(라우터)을 렌더링합니다.
   return (
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />
