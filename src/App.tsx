@@ -152,8 +152,8 @@ function App() {
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
     const hasSeenTutorial = localStorage.getItem(TUTORIAL_STORAGE_KEY);
-
-    // ⭐ OAuth 콜백 경로인 경우 튜토리얼 건너뛰기
+    const isLoggedIn = !!getAccessToken();
+    // OAuth 콜백 경로인 경우 튜토리얼 건너뛰기
     const isOAuthCallback =
       window.location.pathname === "/oauth-redirect" ||
       window.location.pathname.includes("/oauth/callback") ||
@@ -161,15 +161,18 @@ function App() {
 
     console.log("=== Onboarding Check ===");
     console.log("isMobile:", isMobile);
+    console.log("isLoggedIn:", isLoggedIn);
     console.log("hasSeenTutorial:", hasSeenTutorial);
     console.log("isOAuthCallback:", isOAuthCallback);
     console.log("current path:", window.location.pathname);
 
-    // 모바일이고, 튜토리얼을 본 적이 없고, OAuth 콜백이 아닌 경우에만 튜토리얼 표시
-    if (isMobile && !hasSeenTutorial && !isOAuthCallback) {
+    // 모바일 && "로그인 안 했고" && 튜토리얼 본 적 없고 && OAuth 콜백 아님
+    if (isMobile && !isLoggedIn && !hasSeenTutorial && !isOAuthCallback) {
+      console.log(">>> Showing Onboarding Tutorial");
       setShowTutorial(true);
+    } else {
+      console.log(">>> Skipping Onboarding Tutorial");
     }
-
     // 튜토리얼 확인 완료
     setIsCheckingTutorial(false);
   }, []);
