@@ -4,7 +4,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 // 온보딩 컴포넌트
 import SplashScreen from "./components/onboarding/SplashScreen";
-import Onboarding from "./components/onboarding/OnBoarding";
+import OnBoarding from "./components/onboarding/OnBoarding";
 
 // 페이지 컴포넌트들 ...
 import NotFoundPage from "./pages/NotFoundPage";
@@ -222,7 +222,7 @@ function App() {
   if (showTutorial) {
     // Onboarding.tsx(Swiper)는 마지막에 '로그인 없이 이용하기' 등을 누르면
     // onFinishOnboarding(prop)을 호출합니다.
-    return <Onboarding onFinishOnboarding={handleTutorialComplete} />;
+    return <OnBoarding onFinishOnboarding={handleTutorialComplete} />;
   }
 
   // 4. 모든 온보딩이 끝났다면, 메인 앱(라우터)을 렌더링합니다.
