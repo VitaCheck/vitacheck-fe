@@ -49,7 +49,6 @@ import AIPage from "./pages/AiRecommendPage";
 // React Query
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
-// import axios from "@/lib/axios";
 import { registerServiceWorker, onForegroundMessage } from "@/lib/firebase";
 import { getAccessToken } from "@/lib/auth";
 import { syncFcmTokenAfterLoginSilently } from "@/lib/push";
@@ -59,6 +58,7 @@ import SettingsPage from "./pages/SettingsPage";
 
 const queryClient = new QueryClient();
 const TUTORIAL_STORAGE_KEY = "hasCompletedOnboardingTutorial";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -148,14 +148,25 @@ function App() {
 
   fcmTokenStore.migrateFromLocalStorage();
 
-  // --- 튜토리얼 완료 여부 체크 (최초 1회) [수정] ---
+  // --- 튜토리얼 완료 여부 체크 (최초 1회) ---
   useEffect(() => {
     const isMobile = window.innerWidth <= 768;
-    // [수정] sessionStorage -> localStorage
     const hasSeenTutorial = localStorage.getItem(TUTORIAL_STORAGE_KEY);
 
-    // 모바일이고, 튜토리얼을 본 적이 없다면
-    if (isMobile && !hasSeenTutorial) {
+    // ⭐ OAuth 콜백 경로인 경우 튜토리얼 건너뛰기
+    const isOAuthCallback =
+      window.location.pathname === "/oauth-redirect" ||
+      window.location.pathname.includes("/oauth/callback") ||
+      window.location.pathname.includes("/login/oauth2/code");
+
+    console.log("=== Onboarding Check ===");
+    console.log("isMobile:", isMobile);
+    console.log("hasSeenTutorial:", hasSeenTutorial);
+    console.log("isOAuthCallback:", isOAuthCallback);
+    console.log("current path:", window.location.pathname);
+
+    // 모바일이고, 튜토리얼을 본 적이 없고, OAuth 콜백이 아닌 경우에만 튜토리얼 표시
+    if (isMobile && !hasSeenTutorial && !isOAuthCallback) {
       setShowTutorial(true);
     }
 
@@ -192,7 +203,7 @@ function App() {
     };
   }, []);
 
-  // --- 완료 핸들러 [수정] ---
+  // --- 완료 핸들러 ---
 
   // 1. 스플래시 스크린(로고)이 완료됐을 때
   const handleSplashComplete = () => {
@@ -205,7 +216,7 @@ function App() {
     setShowTutorial(false);
   };
 
-  // --- 렌더링 로직 (순서가 중요!) [수정] ---
+  // --- 렌더링 로직 (순서가 중요!) ---
 
   // 1. 가장 먼저, 스플래시 스크린(로고 애니메이션)을 보여줍니다.
   if (showSplash) {
@@ -220,7 +231,7 @@ function App() {
 
   // 3. 튜토리얼을 보여줘야 한다면, 튜토리얼을 렌더링합니다.
   if (showTutorial) {
-    // Onboarding.tsx(Swiper)는 마지막에 '로그인 없이 이용하기' 등을 누르면
+    // OnBoarding.tsx(Swiper)는 마지막에 '로그인 없이 이용하기' 등을 누르면
     // onFinishOnboarding(prop)을 호출합니다.
     return <OnBoarding onFinishOnboarding={handleTutorialComplete} />;
   }
