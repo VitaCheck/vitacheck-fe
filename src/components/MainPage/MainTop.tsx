@@ -14,16 +14,20 @@ import Text1 from "../../assets/text1.png";
 import Text2 from "../../assets/text2.png";
 import Text3 from "../../assets/text3.png";
 import Text4 from "../../assets/text4.png";
+import { useNavigate } from "react-router-dom";
 
 const ROTATE_MS = 4000;
 
 const MainTop = () => {
+  const navigate = useNavigate();
+
   const slides = useMemo(
     () => [
       {
         bg: Bg1,
         cat: Cat1,
         text: Text1,
+        link: "/object",
         styles: {
           text: "top-[15%] left-[8%] w-[45%] sm:w-[35%] sm:left-[13%] lg:left-[18%] lg:w-[30%] xl:w-[25%]",
           cat: "bottom-0 right-[5%] w-[40%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%]",
@@ -33,6 +37,7 @@ const MainTop = () => {
         bg: Bg2,
         cat: Cat2,
         text: Text2,
+        link: "/object",
         styles: {
           text: "top-[15%] left-[8%] w-[50%] sm:w-[40%] sm:left-[13%] lg:left-[18%] lg:w-[35%] xl:w-[25%]",
           cat: "bottom-3 right-[5%] w-[25%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
@@ -42,6 +47,7 @@ const MainTop = () => {
         bg: Bg3,
         cat: Cat3,
         text: Text3,
+        link: "/ingredient",
         styles: {
           text: "top-[15%] left-[8%] w-[60%] sm:w-[45%] sm:left-[13%] lg:left-[18%] lg:w-[40%] xl:w-[30%]",
           cat: "bottom-[3%] right-[5%] w-[23%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
@@ -51,6 +57,7 @@ const MainTop = () => {
         bg: Bg4,
         cat: Cat4,
         text: Text4,
+        link: "/alarm",
         styles: {
           text: "top-[15%] left-[8%] w-[45%] sm:w-[30%] sm:left-[13%] lg:left-[18%] lg:w-[25%] xl:w-[20%]",
           cat: "bottom-[-5%] right-[5%] w-[40%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%] xl:right-[15%]",
@@ -79,11 +86,16 @@ const MainTop = () => {
     };
   }, [paused, slides.length]);
 
+  const handleBannerClick = () => {
+    navigate(slides[index].link);
+  };
+
   return (
     <header
-      className="relative w-full min-h-[200px] sm:min-h-[300px] lg:min-h-[380px] overflow-hidden"
+      className="relative w-full min-h-[200px] sm:min-h-[300px] lg:min-h-[380px] overflow-hidden hover:cursor-pointer"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onClick={handleBannerClick}
     >
       {slides.map((s, i) => (
         <div
