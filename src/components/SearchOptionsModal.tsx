@@ -617,6 +617,7 @@ import mainalbum from "../assets/mainalbum.svg";
 import maincamera from "../assets/maincamera.svg";
 import mainwrite from "../assets/mainwrite.svg";
 import camerabutton from "../assets/camerabutton.svg";
+import LoadingCat from "../assets/loadingcat.png";
 
 interface SearchOptionsModalProps {
   onClose: () => void;
@@ -675,6 +676,16 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
 
   /** ==== 환경변수 우선, 없으면 기본 URL ==== */
   const OCR_API_URL = `${BASE_URL}/api/v1/ai/ocr`;
+
+  const bounceStyle = `
+    @keyframes bounceSlow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .bounce-slow {
+      animation: bounceSlow 1.8s ease-in-out infinite;
+    }
+  `;
 
   // 스크롤 잠금
   useEffect(() => {
@@ -874,6 +885,7 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
   };
 
   /** ──────────────── 카메라 전체 화면 뷰 ──────────────── */
+  /** ──────────────── 카메라 전체 화면 뷰 ──────────────── */
   const renderCameraView = () => (
     <div className="fixed inset-0 bg-black z-50 flex flex-col">
       <div className="flex justify-between items-center px-4 py-3 text-white text-sm">
@@ -908,15 +920,28 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
           className="w-[70px] h-[70px] cursor-pointer"
           onClick={handleCaptureAndRecognize}
         />
-        {isLoading && (
-          <p className="text-white text-sm animate-pulse">문자 인식 중...</p>
-        )}
         {recognizedText && (
           <p className="text-white text-sm text-center px-4 whitespace-pre-wrap">
             {recognizedText}
           </p>
         )}
       </div>
+
+      {isLoading && (
+        <div className="fixed inset-0 z-[999] bg-black/80 flex items-center justify-center">
+          <style>{bounceStyle}</style>
+          <div className="flex flex-col items-center justify-center">
+            <img
+              src={LoadingCat}
+              alt="로딩 중 고양이"
+              className="w-[309px] h-[285px] mb-3 bounce-slow"
+            />
+            <p className="text-white text-base animate-pulse">
+              영양제를 찾는 중이에요...
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -945,7 +970,6 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
             <span className="text-[15px] text-black">카메라로 촬영하기</span>
           </div>
 
-          {/* 앨범에서 선택 → 파일 업로드 → OCR */}
           <div
             className="flex items-center space-x-4 cursor-pointer"
             onClick={openAlbumPicker}
@@ -964,11 +988,24 @@ const SearchOptionsModal = ({ onClose }: SearchOptionsModalProps) => {
             <span className="text-[15px] text-black">직접 입력하기</span>
           </div>
         </div>
-
-        {isLoading && (
-          <p className="text-sm text-gray-500 mt-4">문자 인식 중...</p>
-        )}
       </div>
+
+      {/* ✅ 화면 전체 로딩 오버레이 */}
+      {isLoading && (
+        <div className="fixed inset-0 z-[999] bg-black/80 flex items-center justify-center">
+          <style>{bounceStyle}</style>
+          <div className="flex flex-col items-center justify-center">
+            <img
+              src={LoadingCat}
+              alt="로딩 중 고양이"
+              className="w-[309px] h-[285px] mb-3 bounce-slow"
+            />
+            <p className="text-white text-base animate-pulse">
+              영양제를 찾는 중이에요...
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="absolute inset-0 z-[-1]" onClick={onClose}></div>
     </div>

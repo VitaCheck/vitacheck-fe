@@ -1,75 +1,133 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import Banner1 from "../../assets/webbanner01.png";
-import Banner2 from "../../assets/webbanner02.png";
-import Banner3 from "../../assets/webbanner03.png";
-import Banner4 from "../../assets/webbanner04.png";
+import Bg1 from "../../assets/bg1.png";
+import Bg2 from "../../assets/bg2.png";
+import Bg3 from "../../assets/bg3.png";
+import Bg4 from "../../assets/bg4.png";
 
-const ROTATE_MS = 3000;
+import Cat1 from "../../assets/cat1.png";
+import Cat2 from "../../assets/cat2.png";
+import Cat3 from "../../assets/cat3.png";
+import Cat4 from "../../assets/cat4.png";
+
+import Text1 from "../../assets/text1.png";
+import Text2 from "../../assets/text2.png";
+import Text3 from "../../assets/text3.png";
+import Text4 from "../../assets/text4.png";
+
+const ROTATE_MS = 4000;
 
 const MainTop = () => {
-  const banners = useMemo(() => [Banner1, Banner2, Banner3, Banner4], []);
+  const slides = useMemo(
+    () => [
+      {
+        bg: Bg1,
+        cat: Cat1,
+        text: Text1,
+        styles: {
+          text: "top-[15%] left-[8%] w-[40%] sm:w-[35%] sm:left-[13%] lg:left-[18%] lg:w-[30%] xl:w-[25%]",
+          cat: "bottom-0 right-[5%] w-[30%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%]",
+        },
+      },
+      {
+        bg: Bg2,
+        cat: Cat2,
+        text: Text2,
+        styles: {
+          text: "top-[15%] left-[8%] w-[40%] sm:w-[40%] sm:left-[13%] lg:left-[18%] lg:w-[35%] xl:w-[25%]",
+          cat: "bottom-3 right-[5%] w-[20%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
+        },
+      },
+      {
+        bg: Bg3,
+        cat: Cat3,
+        text: Text3,
+        styles: {
+          text: "top-[15%] left-[8%] w-[45%] sm:w-[45%] sm:left-[13%] lg:left-[18%] lg:w-[40%] xl:w-[30%]",
+          cat: "bottom-[3%] right-[5%] w-[18%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
+        },
+      },
+      {
+        bg: Bg4,
+        cat: Cat4,
+        text: Text4,
+        styles: {
+          text: "top-[15%] left-[8%] w-[35%] sm:w-[30%] sm:left-[13%] lg:left-[18%] lg:w-[25%] xl:w-[20%]",
+          cat: "bottom-[-5%] right-[5%] w-[30%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%] xl:right-[15%]",
+        },
+      },
+    ],
+    []
+  );
+
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const timerRef = useRef<number | null>(null);
 
   useEffect(() => {
-    banners.forEach((src) => {
-      const img = new Image();
-      img.src = src;
-    });
-  }, [banners]);
-
-  useEffect(() => {
     if (paused) return;
+
     timerRef.current = window.setInterval(() => {
-      setIndex((i) => (i + 1) % banners.length);
+      setIndex((i) => (i + 1) % slides.length);
     }, ROTATE_MS);
+
     return () => {
-      if (timerRef.current) window.clearInterval(timerRef.current);
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
     };
-  }, [paused, banners.length]);
+  }, [paused, slides.length]);
 
   return (
     <header
-      className="
-        relative z-0
-        [background-repeat:no-repeat]
-      "
+      className="relative w-full min-h-[200px] sm:min-h-[300px] lg:min-h-[380px] overflow-hidden"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
     >
-      <div
-        className="
-          relative
-          mx-auto w-full
-          h-[160px] sm:h-auto     /* 데스크톱에선 높이 자동 */
-          overflow-hidden
-          flex items-center justify-center
-        "
-        onMouseEnter={() => setPaused(true)}
-        onMouseLeave={() => setPaused(false)}
-        aria-label="프로모션 배너"
-        role="img"
-      >
-        {banners.map((src, i) => (
+      {slides.map((s, i) => (
+        <div
+          key={i}
+          className={`absolute inset-0 transition-opacity duration-700 ease-in-out ${
+            i === index ? "opacity-100" : "opacity-0"
+          }`}
+        >
+          {/* 배경 */}
           <img
-            key={src}
-            src={src}
-            alt={`배너 ${i + 1}`}
-            className={`
-              /* 모바일: 겹쳐서 페이드, 가운데 정렬 + 좌우 크롭 강화 */
-              absolute transition-opacity duration-700
-              top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2
-              h-full w-auto scale-x-130 origin-center
-              ${i === index ? "opacity-100" : "opacity-0"}
-
-              /* 데스크톱(sm↑): 활성 것만 흐름에 표시(너비 100%, 높이 자동) */
-              sm:static sm:w-full sm:h-auto sm:object-contain
-              sm:translate-x-0 sm:translate-y-0 sm:scale-x-100 sm:top-auto sm:left-auto
-              ${i === index ? "sm:block" : "sm:hidden"}
-            `}
+            src={s.bg}
+            alt={`배경 ${i + 1}`}
+            className="w-full h-full object-cover"
             draggable={false}
           />
-        ))}
+
+          {/* 텍스트 */}
+          <img
+            src={s.text}
+            alt={`텍스트 ${i + 1}`}
+            className={`absolute object-contain ${s.styles.text}`}
+            draggable={false}
+          />
+
+          {/* 고양이 */}
+          <img
+            src={s.cat}
+            alt={`고양이 ${i + 1}`}
+            className={`absolute object-contain ${s.styles.cat}`}
+            draggable={false}
+          />
+        </div>
+      ))}
+
+      <div
+        className="
+          absolute bottom-[10px] right-[7%] sm:right-[5%] lg:right-[16%] xl:right-[17%]
+          bg-[rgba(244,244,244,0.6)] text-black text-sm
+          px-[10px] py-[4px] rounded-full
+          backdrop-blur-[2px]
+          font-medium
+        "
+      >
+        {index + 1} / {slides.length}
       </div>
     </header>
   );

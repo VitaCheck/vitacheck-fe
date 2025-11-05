@@ -146,6 +146,7 @@ import { fetchSupplementDetail } from "@/apis/supplementApi";
 import type { SupplementDetail } from "@/apis/supplementApi";
 import ProductCard from "@/components/ProductCard";
 import AI from "@/assets/aiicon.png";
+import LoadingCat from "@/assets/loadingcat.png";
 
 interface EnrichedCombination {
   combinationName: string;
@@ -162,6 +163,32 @@ const AiRecommendPage = () => {
   );
   const [isLoading, setIsLoading] = useState(true);
   const fetchedRef = useRef(false);
+
+  // ✅ 내부 전용 애니메이션 정의 (이 컴포넌트 안에서만 작동)
+  const bounceStyle = `
+    @keyframes bounceSlow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .bounce-slow {
+      animation: bounceSlow 1.8s ease-in-out infinite;
+    }
+  `;
+
+  const LoadingSection = () => (
+    <div className="flex flex-col items-center justify-center mt-[80px] mb-[60px]">
+      <style>{bounceStyle}</style>
+
+      <img
+        src={LoadingCat}
+        alt="로딩 중 고양이"
+        className="w-[309px] h-[285px] mb-4 bounce-slow"
+      />
+      <p className="text-[15px] text-black animate-pulse">
+        영양제 조합을 찾는 중이에요...
+      </p>
+    </div>
+  );
 
   useEffect(() => {
     const loadRecommendations = async () => {
@@ -214,7 +241,7 @@ const AiRecommendPage = () => {
   }, [JSON.stringify(selectedPurposes)]);
 
   return (
-    <div className="flex flex-col w-full min-h-screen px-[24px] pt-[40px] pb-[80px] font-[Pretendard]">
+    <div className="flex flex-col w-full min-h-screen px-8 pt-[40px] pb-[80px] font-[Pretendard] sm:px-30">
       {/* 상단 헤더 */}
       <div className="flex items-center gap-[8px] mb-[14px]">
         <img src={AI} alt="AI" className="w-[22px] h-[22px]" />
@@ -224,18 +251,13 @@ const AiRecommendPage = () => {
       </div>
 
       {/* 로딩 문구 */}
-      {isLoading && (
-        <div className="bg-[#F4F4F4] rounded-[10px] p-[12px] text-[13px] text-[#555] leading-[1.6] mb-[24px]">
-          AI가 선택한 목적들을 종합하여 최적의 조합을 분석 중입니다...
-        </div>
-      )}
+      {isLoading && <LoadingSection />}
 
       {/* 결과 표시 */}
       {!isLoading && recommendations.length > 0 ? (
         <div className="flex flex-col gap-[40px]">
           {recommendations.map((combo, idx) => (
             <div key={idx} className="flex flex-col gap-[16px]">
-              {/* reason 박스 */}
               <div className="bg-[#F3F3F3] rounded-[16px] p-[18px] shadow-[2px_4px_12px_rgba(0,0,0,0.08)] border border-[#EAEAEA]">
                 <h2 className="text-[16px] font-semibold text-[#222] mb-[8px]">
                   {combo.combinationName}
@@ -245,7 +267,6 @@ const AiRecommendPage = () => {
                 </p>
               </div>
 
-              {/* 제품 카드 목록 */}
               <div
                 className="
                   grid grid-cols-2 sm:grid-cols-3 
