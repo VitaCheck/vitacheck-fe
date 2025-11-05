@@ -25,8 +25,8 @@ const MainTop = () => {
         cat: Cat1,
         text: Text1,
         styles: {
-          text: "top-[15%] left-[8%] w-[40%] sm:w-[35%] sm:left-[13%] lg:left-[18%] lg:w-[30%] xl:w-[25%]",
-          cat: "bottom-0 right-[5%] w-[30%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%]",
+          text: "top-[15%] left-[8%] w-[45%] sm:w-[35%] sm:left-[13%] lg:left-[18%] lg:w-[30%] xl:w-[25%]",
+          cat: "bottom-0 right-[5%] w-[40%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%]",
         },
       },
       {
@@ -34,8 +34,8 @@ const MainTop = () => {
         cat: Cat2,
         text: Text2,
         styles: {
-          text: "top-[15%] left-[8%] w-[40%] sm:w-[40%] sm:left-[13%] lg:left-[18%] lg:w-[35%] xl:w-[25%]",
-          cat: "bottom-3 right-[5%] w-[20%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
+          text: "top-[15%] left-[8%] w-[50%] sm:w-[40%] sm:left-[13%] lg:left-[18%] lg:w-[35%] xl:w-[25%]",
+          cat: "bottom-3 right-[5%] w-[25%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
         },
       },
       {
@@ -43,8 +43,8 @@ const MainTop = () => {
         cat: Cat3,
         text: Text3,
         styles: {
-          text: "top-[15%] left-[8%] w-[45%] sm:w-[45%] sm:left-[13%] lg:left-[18%] lg:w-[40%] xl:w-[30%]",
-          cat: "bottom-[3%] right-[5%] w-[18%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
+          text: "top-[15%] left-[8%] w-[60%] sm:w-[45%] sm:left-[13%] lg:left-[18%] lg:w-[40%] xl:w-[30%]",
+          cat: "bottom-[3%] right-[5%] w-[23%] sm:w-[15%] sm:right-[10%] lg:w-[15%] lg:right-[15%] xl:w-[10%] xl:right-[17%]",
         },
       },
       {
@@ -52,8 +52,8 @@ const MainTop = () => {
         cat: Cat4,
         text: Text4,
         styles: {
-          text: "top-[15%] left-[8%] w-[35%] sm:w-[30%] sm:left-[13%] lg:left-[18%] lg:w-[25%] xl:w-[20%]",
-          cat: "bottom-[-5%] right-[5%] w-[30%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%] xl:right-[15%]",
+          text: "top-[15%] left-[8%] w-[45%] sm:w-[30%] sm:left-[13%] lg:left-[18%] lg:w-[25%] xl:w-[20%]",
+          cat: "bottom-[-5%] right-[5%] w-[40%] sm:w-[30%] sm:right-[10%] lg:right-[15%] xl:w-[20%] xl:right-[15%]",
         },
       },
     ],
