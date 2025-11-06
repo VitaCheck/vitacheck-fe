@@ -41,7 +41,7 @@ const Onboarding: React.FC<OnboardingProps> = ({ onFinishOnboarding }) => {
 
   // 이메일 로그인 - window.location 사용 (Router 외부이므로)
   const onEmailLogin = () => {
-    window.location.href = "/login/email";
+    window.location.href = "/signup/email";
   };
 
   const totalSlides = 5;
