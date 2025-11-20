@@ -2,11 +2,7 @@
 
 <div>
 
-![React](https://img.shields.io/badge/React-19-61DAFB?style=flat-square&logo=react&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat-square&logo=typescript&logoColor=white)
-![License](https://img.shields.io/badge/license-MIT-green?style=flat-square)
-
-**영양제 섭취를 체계적으로 관리하고, 성분 조합을 분석하여 안전한 영양제 복용을 도와주는 웹 서비스**
+### 영양제 섭취부터 맞춤 추천까지 비타체크!
 <img width="1583" height="890" alt="비타체크_서비스 소개 001" src="https://github.com/user-attachments/assets/ef07cb64-9492-45cc-bf86-5f2366c72402" />
 <img width="1583" height="890" alt="비타체크_서비스 소개 002" src="https://github.com/user-attachments/assets/83f5df27-10db-4e02-a18b-568cce8d6dfb" />
 <img width="1583" height="890" alt="비타체크_서비스 소개 004" src="https://github.com/user-attachments/assets/bdb301cd-9934-45ac-b6df-275f0c1a0d23" />
