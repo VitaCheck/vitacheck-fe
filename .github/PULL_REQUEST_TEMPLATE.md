@@ -12,7 +12,7 @@
 
 ### 주제1
 
-```Javascript
+```Typescript
 // 여기에 코드를 작성해주세요
 ```
 
@@ -20,7 +20,7 @@
 
 ### 주제2
 
-```Javascript
+```Typescript
 // 여기에 코드를 작성해주세요
 ```
 
