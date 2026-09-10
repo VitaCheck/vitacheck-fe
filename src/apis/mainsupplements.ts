@@ -88,41 +88,9 @@ export async function getPopularSupplementsByAge({
   const params: Record<string, string | number> = { ageGroup, page, size };
   if (gender !== "ALL") params.gender = gender;
 
-  const token = localStorage.getItem("accessToken");
-
-  // 로그인: Authorization 포함해서 axios 인스턴스로 호출
-  if (token) {
-    const res = await api.get<PagedResponse<SupplementSummary>>(
-      "/api/v1/supplements/popular",
-      {
-        params,
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-    return res.data;
-  }
-
-  //비로그인: 인터셉터 영향 없는 fetch로 호출
-  const base = import.meta.env.VITE_SERVER_API_URL;
-  const qs = new URLSearchParams(
-    Object.entries(params).reduce<Record<string, string>>((acc, [k, v]) => {
-      acc[k] = String(v);
-      return acc;
-    }, {})
-  ).toString();
-
-  const resp = await fetch(`${base}/api/v1/supplements/popular?${qs}`, {
-    method: "GET",
-  });
-  if (!resp.ok) {
-    const text = await resp.text();
-    const err: any = new Error("popular-supplements fetch failed");
-    err.isAxiosError = true;
-    err.response = {
-      status: resp.status,
-      data: text,
-    };
-    throw err;
-  }
-  return (await resp.json()) as PagedResponse<SupplementSummary>;
+  const res = await api.get<PagedResponse<SupplementSummary>>(
+    "/api/v1/supplements/popular",
+    { params }
+  );
+  return res.data;
 }
