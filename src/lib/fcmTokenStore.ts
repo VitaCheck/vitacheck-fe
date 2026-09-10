@@ -3,12 +3,10 @@ import { safeSession } from "@/lib/safeSession";
 const KEY_TOKEN = "fcmToken";
 const KEY_SENT = "fcmTokenSent";
 
-// 메모리 보관소 (탭 내 생존)
 let memToken: string | null = null;
 let memSent: string | null = null;
 
 export const fcmTokenStore = {
-  /** (선택) 기존 localStorage 잔재가 있으면 세션으로 이관 */
   migrateFromLocalStorage() {
     try {
       const lsToken = localStorage.getItem(KEY_TOKEN);
@@ -24,7 +22,7 @@ export const fcmTokenStore = {
         localStorage.removeItem(KEY_SENT);
       }
     } catch {
-      /* ignore */
+      // ignore
     }
   },
 

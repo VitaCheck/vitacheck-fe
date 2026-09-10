@@ -37,7 +37,6 @@ function ensureMessaging(): Promise<Messaging | null> {
   return _messagingReady;
 }
 
-/** 서비스워커 등록 (앱 시작 시 1회) */
 export async function registerServiceWorker() {
   if (!("serviceWorker" in navigator)) {
     console.warn("[FCM] no SW support");
@@ -51,7 +50,7 @@ export async function registerServiceWorker() {
   return reg;
 }
 
-/** 권한 요청 */
+// 권한 요청
 export async function requestNotificationPermission() {
   if (!("Notification" in window)) return "unsupported";
   console.log("[FCM] current permission:", Notification.permission);
@@ -62,7 +61,7 @@ export async function requestNotificationPermission() {
   return res;
 }
 
-/** 토큰 발급 */
+// 토큰 발급
 export async function getFcmToken(): Promise<string | null> {
   const m = await ensureMessaging();
   if (!m) {
@@ -83,13 +82,11 @@ export async function getFcmToken(): Promise<string | null> {
   }
 }
 
-/** 포그라운드 수신 */
+// 포그라운드 수신
 export function onForegroundMessage(cb: (p: any) => void) {
-  // 🔽 이 함수가 Promise<Unsubscribe | void>를 반환합니다.
   return ensureMessaging().then((m) => {
     if (!m) return;
 
-    // 🔽 onMessage가 반환하는 unsubscribe 함수를 return합니다.
     return onMessage(m, (payload) => {
       console.log("[FCM] onMessage payload", payload);
       cb(payload);
@@ -97,7 +94,7 @@ export function onForegroundMessage(cb: (p: any) => void) {
   });
 }
 
-/** (옵션) 로컬 토큰 삭제 */
+// (옵션) 로컬 토큰 삭제
 export async function removeFcmToken() {
   const m = await ensureMessaging();
   if (!m) return false;
@@ -109,9 +106,7 @@ export async function removeFcmToken() {
   }
 }
 
-// src/lib/firebase.ts에 추가
-
-/** 디버깅: 현재 상태 확인 */
+// 디버깅 
 export async function debugFcmStatus() {
   console.log("=== FCM Debug Info ===");
   console.log("1. Notification permission:", Notification.permission);
@@ -133,8 +128,7 @@ export async function debugFcmStatus() {
   return { permission: Notification.permission, token };
 }
 
-// 전역에서 호출 가능하게
 // @ts-ignore
 window.__fcmDebug = debugFcmStatus;
 // @ts-ignore
-window.__fcm = { registerServiceWorker, getFcmToken };
+window.__fcm = { registerServiceWorker, getFcmToken }; 
