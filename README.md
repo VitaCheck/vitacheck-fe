@@ -212,7 +212,6 @@ docs: README 설치 가이드 업데이트
 ## 📚 참고 문서
 
 - [프로젝트 위키](https://www.notion.so/hhyunseo/VitaCheck-282cd79c461280928238e933156927c2?source=copy_link)
-- [API 문서](https://api.beatbuddy.world/swagger-ui/index.html?urls.primaryName=default#/)
 - [백엔드 repository](https://github.com/VitaCheck/vitacheck-be)
 
 </div>
